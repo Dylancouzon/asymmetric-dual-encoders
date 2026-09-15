@@ -14,12 +14,13 @@ successor; it is not authorized to execute until a new session follows `instruct
 | M11 | Zero/document models and serving ports | Closed in repo record; `m11/STATUS.md` |
 | M12 | Qdrant fusion audit | Closed; `m12/FINDINGS.md` |
 | M13 | Cloud E, build, final evaluation and cost frontier | Planned historical track, not current execution; `m13/STATUS.md`, `instructions-m13.md` |
-| M14 | Nano release and combined FastEmbed PR | After M13; `instructions-m14.md` |
+| M14 | **Nano research preview** (own Hub account, custom FastEmbed branch) | Current execution; rescoped by R20 2026-09-15; `instructions-m14.md` |
 | M15 | Whitepaper and evidence package | After measurements, nano optional; `instructions-m15.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
 | M19 | Deterministic short-query Zero feasibility | **Plan reviewed; awaiting a new execution session** on the M18 branch; `instructions-m19.md` |
+| M20 | Reserved four, official release, upstream FastEmbed PR, BEIR-18 | Created 2026-09-15 by R20; not authorized to execute; `instructions-m20.md` |
 
 ## Migration map
 
@@ -27,7 +28,8 @@ successor; it is not authorized to execute until a new session follows `instruct
 |---|---|
 | M10.0–M10.2 completed data / box screening | M10, closed |
 | Pending E arms, M10.3 build, M10.4 judging, LoTTE, costs | M13 |
-| M13 nano release | M14 |
+| M13 nano release | M14 preview (R20), M20 official release |
+| M14 reserved four, BEIR-18, upstream FastEmbed PR | M20 (R20, 2026-09-15) |
 | M14 paper | M15 |
 | M15 image model | M16 |
 | M16 better-zero ideas | M17 |

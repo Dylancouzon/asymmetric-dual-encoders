@@ -63,3 +63,50 @@ already-triggered reserved four. First make the Zero amendment above, extend and
 M13 base implementation without touching protected data, then complete the one zero-alpha report
 before public release. Preserve M13's original `INCOMPLETE_RESERVED` result and the post-trigger
 ownership disclosure (R19).
+
+## Owner ruling R20 — research preview rescope, 2026-09-15 (Dylan)
+
+**This ruling supersedes the two clarifications above and the publication gate in
+`m14/HANDOFF.md` for M14 only.** It changes release scope and sequencing. It changes no measured
+result, registered constant, bar, licence or access rule, and it spends no protected access.
+
+M14 becomes a **research preview release** on Dylan's own Hugging Face account and a custom
+FastEmbed branch, targeted for 2026-09-16. Everything that requires protected access, upstream
+publication or broad descriptive evaluation moves to M20 (`instructions-m20.md`):
+
+| moved to M20 | stays in M14 |
+|---|---|
+| Reserved-four A100 transaction (FEVER, DBpedia-entity, cqadup-android/english) | Frozen-byte restore and hash verification |
+| Dense-Zero reserved roster amendment and executor extension | Release staging and documented packaging transforms |
+| Broad descriptive BEIR-18 validation | Full parity matrix and length-stratified fixtures |
+| Official release and public model card | Preview model card with existing M13 evidence |
+| Upstream FastEmbed PR | Custom FastEmbed branch, for the preview only |
+| Storage-retirement recommendation | Private-first Hub upload, download verification, public transition |
+
+Rationale of record: `m13/RESERVED_EXECUTION.md` caps the reserved transaction at 55.2 hours
+because the approximately 10M Stella passage vectors do not exist and the controller runs the
+pre-encode and the protected scorer serially. It cannot fit the preview window, and a one-shot
+irreversible access must not be compressed to meet a demo date. The reserved rows are zero-alpha
+descriptive and cannot change the completed six-set claims, so the preview does not depend on them.
+
+Preview constraints, all mandatory:
+
+- The reserved access stays **unspent**. The Zero amendment window therefore stays open, and M20
+  inherits it unchanged. Do not open a reserved payload, create `m8-reserved-spent`, or resume the
+  A100 in M14.
+- `results/m10_final_run.json` keeps `end_status = INCOMPLETE_RESERVED`. Do not relabel it
+  `COMPLETE`; that transition belongs to M20's reserved run.
+- The preview card states plainly that it is a research preview, that the reserved four and the
+  broad BEIR-18 validation are pending, and that no upstream FastEmbed entry exists yet.
+- All existing disclosures survive the preview framing: MIT plus bge-small and Stella attribution,
+  the exact 199,999,721 dose with its reconciled shortfall, ArguAna/FiQA Stella contact with the
+  clean-four headline, the TREC-COVID loss to LEAF, and synthetic-latency framing for serving costs.
+- Publication target is `DylanCouzon/constella-nano` (Dylan, 2026-09-15). The preview is its first
+  revision; M20 publishes the official card as a later revision of the same repository. Record the
+  preview commit/revision URL so M20 can cite exactly what was shown.
+- `DylanCouzon/constella-zero` and `DylanCouzon/stella-en-400M-v5-doc-onnx` are untouched.
+- The custom FastEmbed branch carries the three native entries and reference-derived canonical
+  vectors only. It must not include the unrelated #703 padding fix, and it is not the upstream PR.
+
+Packaging, parity and upload work are ordinary registered-branch implementation and may proceed
+autonomously under this ruling.

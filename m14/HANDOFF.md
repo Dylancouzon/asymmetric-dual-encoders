@@ -1,5 +1,15 @@
 # M14 release entry — constella-nano
 
+> **Amended 2026-09-15 by owner ruling R20 (`instructions-m14.md`).** M14 is now a research
+> preview on Dylan's own Hub account and a custom FastEmbed branch. The reserved-four A100
+> transaction, the dense-Zero roster amendment, the broad BEIR-18 validation, the official
+> release and the upstream FastEmbed PR move to M20 (`instructions-m20.md`). The publication gate
+> in the next paragraph, and checklist steps 2, 3, 9 and 10 below, are therefore **M20's work,
+> not M14's**. Reserved access stays unspent and `results/m10_final_run.json` keeps
+> `end_status = INCOMPLETE_RESERVED` through the preview. Everything else in this document —
+> paths, hashes, restore commands, packaging transforms, parity requirements, disclosures —
+> remains authoritative and unchanged for the preview.
+
 > **M13 is closed and unpublished.** Fetch `origin/main` plus tags and require
 > `refs/tags/m13-closed^{commit}` to be an ancestor of `origin/main`. Under owner ruling R19, M14
 > owns both the triggered reserved A100 execution and publication. Do not publish until the
