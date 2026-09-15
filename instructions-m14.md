@@ -1,5 +1,11 @@
 # M14 — nano release
 
+Latest user scope update (2026-09-15 UTC): M13 continuation now includes nano
+Hugging Face packaging, model card, upload and published-artifact verification.
+Treat deliverables 1, 2 and 4 below as shared release requirements to be completed
+by M13; verify/reuse its closure evidence rather than republishing. M14 retains
+deliverable 3, the clean upstream FastEmbed PR. This supersedes the older split.
+
 Previously M13; moved on 2026-09-10 to make room for cloud execution. Blocked on M13's frozen
 candidate, release decision and serving validation. Zero and its document tower already shipped
 in M11; they are not republished to close this milestone.

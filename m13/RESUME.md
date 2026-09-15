@@ -1,3 +1,20 @@
+# Current resume entry — session clear, 2026-09-15 UTC
+
+**Start with m13/HANDOFF.md.** This file retains historical context below.
+Worktree: /home/dylan/asymetric-dual-encoders/work/m13cloud
+Branch: m13-stage1-execution-prep. Do not switch the parent M17 checkout.
+User will resume manually in the morning. Goal PAUSED; no separate agent or wake-up
+launcher installed. CPU nano final six-set benchmark and two local monitors remain
+running; read work/m13-final/execution.json and verify actual PIDs before acting.
+m10-six-spent is already pushed: NEVER restart nano scoring.
+Latest scope explicitly includes Hugging Face upload/verification of nano before
+M13 closure; older text assigning all publication to M14 is superseded. Release
+unless gross overfitting or catastrophic failure, with honest measured claims.
+M14 retains the clean upstream FastEmbed PR. No further permission question needed
+for the already-authorized release. Preserve prior dose failure and all audit history.
+
+---
+
 # Final benchmark prepared — 2026-09-14
 
 Exact metadata-only replay explains279shortfall; evaluate unchanged candidate

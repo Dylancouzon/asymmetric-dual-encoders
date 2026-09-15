@@ -24,8 +24,12 @@ prepared experiment and measures the frontier; it does not reopen completed reci
    query/index bytes, hydration, cold/warm p50/p95, peak RSS, thread count and hardware. Dense and
    fused costs stay separate; M12 cloud fusion does not establish Edge fusion latency.
 
-**Done:** documented build outcome, durable quality decisions and comparable costs, sufficient for
-release and the paper. A negative result completes the measurement milestone too.
+**Done:** documented build outcome, durable quality decisions and comparable costs.
+Latest user scope update (2026-09-15 UTC): the next session also packages, uploads
+and verifies nano on Hugging Face before closing M13, unless gross overfitting or
+catastrophic failure prevents release. Missing superiority targets alone does not
+block publication. Record the public revision and qualified model card. See
+`m13/HANDOFF.md` and `m13/RELEASE_DECISION.md`; the FastEmbed PR remains M14.
 
 ## Boundaries
 

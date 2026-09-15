@@ -7,8 +7,9 @@ and instructions-m14.md. Do not assume M13 is closed until a closure record says
 
 ## Current state — see results/m13_live_status.json for the latest timestamp
 
-AGENT: goal PAUSED by user; no automatic agent progression. NEXT AGENT: monitor or resume M13 if not
-closed; only start M14 publication after the M13 closure/handoff exists.
+AGENT: STOPPING FOR USER-REQUESTED SESSION CLEAR; goal remains PAUSED. No automatic
+agent progression or separate continuation session. NEXT AGENT: resume M13 manually
+in the morning and finish closure INCLUDING Hugging Face publication of nano.
 TRAINING: STOPPED/FINISHED. All three Runpod pods EXITED at last live check.
 FINAL NANO EVALUATION: RUNNING locally on CPU. Supervisor PID330084; child330139.
 Authoritative live receipt: work/m13-final/execution.json; log: logs/m13-final-six.log.
@@ -45,13 +46,24 @@ ambitious target alone does not block release. Do not alter statistical gates.
 5. Evaluate gross-overfitting/catastrophic-failure concerns against actual evidence;
    document release recommendation, limitations, budget and artifact identities.
 6. Reconcile all retained storage and unique backups before retiring idle disks.
-7. Commit M13 closure and M14 handoff with exact paths and outstanding M14 tasks.
+7. Publish the verified nano bundle and model card to Hugging Face under the existing
+   owner namespace (expected DylanCouzon/constella-nano; verify account/repository
+   before upload). User explicitly authorized upload on 2026-09-15 UTC; do not ask
+   again merely because older milestone files assigned publication to M14. Verify
+   the uploaded commit, file hashes and a clean download/inference smoke test.
+8. Commit M13 closure and M14 handoff with exact paths, Hub revision and remaining
+   FastEmbed PR work. Do not claim closure while required evaluation is incomplete.
 
-## M14 boundary
+## Updated release boundary — latest user instruction, 2026-09-15 UTC
 
-M14 owns Hub nano publication, model card, release packaging validation, and one
-clean FastEmbed PR. Zero/stella already shipped; do not republish them. M13 must
-provide the fixed artifact, quality decisions, costs and qualified release decision.
+The user explicitly included Hugging Face upload in the next session's M13 closure.
+This supersedes the earlier M13/M14 publication split: finish nano release packaging,
+model card, licensing/attribution checks, upload and published-artifact verification
+as part of this continuation. Reuse m11/CODEMAP.md and m11/release/ patterns; do not
+blindly run zero/document-tower publishers against nano. Zero/stella already shipped;
+do not republish them. M14 retains the clean upstream FastEmbed PR. Release remains
+authorized unless gross overfitting or catastrophic failure is demonstrated; missing
+superiority targets alone does not block it. Preserve all measured limitations.
 
 ## Monitoring / resumption
 
@@ -113,3 +125,27 @@ Read work/m13-monitor/timer-health.json and timer-alerts.jsonl, or
 `journalctl --user -u m13-backup-watchdog.service`. Unit sources are committed in
 m13/. This needs the Windows/WSL host awake; it cannot wake the paused agent/chat.
 Next action after completion requires user or remote agent to resume from this handoff.
+
+## Session-clear checkpoint — 2026-09-15T00:44:37.814816+00:00
+
+Latest user request: cancel the proposed separate CLI continuation, prepare a clean
+handoff, then stop this session. User will manually resume in the morning before
+leaving. No CLI agent was launched and no agent-wakeup timer was installed. Only
+the existing primary monitor and independent backup timer remain active.
+
+Benchmark was RUNNING on FiQA at this checkpoint, both PIDs live, child using
+about 360% CPU. SciFact/NFCorpus were the only completed rows. The earlier 4–6am
+Eastern finish estimate is approximate; check live state, do not assume completion.
+M9 scoring, serving-cost measurement and conditional reserved evaluation have NOT
+run; they will still take time after nano finishes. No promise of immediate morning
+closure. Never restart the already-spent nano six-set run.
+
+Morning sequence: inspect live receipt, both PIDs, logs, saved rows, git status and
+origin; read any executor auto-commit before editing. If still RUNNING, preserve it.
+If terminal, inspect the six-set verdict and reserved trigger. INCOMPLETE_RESERVED
+is an expected possible exit, not permission to rerun six-set scoring. Follow the
+remaining work list above, with costs on an idle CPU and M9 after nano. Read
+m13/M9_CLOSEOUT.md and m13/FINAL_EXECUTION.md for exact execution constraints.
+Keep the goal paused unless the user changes that; normal authorized task execution
+can proceed without goal mode. Keep work concrete, logged and pushed; no extra
+monitor infrastructure. This handoff supersedes historical status in RESUME.md.

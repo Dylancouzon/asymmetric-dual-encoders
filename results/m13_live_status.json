@@ -1,6 +1,6 @@
 {
-  "checked_at": "2026-09-15T00:26:15.119473+00:00",
-  "agent_state": "GOAL_PAUSED_BY_USER",
+  "checked_at": "2026-09-15T00:44:37.814816+00:00",
+  "agent_state": "STOPPED_FOR_USER_SESSION_CLEAR_GOAL_PAUSED",
   "milestone_state": "M13_IN_PROGRESS",
   "training": "STOPPED",
   "gpu_pods": "ALL_EXITED_AT_LAST_LIVE_CHECK",
@@ -12,7 +12,7 @@
     "device": "cpu",
     "paid_compute": false,
     "child_pid": 330139,
-    "updated_at": 1789431448.7698443
+    "updated_at": 1789433068.7981396
   },
   "completed_datasets": {
     "nfcorpus": {
@@ -28,8 +28,10 @@
       "written": "2026-09-14T23:57:21.963715+00:00"
     }
   },
-  "next": "Detached nano evaluation continues; primary watchdog and independent five-minute backup timer are active. Resume agent explicitly after evaluation.",
+  "next": "User resumes manually in morning from m13/HANDOFF.md; finish evaluation, costs, M9 comparison, conditional reserved if triggered, and authorized Hugging Face nano upload/verification before M13 closure.",
   "resume_file": "m13/HANDOFF.md",
   "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process.",
-  "m9_preflight": "PASSED; scoring NOT STARTED"
+  "m9_preflight": "PASSED; scoring NOT STARTED",
+  "wake_up_agent_installed": false,
+  "huggingface_publication": "AUTHORIZED_IN_M13_CLOSURE_UNLESS_GROSS_OVERFITTING_OR_CATASTROPHIC_FAILURE"
 }
