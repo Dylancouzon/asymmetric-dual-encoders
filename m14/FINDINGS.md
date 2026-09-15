@@ -30,3 +30,10 @@ That bridge explicitly supplies pooling and normalization, so it can produce cor
 FastEmbed output even when the eventual built-in model entry is assigned to the wrong family.
 Native release verification must exercise the model by its published name, confirm the resolved
 FastEmbed family, and compare that output with a reference-derived canonical vector.
+The S3 parity cast also hid the native integer-mask pooling's promotion from fp32 to float64, so
+native verification must assert returned dtype and per-vector bytes as well as vector values.
+
+The model-card verifier's stale-import guard correctly refused site-packages FastEmbed. The
+verified invocation must prepend `work/m14-preview/fastembed` to `PYTHONPATH`; the S5 receipt
+records that checkout's absolute path, branch and commit, plus the resolved `fastembed` module
+path. The guard remains load-bearing and must not be weakened.
