@@ -57,7 +57,8 @@ graph's normalized output unchanged.
 
 ### Sentence Transformers
 
-For the source model in torch—a different artifact—and its supported prompted query path:
+For the source model in torch—a different artifact—and its supported prompted query path. This
+example needs `pip install sentence-transformers torch`, which the FastEmbed path above does not:
 
 ```python
 from sentence_transformers import SentenceTransformer

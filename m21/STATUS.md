@@ -79,5 +79,17 @@ build numbers, and Zero cost/size figures mixed across incompatible protocols.
 
 Astra reviewed the M21 plan before execution (NO-GO as written, no P0; two findings folded in:
 the README needed executable verification rather than a prose refresh, and the plain-English page
-carried two factual errors about Zero's construction and M9's cause). The implementation review is
-recorded below.
+carried two factual errors about Zero's construction and M9's cause).
+
+Astra then reviewed the implementation at `d1b4063`: **NO-GO**, no P0, four P1 and two P2. Its
+access log stayed inside the brief's allowlist. Dispositions:
+
+| finding | disposition |
+|---|---|
+| P2 — dtype fix broke float16 | **Fixed** in fork commit `47a5090`. Reproduced first: a fully attended 1024-d float16 vector of 10.0 squares past float16's 65504 maximum, so the norm became `inf` and every component returned exactly 0. Narrowing moved to the post-processing boundary, after `normalize()`; `mean_pooling` keeps upstream's float64 accumulation untouched. Tests now cover float32/float16/float64 through both pooled families plus the overflow case. M14 parity improved to minimum true cosine 1.0 on all three comparisons |
+| P1 — fusion reproduction conditions dropped | **Fixed.** The `bm25s` Lucene-defaults note and the self-exclusion-before-truncation condition are restored beside the fusion table in the Zero card |
+| P1 — "1024-d is four times the size of 384-d" | **Fixed.** The claim was wrong (1024/384 ≈ 2.67); the unsupported multiple is removed |
+| P1 — document card example needs an undeclared dependency | **Fixed.** The Sentence Transformers example now states that it needs `sentence-transformers torch`, which the FastEmbed install line does not provide |
+| P1 — Nano absolutes lack a source trace | **Resolved, not a defect.** The published values are the equal-weight means of the committed per-query rows in `results/m10_final_scores/<dataset>.json` (`system = "nano-dense"`), verified by reproduction: `scifact.json`, n=300, mean 0.721097. Recorded in `m21/BENCHMARKS.md` |
+| P1 — per-number pointers for the retained M9/M10/M17/M18 narrative figures | **Recorded as debt**, not remediated. Those figures are sourced to the `FINDINGS.md` files the page already cites. Per-number tracing of historical narrative belongs to M15's paper evidence pass, not to a one-day preview polish |
+| P2 — preview branch carries the padding fixes | **Accepted deviation**, owner-endorsed. The branch every card installs should not hand users a FastEmbed that crashes on `thenlper/gte-base` mixed batches. The three-PR split in `m21/FASTEMBED.md` keeps them separable for M20 |

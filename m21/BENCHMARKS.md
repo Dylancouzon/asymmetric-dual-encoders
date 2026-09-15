@@ -138,12 +138,12 @@ These items must be fixed or carried explicitly; this file does not silently cho
    The two required rows therefore remain visibly unpopulated above. This is a source-coverage
    blocker for a fully populated canonical table, not permission to derive the values.
 
-2. **Nano absolute-score provenance is indirect in the allowlist.** The six Nano values are
-   committed in `m13/STATUS.md`, `m14/HANDOFF.md`, and `m14/MODEL_CARD.md`. Those documents point
-   to persisted per-query score files beside `results/m10_final_run.json`, but the final-run JSON
-   itself stores the decision deltas, bounds, and p-values rather than the six absolute Nano
-   aggregates. The public numbers agree across the three documents, but the aggregate-bearing
-   result rows were not included in this task's read allowlist.
+2. **RESOLVED — Nano absolute-score provenance.** The six Nano values are the equal-weight means
+   of the committed per-query rows in `results/m10_final_scores/<dataset>.json`, each carrying
+   `system = "nano-dense"` and the freeze/registry/comparator hashes of the registered run. This
+   was verified by reproduction: `scifact.json` has n=300 and mean 0.721097, matching the published
+   row exactly. The same values are published in `m13/STATUS.md` and `m14/MODEL_CARD.md`. The
+   aggregate is the registered statistic over committed rows, not a re-derivation.
 
 3. **Two different fused results are currently both called “fused.”** README and the plain-English
    page lead with `0.4911`, the M7 convex0 all-six macro, while the deployed Qdrant recommendation

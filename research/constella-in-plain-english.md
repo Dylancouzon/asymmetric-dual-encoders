@@ -78,7 +78,7 @@ Before building anything, we measured what already exists. We reproduced LightRe
 
 - Small transformers on the query side scored around 0.50 to 0.53 on the six. Zero-compute systems scored 0.43 to 0.49. Symmetric static models came decisively last at 0.32 to 0.36.
 - A tempting shortcut failed cleanly: fitting a linear map from a static model into a contextual document space, even with test-set-tuned regularisation, scored below the static model used on its own.
-- Costs are not one number. Under the later common four-thread protocol, warm p50 was 0.1119 ms for Zero, 6.8400 ms for bge-small and 7.2511 ms for Nano; measured assets were 90.1, 127.6 and 132.3 MiB respectively. A 1024-d index is four times the size of a 384-d one per document.
+- Costs are not one number. Under the later common four-thread protocol, warm p50 was 0.1119 ms for Zero, 6.8400 ms for bge-small and 7.2511 ms for Nano; measured assets were 90.1, 127.6 and 132.3 MiB respectively. Zero and Nano emit 1024-d vectors against bge-small's 384, so their raw vectors cost proportionally more to store.
 
 **What it changed.** The comparison set, the six datasets, the bootstrap habit and the cost framing were fixed here. An external review called the results not decision-grade and listed seven defects; every one was rerun or reworded before anything else started.
 
