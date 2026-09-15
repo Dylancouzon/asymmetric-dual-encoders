@@ -1,0 +1,295 @@
+{
+  "candidate": "nano-dense",
+  "datasets": [
+    "scifact",
+    "nfcorpus",
+    "fiqa",
+    "arguana",
+    "scidocs",
+    "trec-covid"
+  ],
+  "registry_sha256": "22f4c8c1c20caa9c6d820e0dc7d20291910d1ec60d91854a29ac8f27f4f35a10",
+  "freeze_sha256": "9d631b2c64244aff72db605e94cd973eeb4b80527f14d91fbeab5bc45fec6b52",
+  "begin_commit": "53a7e52ac5505e95a7124a8f6731bca28d5351ac",
+  "spent_tag": "m9-six-spent",
+  "bridge": {
+    "scifact": {
+      "n": 300,
+      "mean_delta": -2.8572829757026835e-08,
+      "mean_abs_delta": 5.7351162565296336e-08,
+      "max_abs_delta": 4.725104937319813e-07,
+      "changed_queries": 73,
+      "bound": 0.003,
+      "passes": true
+    },
+    "nfcorpus": {
+      "n": 323,
+      "mean_delta": 6.0807621404182914e-05,
+      "mean_abs_delta": 8.775618664331046e-05,
+      "max_abs_delta": 0.015257402040331214,
+      "changed_queries": 206,
+      "bound": 0.003,
+      "passes": true
+    },
+    "fiqa": {
+      "n": 648,
+      "mean_delta": -3.793267810968339e-05,
+      "mean_abs_delta": 5.677021270317605e-05,
+      "max_abs_delta": 0.03064581289197782,
+      "changed_queries": 329,
+      "bound": 0.003,
+      "passes": true
+    },
+    "arguana": {
+      "n": 1406,
+      "mean_delta": 4.837681146669134e-05,
+      "mean_abs_delta": 0.0001798883774199159,
+      "max_abs_delta": 0.06932300000000002,
+      "changed_queries": 550,
+      "bound": 0.003,
+      "passes": true
+    },
+    "scidocs": {
+      "n": 1000,
+      "mean_delta": -2.8427936391427682e-05,
+      "mean_abs_delta": 0.00016774649843741933,
+      "max_abs_delta": 0.0980396973005058,
+      "changed_queries": 598,
+      "bound": 0.003,
+      "passes": true
+    },
+    "trec-covid": {
+      "n": 50,
+      "mean_delta": 0.00023988271366132686,
+      "mean_abs_delta": 0.00024005539539363575,
+      "max_abs_delta": 0.006745125232602289,
+      "changed_queries": 43,
+      "bound": 0.003,
+      "passes": true
+    }
+  },
+  "decision_record": {
+    "plan_sha256": "af3a8bc1a4b04f985ee50bd965470c66edd151e4fa783722c2dc4d8b4c326198",
+    "alpha_family": 0.025,
+    "quantile": 0.0125,
+    "contrasts": {
+      "C1": {
+        "a": "nano-dense",
+        "b": "bge-small-en-v1.5",
+        "bootstrap": {
+          "delta_raw": -0.13255572283785508,
+          "lower_q0125_raw": -0.15028601350912363,
+          "quantile": 0.0125,
+          "quantile_method": "inverted_cdf",
+          "B": 10000,
+          "draws_sha256": "fdbafeb1f5699f5c503fdf674eae03864822a2cfe9860a6296b7c8eff7318284",
+          "ci95_raw_reporting_only": [
+            -0.14818047498496326,
+            -0.11687298742805936
+          ],
+          "per_dataset_delta_raw": {
+            "arguana": -0.060635498566729555,
+            "fiqa": -0.1892536661571749,
+            "nfcorpus": -0.029605658698276707,
+            "scidocs": -0.0625187325031363,
+            "scifact": -0.0786854811592126,
+            "trec-covid": -0.3746352999426003
+          },
+          "n_by_dataset": {
+            "arguana": 1406,
+            "fiqa": 648,
+            "nfcorpus": 323,
+            "scidocs": 1000,
+            "scifact": 300,
+            "trec-covid": 50
+          },
+          "_gate_note": "lower_q0125_raw is the ONLY field that decides; ci95_raw is a 2.5% endpoint and is reporting-only"
+        },
+        "signflip": {
+          "delta": -0.1326,
+          "p": 1.0,
+          "p_str": "1.00000",
+          "R": 100000,
+          "seed": 901,
+          "alternative": "greater",
+          "method": "paired sign-flip randomization, macro-structured, one sign per shared query",
+          "strata": [
+            {
+              "components": [
+                "arguana"
+              ],
+              "n_units": 1406
+            },
+            {
+              "components": [
+                "fiqa"
+              ],
+              "n_units": 648
+            },
+            {
+              "components": [
+                "nfcorpus"
+              ],
+              "n_units": 323
+            },
+            {
+              "components": [
+                "scidocs"
+              ],
+              "n_units": 1000
+            },
+            {
+              "components": [
+                "scifact"
+              ],
+              "n_units": 300
+            },
+            {
+              "components": [
+                "trec-covid"
+              ],
+              "n_units": 50
+            }
+          ],
+          "shared_units": 0,
+          "per_dataset_n": {
+            "arguana": 1406,
+            "fiqa": 648,
+            "nfcorpus": 323,
+            "scidocs": 1000,
+            "scifact": 300,
+            "trec-covid": 50
+          },
+          "_sharing_note": "same sign-plan seed across C1/C2; no materialized plan digest, unlike the bootstrap draw plan"
+        },
+        "bootstrap_rejects": false,
+        "holm_rejects": false,
+        "passes": false
+      },
+      "C2": {
+        "a": "nano-dense",
+        "b": "leaf-ir-asym",
+        "bootstrap": {
+          "delta_raw": -0.14382332649124357,
+          "lower_q0125_raw": -0.16140289050108556,
+          "quantile": 0.0125,
+          "quantile_method": "inverted_cdf",
+          "B": 10000,
+          "draws_sha256": "e6888d4c092fef50201ffdcbdfbf141359584f938a72b68d95bb79efdcdeb2c8",
+          "ci95_raw_reporting_only": [
+            -0.1592522634393211,
+            -0.1282586149662676
+          ],
+          "per_dataset_delta_raw": {
+            "arguana": -0.04044121976160865,
+            "fiqa": -0.20221051183618727,
+            "nfcorpus": -0.047433853744716335,
+            "scidocs": -0.0606719225031363,
+            "scifact": -0.06499181115921261,
+            "trec-covid": -0.44719063994260033
+          },
+          "n_by_dataset": {
+            "arguana": 1406,
+            "fiqa": 648,
+            "nfcorpus": 323,
+            "scidocs": 1000,
+            "scifact": 300,
+            "trec-covid": 50
+          },
+          "_gate_note": "lower_q0125_raw is the ONLY field that decides; ci95_raw is a 2.5% endpoint and is reporting-only"
+        },
+        "signflip": {
+          "delta": -0.1438,
+          "p": 1.0,
+          "p_str": "1.00000",
+          "R": 100000,
+          "seed": 901,
+          "alternative": "greater",
+          "method": "paired sign-flip randomization, macro-structured, one sign per shared query",
+          "strata": [
+            {
+              "components": [
+                "arguana"
+              ],
+              "n_units": 1406
+            },
+            {
+              "components": [
+                "fiqa"
+              ],
+              "n_units": 648
+            },
+            {
+              "components": [
+                "nfcorpus"
+              ],
+              "n_units": 323
+            },
+            {
+              "components": [
+                "scidocs"
+              ],
+              "n_units": 1000
+            },
+            {
+              "components": [
+                "scifact"
+              ],
+              "n_units": 300
+            },
+            {
+              "components": [
+                "trec-covid"
+              ],
+              "n_units": 50
+            }
+          ],
+          "shared_units": 0,
+          "per_dataset_n": {
+            "arguana": 1406,
+            "fiqa": 648,
+            "nfcorpus": 323,
+            "scidocs": 1000,
+            "scifact": 300,
+            "trec-covid": 50
+          },
+          "_sharing_note": "same sign-plan seed across C1/C2; no materialized plan digest, unlike the bootstrap draw plan"
+        },
+        "bootstrap_rejects": false,
+        "holm_rejects": false,
+        "passes": false
+      }
+    },
+    "holm": {
+      "C1": {
+        "p": 1.0,
+        "threshold": 0.0125,
+        "reject": false,
+        "rank": 1
+      },
+      "C2": {
+        "p": 1.0,
+        "threshold": 0.025,
+        "reject": false,
+        "rank": 2
+      }
+    },
+    "decision": {
+      "outcome": "neither",
+      "release": false,
+      "claim": "measurement; no claim",
+      "C1_passes": false,
+      "C2_passes": false,
+      "headline_verbatim": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the six development-informed datasets in our exact-search harness",
+      "forbidden_words": [
+        "resolved",
+        "confirmed",
+        "unrestricted"
+      ]
+    }
+  },
+  "end_status": "COMPLETE_SIX_ONLY",
+  "scope": "M13-authorized M9 six-only close-out; no separate reserved access.",
+  "provenance": "build provenance spans TWO build lock states -- see the M9.3 BUILD PROVENANCE DISCLOSURE in m9/LEDGER.md. Never describe this as a single-lock run.",
+  "written": "2026-09-15T16:58:58.068193+00:00"
+}
