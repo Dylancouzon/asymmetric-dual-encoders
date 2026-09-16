@@ -27,6 +27,7 @@ The same document index also works with the stronger
 
 > Research preview: Native FastEmbed support currently requires the Constella preview branch
 > shown below. The published evaluation is limited to the results described in this card.
+> Full BEIR benchmarking is underway. Results from that broader evaluation are not included yet.
 
 | Property | Value |
 |---|---|

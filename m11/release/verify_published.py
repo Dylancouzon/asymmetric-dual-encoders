@@ -23,7 +23,7 @@ def chk(n, p, d=""):
 
 # Pinned published revisions. A verifier that accepts whatever the Hub currently serves cannot
 # detect an unexpected change to a model repository.
-EXPECTED = {ZERO: "b374ae7f8a", DOC: "993fc385b7", NANO: "4ce2d611d5"}
+EXPECTED = {ZERO: "8b47e77960", DOC: "28b40aca9a", NANO: "fed594736b"}
 
 for rid in (ZERO, DOC, NANO):
     r = requests.get(f"https://huggingface.co/api/models/{rid}", timeout=30).json()
@@ -67,15 +67,18 @@ for rid, want in MANIFESTS.items():
 # both cards say what we think they say
 for rid, must, mustnot in [
         (ZERO, ["library_name: fastembed", "Distance.COSINE", "TextEmbedding(NAME)",
-                "Research preview", "swappable at query time", "fixed", "DBSF",
+                "Research preview", "BEIR benchmarking is underway", "swappable at query time",
+                "fixed", "DBSF",
                 "recommended deployment setup", "prefetch 100", "338,076"],
                ["convex", "registered", "reserved-four", "np.stack"]),
         (DOC,  ["library_name: fastembed", "TextEmbedding(NAME)", "s2p_query",
-                "Research preview", "swappable at query time", "fixed", "259",
+                "Research preview", "BEIR benchmarking is underway", "swappable at query time",
+                "fixed", "259",
                 "Natural Questions passages", "0.99999988"],
                ["registered", "reserved-four", "np.stack", "add_custom_model"]),
         (NANO, ["library_name: fastembed", "TextEmbedding(NAME)", "34,540,672",
-                "Research preview", "swappable at query time", "fixed", "199,999,721",
+                "Research preview", "BEIR benchmarking is underway", "swappable at query time",
+                "fixed", "199,999,721",
                 "DylanCouzon/constella-zero"],
                ["registered", "reserved-four", "np.stack", "add_custom_model"])]:
     card = open(hf_hub_download(rid, "README.md")).read()

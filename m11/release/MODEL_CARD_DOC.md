@@ -23,6 +23,7 @@ then search the index with either
 
 > Research preview: Native FastEmbed support currently requires the Constella preview branch
 > shown below. The published evaluation is limited to the results described in the model cards.
+> Full BEIR benchmarking is underway. Results from that broader evaluation are not included yet.
 
 The model is an ONNX conversion of
 [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5) at revision
