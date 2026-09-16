@@ -42,9 +42,11 @@ BEIR15_RESULT = REPO / "results" / "m20_beir15_run.json"
 ARCHIVE_MANIFEST = REPO / "results" / "m20_archive_manifest.json"
 REMOTE_ARCHIVE = "work/m20-archive"
 LOCAL_ARCHIVE = Path("/mnt/d/constella-archive/beir15")
-# fp16 vectors for ~33.9M documents across three towers, plus the gzipped payloads, plus room to
-# stage them beside the shards they are copied from.
-MIN_REMOTE_FREE_BYTES = 260_000_000_000
+# Stage C writes fp16 vectors for BEIR-15's ~23.74M new documents across three towers:
+# 23,744,806 x (1024 + 384 + 768) x 2 bytes = 103 GB. Stage D adds about 25 GB of gzipped
+# payloads; the archive's vectors are HARD LINKS to the shards, not a second 147 GB copy. Raw
+# corpus downloads and the datasets cache account for the rest.
+MIN_REMOTE_FREE_BYTES = 170_000_000_000
 
 
 def save(record):

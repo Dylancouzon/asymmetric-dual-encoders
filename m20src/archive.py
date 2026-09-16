@@ -68,6 +68,23 @@ def _dump_jsonl(path, rows):
     return path
 
 
+def _place(origin, destination):
+    """Stage one shard beside the archive without a second copy of its bytes.
+
+    The vectors are about 147 GB across the three towers. Copying them into the archive on the
+    same 500 GB volume that already holds them would need 294 GB for the vectors alone, which the
+    pod does not have. A hard link is the same bytes under a second name, so re-hashing the
+    destination still hashes the real content, and rsync to `D:` and rclone to object storage both
+    read and transfer real bytes. Falls back to a copy across filesystems.
+    """
+    if destination.exists():
+        destination.unlink()
+    try:
+        os.link(origin, destination)
+    except OSError:
+        shutil.copy2(origin, destination)
+
+
 def build_corpus(root, corpus_name):
     """corpus.jsonl.gz for any corpus; queries and qrels too.
 
@@ -155,12 +172,15 @@ def build_vectors(root, corpus_name):
                 raise RuntimeError(f"{origin}: missing or does not match its recorded hash")
             destination = target / name
             if not destination.is_file() or R.sha_file(destination) != digest:
-                shutil.copy2(origin, destination)
+                _place(origin, destination)
                 if R.sha_file(destination) != digest:
-                    raise RuntimeError(f"{destination}: copy does not match the recorded hash")
+                    raise RuntimeError(f"{destination}: staged copy does not match the recorded "
+                                       f"hash")
             files[f"vectors/{TOWER_ID[tower]}/{corpus_name}/{name}"] = destination
         destination = target / "manifest.json"
         if not destination.is_file() or R.sha_file(destination) != R.sha_file(manifest_path):
+            if destination.exists():
+                destination.unlink()
             shutil.copy2(manifest_path, destination)
         files[f"vectors/{TOWER_ID[tower]}/{corpus_name}/manifest.json"] = destination
     return files
