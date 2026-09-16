@@ -8,9 +8,9 @@ Hugging Face Hub 1.28.0.
 
 | Artifact | Tested Hugging Face revision |
 |---|---|
-| `DylanCouzon/stella-en-400M-v5-doc-onnx` | `70a8b2cbd5f34e35c5947294090345d91818597f` |
-| `DylanCouzon/constella-nano` | `7cc8a0fa8f06b2fb44983334aaba37b7ee3d15bb` |
-| `DylanCouzon/constella-zero` | `fa1bf1c186b03fb6ee73a4c9da6d8b56ce806bb4` |
+| `DylanCouzon/stella-en-400M-v5-doc-onnx` | `44c3ba46827965e9f712f84ece996698fffafcb4` |
+| `DylanCouzon/constella-nano` | `cd8e70646a1242e12b0c9cffe1dced73803d08f5` |
+| `DylanCouzon/constella-zero` | `54453d612eb5a173aa327be0c4fd991c18f97861` |
 
 Both query encoders returned the expected top destination for all six queries in
 `space_travel.json`. The test used one in-memory Qdrant collection: its document vectors were

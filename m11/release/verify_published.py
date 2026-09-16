@@ -1,4 +1,4 @@
-"""Verify what the two published repos actually SERVE, against local truth.
+"""Verify what the three published repos actually SERVE, against local truth.
 
 Every other gate here checks bytes on the way OUT. This one checks what the Hub gives back to a
 stranger: that both repos are public, that the shipped table still hashes to `m7/FREEZE.json`,
@@ -23,7 +23,7 @@ def chk(n, p, d=""):
 
 # Pinned published revisions. A verifier that accepts whatever the Hub currently serves cannot
 # detect an unexpected change to a model repository.
-EXPECTED = {ZERO: "fa1bf1c186", DOC: "70a8b2cbd5", NANO: "7cc8a0fa8f"}
+EXPECTED = {ZERO: "54453d612e", DOC: "44c3ba4682", NANO: "cd8e70646a"}
 
 for rid in (ZERO, DOC, NANO):
     r = requests.get(f"https://huggingface.co/api/models/{rid}", timeout=30).json()
@@ -64,23 +64,23 @@ for rid, want in MANIFESTS.items():
     chk(f"{rid.split('/')[1]}: file set is exactly the manifest", names == want,
         f"extra={sorted(names - want)} missing={sorted(want - names)}" if names != want else "")
 
-# both cards say what we think they say
+# all three cards say what we think they say
 for rid, must, mustnot in [
         (ZERO, ["library_name: fastembed", "Distance.COSINE", "TextEmbedding(NAME)",
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
-                "fixed", "DBSF",
+                "fixed", "DBSF", "runnable demo",
                 "recommended deployment setup", "prefetch 100", "338,076"],
                ["convex", "registered", "reserved-four", "np.stack",
                 "did not establish", "equivalence claim"]),
         (DOC,  ["library_name: fastembed", "TextEmbedding(NAME)", "s2p_query",
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
-                "fixed", "259",
+                "fixed", "runnable demo", "259",
                 "Natural Questions passages", "0.99999988"],
                ["registered", "reserved-four", "np.stack", "add_custom_model",
                 "did not establish", "equivalence claim"]),
         (NANO, ["library_name: fastembed", "TextEmbedding(NAME)", "34,540,672",
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
-                "fixed", "199,999,721",
+                "fixed", "runnable demo", "199,999,721",
                 "DylanCouzon/constella-zero"],
                ["registered", "reserved-four", "np.stack", "add_custom_model",
                 "did not establish", "did not pass", "equivalence claim"])]:
