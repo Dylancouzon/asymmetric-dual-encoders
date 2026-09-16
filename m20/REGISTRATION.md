@@ -183,7 +183,7 @@ weight, threshold, contrast or release rule.
 | Arctic-M cost relative to Stella | 0.3308 | `results/m20_tower_rate_benchmark.json` |
 | all three towers, combined | 1.4657 × Stella | derived |
 | reserved four documents | 10,115,709 | `results/eval_manifest.json` |
-| BEIR-15 documents not already in the reserved set | ≈ 18.33M | `m20/PLAN.md`, verified at download |
+| BEIR-15 documents not already in the reserved set | 23,744,806 | registry `budget.document_volumes`, verified at download |
 | target pod compute + its storage | $1.6636111111/h | `results/m13_build_record.json` |
 | the two other retained stopped volumes | $0.1389/h | 2 × 500 GB at $0.10/GB-month |
 | all-retained hourly during an M20 session | $1.8025/h | derived |
@@ -195,20 +195,36 @@ left resident on a 10 GB card at once — an allocator artifact that would have 
 this cap. The corrected measurement is the registered one and the artifact is recorded in
 `results/m20_tower_rate_benchmark.json`.
 
+**Climate-FEVER is encoded, not reused.** Its corpus is FEVER's Wikipedia, but the published
+document counts differ (5,416,593 against 5,416,568), so the reserved FEVER shards do not cover
+it. Its 5.42M documents are inside the cap below. `m20/PLAN.md`'s sketch omitted them; this
+registration supersedes that sketch. The executor still compares its corpus hashes to FEVER's and
+records the comparison rather than assuming either answer.
+
 ### Registered stage caps
 
 | stage | protected? | expected | **cap** |
 |---|---|---:|---:|
-| A. reserved corpora download, pre-encode, BM25 index | no, pre-tag | ≈ 45 h | **60 h** |
+| A. reserved corpora download, pre-encode, BM25 index | no, pre-tag | ≈ 45 h | **52 h** |
 | B. tagged reserved transaction: query encode, search, BM25 retrieval, fusion, report | yes | ≈ 5 h | **55.2 h** (inherited, unchanged) |
-| C. BEIR-15: download, pre-encode, index, score | no | ≈ 95 h | **110 h** |
+| C. BEIR-15: download, pre-encode, index, score | no | ≈ 113 h | **125 h** |
 | D. archive build, upload, re-hash verification | no | ≈ 8 h | **10 h** |
-| **M20 total** | | **≈ 153 h** | **235.2 h** |
+| **M20 total** | | **≈ 171 h** | **242.2 h** |
 
-Of the 235.2-hour cap, 55.2 h is the already-committed reserved line and **180 h is new spend**:
-180 × $1.8025 = **$324.45**, inside the $342.96 headroom. Expected spend is about $180 of new
-compute. The controller refuses to start if the wallet cannot cover the full conservative cap and
-refuses any stage that would exceed its own cap.
+Of the 242.2-hour cap, 55.2 h is the already-committed reserved line and **187 h is new spend**:
+187 × $1.8025 = **$337.07**, inside the $342.96 of recorded headroom. Expected spend is about $209
+of new compute. The controller refuses to start if the wallet cannot cover the full conservative
+cap and refuses any stage that would exceed its own cap.
+
+**Stage C has roughly 10% cap headroom, and the budget rather than the estimate is what sets it.**
+BEIR-15's 23.7M new documents across three fp32 towers is the dominant cost of M20 and there is no
+slack left to absorb a slower-than-projected run. The reserved transaction is therefore ordered
+first, so the irreplaceable access lands before this risk is taken. If the projection gate trips in
+stage C the run stops cleanly and **the owner decides** between raising the ceiling, narrowing
+BEIR-15, or accepting a partial descriptive table. No executor may decide that, and no executor may
+change the fp32 encoding contract to buy time: fp32 with TF32 disabled is what the frozen
+comparator vectors were made under, and mixing precisions inside one table is exactly the silent
+inconsistency this project exists to avoid.
 
 ### In-run projection gate
 

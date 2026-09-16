@@ -567,22 +567,38 @@
     },
     "_ratio_source": "results/m20_tower_rate_benchmark.json (RTX 3080, SQuAD training passages, one tower per process, no protected access). Ratio only; the absolute rate is the A100 measurement.",
     "stage_caps_hours": {
-      "A_reserved_pre_encode_unprotected": 60.0,
+      "A_reserved_pre_encode_unprotected": 52.0,
       "B_tagged_reserved_transaction": 55.2,
-      "C_beir15": 110.0,
+      "C_beir15": 125.0,
       "D_archive": 10.0,
-      "m20_total": 235.2
+      "m20_total": 242.2
     },
     "expected_hours": {
       "A_reserved_pre_encode_unprotected": 45.0,
       "B_tagged_reserved_transaction": 5.0,
-      "C_beir15": 95.0,
+      "C_beir15": 113.0,
       "D_archive": 8.0,
-      "m20_total": 153.0
+      "m20_total": 171.0
     },
-    "new_hours_beyond_committed_reserved_line": 180.0,
-    "new_spend_at_cap_usd": 324.45,
+    "new_hours_beyond_committed_reserved_line": 187.0,
+    "new_spend_at_cap_usd": 337.07,
     "_inherited_55_2": "m13/build_config.json budget.mandatory_hours_fixed.reserved_batch_allowance = 55.2 h is UNCHANGED. Its derivation (results/m13_encode_benchmark.json) priced 10M passages on the STELLA tower alone, doubled; the reserved batch also needs bge-small and Arctic-M document vectors for the same 10.1M passages, which that arithmetic never included. M20 therefore registers its own stage caps and applies the inherited 55.2 h to stage B, the tagged scoring stage, where its derivation is comfortably sufficient. Pre-observation cost bookkeeping only: no estimand, weight, threshold, contrast or release rule changes.",
-    "projection_gate": "After the first completed corpus for each tower the executor measures passages/s and projects the remaining hours for its stage. If the projection exceeds the stage's remaining cap it stops cleanly at a shard boundary and reports. Pre-tag this costs nothing; post-tag the reserved result is already durable per completed system."
+    "projection_gate": "After the first completed corpus for each tower the executor measures passages/s and projects the remaining hours for its stage. If the projection exceeds the stage's remaining cap it stops cleanly at a shard boundary and reports. Pre-tag this costs nothing; post-tag the reserved result is already durable per completed system.",
+    "document_volumes": {
+      "reserved_four_docs": 10115709,
+      "beir15_new_docs_expected": 23744806,
+      "_beir15_new_breakdown": {
+        "msmarco": 8841823,
+        "nq": 2681468,
+        "hotpotqa": 5233329,
+        "webis-touche2020": 382545,
+        "quora": 522931,
+        "cqadupstack_ten_forums": 394000,
+        "six_set_six_corpora": 272117,
+        "climate-fever": 5416593
+      },
+      "_climate_fever_note": "Climate-FEVER's corpus is FEVER's Wikipedia but the published document counts differ (5,416,593 vs 5,416,568), so the reserved FEVER shards are NOT reusable and it is encoded separately. The executor still compares its corpus id and text hashes to FEVER's and records the comparison rather than assuming either answer. Its 5.42M documents are included in the cap below; an earlier sketch in m20/PLAN.md omitted them."
+    },
+    "_headroom_warning": "Stage C's cap is only about 1.1x its expectation, because 187 new hours at $1.8025/h is $337.07 against $342.96 of recorded headroom: the budget, not the estimate, is what sets it. BEIR-15's ~23.7M new documents across three fp32 towers is the dominant cost and there is no slack left to absorb a slower-than-projected run. The reserved transaction is ordered FIRST so the irreplaceable access lands before this risk is taken. If the projection gate trips in stage C the run stops cleanly and the owner decides between raising the ceiling, narrowing BEIR-15, or accepting a partial descriptive table; no executor may decide that."
   }
 }
