@@ -82,8 +82,21 @@ Raw corpora, queries and qrels compress to roughly 25–30 GB. Both targets rece
 tarballs; `results/m20_archive_manifest.json` lists every file, size and SHA-256, and re-hash at
 both targets is the verification. Proposed exact destinations, to be fixed in the registration:
 local `/mnt/d/constella-archive/beir15/` (Windows `D:\constella-archive\beir15\`); object storage
-bucket and prefix **to be named by the owner** before the run (provider and account are not in the
-repo). Credentials never enter git, logs or the pod image.
+under the same layout, prefix `constella-archive/beir15/` (owner, 2026-09-16: "whatever makes
+sense for the prefix"). Layout below the prefix, identical on both targets:
+
+```
+beir15/
+  MANIFEST.json                      # copy of results/m20_archive_manifest.json
+  datasets/<dataset>/{corpus,queries,qrels}.<ext>.zst      # raw BEIR payloads, HF revision in manifest
+  vectors/stella-ffeb2b7e/<dataset>/shard-00000.fp16.npy … # 50,000-row hash-recorded shards
+  vectors/{bge-small-5c38ec7c,arctic-m-e58a8f75}/<dataset>/…  # comparator vectors, courtesy copies
+```
+
+No object-storage tooling or credentials exist on the box yet (no rclone/aws/b2 config,
+2026-09-16). Provider is the owner's account choice; default recommendation is an S3-compatible
+bucket with free egress (Cloudflare R2 or Backblaze B2) driven by `rclone`, bucket name recorded in
+the registration when created. Credentials never enter git, logs or the pod image.
 
 ## Identities the registration must pin (Astra review, 2026-09-16)
 

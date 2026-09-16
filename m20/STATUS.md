@@ -21,7 +21,8 @@ settled by owner ruling R23). Both access logs audited clean. Rulings R22 and R2
 
 ## Open items for the owner
 
-- Name the object-storage bucket/prefix for the archive before the cloud session.
+- Prefix and layout are fixed (`m20/PLAN.md` §Archive sizing). The execution session needs an
+  object-storage account/bucket and credentials on the box before the archive step; none exist yet.
 
 ## Blockers
 
