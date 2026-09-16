@@ -108,10 +108,7 @@ Zero's strongest practical configuration adds a lexical channel:
 |---|---:|---:|
 | Zero, dense only | 0.4339 | 0.4098 |
 | Zero + BM25, Qdrant DBSF, prefetch 100 | 0.4887 | 0.4912 |
-| Zero + BM25, convex0 `w=0.8`, prefetch 1000 | 0.4911 | 0.4866 |
 
-DBSF and convex0 are different fusion operators at different prefetch depths. No confidence interval
-was computed between them, so the observed values establish neither superiority nor equivalence.
 DBSF is recommended because Qdrant ships it and it requires no fitted fusion weight.
 
 ## Serving and Edge Results
@@ -233,15 +230,33 @@ FastEmbed branch:
 pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview" qdrant-client
 ```
 
-For deeper review:
+## Milestone map
 
-- [`m21/BENCHMARKS.md`](../m21/BENCHMARKS.md) is the canonical public benchmark table and discrepancy
-  audit.
-- [`m13/STATUS.md`](../m13/STATUS.md) records the Nano build, final evaluation, and serving protocol.
-- [`m19/FINDINGS.md`](../m19/FINDINGS.md) records the deterministic specialization result and why it
-  remained inconclusive.
-- [`HARNESS.md`](../HARNESS.md) maps the reusable evaluation and verification machinery.
-- [`ROADMAP.md`](../ROADMAP.md) shows what remains, including BEIR-18 and the upstream FastEmbed work.
+This is the shortest route through the research history. Each row says what the milestone tried,
+what came out of it, and where to start if you want the full methodology or evidence.
+
+| Milestone | What happened | Start here |
+|---|---|---|
+| M0-M6 | Surveyed asymmetric, static, sparse, and small-transformer retrieval; built the exact-search and bootstrap harness; reproduced the main baselines; tested and rejected linear projection from a static encoder into a contextual document space; and built the first edge prototype. | [`m1-m6-findings.md`](m1-m6-findings.md) |
+| M7 | Selected Stella by measuring how well each teacher distilled into a lookup table, then trained and froze Zero. Zero retained 75.5% of Stella across the six but missed the LightRetriever dense bar by 0.0243. BM25 fusion was the useful result. | [`m7/STATUS.md`](../m7/STATUS.md) |
+| M8 | Tested twelve table-side improvement ideas, including alternative targets, finer query representations, and pseudo-relevance feedback. No measured lever closed the M7 gap, so the project moved from lookup-table optimization to a small transformer. | [`m8/FINDINGS.md`](../m8/FINDINGS.md) |
+| M9 | Built the first Nano candidate. Its retention was 93.8% on the development slice closest to training, but only 50% to 71% on the forum slices. It was kept as a measurement, not released. | [`m9/STATUS.md`](../m9/STATUS.md) |
+| M10 | Built the licensed data and provenance pipeline, ran the architecture and recipe screen, and froze the final Nano recipe: bge-small backbone, layers 12/8/4, a 1152-to-1024 linear head, 75/25 query-document mix, and squared L2 regression. | [`m10/STATUS.md`](../m10/STATUS.md) |
+| M11 | Packaged and published Constella Zero and the Stella document tower as ONNX models, added FastEmbed serving paths, and turned the export failures into a reusable porting checklist. | [`m11/STATUS.md`](../m11/STATUS.md) |
+| M12 | Audited Qdrant-native fusion. The dev-fitted convex operator was not available in Qdrant and depended on an unrealistic prefetch depth; DBSF at prefetch 100 became the deployment recommendation. | [`m12/FINDINGS.md`](../m12/FINDINGS.md) |
+| M13 | Trained the final Nano checkpoint on 199,999,721 examples, froze and evaluated it, measured the serving frontier, and completed Torch, ONNX Runtime, and FastEmbed parity. This produced the benchmark results reported above. | [`m13/STATUS.md`](../m13/STATUS.md) |
+| M14 | Published Nano from the frozen M13 bytes as a public research preview after independent release reviews and downloaded-artifact verification. | [`m14/STATUS.md`](../m14/STATUS.md) |
+| M15 | Owns the whitepaper and reproducible evidence package. Writing has not started; the plan calls for one paper covering Zero, Nano, deployment cost, negative results, and the limits of the evidence. | [`instructions-m15.md`](../instructions-m15.md) |
+| M16 | Holds unscheduled follow-up ideas: an asymmetric image model and vertically specialized Zero or Nano variants. These are scoped ideas, not completed experiments. | [`instructions-m16.md`](../instructions-m16.md) |
+| M17 | Tried a Zero v1.1 with vocabulary extension, joint table/listwise training, alias consistency, and checkpoint averaging. None of the five trained arms beat the untrained added-entry baseline, so the screen stopped and Zero v1 stayed shipped. | [`m17/STATUS.md`](../m17/STATUS.md) |
+| M18 | Built a searchable Qdrant project-memory system over a pinned 79,269-document repository snapshot and trained a specialized table. The system worked, but the candidate missed the fused improvement bar and the evaluation exposed answer-key problems. | [`m18/FINDINGS.md`](../m18/FINDINGS.md) |
+| M19 | Replaced training with deterministic rows for 12 fragmented technical terms. Numeric and serving checks passed, but relevance judgment remained label-sensitive because 60 pooled items lacked enough context. The result is inconclusive and confirmation stayed sealed. | [`m19/FINDINGS.md`](../m19/FINDINGS.md) |
+| M20 | Pending: run the reserved four and descriptive BEIR-18, turn Nano's preview into the official release, and upstream the FastEmbed integration. No M20 evaluation result exists yet. | [`instructions-m20.md`](../instructions-m20.md) |
+| M21 | Consolidated the research preview: one canonical benchmark table, shorter model cards and README, one FastEmbed branch, and an fp32 fix for the pooling path that had promoted Nano output to float64. | [`m21/STATUS.md`](../m21/STATUS.md) |
+
+The canonical public numbers and discrepancy audit are in
+[`m21/BENCHMARKS.md`](../m21/BENCHMARKS.md). [`HARNESS.md`](../HARNESS.md) maps the reusable
+evaluation machinery, while [`ROADMAP.md`](../ROADMAP.md) is the current execution plan.
 
 The repository is an evidence base rather than a guided paper. If a detail here looks surprising,
 Claude or Codex can trace it through the status files, result JSONs, registrations, reviews, and
