@@ -131,8 +131,13 @@
   "_why_any": "so an aim claim never stands without its descriptive reserved rows (Opus, \u00a7Final run change 1). M9's trigger was `if C1 passes`. **Note, (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH): under fixed-sequence gatekeeping 'ANY conjunct rejects' is EQUIVALENT to 'C1b rejects', because C1b is first and nothing later is tested unless it rejected.** The wording is kept as 'any' because it is robust to a future re-ordering, but no reader should think it is a weaker condition than it is.",
   "systems_included": [
    "nano-dense",
+   "zero-dense",
+   "stella-query",
    "bge-small-en-v1.5",
-   "leaf-ir-asym"
+   "leaf-ir-asym",
+   "bm25",
+   "zero+bm25 dbsf@100",
+   "nano+bm25 dbsf@100"
   ],
   "systems_omitted": "all others",
   "datasets": [
@@ -162,7 +167,13 @@
   "_six_crash": "**Post-tag continuation, named 2026-09-10 (Fable + Codex round 8, 2026-09-10, independently reproduced here).** The first version said 'resume at the first incomplete dataset' while `infra_retry_admissible_iff` allows a retry only when the tag does NOT exist, `recover_path` never re-reads the six, and the mandate re-registers FINAL_LOCK's 'any failure at or after step 3 consumes the access, no rerun under any flag'. So the rule I added had no admissible state \u2014 another half-applied correction. **The mode, distinct from pre-tag infra retry and from post-completion `--recover`:** POST-TAG CONTINUATION is admissible iff ALL of \u2014 the `m10-six-spent` tag EXISTS on origin; the persisted per-dataset scores are INCOMPLETE; `HEAD` equals the FINAL-RUN-BEGIN commit; and the live registry sha256 equals the one persisted with the scores. It opens ONLY the datasets with no persisted scores, appends them, and stops. It may not re-open a dataset already persisted, may not re-score one, and may not run more than once per incomplete dataset. **This AMENDS the mandate's 'no rerun under any flag' for M10, deliberately and pre-observation** \u2014 without it a crash between the tag push and the last dataset's write loses the access outright, which is a worse outcome than a bounded, authenticated continuation.",
   "min_free_gb": 120,
   "_min_free_gb": "Added 2026-09-10 (ruling R7): inherited from M9's registry, absent here until now. Free disk required before the reserved encodes; `m13src/access13.py` enforces it.",
-  "_six_crash_amended_2026_09_10": "WITHDRAWN 2026-09-10 by ruling R14 (m13/RULINGS.md), unexecuted, before any protected access: the original `_six_crash` and `infra_retry_admissible_iff` wording stands; there is no post-tag continuation. Withdrawn text: Ruling R11 (Dylan, 2026-09-10): a crash AFTER the tag and BEFORE the first persisted dataset is not an outright loss. A continuation is admissible iff the tag exists on origin, ZERO datasets are persisted, HEAD equals the FINAL-RUN-BEGIN commit, the registry sha equals the registry at that commit, and the working tree is clean. The BEGIN commit pins code and registry as firmly as a persisted sha does. Attempts are counted in the ledger. Everything else in `_six_crash` and `infra_retry_admissible_iff` is unchanged; this does not amend M9's registry."
+  "_six_crash_amended_2026_09_10": "WITHDRAWN 2026-09-10 by ruling R14 (m13/RULINGS.md), unexecuted, before any protected access: the original `_six_crash` and `infra_retry_admissible_iff` wording stands; there is no post-tag continuation. Withdrawn text: Ruling R11 (Dylan, 2026-09-10): a crash AFTER the tag and BEFORE the first persisted dataset is not an outright loss. A continuation is admissible iff the tag exists on origin, ZERO datasets are persisted, HEAD equals the FINAL-RUN-BEGIN commit, the registry sha equals the registry at that commit, and the working tree is clean. The BEGIN commit pins code and registry as firmly as a persisted sha does. Attempts are counted in the ledger. Everything else in `_six_crash` and `infra_retry_admissible_iff` is unchanged; this does not amend M9's registry.",
+  "_systems_included_original": [
+   "nano-dense",
+   "bge-small-en-v1.5",
+   "leaf-ir-asym"
+  ],
+  "_amended_2026_09_16": "PRE-OBSERVATION AMENDMENT, 2026-09-16, pushed before any reserved payload was opened (no `m8-reserved-spent` tag locally or on origin at amendment time; results/m10_final_run.json ends INCOMPLETE_RESERVED). Authority: owner rulings R20 and R22 (m13/RULINGS.md). WHAT CHANGED: `systems_included` grows from the three tested M13 base systems to the eight-system descriptive roster -- adding dense `zero-dense` (R20), and `stella-query`, `bm25`, `zero+bm25 dbsf@100` and `nano+bm25 dbsf@100` (R22). The original three-system list is preserved verbatim in `_systems_included_original` and in git. WHAT DID NOT CHANGE: the four datasets, the R1/R2 estimands, the NDO-3 weights, B=10000, seed=902, the interval method, alpha=0.0, `gate`=null, the trigger, `min_free_gb`, the FEVER double-contamination label, `_one_access`, and `crash`. The five added systems produce NO new estimand and enter no contrast: R1 remains nano - bge-small and R2 remains nano - leaf-ir-asym, computed from exactly the same two pairs of systems as before. Every added row is descriptive with zero alpha. Zero and Stella-query reuse Nano's Stella document shards and do not authorize a second corpus-scale Stella encode; `zero+bm25 dbsf@100` does NOT substitute for the dense `zero-dense` row -- both are reported. CRASH RULE: `crash` above governs this transaction, confirmed by owner ruling R23 (2026-09-16). R14's withdrawal of post-tag continuation applied to the SIX-SET run and is unchanged for it; it is not a ban on the per-system resume registered here and tested in M13's executor. Full registration: m20/REGISTRATION.md and m20/beir15_registry.json."
  },
  "implementation": {
   "module": "m10src/final10.py \u2014 WRITTEN and unit-tested (m10src/test_final10.py)",

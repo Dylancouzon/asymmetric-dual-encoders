@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
-"""Corpus-only, resumable document pre-encode for M13's reserved four.
+"""Corpus-only, resumable document pre-encode for M13's reserved four and M20's BEIR-15.
 
 This entry point deliberately cannot read queries or qrels.  It claims the corpus-only G2
-allowlist entry, authenticates each public corpus against ``results/eval_manifest.json``, and
-writes hash-recorded fp16 shards.  The later reserved transaction re-hashes these shards before
-opening the one-shot payload and scores only the systems registered in M10's final-run registry.
+allowlist entry, authenticates each public corpus, and writes hash-recorded fp16 shards.  The
+later reserved transaction re-hashes these shards before opening the one-shot payload and scores
+only the systems registered in M10's final-run registry.
+
+M20 (owner rulings R20/R22) extends it in exactly two ways and changes nothing about the encoding
+contract:
+
+  * The three "systems" here were always the three DOCUMENT TOWERS.  M20's eight-system roster adds
+    `zero-dense` and `stella-query`, both of which REUSE the Stella shards written under
+    ``nano-dense``; no new tower and no second corpus-scale Stella encode.  `bm25` and the two
+    DBSF rows have no document vectors at all.  So this file's `SYSTEMS` table is unchanged.
+  * ``--datasets`` selects the reserved four (the default) or a BEIR-15 corpus.  Reserved corpora
+    are still authenticated against ``results/eval_manifest.json``.  A BEIR-15 corpus has no prior
+    frozen hash, so it is pinned by HuggingFace revision and its computed hashes are recorded in
+    ``results/m20_corpus_pins.json`` on first encode and re-verified on every later one.
 """
 from __future__ import annotations
 
@@ -30,7 +42,15 @@ GUARD_RECEIPT = paths_guard.claim(
     GUARD_ENTRY, note="M13 triggered reserved batch: public corpora only; no query or qrel access")
 paths_guard.install()
 
-DATASETS = ("fever", "dbpedia-entity", "cqadup-android", "cqadup-english")
+RESERVED_DATASETS = ("fever", "dbpedia-entity", "cqadup-android", "cqadup-english")
+DATASETS = RESERVED_DATASETS            # the historical name, still the default batch
+REGISTRY = REPO / "m20" / "beir15_registry.json"
+CORPUS_PINS = REPO / "results" / "m20_corpus_pins.json"
+BEIR15_SUMMARY = REPO / "results" / "m20_beir15_preencode.json"
+# The BEIR-15 corpora this file may encode, by cache name -> (hub repo, pinned revision).  Built
+# from the pushed pre-observation registration so the executor cannot drift from it.  The reserved
+# four are present because BEIR-15 reuses their shards; they are never re-encoded from here under
+# a BEIR-15 invocation, and their rows come from the tagged transaction.
 SYSTEMS = {
     "nano-dense": {
         "repo": "NovaSearch/stella_en_400M_v5",
@@ -117,43 +137,82 @@ def _doc_text(row):
     return f"{title} {text}".strip() if title else text
 
 
+def corpus_sources():
+    """cache name -> (hub repo, pinned revision), built from the pushed M20 registration.
+
+    CQADupStack is one BEIR dataset of twelve forums, each its own `mteb/` repository, so it
+    expands here into twelve cache names of the historical `cqadup-<forum>` shape.
+    """
+    registry = json.loads(REGISTRY.read_text())
+    out = {}
+    for row in registry["datasets"]:
+        if row["key"] == "cqadupstack":
+            continue
+        out[row["key"]] = (row["source"], row["revision"])
+    for forum, row in registry["cqadupstack"]["forums"].items():
+        out[f"cqadup-{forum}"] = (row["source"], row["revision"])
+    return out
+
+
 def load_corpus(dataset):
-    """Load only the named corpus configuration; the guard refuses every other config."""
+    """Load only the named corpus configuration, at its pinned revision; the guard refuses every
+    other config.  The revision pin is belt-and-braces for the reserved four, whose corpora are
+    additionally hash-checked against the frozen manifest, and it is the ONLY identity a BEIR-15
+    corpus has on its first encode."""
     from datasets import load_dataset
 
     paths_guard.ensure_loader_guard()
-    if dataset.startswith("cqadup-"):
-        source = f"mteb/cqadupstack-{dataset.split('-', 1)[1]}"
-    else:
-        source = f"BeIR/{dataset}"
-    return load_dataset(source, "corpus")["corpus"], source
+    sources = corpus_sources()
+    if dataset not in sources:
+        raise ValueError(f"{dataset!r} is not a registered M20 corpus")
+    source, revision = sources[dataset]
+    return load_dataset(source, "corpus", revision=revision)["corpus"], source, revision
 
 
-def authenticate_corpus(dataset, corpus):
+def _corpus_identity(corpus):
     from hashing import sha_stream_list
 
-    expected = json.loads((REPO / "results" / "eval_manifest.json").read_text())[
-        "m7_untouched_final"][dataset]
-    got = {
+    return {
         "n_docs": len(corpus),
         "corpus_ids_sha256": sha_stream_list(str(x) for x in corpus["_id"]),
         "corpus_text_sha256": sha_stream_list(_doc_text(row) for row in corpus),
     }
-    bad = [f"{key}: {got[key]} != {expected.get(key)}" for key in got
-           if got[key] != expected.get(key)]
-    if bad:
-        raise RuntimeError(f"{dataset}: public corpus differs from the frozen manifest: "
-                           + "; ".join(bad))
+
+
+def authenticate_corpus(dataset, corpus, revision=None):
+    """Reserved corpora must match the frozen manifest.  A BEIR-15 corpus has no prior frozen
+    hash: it is pinned by revision, and its computed hashes are RECORDED on first encode and
+    re-verified on every later one, so a silently republished dataset cannot slip through."""
+    got = _corpus_identity(corpus)
+    if dataset in RESERVED_DATASETS:
+        expected = json.loads((REPO / "results" / "eval_manifest.json").read_text())[
+            "m7_untouched_final"][dataset]
+        bad = [f"{key}: {got[key]} != {expected.get(key)}" for key in got
+               if got[key] != expected.get(key)]
+        if bad:
+            raise RuntimeError(f"{dataset}: public corpus differs from the frozen manifest: "
+                               + "; ".join(bad))
+        return got
+    pins = json.loads(CORPUS_PINS.read_text()) if CORPUS_PINS.exists() else {}
+    want = {**got, "hf_revision": revision}
+    if dataset in pins:
+        bad = [key for key in want if pins[dataset].get(key) != want[key]]
+        if bad:
+            raise RuntimeError(f"{dataset}: corpus changed since it was pinned on {bad}")
+    else:
+        pins[dataset] = want
+        write_atomic(CORPUS_PINS, json.dumps(pins, indent=2, sort_keys=True) + "\n")
     return got
 
 
-def identity(system, dataset, corpus_identity, source):
+def identity(system, dataset, corpus_identity, source, revision=None):
     spec = SYSTEMS[system]
     return {
         "schema_version": 1,
         "system": system,
         "dataset": dataset,
         "source": source,
+        "source_revision": revision,
         "model_id": spec["repo"],
         "revision": spec["revision"],
         "backend": spec["backend"],
@@ -211,13 +270,13 @@ class Encoder:
         return values
 
 
-def encode_dataset(encoder, dataset):
-    corpus, source = load_corpus(dataset)
-    corpus_identity = authenticate_corpus(dataset, corpus)
+def encode_dataset(encoder, dataset, projection=None):
+    corpus, source, revision = load_corpus(dataset)
+    corpus_identity = authenticate_corpus(dataset, corpus, revision)
     out = ROOT / encoder.system / dataset
     out.mkdir(parents=True, exist_ok=True)
     manifest_path = out / "manifest.json"
-    want = identity(encoder.system, dataset, corpus_identity, source)
+    want = identity(encoder.system, dataset, corpus_identity, source, revision)
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text())
         existing_identity = {key: manifest.get(key) for key in want}
@@ -260,26 +319,105 @@ def encode_dataset(encoder, dataset):
         tmp = path.with_suffix(".tmp.npy")
         np.save(tmp, vecs)
         os.replace(tmp, path)
+        seconds = time.monotonic() - started
         manifest["shards"][sid] = {
             "rows": hi - lo,
             "bytes": path.stat().st_size,
             "sha256": sha_file(path),
-            "seconds": time.monotonic() - started,
+            "seconds": seconds,
         }
         write_atomic(manifest_path, json.dumps(manifest, indent=2) + "\n")
         print(f"[{encoder.system}/{dataset}] shard {shard + 1}/{n_shards} "
-              f"({hi - lo:,} rows)", flush=True)
+              f"({hi - lo:,} rows, {(hi - lo) / max(seconds, 1e-9):.0f}/s)", flush=True)
+        if projection is not None:
+            projection.observe(encoder.system, hi - lo, seconds)
 
     manifest.update(status="COMPLETE", n_shards=n_shards, completed_utc=time.time())
     write_atomic(manifest_path, json.dumps(manifest, indent=2) + "\n")
     return manifest_path
 
 
-def update_summary():
+class Projection:
+    """Stop a stage that is going to blow its registered cap, instead of discovering it at the cap.
+
+    A cap alone does not protect a paid run: a job five times slower than planned spends the whole
+    allowance before anyone sees it.  This re-projects after every shard and refuses at a shard
+    boundary -- the only place where stopping costs nothing, because the shard just written is
+    hash-recorded and resumable.
+
+    Three things it has to get right, each of which an earlier version got wrong:
+
+    * **One wall clock for the whole stage.**  The three towers run as three separate processes.
+      The deadline is therefore an ABSOLUTE time handed down by the controller, not each process's
+      own summed encode seconds, so a slow first tower shortens the second one's budget instead of
+      each getting the full cap.
+    * **Every tower, not just this one.**  A tower that has not started yet still has to fit. Its
+      cost is projected from THIS tower's measured rate through the registered cost ratios in
+      `results/m20_tower_rate_benchmark.json`, which is what that measurement is for.
+    * **The registered volume, not the corpora downloaded so far.**  Counting only pinned corpora
+      would make the projection most optimistic exactly when least is known.  The batch totals are
+      the registered ones the cap was built from.
+    """
+
+    def __init__(self, tower, tower_order, expected_docs, deadline_epoch, cost_ratio, label,
+                 min_rows=100_000):
+        if tower not in tower_order:
+            raise ValueError(f"{tower!r} is not in the registered tower order {tower_order}")
+        self.tower = tower
+        self.tower_order = list(tower_order)
+        self.expected_docs = int(expected_docs)
+        self.deadline_epoch = float(deadline_epoch)
+        self.cost_ratio = dict(cost_ratio)
+        self.label = label
+        self.min_rows = int(min_rows)
+        self.rows = 0
+        self.seconds = 0.0
+
+    def _pending_towers(self):
+        return self.tower_order[self.tower_order.index(self.tower) + 1:]
+
+    def observe(self, _system, rows, seconds):
+        self.rows += int(rows)
+        self.seconds += float(seconds)
+        if self.rows < self.min_rows:
+            return
+        rate = self.rows / max(self.seconds, 1e-9)           # documents per second, this tower
+        remaining = max(0, self.expected_docs - self.rows) / rate
+        for other in self._pending_towers():
+            ratio = self.cost_ratio[other] / self.cost_ratio[self.tower]
+            remaining += self.expected_docs / (rate / ratio)
+        finish_at = time.time() + remaining
+        if finish_at > self.deadline_epoch:
+            over = (finish_at - self.deadline_epoch) / 3600.0
+            raise RuntimeError(
+                f"{self.label}: projected to finish {over:.1f} h past the registered stage "
+                f"deadline at the measured rate ({self.tower} {rate:.0f} docs/s, "
+                f"{self.rows:,}/{self.expected_docs:,} done, towers still to run "
+                f"{self._pending_towers() or 'none'}). Stopping at a shard boundary; every shard "
+                f"written is hash-recorded and resumable.")
+
+
+def tower_cost_ratios():
+    """Registered relative document-encode cost per tower, keyed by this file's system names."""
+    rows = json.loads((REPO / "results" / "m20_tower_rate_benchmark.json").read_text())["towers"]
+    by_tower = {name: row["cost_relative_to_stella"] for name, row in rows.items()}
+    return {"nano-dense": by_tower["stella-400M-v5"],
+            "bge-small-en-v1.5": by_tower["bge-small-en-v1.5"],
+            "leaf-ir-asym": by_tower["arctic-m-v1.5"]}
+
+
+def expected_batch_docs(batch):
+    """The registered document volume the stage cap was built from."""
+    budget = json.loads(REGISTRY.read_text())["budget"]["document_volumes"]
+    return int(budget["reserved_four_docs"] if batch == "reserved"
+               else budget["beir15_new_docs_expected"])
+
+
+def _summary(datasets, summary_path):
     rows = {}
     for system in SYSTEMS:
         rows[system] = {}
-        for dataset in DATASETS:
+        for dataset in datasets:
             path = ROOT / system / dataset / "manifest.json"
             if path.exists():
                 record = json.loads(path.read_text())
@@ -289,38 +427,63 @@ def update_summary():
                     "manifest_sha256": sha_file(path),
                     "n_docs": record.get("n_docs"),
                     "n_shards": record.get("n_shards"),
+                    "source_revision": record.get("source_revision"),
                     "vector_bytes": sum(v.get("bytes", 0) for v in record.get("shards", {}).values()),
                 }
     complete = all(rows.get(system, {}).get(dataset, {}).get("status") == "COMPLETE"
-                   for system in SYSTEMS for dataset in DATASETS)
-    blob = {"status": "COMPLETE" if complete else "RUNNING", "systems": rows,
-            "guard": GUARD_RECEIPT, "updated_utc": time.time()}
-    write_atomic(SUMMARY, json.dumps(blob, indent=2) + "\n")
+                   for system in SYSTEMS for dataset in datasets)
+    blob = {"status": "COMPLETE" if complete else "RUNNING", "datasets": list(datasets),
+            "systems": rows, "guard": GUARD_RECEIPT, "updated_utc": time.time()}
+    write_atomic(summary_path, json.dumps(blob, indent=2) + "\n")
     return complete
 
 
-def main(system, device):
+def update_summary():
+    """The reserved receipt the tagged transaction authenticates. Its shape is unchanged."""
+    return _summary(RESERVED_DATASETS, SUMMARY)
+
+
+def update_beir15_summary(datasets):
+    return _summary(datasets, BEIR15_SUMMARY)
+
+
+def beir15_encode_datasets():
+    """BEIR-15 corpora that this stage encodes: every registered corpus except the reserved four,
+    whose shards the tagged transaction produces and BEIR-15 reuses."""
+    return tuple(name for name in corpus_sources() if name not in RESERVED_DATASETS)
+
+
+def main(system, device, datasets=RESERVED_DATASETS, projection=None, label="pre-encode"):
     if system not in SYSTEMS:
         raise ValueError(f"unknown system {system!r}")
+    reserved_batch = tuple(datasets) == tuple(RESERVED_DATASETS)
     encoder = Encoder(system, device)
-    for dataset in DATASETS:
-        encode_dataset(encoder, dataset)
+    for dataset in datasets:
+        encode_dataset(encoder, dataset, projection=projection)
+        if reserved_batch:
+            update_summary()
+        else:
+            update_beir15_summary(datasets)
+    if reserved_batch:
         update_summary()
-    update_summary()
+    else:
+        update_beir15_summary(datasets)
 
 
-def preflight():
+def preflight(datasets=RESERVED_DATASETS):
     """Exercise the real guarded corpus route without hashing or encoding any passage."""
     rows = {}
     expected = json.loads((REPO / "results" / "eval_manifest.json").read_text())[
         "m7_untouched_final"]
-    for dataset in DATASETS:
-        corpus, source = load_corpus(dataset)
-        rows[dataset] = {"source": source, "n_docs": len(corpus),
-                         "expected_n_docs": expected[dataset]["n_docs"]}
-        if rows[dataset]["n_docs"] != rows[dataset]["expected_n_docs"]:
-            raise RuntimeError(f"{dataset}: corpus count changed during preflight")
+    for dataset in datasets:
+        corpus, source, revision = load_corpus(dataset)
+        rows[dataset] = {"source": source, "revision": revision, "n_docs": len(corpus)}
+        if dataset in expected:
+            rows[dataset]["expected_n_docs"] = expected[dataset]["n_docs"]
+            if rows[dataset]["n_docs"] != rows[dataset]["expected_n_docs"]:
+                raise RuntimeError(f"{dataset}: corpus count changed during preflight")
     print(json.dumps({"status": "PASSED", "guard": GUARD_RECEIPT, "datasets": rows}))
+    return rows
 
 
 if __name__ == "__main__":
@@ -328,10 +491,36 @@ if __name__ == "__main__":
     parser.add_argument("--system", choices=tuple(SYSTEMS))
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--preflight-only", action="store_true")
+    parser.add_argument("--batch", choices=("reserved", "beir15"), default="reserved",
+                        help="reserved: the registered reserved four. beir15: every other "
+                             "registered BEIR-15 corpus; the reserved four are never re-encoded "
+                             "here and their rows come from the tagged transaction.")
+    parser.add_argument("--corpora", nargs="+", default=None,
+                        help="restrict the batch to these corpus names; used for smoke runs and "
+                             "for splitting a long stage across processes")
+    parser.add_argument("--stage-deadline", type=float, default=None,
+                        help="absolute unix time by which the WHOLE stage, every tower, must "
+                             "finish; the controller passes one clock to all three processes")
+    parser.add_argument("--tower-order", default="nano-dense,bge-small-en-v1.5,leaf-ir-asym",
+                        help="the order the controller runs the towers in; towers after --system "
+                             "in this list are projected from this one's measured rate")
     args = parser.parse_args()
+    batch = RESERVED_DATASETS if args.batch == "reserved" else beir15_encode_datasets()
+    if args.corpora:
+        unknown = [name for name in args.corpora if name not in batch]
+        if unknown:
+            parser.error(f"not in the --batch {args.batch} corpus list: {unknown}")
+        batch = tuple(args.corpora)
     if args.preflight_only:
-        preflight()
+        preflight(batch)
     elif args.system:
-        main(args.system, args.device)
+        projection = None
+        if args.stage_deadline:
+            projection = Projection(
+                tower=args.system, tower_order=args.tower_order.split(","),
+                expected_docs=expected_batch_docs(args.batch),
+                deadline_epoch=args.stage_deadline, cost_ratio=tower_cost_ratios(),
+                label=f"pre-encode/{args.batch}")
+        main(args.system, args.device, batch, projection, f"pre-encode/{args.batch}")
     else:
         parser.error("--system is required unless --preflight-only is used")

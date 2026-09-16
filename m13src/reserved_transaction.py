@@ -20,16 +20,47 @@ MANIFEST = A.REPO / "results" / "m13_reserved_manifest.json"
 RESULT = A.REPO / "results" / "m13_reserved_run.json"
 PREENCODE = A.REPO / "results" / "m13_reserved_preencode.json"
 LOCK = A.REPO / "work" / "m13-reserved.lock"
+ARCHIVE_ROOT = A.REPO / "work" / "m20-archive"
 CODE_FILES = (
     "m13src/score13.py",
     "m13src/reserved_transaction.py",
     "m13src/reserved_support.py",
+    "m20src/roster.py",
+    "m20/beir15_registry.json",
     "m8src/pre_encode.py",
     "m8src/paths_guard.py",
     "m7src/evalkit.py",
+    "m7src/fusion.py",
+    "m12src/qfusion.py",
     "m10src/nano10.py",
     "m13/LOTTE_GATE_MANIFEST.json",
 )
+
+
+def _sha_bytes(blob):
+    import hashlib
+
+    return hashlib.sha256(blob).hexdigest()
+
+
+def registry_without_m20_amendment(path):
+    """The registry bytes as they were before the dated M20 roster amendment.
+
+    The amendment adds exactly two keys under `reserved` and rewrites `systems_included`.
+    Reversing those three edits and re-serializing must reproduce the pre-amendment file
+    byte-for-byte; anything else -- a moved weight, a changed seed, a different partition -- shows
+    up as a hash mismatch here rather than being waved through as "the registry was amended".
+    """
+    import collections
+
+    live = json.loads(Path(path).read_text(), object_pairs_hook=collections.OrderedDict)
+    reserved = live["reserved"]
+    original = reserved.pop("_systems_included_original", None)
+    amendment = reserved.pop("_amended_2026_09_16", None)
+    if original is None or amendment is None:
+        raise ValueError("live registry carries no dated M20 roster amendment to reverse")
+    reserved["systems_included"] = original
+    return (json.dumps(live, indent=1) + "\n").encode()
 
 
 def code_identity(repo=A.REPO):
@@ -86,7 +117,14 @@ def _prior(cfg, conf):
     if decision.get("reserved_batch_runs") is not True:
         raise ValueError("the frozen six-set decision did not trigger the reserved batch")
     if prior.get("registry_sha256") != A.sha256_file(cfg.registry_path):
-        raise ValueError("six-set result and live registry differ")
+        # The M20 roster amendment (R20/R22) deliberately changes the registry after the six-set
+        # result pinned it. Demanding an unchanged hash would make a registered amendment
+        # unexecutable; accepting any change would let a weight or threshold move unseen. So prove
+        # mechanically that undoing the amendment reproduces the pinned bytes exactly.
+        undone = registry_without_m20_amendment(cfg.registry_path)
+        if _sha_bytes(undone) != prior.get("registry_sha256"):
+            raise ValueError("six-set result and live registry differ by more than the registered "
+                             "M20 roster amendment")
     if prior.get("freeze_sha256") != json.loads(cfg.state_path.read_text())["freeze_sha256"]:
         raise ValueError("six-set result and run manifest name different checkpoints")
     freeze = json.loads(Path(cfg.freeze_path).read_text())
@@ -104,7 +142,9 @@ def _preencode(cfg, verify_shards=True):
     record = json.loads(PREENCODE.read_text())
     if record.get("status") != "COMPLETE":
         raise ValueError("reserved document pre-encode is incomplete")
-    for system in R.SYSTEMS:
+    # The pre-encode summary is keyed by DOCUMENT TOWER directory, not by system: three of the
+    # eight systems share the Stella shards and two have no document vectors at all.
+    for system in sorted({R.cache_dir_for(name) for name in R.DENSE_SYSTEMS}):
         for dataset in R.DATASETS:
             row = record.get("systems", {}).get(system, {}).get(dataset, {})
             path = Path(cfg.repo) / row.get("manifest", "missing")
@@ -197,10 +237,10 @@ def _continuation(cfg, conf):
     if manifest.get("freeze_file_sha256") != A.sha256_file(cfg.freeze_path):
         problems.append("Nano freeze metadata changed after the tag")
     allowed = {
-        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{system}.json"
+        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{R.R20.slug(system)}.json"
         for system in R.SYSTEMS
     } | {
-        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{system}.json.tmp"
+        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{R.R20.slug(system)}.json.tmp"
         for system in R.SYSTEMS
     }
     unexpected = [line for line in _status_lines(cfg) if line not in allowed]
@@ -212,13 +252,40 @@ def _continuation(cfg, conf):
     return manifest, begin
 
 
-def run(cfg=None, preflight_only=False):
+def publish(cfg):
+    """Re-commit and push an already-computed reserved result after a failed push.
+
+    The transaction writes its result files and only then commits. A crash or a network failure in
+    between leaves complete, durable-on-disk outputs that the ordinary entry point refuses to touch
+    because `RESULT.exists()`. That refusal is right -- nothing may be re-scored -- but it left no
+    way to publish what was already paid for. This path opens no payload, scores nothing, changes
+    no number, and refuses unless the result is already present and already COMPLETE.
+    """
+    if not RESULT.exists():
+        raise ValueError("there is no computed reserved result to publish")
+    final = json.loads(Path(cfg.result_path).read_text())
+    if final.get("end_status") != "COMPLETE" or "reserved" not in final:
+        raise ValueError("the six-set result does not already carry a complete reserved report")
+    if final["reserved"].get("manifest_sha256") != A.sha256_file(MANIFEST):
+        raise ValueError("the reserved result does not match the BEGIN manifest on disk")
+    ok, command, error = A.commit_and_push(
+        cfg, [cfg.ledger_path, cfg.result_path, cfg.scores_dir / "reserved", RESULT],
+        f"m13: RESERVED-RUN-END {A.sha256_file(RESULT)[:12]} (publish-only)")
+    if not ok:
+        raise RuntimeError(f"reserved result still not durable: {command}: {error}")
+    print(json.dumps({"status": "PUBLISHED", "result_sha256": A.sha256_file(RESULT)}), flush=True)
+    return 0
+
+
+def run(cfg=None, preflight_only=False, publish_only=False):
     import score13 as S
 
     cfg = cfg or A.production()
     conf = json.loads(cfg.registry_path.read_text())
     reserved_cfg = replace(cfg, spent_tag=TAG, lock_path=LOCK)
     A.acquire_lock(reserved_cfg)
+    if publish_only:
+        return publish(cfg)
     exists, where = A.spent_tag_exists(reserved_cfg, conf)
     if preflight_only:
         problems, _prior_result, _preencode_result = preflight(cfg)
@@ -244,8 +311,14 @@ def run(cfg=None, preflight_only=False):
     summary = S.reserved_batch(cfg, conf, None)
     if summary.get("status") != "complete" or "contrasts" not in summary:
         raise RuntimeError("reserved batch did not return a complete descriptive report")
+    # R22's archive needs the reserved queries and qrels. They are exported HERE, from payloads
+    # this transaction has already opened and authenticated, so the archiving pass never has to
+    # reopen protected data. No additional protected read happens.
+    archived = R.export_reserved_payload_archive(cfg, ARCHIVE_ROOT)
     record = {
         **summary,
+        "reserved_payload_archive": {"root": str(ARCHIVE_ROOT.relative_to(cfg.repo)),
+                                     "datasets": archived},
         "manifest_sha256": A.sha256_file(MANIFEST),
         "begin_commit": begin,
         "spent_tag": TAG,

@@ -1,0 +1,635 @@
+{
+  "schema_version": 1,
+  "registered_utc": "2026-09-16",
+  "status": "PRE-OBSERVATION",
+  "authority": [
+    "m13/RULINGS.md R20 (dense Zero added to the reserved roster)",
+    "m13/RULINGS.md R22 (BEIR-15, eight-system roster, three-way split, archive)",
+    "m13/RULINGS.md R23 (reserved.crash governs the reserved transaction)"
+  ],
+  "scope": "Descriptive broad validation. alpha = 0. No gate, no threshold, no release rule, no superiority or equivalence claim. It does not enter, reinterpret or re-weight M13's registered six-set inference, and it produces no new estimand. R1/R2, the NDO-3 weights, B, seed and alpha of m10/final_run_registry.json are untouched.",
+  "separation": "The reserved four (FEVER, dbpedia-entity, cqadup-android, cqadup-english) are scored ONCE, inside the tagged reserved transaction, and their rows are COPIED into the BEIR-15 tables. The BEIR-15 pass never opens a reserved payload and never re-scores a reserved dataset.",
+  "document_towers": {
+    "stella-400M-v5": {
+      "repo": "NovaSearch/stella_en_400M_v5",
+      "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+      "dim": 1024,
+      "pooling": "mean",
+      "post_dense": "2_Dense_1024",
+      "config_kwargs": {
+        "use_memory_efficient_attention": false,
+        "unpad_inputs": false
+      },
+      "doc_prefix": "",
+      "max_length": 512,
+      "truncation_side": "right",
+      "add_special_tokens": true,
+      "inference_dtype": "fp32",
+      "storage_dtype": "fp16",
+      "normalized": true,
+      "tf32_matmul": false,
+      "batch_tokens": 32768,
+      "path": "m7src/teacher.py:encode via m8src/pre_encode.py"
+    },
+    "bge-small-en-v1.5": {
+      "repo": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "dim": 384,
+      "doc_prefix": "",
+      "max_length": 512,
+      "inference_dtype": "fp32",
+      "storage_dtype": "fp16",
+      "normalized": true,
+      "tf32_matmul": false,
+      "batch_size": 256,
+      "path": "sentence_transformers.SentenceTransformer via m8src/pre_encode.py"
+    },
+    "arctic-m-v1.5": {
+      "repo": "Snowflake/snowflake-arctic-embed-m-v1.5",
+      "revision": "e58a8f756156a1293d763f17e3aae643474e9b8a",
+      "dim": 768,
+      "doc_prefix": "",
+      "max_length": 512,
+      "inference_dtype": "fp32",
+      "storage_dtype": "fp16",
+      "normalized": true,
+      "tf32_matmul": false,
+      "batch_size": 256,
+      "path": "sentence_transformers.SentenceTransformer via m8src/pre_encode.py"
+    }
+  },
+  "systems": [
+    {
+      "key": "nano-dense",
+      "order": 1,
+      "origin": "M13 registered reserved roster",
+      "document_tower": "stella-400M-v5",
+      "query_model": "M13 frozen Nano checkpoint work/m13-final/cycle3.pt",
+      "query_checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+      "query_prompt": "",
+      "query_max_length": 512,
+      "query_device": "cpu",
+      "query_compute_dtype": "fp32",
+      "_why_cpu": "Nano10's serving method enters bf16 autocast on CUDA; the inherited M8 confirmatory contract is fp32 compute, so the existing method runs on CPU rather than forking its math."
+    },
+    {
+      "key": "zero-dense",
+      "order": 2,
+      "origin": "R20",
+      "document_tower": "stella-400M-v5",
+      "query_model": "DylanCouzon/constella-zero",
+      "query_hub_revision": "ebee6ea94999f26182505548ffc5df035e727351",
+      "query_variant": "int8",
+      "_why_int8": "int8 is the released artifact the M7/M11/M12 published zero numbers were measured on; fp16 is shipped for reference only.",
+      "query_file_sha256": {
+        ".gitattributes": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361",
+        "README.md": "3ff4b6250a32167ed02deee7660583eb47d56fb7c4dc56f5a6990c54ca549acf",
+        "config.json": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+        "model.npz": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+        "model.onnx": "6c8a9d0753330cb5291b4df005ecfaa04a27b587f6af6f0986778dc43fb9ec0a",
+        "model_tokens.onnx": "457e73ec07c958982fcc7a276e4c218d6ab70b8a2c55452e38a318c27dcfb5f0",
+        "special_tokens_map.json": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a",
+        "tokenizer.json": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+        "tokenizer_config.json": "7a4b1e7b21d2afc56bf62b7ee7515f415fd2655a4bf4adfd3f1a56ce46e29827",
+        "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+        "zero_encoder.py": "92e93ee40b061556f294974bcf384b9a14163d94ee4e57818ee34d193e8cc754"
+      },
+      "required_files": [
+        "config.json",
+        "model.npz",
+        "tokenizer.json"
+      ],
+      "frozen_table_sha256_must_equal": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+      "_frozen_table_note": "m7/FREEZE.json table_sha256; the published model.npz is byte-identical to the frozen M7 table, so the released bundle and the frozen artifact are the same weights.",
+      "query_encoder_path": "m11/release/zero_encoder.py:ZeroQueryEncoder",
+      "query_preproc": {
+        "pool_mode": "sqrt",
+        "prefix": "",
+        "add_special_tokens": true,
+        "max_length": 512,
+        "padding": "none",
+        "truncation": true
+      },
+      "query_compute_dtype": "fp32 numpy",
+      "parity_check": "ZeroQueryEncoder(int8) against m7src/table.py:load_table(int8).encode under m7/FREEZE.json preproc, max-abs <= 1e-5 on the fixed non-benchmark probe set; measured 1.49e-08 on 2026-09-16."
+    },
+    {
+      "key": "stella-query",
+      "order": 3,
+      "origin": "R22",
+      "document_tower": "stella-400M-v5",
+      "query_model": "NovaSearch/stella_en_400M_v5",
+      "query_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+      "query_prompt": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+      "_query_prompt_source": "m7src/encoders.py SPECS['stella-400M-v5'].query_prefix, the string the M7 teacher probe and every stella query encode in this project used. It is prepended to the raw query text with no separator.",
+      "query_max_length": 512,
+      "query_truncation_side": "right",
+      "query_add_special_tokens": true,
+      "query_padding": "longest (per batch)",
+      "query_pooling": "mean",
+      "query_post_dense": "2_Dense_1024",
+      "query_config_kwargs": {
+        "use_memory_efficient_attention": false,
+        "unpad_inputs": false
+      },
+      "query_device": "cuda",
+      "query_compute_dtype": "fp32",
+      "query_tf32_matmul": false,
+      "query_batch_tokens": 32768,
+      "query_encoder_path": "m7src/teacher.py:encode",
+      "_note": "This is the symmetric teacher: the same tower that produced the document shards, run on the query side with its published s2p prompt. It is a descriptive ceiling reference, not a deployable comparator (400M parameters of query compute)."
+    },
+    {
+      "key": "bge-small-en-v1.5",
+      "order": 4,
+      "origin": "M13 registered reserved roster",
+      "document_tower": "bge-small-en-v1.5",
+      "query_model": "BAAI/bge-small-en-v1.5",
+      "query_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "query_prompt": "Represent this sentence for searching relevant passages: ",
+      "query_max_length": 512,
+      "query_device": "cuda",
+      "query_compute_dtype": "fp32",
+      "query_tf32_matmul": false,
+      "query_batch_size": 256
+    },
+    {
+      "key": "leaf-ir-asym",
+      "order": 5,
+      "origin": "M13 registered reserved roster",
+      "document_tower": "arctic-m-v1.5",
+      "query_model": "MongoDB/mdbr-leaf-ir",
+      "query_revision": "4262131b32c3182bd06e67e92ae69d7bd66e0c5c",
+      "query_prompt": "the model card's named `query` prompt, taken from the pinned model config rather than duplicated as a literal",
+      "query_max_length": 512,
+      "query_device": "cuda",
+      "query_compute_dtype": "fp32",
+      "query_tf32_matmul": false,
+      "query_batch_size": 256
+    },
+    {
+      "key": "bm25",
+      "order": 6,
+      "origin": "R22",
+      "document_tower": null,
+      "implementation": "bm25s",
+      "method": "lucene",
+      "k1": 1.2,
+      "b": 0.75,
+      "stopwords": "en",
+      "stemmer": "english-snowball-PyStemmer",
+      "retrieval_depth": 1000,
+      "drop_zero_scores": true,
+      "drop_self_hits": true,
+      "_source": "m7src/fusion.py BM25_CONFIG and _to_run, M7's frozen lexical defaults, unchanged. `drop_self_hits` removes a returned document whose id equals the query id; it is part of the frozen function, not a post-hoc filter.",
+      "package_versions_pinned_at_registration": {
+        "bm25s": "0.3.11",
+        "PyStemmer": "3.1.0"
+      },
+      "_versions_rule": "The executed versions are recorded in every run receipt. A version change is disclosed, not silently inherited (m7src/fusion.py cache_key)."
+    },
+    {
+      "key": "zero+bm25 dbsf@100",
+      "order": 7,
+      "origin": "R22",
+      "derived_from": [
+        "zero-dense",
+        "bm25"
+      ],
+      "operator": "m12src/qfusion.py:dbsf",
+      "prefetch_depth": 100,
+      "truncation_order": "Each input run is truncated to its top 100 by m12src/qfusion.py:truncate BEFORE dbsf is applied, because DBSF's mu and sigma are computed over whatever the prefetch returned. Truncating after fusion would be a different function.",
+      "parameters": "none; DBSF is parameter-free",
+      "absent_document_rule": "A document absent from one prefetch contributes 0 to that prefetch's term. This is Qdrant's behaviour and M12's registered choice (m12/LEDGER.md), not an oversight."
+    },
+    {
+      "key": "nano+bm25 dbsf@100",
+      "order": 8,
+      "origin": "R22",
+      "derived_from": [
+        "nano-dense",
+        "bm25"
+      ],
+      "operator": "m12src/qfusion.py:dbsf",
+      "prefetch_depth": 100,
+      "truncation_order": "as for zero+bm25 dbsf@100",
+      "parameters": "none; DBSF is parameter-free"
+    }
+  ],
+  "search": {
+    "implementation": "m7src/evalkit.py:topk_ids_scores, exact over the whole corpus",
+    "dense_depth": 100,
+    "lexical_depth": 1000,
+    "_dense_depth_note": "M12 retrieved dense at m7src/fusion.py DEPTH=1000 and truncated to 100 before DBSF. Retrieving directly at 100 returns the same set and the same scores; the only possible difference is which of two EQUAL-scoring documents sits at rank 100, which cannot move nDCG@10 (decided by the top 10) and cannot move DBSF's mean or sample sd (the tied documents carry the same score). The reproduction check proves this on real data by computing one m12/six_dbsf.json dbsf@100 value both ways. Depth 100 is registered for production because it holds a tenth of the run in memory on corpora of 5-9M documents.",
+    "_lexical_depth_note": "BM25 keeps DEPTH=1000: it is part of m7src/fusion.py's frozen function and its cache key, and the run is truncated to 100 before DBSF like any other prefetch.",
+    "precision": "fp16 document blocks promoted to fp32; query vectors fp32",
+    "ann": "none. No ANN recall is mixed into these quality numbers."
+  },
+  "metric": {
+    "measure": "nDCG@10",
+    "implementation": "m7src/evalkit.py:per_query_ndcg",
+    "per_query_rows_persisted": true,
+    "dataset_score": "mean of the per-query nDCG@10 values, except CQADupStack"
+  },
+  "cqadupstack": {
+    "counts_as": "one BEIR dataset",
+    "aggregation": "mean of the twelve per-forum nDCG@10 dataset scores (BEIR convention), NOT a query-pooled mean",
+    "per_forum_rows_also_reported": true,
+    "forums": {
+      "android": {
+        "source": "mteb/cqadupstack-android",
+        "revision": "e03f271e3f4a75f49787c838a62f671b35bc9004",
+        "contact": [
+          "reserved"
+        ],
+        "scored_in": "reserved transaction"
+      },
+      "english": {
+        "source": "mteb/cqadupstack-english",
+        "revision": "fa6afc4ce926dafd42b7b7c0a19ae40c4632d895",
+        "contact": [
+          "reserved"
+        ],
+        "scored_in": "reserved transaction"
+      },
+      "gaming": {
+        "source": "mteb/cqadupstack-gaming",
+        "revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "gis": {
+        "source": "mteb/cqadupstack-gis",
+        "revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "mathematica": {
+        "source": "mteb/cqadupstack-mathematica",
+        "revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "physics": {
+        "source": "mteb/cqadupstack-physics",
+        "revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "contact": [
+          "M7-dev"
+        ],
+        "scored_in": "beir15"
+      },
+      "programmers": {
+        "source": "mteb/cqadupstack-programmers",
+        "revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "contact": [
+          "M7-dev"
+        ],
+        "scored_in": "beir15"
+      },
+      "stats": {
+        "source": "mteb/cqadupstack-stats",
+        "revision": "6b474f6f6dca1fe17f197f04500b537417692250",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "tex": {
+        "source": "mteb/cqadupstack-tex",
+        "revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "unix": {
+        "source": "mteb/cqadupstack-unix",
+        "revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "webmasters": {
+        "source": "mteb/cqadupstack-webmasters",
+        "revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      },
+      "wordpress": {
+        "source": "mteb/cqadupstack-wordpress",
+        "revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
+        "contact": [
+          "clean"
+        ],
+        "scored_in": "beir15"
+      }
+    }
+  },
+  "datasets": [
+    {
+      "key": "scifact",
+      "source": "BeIR/scifact",
+      "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+      "contact": [
+        "clean"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/scifact-qrels",
+      "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029"
+    },
+    {
+      "key": "nfcorpus",
+      "source": "BeIR/nfcorpus",
+      "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+      "contact": [
+        "clean"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/nfcorpus-qrels",
+      "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65"
+    },
+    {
+      "key": "scidocs",
+      "source": "BeIR/scidocs",
+      "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+      "contact": [
+        "clean"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/scidocs-qrels",
+      "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc"
+    },
+    {
+      "key": "trec-covid",
+      "source": "BeIR/trec-covid",
+      "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+      "contact": [
+        "clean"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/trec-covid-qrels",
+      "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10"
+    },
+    {
+      "key": "fiqa",
+      "source": "BeIR/fiqa",
+      "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+      "contact": [
+        "teacher-disclosed"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/fiqa-qrels",
+      "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a"
+    },
+    {
+      "key": "arguana",
+      "source": "BeIR/arguana",
+      "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+      "contact": [
+        "teacher-disclosed"
+      ],
+      "scored_in": "beir15",
+      "also_scored_in": "M13 six-set",
+      "split": "test",
+      "qrels_source": "BeIR/arguana-qrels",
+      "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7"
+    },
+    {
+      "key": "fever",
+      "source": "BeIR/fever",
+      "revision": "426aea4d30c65c041f093ae072e25fb5a0e64659",
+      "contact": [
+        "reserved",
+        "teacher-disclosed",
+        "comparator-training"
+      ],
+      "scored_in": "reserved transaction",
+      "split": "test",
+      "note": "Double-contaminated sensitivity row: Stella discloses FEVER exposure and FEVER is a reserved set. Zero alpha, never gate-relevant."
+    },
+    {
+      "key": "dbpedia-entity",
+      "source": "BeIR/dbpedia-entity",
+      "revision": "6029bd92b4a912ce92b2b0972999e297f76dbcbc",
+      "contact": [
+        "reserved"
+      ],
+      "scored_in": "reserved transaction",
+      "split": "test"
+    },
+    {
+      "key": "cqadupstack",
+      "source": "mteb/cqadupstack-*",
+      "revision": "see cqadupstack.forums",
+      "contact": [
+        "reserved",
+        "M7-dev",
+        "clean"
+      ],
+      "scored_in": "reserved transaction (2 forums) + beir15 (10 forums)"
+    },
+    {
+      "key": "msmarco",
+      "source": "BeIR/msmarco",
+      "revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+      "contact": [
+        "comparator-training"
+      ],
+      "scored_in": "beir15",
+      "split": "dev",
+      "licence_role": "validation only",
+      "licence_primary_source": "https://microsoft.github.io/msmarco/Notice.html \u2014 \"non-commercial research purposes only\"; recorded in research/m7-data-licensing.md row 1 and its 2026-09-04 validation-use rule change. Never gradients, targets, negatives or generation seeds.",
+      "qrels_source": "BeIR/msmarco-qrels",
+      "qrels_revision": "253fbf8a3f8d4a0932b63882b5162bedc84779f5"
+    },
+    {
+      "key": "nq",
+      "source": "BeIR/nq",
+      "revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+      "contact": [
+        "M7-dev",
+        "comparator-training"
+      ],
+      "scored_in": "beir15",
+      "split": "test",
+      "note": "M7 development used a 250k-document subset of this corpus for fusion selection.",
+      "qrels_source": "BeIR/nq-qrels",
+      "qrels_revision": "519acd4e48bb3e5da22b2b888ce36c614f4f2bc9"
+    },
+    {
+      "key": "hotpotqa",
+      "source": "BeIR/hotpotqa",
+      "revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+      "contact": [
+        "M7-dev",
+        "comparator-training"
+      ],
+      "scored_in": "beir15",
+      "split": "test",
+      "qrels_source": "BeIR/hotpotqa-qrels",
+      "qrels_revision": "b15429e9244c8ec966985d7778427c3b1543b314"
+    },
+    {
+      "key": "webis-touche2020",
+      "source": "BeIR/webis-touche2020",
+      "revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+      "contact": [
+        "source-family-contact-with-arguana"
+      ],
+      "scored_in": "beir15",
+      "split": "test",
+      "note": "Same args.me source family as ArguAna, which Stella discloses. Licence status disclosed on every table.",
+      "qrels_source": "BeIR/webis-touche2020-qrels",
+      "qrels_revision": "dea3c4c7339f61c3e1abc42b9bdbf337b115aa97"
+    },
+    {
+      "key": "quora",
+      "source": "BeIR/quora",
+      "revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+      "contact": [
+        "comparator-training",
+        "licence-unverified"
+      ],
+      "scored_in": "beir15",
+      "split": "test",
+      "licence_role": "evaluation only (R22)",
+      "licence_note": "No primary-source licence; banned from M7 dev for that reason. Included under R22 because it is part of the standard public benchmark. Never gradients, targets, negatives or generation seeds.",
+      "qrels_source": "BeIR/quora-qrels",
+      "qrels_revision": "7906857d63e4b4d41fd16c954c929c3ff3c580d9"
+    },
+    {
+      "key": "climate-fever",
+      "source": "BeIR/climate-fever",
+      "revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
+      "contact": [
+        "teacher-disclosed",
+        "licence-unverified"
+      ],
+      "scored_in": "beir15",
+      "split": "test",
+      "licence_role": "evaluation only (R22)",
+      "licence_note": "No affirmative licence; dropped from M7's partitions for that reason. Included under R22 as part of the standard public benchmark. Never gradients, targets, negatives or generation seeds.",
+      "corpus_reuse": "Its corpus is FEVER's Wikipedia. The reserved FEVER document shards are reused ONLY if the Climate-FEVER corpus id and text hashes match FEVER's exactly; otherwise it is encoded separately. Its queries and qrels are public and are NOT reserved.",
+      "qrels_source": "BeIR/climate-fever-qrels",
+      "qrels_revision": "ca2c7ed51cf8b40c10c23a099a27eceb3678156b"
+    }
+  ],
+  "excluded_datasets": {
+    "BioASQ": "not freely redistributable",
+    "Signal-1M": "not freely redistributable",
+    "TREC-NEWS": "not freely redistributable",
+    "Robust04": "not freely redistributable"
+  },
+  "licence_evidence_rule": "HuggingFace wrapper licence tags are NOT licence evidence (m7/LEDGER.md). Primary-source evidence in research/m7-data-licensing.md and m7/LEDGER.md governs. Nothing in BEIR-15 changes the training-source rule: no dataset here supplies gradients, targets, negatives or generation seeds in any role.",
+  "reporting": {
+    "required_labels": "Every table row carries its contact labels and, where applicable, its licence role.",
+    "headline": "There is no headline. BEIR-15 is descriptive. The paper's headline remains M13's registered clean-4 with all six beside it.",
+    "forbidden": "No superiority, equivalence, significance or release claim may be derived from any BEIR-15 or reserved row."
+  },
+  "outputs": {
+    "reserved": [
+      "results/m13_reserved_preencode.json",
+      "results/m13_reserved_manifest.json",
+      "results/m13_reserved_run.json",
+      "results/m10_final_scores/reserved/<system>.json",
+      "results/m13_reserved_cloud.json"
+    ],
+    "beir15": [
+      "results/m20_beir15_run.json",
+      "results/m20_beir15_scores/<dataset>/<system>.json"
+    ],
+    "archive": [
+      "results/m20_archive_manifest.json"
+    ]
+  },
+  "registry_amendment": {
+    "file": "m10/final_run_registry.json",
+    "keys_added": [
+      "reserved._systems_included_original",
+      "reserved._amended_2026_09_16"
+    ],
+    "keys_changed": [
+      "reserved.systems_included"
+    ],
+    "pre_amendment_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+    "_pre_amendment_sha_note": "equals results/m10_final_run.json registry_sha256, the registry the frozen six-set decision ran under",
+    "mechanical_proof": "Delete the two added keys, restore `reserved.systems_included` from `reserved._systems_included_original` in place, re-serialize with json.dumps(indent=1) plus a trailing newline: the bytes equal the pre-amendment file exactly. The reserved executor performs this reconstruction instead of demanding an unchanged registry hash, so the amendment is provably confined to the roster and cannot hide a change to a weight, threshold, partition, seed or estimand. Verified byte-exact 2026-09-16."
+  },
+  "budget": {
+    "currency": "USD",
+    "project_ceiling_usd": 1000.0,
+    "committed_usd_before_m20": 657.04,
+    "headroom_usd_before_m20": 342.96,
+    "_committed_source": "results/m13_build_record.json budget.allocation",
+    "target_pod_hourly_usd": 1.6636111111111112,
+    "other_retained_storage_hourly_usd": 0.14375,
+    "all_retained_hourly_usd": 1.8073611111111112,
+    "a100_stella_fp32_passages_per_second": 100.76251639646428,
+    "_rate_source": "results/m13_encode_benchmark.json, slower of the two registered sizes",
+    "tower_cost_relative_to_stella": {
+      "stella-400M-v5": 1.0,
+      "bge-small-en-v1.5": 0.1349,
+      "arctic-m-v1.5": 0.3308,
+      "all_three": 1.4657
+    },
+    "_ratio_source": "results/m20_tower_rate_benchmark.json (RTX 3080, SQuAD training passages, one tower per process, no protected access). Ratio only; the absolute rate is the A100 measurement.",
+    "stage_caps_hours": {
+      "A_reserved_pre_encode_unprotected": 52.0,
+      "B_tagged_reserved_transaction": 55.2,
+      "C_beir15": 120.0,
+      "D_archive": 10.0,
+      "m20_total": 237.2
+    },
+    "expected_hours": {
+      "A_reserved_pre_encode_unprotected": 45.0,
+      "B_tagged_reserved_transaction": 5.0,
+      "C_beir15": 113.0,
+      "D_archive": 8.0,
+      "m20_total": 171.0
+    },
+    "new_spend_at_cap_usd": 337.5,
+    "_inherited_55_2": "m13/build_config.json budget.mandatory_hours_fixed.reserved_batch_allowance = 55.2 h is UNCHANGED. Its derivation (results/m13_encode_benchmark.json) priced 10M passages on the STELLA tower alone, doubled; the reserved batch also needs bge-small and Arctic-M document vectors for the same 10.1M passages, which that arithmetic never included. M20 therefore registers its own stage caps and applies the inherited 55.2 h to stage B, the tagged scoring stage, where its derivation is comfortably sufficient. Pre-observation cost bookkeeping only: no estimand, weight, threshold, contrast or release rule changes.",
+    "projection_gate": "After the first completed corpus for each tower the executor measures passages/s and projects the remaining hours for its stage. If the projection exceeds the stage's remaining cap it stops cleanly at a shard boundary and reports. Pre-tag this costs nothing; post-tag the reserved result is already durable per completed system.",
+    "document_volumes": {
+      "reserved_four_docs": 10115709,
+      "beir15_new_docs_expected": 23744806,
+      "_beir15_new_breakdown": {
+        "msmarco": 8841823,
+        "nq": 2681468,
+        "hotpotqa": 5233329,
+        "webis-touche2020": 382545,
+        "quora": 522931,
+        "cqadupstack_ten_forums": 394000,
+        "six_set_six_corpora": 272117,
+        "climate-fever": 5416593
+      },
+      "_climate_fever_note": "Climate-FEVER's corpus is FEVER's Wikipedia but the published document counts differ (5,416,593 vs 5,416,568), so the reserved FEVER shards are NOT reusable and it is encoded separately. The executor still compares its corpus id and text hashes to FEVER's and records the comparison rather than assuming either answer. Its 5.42M documents are included in the cap below; an earlier sketch in m20/PLAN.md omitted them."
+    },
+    "_headroom_warning": "Stage C's cap is about 1.06x its expectation, because the ceiling rather than the estimate sets it: at the corrected formula the whole plan costs $335.72 of new spend against $342.96 of recorded headroom. BEIR-15's ~23.7M new documents across three fp32 towers is the dominant cost and there is no slack to absorb a slower-than-projected run. The reserved transaction is ordered FIRST so the irreplaceable access lands before this risk is taken. If the projection gate trips in stage C the run stops cleanly and the owner decides between raising the ceiling, narrowing BEIR-15, or accepting a partial descriptive table; no executor may decide that.",
+    "cost_formula": "new_spend_at_cap = m20_total_hours * all_retained_hourly - inherited_reserved_allowance_hours * target_pod_hourly. The subtraction removes ONLY the target-pod hours already inside committed_usd; the two sibling volumes bill during those hours too and are NOT subtracted. An earlier version priced 187 h at the all-retained rate and so omitted 55.2 h of sibling storage ($7.67), which put the plan $1.77 over the ceiling. Corrected 2026-09-16 after review, pre-observation.",
+    "inherited_reserved_allowance_hours": 55.2,
+    "committed_plus_new_at_cap_usd": 994.54,
+    "_hourly_note": "Read from the live Runpod quote on 2026-09-16: the target A100 bills $1.59/h compute plus 530 GB of disk, and the two retained stopped pods hold 530 GB and 505 GB. An earlier version assumed two bare 500 GB volumes and so understated sibling storage by $0.0049/h. The controller recomputes from the live quote and refuses if it exceeds the registered allowance below.",
+    "_new_spend_margin": "At the live quote the plan costs $336.87. The registered allowance is $337.50, a 0.2% margin so a cent of quote drift does not refuse a launch; committed plus the registered allowance is $994.54, inside the $1,000 ceiling. The controller refuses if the LIVE cost exceeds $337.50, not merely if the registered number does."
+  },
+  "_qrels_pin_note": "BEIR publishes labels in a SEPARATE repository from the corpus and queries, with its own revision. Pinning only the dataset revision would leave the qrels unpinned and a republished label set could change a reported number silently. Revisions read 2026-09-16. The reserved four have no entry here: their labels are the frozen payloads in results/frozen_eval/, hash-pinned in results/eval_manifest.json, and are read only inside the tagged transaction. CQADupStack labels live in the forum's own repository under the `default` config and are covered by the forum revision already pinned above."
+}

@@ -1,0 +1,57 @@
+{
+  "status": "PASSED",
+  "purpose": "m20/REGISTRATION.md run prerequisite: the extended roster code reproduces M12's registered DBSF@100 operator before it runs on new data.",
+  "protected_evaluation_access": false,
+  "datasets": [
+    "scifact",
+    "nfcorpus"
+  ],
+  "tolerances": {
+    "A_operator": 1e-09,
+    "B_released_bundle": 1e-06,
+    "C_depth_equivalence": 1e-09
+  },
+  "checks": {
+    "A": "m20 roster + frozen M7 table, dense depth 1000 truncated to 100, vs m12/six_dbsf.json dbsf@100",
+    "B": "released constella-zero int8 bundle vs the frozen table, same everything else",
+    "C": "dense retrieved at depth 100 vs retrieved at 1000 and truncated to 100"
+  },
+  "rows": {
+    "scifact": {
+      "query_vector_max_abs_frozen_vs_bundle": 3.725290298461914e-08,
+      "m20_frozen_table_depth1000": 0.7173006320494344,
+      "m20_frozen_table_depth100": 0.7173006320494344,
+      "m20_released_bundle_depth100": 0.7173006320494344,
+      "m12_published_dbsf100": 0.7173006320494344,
+      "A_operator_delta": 0.0,
+      "B_released_bundle_delta": 0.0,
+      "C_depth_equivalence_delta": 0.0,
+      "A_passed": true,
+      "B_passed": true,
+      "C_passed": true
+    },
+    "nfcorpus": {
+      "query_vector_max_abs_frozen_vs_bundle": 2.9802322387695312e-08,
+      "m20_frozen_table_depth1000": 0.344206137000484,
+      "m20_frozen_table_depth100": 0.344206137000484,
+      "m20_released_bundle_depth100": 0.344206137000484,
+      "m12_published_dbsf100": 0.344206137000484,
+      "A_operator_delta": 0.0,
+      "B_released_bundle_delta": 0.0,
+      "C_depth_equivalence_delta": 0.0,
+      "A_passed": true,
+      "B_passed": true,
+      "C_passed": true
+    }
+  },
+  "bm25_config": {
+    "impl": "bm25s",
+    "method": "lucene",
+    "k1": 1.2,
+    "b": 0.75,
+    "stopwords": "en",
+    "stemmer": "english-snowball-PyStemmer",
+    "drop_zero_scores": true,
+    "drop_self_hits": true
+  }
+}
