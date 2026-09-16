@@ -2,7 +2,8 @@
 
 Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. This changes scope
 and navigation, not results, registered constants or access rules. **M20 is the next execution milestone**; it is not authorized to execute until a new session
-follows `instructions-m20.md`. M19 remains a reviewed plan awaiting its own execution session.
+follows `instructions-m20.md`. M19 closed at its development-judgment boundary with confirmation
+sealed and released Zero v1 retained.
 
 | Milestone | Deliverable | State / entry point |
 |---|---|---|
@@ -19,7 +20,7 @@ follows `instructions-m20.md`. M19 remains a reviewed plan awaiting its own exec
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
-| M19 | Deterministic short-query Zero feasibility | **Plan reviewed; awaiting a new execution session** on the M18 branch; `instructions-m19.md` |
+| M19 | Deterministic short-query Zero feasibility | **Closed 2026-09-13** as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development result label-sensitive, confirmation sealed, Zero v1 retained; `m19/STATUS.md` |
 | M20 | Reserved four, official release, upstream FastEmbed PR, BEIR-18 | Next execution milestone; not authorized until a session follows `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 
