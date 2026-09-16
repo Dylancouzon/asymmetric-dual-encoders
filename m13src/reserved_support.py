@@ -1,9 +1,20 @@
-"""M13-prepared helpers for M14's execution of the triggered descriptive reserved batch.
+"""M13-prepared helpers for the execution of the triggered descriptive reserved batch.
 
 The protected-path capability is claimed by ``m13src.score13`` before any function here is
 called.  This module never claims or weakens that boundary.  It authenticates the pre-encoded
 document shards, opens the frozen query/qrel payload once per system, performs exact retrieval,
 and derives the zero-alpha NDO-3 report registered in ``m10/final_run_registry.json``.
+
+**M20 extension (owner rulings R20, R22; registered pre-observation in ``m20/REGISTRATION.md``
+and ``m20/beir15_registry.json``).**  The roster grows from three systems to eight.  What did not
+change: the four datasets, the R1/R2 estimands, the NDO-3 weights, B, the seed, the interval
+method and ``alpha = 0``.  R1 is still nano minus bge-small and R2 is still nano minus LEAF,
+computed from exactly the same two pairs of systems.  The five added rows are descriptive and
+enter no contrast.
+
+The three systems on the Stella tower -- Nano, Zero and the Stella query tower -- share ONE set of
+document shards.  ``m20src/roster.py`` holds the roster, the query towers and the fusion operator
+so the protected transaction and the unprotected BEIR-15 pass cannot drift apart.
 """
 from __future__ import annotations
 
@@ -17,24 +28,35 @@ import time
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
-for _p in ("m7src", "m10src", "m13src"):
+for _p in ("m7src", "m10src", "m12src", "m13src", "m20src"):
     if str(REPO / _p) not in sys.path:
         sys.path.insert(0, str(REPO / _p))
 
+import roster as R20  # noqa: E402
+
 DATASETS = ("fever", "dbpedia-entity", "cqadup-android", "cqadup-english")
-SYSTEMS = ("nano-dense", "bge-small-en-v1.5", "leaf-ir-asym")
+SYSTEMS = R20.SYSTEMS
+DENSE_SYSTEMS = R20.DENSE_SYSTEMS
+DERIVED_SYSTEMS = R20.DERIVED_SYSTEMS
+RUN_PRODUCERS = R20.RUN_PRODUCERS
 ENC_ROOT = REPO / "work" / "m13-reserved-enc"
-LEAF_QUERY_REVISION = "4262131b32c3182bd06e67e92ae69d7bd66e0c5c"
-BGE_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
-ARCTIC_REVISION = "e58a8f756156a1293d763f17e3aae643474e9b8a"
-STELLA_REVISION = "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
-BGE_PREFIX = "Represent this sentence for searching relevant passages: "
+RUN_ROOT = REPO / "work" / "m20-runs"
+RUN_STAGE = "reserved"
+LEAF_QUERY_REVISION = R20.LEAF_QUERY_REVISION
+BGE_REVISION = R20.BGE_REVISION
+ARCTIC_REVISION = R20.ARCTIC_REVISION
+STELLA_REVISION = R20.STELLA_REVISION
+BGE_PREFIX = R20.BGE_PREFIX
+# Per system, the document side its rows were produced against.  `bm25` has none; the two DBSF
+# rows inherit their inputs' towers and are recorded as derived.
 DOCUMENT_ENCODERS = {
-    "nano-dense": {"model": "NovaSearch/stella_en_400M_v5", "revision": STELLA_REVISION},
-    "bge-small-en-v1.5": {"model": "BAAI/bge-small-en-v1.5", "revision": BGE_REVISION},
-    "leaf-ir-asym": {"model": "Snowflake/snowflake-arctic-embed-m-v1.5",
-                     "revision": ARCTIC_REVISION},
+    system: {"model": R20.TOWERS[R20.DOC_TOWER[system]]["model"],
+             "revision": R20.TOWERS[R20.DOC_TOWER[system]]["revision"]}
+    for system in DENSE_SYSTEMS
 }
+DOCUMENT_ENCODERS["bm25"] = {"model": "bm25s", "revision": "corpus text; no neural document tower"}
+for _derived, (_dense, _lex) in DERIVED_SYSTEMS.items():
+    DOCUMENT_ENCODERS[_derived] = {"model": "derived", "revision": f"{_dense} + {_lex} dbsf@100"}
 
 
 def sha_file(path, block=8 << 20):
@@ -47,22 +69,11 @@ def sha_file(path, block=8 << 20):
 
 def nano_dependency_identity(model):
     """Re-derive the M13 dependency identity from the exact constructed Nano10 objects."""
-    import nano10 as N
-
-    repo = N.REPOS[model.key]
-    h = hashlib.sha256()
-    h.update(repo.encode())
-    h.update(model.tok.backend_tokenizer.to_str().encode())
-    h.update(model.backbone.config.to_json_string().encode())
-    return {"repo": repo, "sha256": h.hexdigest()}
+    return R20.nano_dependency_identity(model)
 
 
 def registered_nano_dependency(repo=REPO):
-    manifest = json.loads((Path(repo) / "m13" / "LOTTE_GATE_MANIFEST.json").read_text())
-    dependency = (manifest.get("candidate") or {}).get("dependencies")
-    if not isinstance(dependency, dict) or set(dependency) != {"repo", "sha256"}:
-        raise ValueError("LoTTE manifest does not carry the frozen Nano dependency identity")
-    return dependency
+    return R20.registered_nano_dependency(repo)
 
 
 class ShardedVectors:
@@ -125,9 +136,15 @@ class ShardedVectors:
         return pieces[0] if len(pieces) == 1 else np.concatenate(pieces, axis=0)
 
 
+def cache_dir_for(system):
+    """The shard directory a system reads.  Three systems share the Stella tower's directory."""
+    return R20.TOWER_DIR[R20.DOC_TOWER[system]]
+
+
 def cache_for(system, dataset, repo=REPO, verify=True):
     root = Path(repo) / "work" / "m13-reserved-enc"
-    vectors = ShardedVectors(root / system / dataset / "manifest.json", verify=verify)
+    vectors = ShardedVectors(root / cache_dir_for(system) / dataset / "manifest.json",
+                             verify=verify)
     ids_path = Path(repo) / vectors.manifest["doc_ids_path"]
     if sha_file(ids_path) != vectors.manifest["doc_ids_file_sha256"]:
         raise ValueError(f"{ids_path}: document-id file changed")
@@ -135,6 +152,28 @@ def cache_for(system, dataset, repo=REPO, verify=True):
     if len(doc_ids) != len(vectors) or len(set(doc_ids)) != len(doc_ids):
         raise ValueError(f"{dataset}: document ids are missing or duplicated")
     return doc_ids, vectors
+
+
+def corpus_for(dataset, repo=REPO):
+    """Document ids and texts for the lexical system, authenticated against the frozen manifest.
+
+    This is the public corpus, the same bytes `m8src/pre_encode.py` already hashed pre-tag.  It is
+    read here because BM25 has no pre-encoded vectors to stand in for it.  Ids come from the
+    pre-encode's shared id file, so BM25 and every dense system rank the same document list in the
+    same order.
+    """
+    import pre_encode as P
+
+    corpus, source, revision = P.load_corpus(dataset)
+    identity = P.authenticate_corpus(dataset, corpus, revision)
+    doc_ids = [str(value) for value in corpus["_id"]]
+    doc_texts = [P._doc_text(row) for row in corpus]
+    ids_path = Path(repo) / "work" / "m13-reserved-enc" / "corpora" / dataset / "doc_ids.json"
+    if ids_path.exists():
+        shared = [str(value) for value in json.loads(ids_path.read_text())]
+        if shared != doc_ids:
+            raise ValueError(f"{dataset}: BM25 document order differs from the pre-encoded order")
+    return doc_ids, doc_texts, {"source": source, "revision": revision, **identity}
 
 
 def load_payload(cfg, dataset):
@@ -158,65 +197,12 @@ def load_payload(cfg, dataset):
     return qids, qtexts, payload["qrels"], got
 
 
-class QueryEncoder:
+class QueryEncoder(R20.QueryEncoder):
+    """The registered query towers, under the transaction's device setting."""
+
     def __init__(self, system, cfg):
-        self.system = system
-        search_device = str(cfg.extra.get("reserved_device", "cuda"))
-        # Nano10's serving method deliberately enters bf16 autocast on CUDA.  The inherited M8
-        # confirmatory contract is fp32 compute, so keep that existing method on CPU rather than
-        # forking its math here.  The two SentenceTransformer query towers use fp32 on the GPU.
-        self.device = "cpu" if system == "nano-dense" else search_device
-        self.model = None
-        if system == "nano-dense":
-            import score13 as S
-
-            freeze = S._freeze_blob(cfg)
-            self.model = S.Nano10Student(freeze, device=self.device, repo=cfg.repo)
-            dependency = nano_dependency_identity(self.model.model)
-            if dependency != registered_nano_dependency(cfg.repo):
-                raise ValueError("constructed Nano tokenizer/backbone dependency changed")
-            self.dim = 1024
-            self.identity = {"query_model": "M13 frozen nano", "revision": freeze["_sha256"],
-                             "device": self.device, "compute_dtype": "fp32",
-                             "dependency": dependency}
-        else:
-            import torch
-            from sentence_transformers import SentenceTransformer
-
-            if system == "bge-small-en-v1.5":
-                repo, revision, dim = "BAAI/bge-small-en-v1.5", BGE_REVISION, 384
-            elif system == "leaf-ir-asym":
-                repo, revision, dim = "MongoDB/mdbr-leaf-ir", LEAF_QUERY_REVISION, 768
-            else:
-                raise ValueError(f"unregistered reserved system {system!r}")
-            if self.device == "cuda":
-                torch.backends.cuda.matmul.allow_tf32 = False
-            self.model = SentenceTransformer(repo, revision=revision, device=self.device,
-                                             model_kwargs={"dtype": torch.float32})
-            self.model.max_seq_length = 512
-            self.dim = dim
-            self.identity = {"query_model": repo, "revision": revision,
-                             "device": self.device, "compute_dtype": "fp32"}
-
-    def encode(self, texts):
-        values = list(texts)
-        if self.system == "nano-dense":
-            out = self.model.encode(values)
-        elif self.system == "leaf-ir-asym":
-            # The pinned model card defines the asymmetric query route through its named
-            # ``query`` prompt.  Use that interface directly so the model's own pinned config,
-            # rather than a duplicated free-form string, remains part of the execution path.
-            out = self.model.encode(values, prompt_name="query", batch_size=256,
-                                    normalize_embeddings=True, show_progress_bar=False,
-                                    convert_to_numpy=True)
-        else:
-            out = self.model.encode([BGE_PREFIX + value for value in values], batch_size=256,
-                                    normalize_embeddings=True, show_progress_bar=False,
-                                    convert_to_numpy=True)
-        out = np.asarray(out, dtype=np.float32)
-        if out.shape != (len(values), self.dim) or not np.isfinite(out).all():
-            raise ValueError(f"{self.system}: invalid query vectors {out.shape}")
-        return out
+        super().__init__(system, cfg=cfg,
+                         device=str(cfg.extra.get("reserved_device", "cuda")), repo=cfg.repo)
 
 
 def preflight_models(cfg=None, device="cuda"):
@@ -225,31 +211,37 @@ def preflight_models(cfg=None, device="cuda"):
 
     cfg = cfg or A.production()
     cfg.extra["reserved_device"] = device
+    R20.assert_registered_identities(cfg.repo)
     rows = {}
-    for system in SYSTEMS:
+    for system in DENSE_SYSTEMS:
         encoder = QueryEncoder(system, cfg)
         value = encoder.encode(["M13 reserved query-tower preflight; no benchmark text."])
         rows[system] = {"shape": list(value.shape), "identity": encoder.identity,
                         "finite": bool(np.isfinite(value).all())}
+        encoder.release()
         del encoder
-        try:
-            import torch
-            torch.cuda.empty_cache()
-        except Exception:
-            pass
-    print(json.dumps({"status": "PASSED", "device": device, "systems": rows}))
+    print(json.dumps({"status": "PASSED", "device": device, "systems": rows}, default=str))
     return rows
 
 
-def score_system(cfg, conf, system, _rows_candidate=None):
-    """Score all four datasets for one system; caller writes the atomic system output."""
-    from evalkit import per_query_ndcg, topk_ids_scores
+# ------------------------------------------------------------------ scoring one system
 
-    if system not in SYSTEMS or list(conf["reserved"]["datasets"]) != [
-            "FEVER", "dbpedia-entity", "cqadup-android", "cqadup-english"]:
-        raise ValueError("reserved systems or datasets differ from the registered batch")
-    started = time.time()
-    encoder = QueryEncoder(system, cfg)
+def _run_path(cfg, system, dataset):
+    return R20.run_path(Path(cfg.repo) / "work" / "m20-runs", RUN_STAGE, system, dataset)
+
+
+def _check_scores(system, dataset, scores, qids):
+    if set(scores) != set(qids):
+        raise ValueError(f"{system}/{dataset}: scorer omitted "
+                         f"{len(set(qids) - set(scores))} queries")
+    values = np.asarray(list(scores.values()), dtype=np.float64)
+    if not np.isfinite(values).all() or np.any(values < 0) or np.any(values > 1):
+        raise ValueError(f"{system}/{dataset}: nDCG falls outside [0, 1]")
+
+
+def _score_dense(cfg, system, encoder):
+    from evalkit import topk_ids_scores
+
     datasets = {}
     for dataset in DATASETS:
         doc_ids, doc_vectors = cache_for(system, dataset, repo=cfg.repo, verify=True)
@@ -257,13 +249,12 @@ def score_system(cfg, conf, system, _rows_candidate=None):
         qvectors = encoder.encode(qtexts)
         if qvectors.shape[1] != doc_vectors.shape[1]:
             raise ValueError(f"{system}/{dataset}: query/doc dimensions differ")
-        run = topk_ids_scores(qvectors, doc_vectors, doc_ids, k=cfg.topk,
+        run = topk_ids_scores(qvectors, doc_vectors, doc_ids, k=R20.DENSE_DEPTH,
                               chunk=int(cfg.extra.get("reserved_chunk", 50_000)),
                               device=str(cfg.extra.get("reserved_device", "cuda")), qids=qids)
-        scores = {str(q): float(v) for q, v in per_query_ndcg(run, qrels).items()}
-        if set(scores) != set(qids):
-            raise ValueError(f"{system}/{dataset}: scorer omitted {len(set(qids) - set(scores))} queries")
-        datasets[dataset] = {
+        scores = R20.per_query_ndcg10(run, qrels)
+        _check_scores(system, dataset, scores, qids)
+        row = {
             "scores": scores,
             "mean_ndcg10": float(np.mean(list(scores.values()))),
             "n_queries": len(scores),
@@ -271,15 +262,111 @@ def score_system(cfg, conf, system, _rows_candidate=None):
             "document_cache_manifest": str(doc_vectors.manifest_path.relative_to(cfg.repo)),
             "document_cache_manifest_sha256": sha_file(doc_vectors.manifest_path),
         }
+        if system in RUN_PRODUCERS:
+            path = _run_path(cfg, system, dataset)
+            row["run_path"] = str(path.relative_to(cfg.repo))
+            row["run_sha256"] = R20.save_run(path, R20.truncate(run), qids)
+        datasets[dataset] = row
         print(f"[reserved13] {system}: {dataset} complete ({len(scores):,} queries)", flush=True)
+    return datasets
+
+
+def _score_bm25(cfg):
+    datasets = {}
+    for dataset in DATASETS:
+        doc_ids, doc_texts, corpus_identity = corpus_for(dataset, repo=cfg.repo)
+        qids, qtexts, qrels, payload_hashes = load_payload(cfg, dataset)
+        run = R20.bm25_run(doc_ids, doc_texts, qids, qtexts)
+        scores = R20.per_query_ndcg10(run, qrels)
+        # BM25 can return nothing for a query whose terms are all stopwords or all self-hits.
+        # pytrec_eval scores only the queries present in the run, so restore the missing ones at
+        # 0.0 rather than silently reporting a mean over a different query set.
+        for qid in qids:
+            scores.setdefault(qid, 0.0)
+        _check_scores("bm25", dataset, scores, qids)
+        path = _run_path(cfg, "bm25", dataset)
+        datasets[dataset] = {
+            "scores": scores,
+            "mean_ndcg10": float(np.mean([scores[q] for q in qids])),
+            "n_queries": len(scores),
+            "payload_hashes": payload_hashes,
+            "corpus_identity": corpus_identity,
+            "empty_runs": int(sum(1 for q in qids if not run.get(q))),
+            "run_path": str(path.relative_to(cfg.repo)),
+            "run_sha256": R20.save_run(path, R20.truncate(run), qids),
+        }
+        print(f"[reserved13] bm25: {dataset} complete ({len(scores):,} queries)", flush=True)
+    return datasets
+
+
+def _score_derived(cfg, system, outputs):
+    """Fuse two persisted top-100 runs.  Nothing is encoded and nothing is re-retrieved."""
+    dense_key, lexical_key = DERIVED_SYSTEMS[system]
+    for key in (dense_key, lexical_key):
+        if key not in outputs:
+            raise ValueError(f"{system}: input system {key!r} has not completed")
+    datasets = {}
+    for dataset in DATASETS:
+        rows = {key: outputs[key]["datasets"][dataset] for key in (dense_key, lexical_key)}
+        runs = {}
+        for key, row in rows.items():
+            run, _qids = R20.load_run(Path(cfg.repo) / row["run_path"], row["run_sha256"])
+            runs[key] = run
+        qids, _qtexts, qrels, payload_hashes = load_payload(cfg, dataset)
+        if rows[dense_key]["payload_hashes"] != rows[lexical_key]["payload_hashes"] \
+                or rows[dense_key]["payload_hashes"] != payload_hashes:
+            raise ValueError(f"{system}/{dataset}: inputs scored a different payload")
+        fused = R20.dbsf_at_depth(runs[dense_key], runs[lexical_key])
+        scores = R20.per_query_ndcg10(fused, qrels)
+        for qid in qids:
+            scores.setdefault(qid, 0.0)
+        _check_scores(system, dataset, scores, qids)
+        datasets[dataset] = {
+            "scores": scores,
+            "mean_ndcg10": float(np.mean([scores[q] for q in qids])),
+            "n_queries": len(scores),
+            "payload_hashes": payload_hashes,
+            "inputs": {key: {"run_path": rows[key]["run_path"],
+                             "run_sha256": rows[key]["run_sha256"]} for key in rows},
+            "operator": "m12src/qfusion.py:dbsf over both prefetches truncated to 100 first",
+        }
+        print(f"[reserved13] {system}: {dataset} complete ({len(scores):,} queries)", flush=True)
+    return datasets
+
+
+def score_system(cfg, conf, system, _rows_candidate=None, outputs=None):
+    """Score all four datasets for one system; caller writes the atomic system output."""
+    if system not in SYSTEMS or list(conf["reserved"]["datasets"]) != [
+            "FEVER", "dbpedia-entity", "cqadup-android", "cqadup-english"]:
+        raise ValueError("reserved systems or datasets differ from the registered batch")
+    R20.assert_registered_identities(cfg.repo)
+    started = time.time()
+    encoder_identity = {"query_model": system}
+    if system in DENSE_SYSTEMS:
+        encoder = QueryEncoder(system, cfg)
+        encoder_identity = encoder.identity
+        datasets = _score_dense(cfg, system, encoder)
+        encoder.release()
+    elif system in DERIVED_SYSTEMS:
+        datasets = _score_derived(cfg, system, outputs or {})
+        encoder_identity = {"query_model": "derived",
+                            "inputs": list(DERIVED_SYSTEMS[system]),
+                            "compute_dtype": "n/a"}
+    else:
+        datasets = _score_bm25(cfg)
+        import fusion
+
+        encoder_identity = {"query_model": "bm25s", "compute_dtype": "n/a",
+                            "config": fusion.BM25_CONFIG, "depth": fusion.DEPTH}
     return {
         "status": "COMPLETE",
         "system": system,
         "datasets": datasets,
-        "query_encoder": encoder.identity,
+        "query_encoder": encoder_identity,
         "document_encoder": DOCUMENT_ENCODERS[system],
-        "document_compute_dtype": "fp32 on CUDA; normalized vectors stored fp16",
-        "query_compute_dtype": encoder.identity["compute_dtype"],
+        "document_compute_dtype": (R20.DOC_COMPUTE_NOTE if system in DENSE_SYSTEMS
+                                   else "n/a; no neural document tower"),
+        "query_compute_dtype": encoder_identity.get("compute_dtype", "fp32"),
         "elapsed_seconds": time.time() - started,
         "transaction": dict(cfg.extra.get("reserved_identity") or {}),
     }
@@ -288,8 +375,9 @@ def score_system(cfg, conf, system, _rows_candidate=None):
 def validate_output(record, cfg, system):
     """Authenticate an atomic per-system output before accepting it on continuation.
 
-    A completed file is the only state the reserved transaction resumes past.  Presence alone is
-    therefore insufficient: bind the file to this transaction, the frozen payload hashes and the
+    A completed file is the only state the reserved transaction resumes past (registry
+    ``reserved.crash``, confirmed by owner ruling R23).  Presence alone is therefore insufficient:
+    bind the file to this transaction, the frozen payload hashes, and -- for a dense system -- the
     exact document-cache manifest that the scorer verified.
     """
     import access13 as A
@@ -300,11 +388,12 @@ def validate_output(record, cfg, system):
     identity = dict(cfg.extra.get("reserved_identity") or {})
     if not identity or record.get("transaction") != identity:
         raise ValueError(f"{system}: saved output belongs to a different transaction")
-    if record.get("document_encoder") != DOCUMENT_ENCODERS[system] \
-            or record.get("document_compute_dtype") != \
-            "fp32 on CUDA; normalized vectors stored fp16" \
-            or record.get("query_compute_dtype") != "fp32":
-        raise ValueError(f"{system}: saved encoder identity or dtype changed")
+    if record.get("document_encoder") != DOCUMENT_ENCODERS[system]:
+        raise ValueError(f"{system}: saved document identity changed")
+    if system in DENSE_SYSTEMS:
+        if record.get("document_compute_dtype") != R20.DOC_COMPUTE_NOTE \
+                or record.get("query_compute_dtype") != "fp32":
+            raise ValueError(f"{system}: saved encoder dtype changed")
     datasets = record.get("datasets") or {}
     if set(datasets) != set(DATASETS):
         raise ValueError(f"{system}: saved output has incomplete datasets")
@@ -314,7 +403,7 @@ def validate_output(record, cfg, system):
         scores = row.get("scores")
         if not isinstance(scores, dict) or not scores or any(not isinstance(q, str) for q in scores):
             raise ValueError(f"{system}/{dataset}: invalid saved per-query scores")
-        values = np.asarray(list(scores.values()), dtype=np.float64)
+        values = np.asarray([scores[q] for q in sorted(scores)], dtype=np.float64)
         if not np.isfinite(values).all() or np.any(values < 0) or np.any(values > 1):
             raise ValueError(f"{system}/{dataset}: saved nDCG falls outside [0, 1]")
         if row.get("n_queries") != len(scores) \
@@ -325,12 +414,18 @@ def validate_output(record, cfg, system):
         if row.get("payload_hashes") != expected_hashes \
                 or A.sha_json(sorted(scores)) != expected_hashes["qids_sha256"]:
             raise ValueError(f"{system}/{dataset}: saved query/payload identity changed")
-        expected_cache = Path("work") / "m13-reserved-enc" / system / dataset / "manifest.json"
-        if row.get("document_cache_manifest") != str(expected_cache):
-            raise ValueError(f"{system}/{dataset}: saved document-cache path changed")
-        cache = Path(cfg.repo) / expected_cache
-        if not cache.is_file() or sha_file(cache) != row.get("document_cache_manifest_sha256"):
-            raise ValueError(f"{system}/{dataset}: saved document-cache manifest changed")
+        if system in DENSE_SYSTEMS:
+            expected_cache = Path("work") / "m13-reserved-enc" / cache_dir_for(system) / dataset \
+                / "manifest.json"
+            if row.get("document_cache_manifest") != str(expected_cache):
+                raise ValueError(f"{system}/{dataset}: saved document-cache path changed")
+            cache = Path(cfg.repo) / expected_cache
+            if not cache.is_file() or sha_file(cache) != row.get("document_cache_manifest_sha256"):
+                raise ValueError(f"{system}/{dataset}: saved document-cache manifest changed")
+        if system in RUN_PRODUCERS:
+            run_path = Path(cfg.repo) / str(row.get("run_path", "missing"))
+            if not run_path.is_file() or sha_file(run_path) != row.get("run_sha256"):
+                raise ValueError(f"{system}/{dataset}: persisted top-100 run is missing or changed")
     return record
 
 
@@ -347,7 +442,12 @@ def _plan(qids_by_dataset, B, seed):
 
 
 def summarize(outputs, conf):
-    """Derive the registered zero-alpha report from three complete atomic outputs."""
+    """Derive the registered zero-alpha report from every complete atomic output.
+
+    The registered contrasts are unchanged by the M20 roster extension: R1 is nano minus
+    bge-small and R2 is nano minus LEAF, over the same datasets, weights, B and seed.  The five
+    added systems contribute descriptive per-dataset means and nothing else.
+    """
     if set(outputs) != set(SYSTEMS):
         raise ValueError(f"reserved outputs are incomplete: {sorted(outputs)}")
     for system, record in outputs.items():
@@ -427,11 +527,15 @@ def summarize(outputs, conf):
     return {
         "status": "complete",
         "scope": "Registered descriptive reserved batch; zero alpha; no gate or release claim.",
+        "roster": list(SYSTEMS),
+        "roster_authority": "R20 and R22; m10/final_run_registry.json reserved._amended_2026_09_16",
         "B": B, "seed": seed, "quantile_method": "inverted_cdf",
         "draw_plan_sha256": plan_sha,
         "systems": {system: {dataset: outputs[system]["datasets"][dataset]["mean_ndcg10"]
                              for dataset in DATASETS} for system in SYSTEMS},
         "contrasts": result,
+        "contrast_note": "R1 and R2 are the only registered contrasts and are unchanged by the "
+                         "roster extension; the five added systems enter neither.",
     }
 
 

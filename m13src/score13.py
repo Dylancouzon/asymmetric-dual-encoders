@@ -590,14 +590,17 @@ def reserved_batch(cfg, conf, rows_candidate):
     if cfg.extra.get("reserved_production"):
         import reserved_support as support
 
+        # Registered order matters from M20 on: the two DBSF rows are DERIVED from the persisted
+        # top-100 runs of systems earlier in the list, so `outputs` is threaded through. Nothing
+        # else about the per-system atomic resume changes (registry `reserved.crash`, ruling R23).
         outputs = {}
         for system in res["systems_included"]:
-            path = out_dir / f"{system}.json"
+            path = out_dir / f"{support.R20.slug(system)}.json"
             needs_write = not path.exists()
             if path.exists():
                 record = json.loads(path.read_text())
             else:
-                record = support.score_system(cfg, conf, system, rows_candidate)
+                record = support.score_system(cfg, conf, system, rows_candidate, outputs=outputs)
             record = support.validate_output(record, cfg, system)
             if needs_write:
                 write_atomic(path, json.dumps(record, indent=2) + "\n")

@@ -24,12 +24,42 @@ CODE_FILES = (
     "m13src/score13.py",
     "m13src/reserved_transaction.py",
     "m13src/reserved_support.py",
+    "m20src/roster.py",
+    "m20/beir15_registry.json",
     "m8src/pre_encode.py",
     "m8src/paths_guard.py",
     "m7src/evalkit.py",
+    "m7src/fusion.py",
+    "m12src/qfusion.py",
     "m10src/nano10.py",
     "m13/LOTTE_GATE_MANIFEST.json",
 )
+
+
+def _sha_bytes(blob):
+    import hashlib
+
+    return hashlib.sha256(blob).hexdigest()
+
+
+def registry_without_m20_amendment(path):
+    """The registry bytes as they were before the dated M20 roster amendment.
+
+    The amendment adds exactly two keys under `reserved` and rewrites `systems_included`.
+    Reversing those three edits and re-serializing must reproduce the pre-amendment file
+    byte-for-byte; anything else -- a moved weight, a changed seed, a different partition -- shows
+    up as a hash mismatch here rather than being waved through as "the registry was amended".
+    """
+    import collections
+
+    live = json.loads(Path(path).read_text(), object_pairs_hook=collections.OrderedDict)
+    reserved = live["reserved"]
+    original = reserved.pop("_systems_included_original", None)
+    amendment = reserved.pop("_amended_2026_09_16", None)
+    if original is None or amendment is None:
+        raise ValueError("live registry carries no dated M20 roster amendment to reverse")
+    reserved["systems_included"] = original
+    return (json.dumps(live, indent=1) + "\n").encode()
 
 
 def code_identity(repo=A.REPO):
@@ -86,7 +116,14 @@ def _prior(cfg, conf):
     if decision.get("reserved_batch_runs") is not True:
         raise ValueError("the frozen six-set decision did not trigger the reserved batch")
     if prior.get("registry_sha256") != A.sha256_file(cfg.registry_path):
-        raise ValueError("six-set result and live registry differ")
+        # The M20 roster amendment (R20/R22) deliberately changes the registry after the six-set
+        # result pinned it. Demanding an unchanged hash would make a registered amendment
+        # unexecutable; accepting any change would let a weight or threshold move unseen. So prove
+        # mechanically that undoing the amendment reproduces the pinned bytes exactly.
+        undone = registry_without_m20_amendment(cfg.registry_path)
+        if _sha_bytes(undone) != prior.get("registry_sha256"):
+            raise ValueError("six-set result and live registry differ by more than the registered "
+                             "M20 roster amendment")
     if prior.get("freeze_sha256") != json.loads(cfg.state_path.read_text())["freeze_sha256"]:
         raise ValueError("six-set result and run manifest name different checkpoints")
     freeze = json.loads(Path(cfg.freeze_path).read_text())
@@ -104,7 +141,9 @@ def _preencode(cfg, verify_shards=True):
     record = json.loads(PREENCODE.read_text())
     if record.get("status") != "COMPLETE":
         raise ValueError("reserved document pre-encode is incomplete")
-    for system in R.SYSTEMS:
+    # The pre-encode summary is keyed by DOCUMENT TOWER directory, not by system: three of the
+    # eight systems share the Stella shards and two have no document vectors at all.
+    for system in sorted({R.cache_dir_for(name) for name in R.DENSE_SYSTEMS}):
         for dataset in R.DATASETS:
             row = record.get("systems", {}).get(system, {}).get(dataset, {})
             path = Path(cfg.repo) / row.get("manifest", "missing")
@@ -197,10 +236,10 @@ def _continuation(cfg, conf):
     if manifest.get("freeze_file_sha256") != A.sha256_file(cfg.freeze_path):
         problems.append("Nano freeze metadata changed after the tag")
     allowed = {
-        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{system}.json"
+        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{R.R20.slug(system)}.json"
         for system in R.SYSTEMS
     } | {
-        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{system}.json.tmp"
+        f"?? {Path(cfg.scores_dir).relative_to(cfg.repo)}/reserved/{R.R20.slug(system)}.json.tmp"
         for system in R.SYSTEMS
     }
     unexpected = [line for line in _status_lines(cfg) if line not in allowed]

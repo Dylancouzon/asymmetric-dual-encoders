@@ -85,7 +85,7 @@ DOC_TOWER = {
 TOWER_DIR = {"stella-400M-v5": "nano-dense", "bge-small-en-v1.5": "bge-small-en-v1.5",
              "arctic-m-v1.5": "leaf-ir-asym"}
 
-DENSE_DEPTH = 1000          # m7src/fusion.py DEPTH; the depth DBSF@100 is truncated FROM
+DENSE_DEPTH = 100           # registered dense retrieval depth; see the registry search note
 FUSION_DEPTH = 100          # m12src registered prefetch depth
 DOC_COMPUTE_NOTE = "fp32 on CUDA; normalized vectors stored fp16"
 
@@ -335,8 +335,13 @@ def per_query_ndcg10(run, qrels):
 
 # ------------------------------------------------------------------ persisted top-100 runs
 
+def slug(system):
+    """Filesystem-safe name for a system. Two of the eight carry spaces and a `+`."""
+    return system.replace("/", "_").replace(" ", "_")
+
+
 def run_path(root, stage, system, dataset):
-    return Path(root) / stage / system.replace("/", "_").replace(" ", "_") / f"{dataset}.npz"
+    return Path(root) / stage / slug(system) / f"{dataset}.npz"
 
 
 def save_run(path, run, qids):

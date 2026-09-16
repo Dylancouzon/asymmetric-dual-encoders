@@ -84,7 +84,12 @@ absent from one prefetch contributes 0 to that prefetch's term — Qdrant's beha
 registered choice, not an oversight.
 
 Before DBSF runs on any new data, the extended code must reproduce a published `m12/six_dbsf.json`
-per-dataset `dbsf@100` value to 1e-9. That check is a run prerequisite, recorded in the receipt.
+per-dataset `dbsf@100` value to 1e-9. `m20src/dbsf_reproduction.py` is that prerequisite and
+`results/m20_dbsf_reproduction.json` is its receipt. It answers three separate questions rather
+than one: whether extending the executor moved the operator, what substituting the released
+`constella-zero` bundle for the frozen table costs a reported number, and whether retrieving dense
+at depth 100 equals retrieving at 1000 and truncating. Run on SciFact and NFCorpus on 2026-09-16,
+all three deltas were exactly **0.000e+00**.
 
 Convex0 remains M7's confirmatory fusion operator. DBSF@100 remains a disclosed product-policy
 override with no equivalence interval. Nothing here changes either statement.

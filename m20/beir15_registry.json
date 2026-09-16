@@ -218,8 +218,10 @@
   ],
   "search": {
     "implementation": "m7src/evalkit.py:topk_ids_scores, exact over the whole corpus",
-    "dense_depth": 1000,
-    "_dense_depth_note": "Retrieval depth 1000 matches m7src/fusion.py DEPTH, so the dense run truncated to 100 is exactly what a Qdrant prefetch at limit 100 would have returned. nDCG@10 is unaffected by depth beyond 10.",
+    "dense_depth": 100,
+    "lexical_depth": 1000,
+    "_dense_depth_note": "M12 retrieved dense at m7src/fusion.py DEPTH=1000 and truncated to 100 before DBSF. Retrieving directly at 100 returns the same set and the same scores; the only possible difference is which of two EQUAL-scoring documents sits at rank 100, which cannot move nDCG@10 (decided by the top 10) and cannot move DBSF's mean or sample sd (the tied documents carry the same score). The reproduction check proves this on real data by computing one m12/six_dbsf.json dbsf@100 value both ways. Depth 100 is registered for production because it holds a tenth of the run in memory on corpora of 5-9M documents.",
+    "_lexical_depth_note": "BM25 keeps DEPTH=1000: it is part of m7src/fusion.py's frozen function and its cache key, and the run is truncated to 100 before DBSF like any other prefetch.",
     "precision": "fp16 document blocks promoted to fp32; query vectors fp32",
     "ann": "none. No ANN recall is mixed into these quality numbers."
   },
