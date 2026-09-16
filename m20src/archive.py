@@ -6,12 +6,13 @@ Stella-space encoder can be re-evaluated on BEIR-15 without paying for another c
 the archive holds the fp16 document vectors as well as the raw payloads.  Stopped Runpod volumes
 are not the archive.
 
-**Reserved queries and qrels are not copied here, by design.**  They already live in the
-repository at `results/frozen_eval/untouched-*.json`, hash-pinned in `results/eval_manifest.json`
-and durable in git, so archiving them would be a fresh protected read that buys nothing.  This
-module installs the corpus-only guard and records a pointer plus the pinned hashes instead.  Every
-reserved CORPUS and its document vectors are archived in full, which is what a future re-evaluation
-actually needs.
+**Reserved queries and qrels are written by the tagged transaction, not by this module.**  R22 asks
+for queries and qrels for every evaluated dataset, and this module -- which holds only the
+corpus-only capability -- could not read a reserved payload even if it wanted to.  So
+`m13src/reserved_support.py:export_reserved_payload_archive` writes them into this same layout from
+inside the transaction, out of payloads it already had open for scoring, and this module REQUIRES
+them for a reserved corpus and fails if they are absent.  The frozen originals stay in
+`results/frozen_eval/`, hash-pinned in `results/eval_manifest.json`.
 
 Three phases, run where the data is:
 
@@ -43,6 +44,7 @@ import pre_encode as P            # claims the corpus-only guard entry and insta
 import roster as R                # noqa: E402
 
 MANIFEST = REPO / "results" / "m20_archive_manifest.json"
+RESERVED_RESULT = REPO / "results" / "m13_reserved_run.json"
 ENC_ROOT = REPO / "work" / "m13-reserved-enc"
 TOWER_ID = {"stella-400M-v5": "stella-ffeb2b7e",
             "bge-small-en-v1.5": "bge-small-5c38ec7c",
@@ -111,8 +113,15 @@ def build_corpus(root, corpus_name):
                 f"{corpus_name}: {missing} were not exported by the reserved transaction. They "
                 f"can only be written from inside it; re-running the archive cannot produce them "
                 f"and this module must never reopen a reserved payload to fill the gap.")
+        # These are the only archive payloads this module cannot regenerate, so check them against
+        # the hashes the transaction recorded rather than accepting them on presence.
+        recorded = json.loads(RESERVED_RESULT.read_text())["reserved_payload_archive"]["datasets"]
         for name in ("queries.jsonl.gz", "qrels.jsonl.gz"):
-            files[name] = out / name
+            path = out / name
+            if R.sha_file(path) != recorded[corpus_name][name]["sha256"]:
+                raise RuntimeError(f"{path}: does not match the hash the reserved transaction "
+                                   f"recorded in results/m13_reserved_run.json")
+            files[name] = path
         return files, {"source": source, "revision": revision,
                        "queries_and_qrels": "exported by the tagged reserved transaction from "
                                             "payloads it already held open; the frozen originals "

@@ -151,8 +151,8 @@ Layout below the prefix, identical on both targets:
 beir15/
   MANIFEST.json                                   # copy of results/m20_archive_manifest.json
   datasets/<corpus>/corpus.jsonl.gz               # every corpus, from the pinned HF revision
-  datasets/<corpus>/queries.jsonl.gz              # public corpora only
-  datasets/<corpus>/qrels.jsonl.gz                # public corpora only
+  datasets/<corpus>/queries.jsonl.gz              # public: written here; reserved: by the transaction
+  datasets/<corpus>/qrels.jsonl.gz                # public: written here; reserved: by the transaction
   vectors/stella-ffeb2b7e/<corpus>/manifest.json
   vectors/stella-ffeb2b7e/<corpus>/shard_00000.npy ...   # the hash-recorded fp16 shards, as written
   vectors/bge-small-5c38ec7c/<corpus>/...

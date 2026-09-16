@@ -33,7 +33,49 @@ list. That is the brief's error, not a finding; the file is on round 2's list.
 - **P1.** A derived DBSF row hashed whatever run file was on disk rather than the hash its input's
   scored row recorded.
 
-## Round 2 — Fable
+## Round 2 — Fable, 2026-09-16, **GO**
 
-Brief: `research/m20-review-brief-fable-2026-09-16.md`. Scope: the P1 fixes above, plus the access
-boundary Astra could not certify.
+Brief: `research/m20-review-brief-fable-2026-09-16.md`. Reviewed at `0e9aefa` with a clean tree.
+Access log audited: everything it opened is on the brief's list except `.gitignore`,
+`m13src/access13.py` and `m10src/m9base.py` (grepped for `paths_guard` only), a non-recursive
+`import pre_encode` grep over source directories, and `ls ~/.cache/huggingface` — all named in its
+report, none a protected payload, nothing written.
+
+**No blockers.** It certified the access boundary that round 1 could not, and confirmed all seven
+P1 fixes in the code rather than in the triage table:
+
+- A process holding the corpus-only claim is refused every frozen payload, `work/dev` alias,
+  `work/m9reserve`, `work/lotte` and every reserved cache path that is not a corpus config. The
+  exemption requires an exact reserved corpus repository followed by a literal `corpus` segment, so
+  a `-qrels` repository and a `queries` or `default` config cannot match, and the loader guard
+  closes the network route.
+- `reserved_support.corpus_for` is bounded to the corpus config, re-verifies the frozen manifest
+  hashes and the pre-encode's document order, and runs under a claim strictly broader than
+  corpus-only, so the P0 the team found itself is genuinely closed.
+- `export_reserved_payload_archive` introduces no read that would not have happened anyway.
+
+### Debt recorded, not fixed
+
+1. **The guard classifies the `datasets`-style cache but not the hub-style blob cache.** No code
+   path on this branch opens raw cache files and the loader-identity guard blocks the API route, so
+   this is a blind spot in the bulkhead rather than a reachable hole. Pre-existing, not introduced
+   by M20. Owner: whoever next touches `m8src/paths_guard.py`.
+2. **The projection's rate is documents per encode second.** Corpus download, per-tower re-hashing
+   and model load sit outside it, so it under-projects non-encode overhead. The direction of harm
+   is a hard `timeout` kill instead of a clean shard-boundary stop, in stage C only, which is
+   unprotected and resumable.
+3. **The reserved archive payloads live only on the pod volume between stages B and D.** If that
+   volume is lost, `archive --build` hard-fails and cannot be repaired without a second protected
+   access. The substance survives in git, so this is a deliverable-completion risk, not evidence
+   loss. Mitigation available if the owner wants it: run stage D's build immediately after stage B.
+
+### Debt fixed anyway, because each was a line or two
+
+- Two stale docstrings that contradicted the code beside them: `m20src/archive.py`'s header still
+  said the reserved labels were excluded, and the registration's layout block still annotated
+  queries and qrels as "public corpora only".
+- `archive.build_corpus` accepted the reserved payload files on presence. They are the only archive
+  payloads the builder cannot regenerate, so they are now checked against the hashes the
+  transaction recorded in `results/m13_reserved_run.json`.
+- `_score_bm25` held two corpora's text at once across the FEVER-to-DBpedia boundary, about 10M
+  passages. It now frees each dataset's text before loading the next.

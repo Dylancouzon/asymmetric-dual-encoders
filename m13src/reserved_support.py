@@ -326,6 +326,9 @@ def _score_bm25(cfg):
             "run_path": str(path.relative_to(cfg.repo)),
             "run_sha256": R20.save_run(path, R20.truncate(run), qids),
         }
+        # FEVER and DBpedia carry about 10M passages between them. Drop this dataset's text
+        # before loading the next corpus, so the peak holds one corpus rather than two.
+        del doc_texts, run
         print(f"[reserved13] bm25: {dataset} complete ({len(scores):,} queries)", flush=True)
     return datasets
 
