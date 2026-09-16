@@ -23,7 +23,7 @@ def chk(n, p, d=""):
 
 # Pinned published revisions. A verifier that accepts whatever the Hub currently serves cannot
 # detect an unexpected change to a model repository.
-EXPECTED = {ZERO: "fa1bf1c186", DOC: "70a8b2cbd5", NANO: "7cc8a0fa8f"}
+EXPECTED = {ZERO: "ebee6ea949", DOC: "9ec7ac44fc", NANO: "e1a51bff5b"}
 
 for rid in (ZERO, DOC, NANO):
     r = requests.get(f"https://huggingface.co/api/models/{rid}", timeout=30).json()
