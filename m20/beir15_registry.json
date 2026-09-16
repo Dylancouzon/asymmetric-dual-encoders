@@ -581,8 +581,8 @@
     "headroom_usd_before_m20": 342.96,
     "_committed_source": "results/m13_build_record.json budget.allocation",
     "target_pod_hourly_usd": 1.6636111111111112,
-    "other_retained_storage_hourly_usd": 0.1388888888888889,
-    "all_retained_hourly_usd": 1.8025,
+    "other_retained_storage_hourly_usd": 0.14375,
+    "all_retained_hourly_usd": 1.8073611111111112,
     "a100_stella_fp32_passages_per_second": 100.76251639646428,
     "_rate_source": "results/m13_encode_benchmark.json, slower of the two registered sizes",
     "tower_cost_relative_to_stella": {
@@ -606,7 +606,7 @@
       "D_archive": 8.0,
       "m20_total": 171.0
     },
-    "new_spend_at_cap_usd": 335.72,
+    "new_spend_at_cap_usd": 337.5,
     "_inherited_55_2": "m13/build_config.json budget.mandatory_hours_fixed.reserved_batch_allowance = 55.2 h is UNCHANGED. Its derivation (results/m13_encode_benchmark.json) priced 10M passages on the STELLA tower alone, doubled; the reserved batch also needs bge-small and Arctic-M document vectors for the same 10.1M passages, which that arithmetic never included. M20 therefore registers its own stage caps and applies the inherited 55.2 h to stage B, the tagged scoring stage, where its derivation is comfortably sufficient. Pre-observation cost bookkeeping only: no estimand, weight, threshold, contrast or release rule changes.",
     "projection_gate": "After the first completed corpus for each tower the executor measures passages/s and projects the remaining hours for its stage. If the projection exceeds the stage's remaining cap it stops cleanly at a shard boundary and reports. Pre-tag this costs nothing; post-tag the reserved result is already durable per completed system.",
     "document_volumes": {
@@ -627,7 +627,9 @@
     "_headroom_warning": "Stage C's cap is about 1.06x its expectation, because the ceiling rather than the estimate sets it: at the corrected formula the whole plan costs $335.72 of new spend against $342.96 of recorded headroom. BEIR-15's ~23.7M new documents across three fp32 towers is the dominant cost and there is no slack to absorb a slower-than-projected run. The reserved transaction is ordered FIRST so the irreplaceable access lands before this risk is taken. If the projection gate trips in stage C the run stops cleanly and the owner decides between raising the ceiling, narrowing BEIR-15, or accepting a partial descriptive table; no executor may decide that.",
     "cost_formula": "new_spend_at_cap = m20_total_hours * all_retained_hourly - inherited_reserved_allowance_hours * target_pod_hourly. The subtraction removes ONLY the target-pod hours already inside committed_usd; the two sibling volumes bill during those hours too and are NOT subtracted. An earlier version priced 187 h at the all-retained rate and so omitted 55.2 h of sibling storage ($7.67), which put the plan $1.77 over the ceiling. Corrected 2026-09-16 after review, pre-observation.",
     "inherited_reserved_allowance_hours": 55.2,
-    "committed_plus_new_at_cap_usd": 992.76
+    "committed_plus_new_at_cap_usd": 994.54,
+    "_hourly_note": "Read from the live Runpod quote on 2026-09-16: the target A100 bills $1.59/h compute plus 530 GB of disk, and the two retained stopped pods hold 530 GB and 505 GB. An earlier version assumed two bare 500 GB volumes and so understated sibling storage by $0.0049/h. The controller recomputes from the live quote and refuses if it exceeds the registered allowance below.",
+    "_new_spend_margin": "At the live quote the plan costs $336.87. The registered allowance is $337.50, a 0.2% margin so a cent of quote drift does not refuse a launch; committed plus the registered allowance is $994.54, inside the $1,000 ceiling. The controller refuses if the LIVE cost exceeds $337.50, not merely if the registered number does."
   },
   "_qrels_pin_note": "BEIR publishes labels in a SEPARATE repository from the corpus and queries, with its own revision. Pinning only the dataset revision would leave the qrels unpinned and a republished label set could change a reported number silently. Revisions read 2026-09-16. The reserved four have no entry here: their labels are the frozen payloads in results/frozen_eval/, hash-pinned in results/eval_manifest.json, and are read only inside the tagged transaction. CQADupStack labels live in the forum's own repository under the `default` config and are covered by the forum revision already pinned above."
 }

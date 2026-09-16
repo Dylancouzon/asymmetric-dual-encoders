@@ -212,8 +212,8 @@ weight, threshold, contrast or release rule.
 | reserved four documents | 10,115,709 | `results/eval_manifest.json` |
 | BEIR-15 documents not already in the reserved set | 23,744,806 | registry `budget.document_volumes`, verified at download |
 | target pod compute + its storage | $1.6636111111/h | `results/m13_build_record.json` |
-| the two other retained stopped volumes | $0.1389/h | 2 × 500 GB at $0.10/GB-month |
-| all-retained hourly during an M20 session | $1.8025/h | derived |
+| the two other retained stopped pods | $0.14375/h | live quote: 530 GB and 505 GB at $0.10/GB-month |
+| all-retained hourly during an M20 session | $1.80736/h | derived |
 
 The tower ratios were measured on the RTX 3080 box on SQuAD training passages, one tower per
 process, no protected access. Only the ratio is carried; the absolute Stella rate is the A100
@@ -242,10 +242,13 @@ New spend is priced as
 
 ```
 m20_total_hours × all_retained_hourly − inherited_reserved_allowance_hours × target_pod_hourly
-= 237.2 × $1.8025 − 55.2 × $1.6636111111 = $335.72
+= 237.2 × $1.80736 − 55.2 × $1.6636111111 = $336.87
 ```
 
-against $342.96 of recorded headroom, so committed plus new is **$992.76** of the $1,000 ceiling.
+The registered allowance is **$337.50**, a 0.2% margin so a cent of quote drift does not refuse a
+launch, against $342.96 of recorded headroom: committed plus the allowance is **$994.54** of the
+$1,000 ceiling. The sibling figure is the live quote, two retained stopped pods holding 530 GB and
+505 GB; an earlier version assumed two bare 500 GB volumes and understated it by $0.0049/h.
 The subtraction removes only the target-pod hours already inside `committed_usd`; the two sibling
 volumes bill during those hours too and are **not** subtracted. An earlier version of this
 registration priced 187 hours at the all-retained rate and so omitted 55.2 hours of sibling

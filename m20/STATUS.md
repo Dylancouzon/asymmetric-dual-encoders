@@ -36,7 +36,14 @@ before the long repeatable work starts.
 1. **Object storage.** No account, bucket, credentials or `rclone` binary exists on the box. The
    `D:` half of the archive can be built and verified without it; the object-storage half cannot.
    This blocks the exit criterion "archive verified at both targets", nothing earlier.
-2. **Stage C has about 10% cap headroom against the budget, not against the estimate.** BEIR-15
+2. **The wallet may not cover the whole plan.** The Runpod balance was **$351.51** on 2026-09-16.
+   The reserved controller needs $193.74 of cover for stages A and B and starts fine; the BEIR-15
+   controller needs $234.95 for stages C and D and would also start. But gross billing across the
+   whole plan at cap is $428.69, and even the *expected* 171 hours bill about $309, which leaves
+   almost nothing. Top the wallet up before stage C or expect the pod to be cut off mid-encode.
+   All three pods were `EXITED` and the target's quote matched the registered rate.
+
+3. **Stage C has about 6% cap headroom against the budget, not against the estimate.** BEIR-15
    needs roughly 23.7M new document encodes across three fp32 towers, including Climate-FEVER's
    5.42M, which `m20/PLAN.md` had omitted. The registered caps total 242.2 h, of which 187 h is new
    spend at $337.07 against $342.96 of recorded headroom. If the in-run projection gate trips, the
