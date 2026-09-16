@@ -47,8 +47,9 @@ The name Constella combines "constellation" and "Stella." The document embedding
 stars, and the query encoder navigates their shared vector space.
 
 Zero and Nano are swappable at query time. Both can search documents encoded by this model, so
-you can change query encoders without re-encoding documents or rebuilding the collection. This
-compatibility does not mean they produce identical rankings or have equal retrieval quality.
+you can change query encoders without re-encoding documents or rebuilding the collection.
+Compatibility refers to the shared vector space; rankings and retrieval quality vary by query
+encoder.
 
 ## Installation
 

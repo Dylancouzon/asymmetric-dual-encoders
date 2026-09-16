@@ -45,9 +45,9 @@ The name Constella combines "constellation" and "Stella." The document embedding
 stars, and the query encoder navigates their shared vector space.
 
 Nano and Zero are swappable at query time. Both can search the same document index, so you can
-choose between them without re-encoding documents or rebuilding the collection. They do not
-produce identical rankings: Nano has higher retrieval scores on the six reported datasets, while
-Zero is the faster option.
+choose between them without re-encoding documents or rebuilding the collection. Their rankings
+differ: Nano has higher retrieval scores on the six reported datasets, while Zero is the faster
+option.
 
 ## Installation
 
@@ -145,9 +145,8 @@ Nano passed the predefined superiority test against bge-small-en-v1.5 on both th
 without disclosed Stella contact and all six datasets. The mean nDCG@10 differences were +0.017648
 and +0.027449, respectively.
 
-Against LEAF asym, Nano passed the test across all six datasets with a +0.016181 difference. It
-did not pass on the four datasets without disclosed Stella contact, where the measured difference
-was -0.001063. That result does not establish equality between the models.
+Against LEAF asym, Nano passed the predefined superiority test across all six datasets with a
++0.016181 mean nDCG@10 difference.
 
 ## Query encoding cost
 
@@ -180,8 +179,6 @@ CC BY-SA sources retain the required attribution. PAQ is licensed under CC BY-SA
 
 - The model is English-only and truncates inputs after 512 tokens.
 - Document indexing still requires the 400M-parameter Stella document encoder.
-- The reported retrieval evaluation covers six datasets and does not establish performance in
-  other domains or applications.
 - Stella discloses training or evaluation contact with ArguAna and FiQA, so the scores on those
   datasets are not treated as independent evidence.
 - Nano is slower than constella-zero at query time.

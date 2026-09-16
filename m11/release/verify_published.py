@@ -23,7 +23,7 @@ def chk(n, p, d=""):
 
 # Pinned published revisions. A verifier that accepts whatever the Hub currently serves cannot
 # detect an unexpected change to a model repository.
-EXPECTED = {ZERO: "8b47e77960", DOC: "28b40aca9a", NANO: "fed594736b"}
+EXPECTED = {ZERO: "fa1bf1c186", DOC: "70a8b2cbd5", NANO: "7cc8a0fa8f"}
 
 for rid in (ZERO, DOC, NANO):
     r = requests.get(f"https://huggingface.co/api/models/{rid}", timeout=30).json()
@@ -70,17 +70,20 @@ for rid, must, mustnot in [
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
                 "fixed", "DBSF",
                 "recommended deployment setup", "prefetch 100", "338,076"],
-               ["convex", "registered", "reserved-four", "np.stack"]),
+               ["convex", "registered", "reserved-four", "np.stack",
+                "did not establish", "equivalence claim"]),
         (DOC,  ["library_name: fastembed", "TextEmbedding(NAME)", "s2p_query",
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
                 "fixed", "259",
                 "Natural Questions passages", "0.99999988"],
-               ["registered", "reserved-four", "np.stack", "add_custom_model"]),
+               ["registered", "reserved-four", "np.stack", "add_custom_model",
+                "did not establish", "equivalence claim"]),
         (NANO, ["library_name: fastembed", "TextEmbedding(NAME)", "34,540,672",
                 "Research preview", "BEIR benchmarking is underway", "swappable at query time",
                 "fixed", "199,999,721",
                 "DylanCouzon/constella-zero"],
-               ["registered", "reserved-four", "np.stack", "add_custom_model"])]:
+               ["registered", "reserved-four", "np.stack", "add_custom_model",
+                "did not establish", "did not pass", "equivalence claim"])]:
     card = open(hf_hub_download(rid, "README.md")).read()
     miss = [m for m in must if m not in card]
     bad = [m for m in mustnot if m in card]

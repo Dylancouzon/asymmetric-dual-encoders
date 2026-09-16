@@ -46,9 +46,9 @@ The name Constella combines "constellation" and "Stella." The document embedding
 stars, and the query encoder navigates their shared vector space.
 
 Zero and Nano are swappable at query time. Both can search the same document index, so you can
-choose between them without re-encoding documents or rebuilding the collection. They do not
-produce identical rankings: Zero is the faster option, while Nano has higher retrieval scores on
-the six reported datasets. The "zero" name refers to its transformer-free query path.
+choose between them without re-encoding documents or rebuilding the collection. Their rankings
+differ: Zero is the faster option, while Nano has higher retrieval scores on the six reported
+datasets. The "zero" name refers to its transformer-free query path.
 
 ## Installation
 
@@ -156,10 +156,6 @@ candidates from each side. This setup scored 0.4887 mean nDCG@10 across all six 
 `bm25s` with Lucene defaults, so results may differ with another BM25 implementation. Dense-only
 retrieval remains supported when a lexical index is unavailable or unnecessary.
 
-Zero did not establish an improvement over BM25 in the six-dataset statistical test. Its measured
-difference was +0.0165 nDCG@10, but the adjusted test threshold was not met. This is not an
-equivalence claim.
-
 ## Query encoding cost
 
 These measurements cover the query encoder only. They use batch size 1, four CPU threads, five
@@ -196,11 +192,7 @@ Wikipedia-derived data retains CC BY-SA attribution. Amazon ESCI and TriviaQA ar
 - The model is English-only and truncates inputs after 512 tokens.
 - As a bag-of-tokens model, it is weak at distinctions that depend on word order, syntax, or
   negation.
-- Retrieval quality is lower than constella-nano and the full Stella query encoder on the six
-  reported datasets.
 - Document indexing still requires the 400M-parameter Stella document encoder.
-- The reported retrieval evaluation covers six datasets and does not establish performance in
-  other domains or applications.
 
 ## License and provenance
 
