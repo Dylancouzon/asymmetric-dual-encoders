@@ -17,13 +17,15 @@ Keep negative results, failed approaches, provenance and limitations alongside s
 2. The active milestone's `STATUS.md` and `instructions-m*.md` — next work and exit criteria.
 3. Its `CODEMAP.md`, then only the result or registration files needed for the task.
 
-M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M17 and M18 are closed
-historical evidence. M18 shipped an internal Qdrant project-memory system but no improved encoder.
-M19 is the current planning successor on branch `m18-qdrant-project-memory`; its instruction file
-controls whether a new execution session may proceed. Nano release and paper milestone references in
-older files are historical. Harness improvements remain ordinary maintenance. Do not infer
-execution readiness from the historical phrase “half A ready to push” or from a closed milestone's
-executable status.
+M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M14 (Nano research preview),
+M17, M18, M19 and M21 are closed historical evidence. M18 shipped an internal Qdrant project-memory
+system but no improved encoder; M19 closed `ENCODER_INCONCLUSIVE` with its confirmation surface
+still sealed, so it establishes neither improvement nor equivalence and released Zero v1 stays
+selected. **M20 is the next execution milestone** — reserved four, BEIR-18, official Nano release
+and the upstream FastEmbed PR — and no session may execute it until it follows
+`instructions-m20.md`. Paper milestone references in older files are historical. Harness
+improvements remain ordinary maintenance. Do not infer execution readiness from the historical
+phrase “half A ready to push” or from a closed milestone's executable status.
 
 ## Evidence and protocol
 

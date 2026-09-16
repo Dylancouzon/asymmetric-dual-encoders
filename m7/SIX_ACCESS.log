@@ -1,0 +1,25 @@
+{"ts": "2026-08-26T16:36:30-04:00", "dataset": "scifact", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+{"ts": "2026-08-26T16:36:33-04:00", "dataset": "nfcorpus", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+{"ts": "2026-08-26T16:36:36-04:00", "dataset": "fiqa", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+{"ts": "2026-08-26T16:36:46-04:00", "dataset": "arguana", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+{"ts": "2026-08-26T16:36:52-04:00", "dataset": "scidocs", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+{"ts": "2026-08-26T16:37:00-04:00", "dataset": "trec-covid", "argv": ["scripts/validate_perquery.py", "--bm25"], "pid": 46641}
+2026-08-28T23:23:07.565950+00:00 final_run.preflight read+hashed the six frozen query/qrels payloads (verification only, nothing scored)
+{"ts": "2026-08-28T19:23:07-04:00", "dataset": "scifact", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85"], "pid": 71265}
+{"ts": "2026-08-28T19:25:12-04:00", "dataset": "nfcorpus", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85"], "pid": 71265}
+{"ts": "2026-08-28T19:26:44-04:00", "dataset": "fiqa", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85"], "pid": 71265}
+{"ts": "2026-08-28T19:43:34-04:00", "dataset": "arguana", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85"], "pid": 71265}
+2026-08-29T00:02:46.412524+00:00 final_run.preflight read+hashed the six frozen query/qrels payloads (verification only, nothing scored)
+{"ts": "2026-08-28T20:02:46-04:00", "dataset": "scifact", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+{"ts": "2026-08-28T20:02:50-04:00", "dataset": "nfcorpus", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+{"ts": "2026-08-28T20:02:53-04:00", "dataset": "fiqa", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+{"ts": "2026-08-28T20:03:04-04:00", "dataset": "arguana", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+{"ts": "2026-08-28T20:03:13-04:00", "dataset": "scidocs", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+{"ts": "2026-08-28T20:16:30-04:00", "dataset": "trec-covid", "argv": ["m7src/final_run.py", "--freeze-hash", "d24c704077210f3ddd065ff7709f35a3f42ced85", "--infra-retry"], "pid": 72316}
+2026-08-29T02:34:52.361708+00:00 cleanstack_tax.score: pre-registered NON-CONFIRMATORY six-set read (m7/LEDGER.md 'the clean-stack tax')
+{"ts": "2026-09-04T15:48:53-04:00", "dataset": "scifact", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
+{"ts": "2026-09-04T15:48:57-04:00", "dataset": "nfcorpus", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
+{"ts": "2026-09-04T15:48:59-04:00", "dataset": "fiqa", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
+{"ts": "2026-09-04T15:49:09-04:00", "dataset": "arguana", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
+{"ts": "2026-09-04T15:49:17-04:00", "dataset": "scidocs", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
+{"ts": "2026-09-04T15:49:25-04:00", "dataset": "trec-covid", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}

@@ -194,3 +194,7 @@ logs/
 
 # Qdrant local in-memory scratch written by the runnable card/README examples
 :memory:.ses
+
+# Keep the M7 six-set access receipt tracked: the generic *.log rule above hides it,
+# and m7/LEDGER.md cites it as evidence for a spent protected access.
+!m7/SIX_ACCESS.log
