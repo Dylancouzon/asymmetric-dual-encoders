@@ -122,7 +122,7 @@ class Cloud:
         with urllib.request.urlopen(request, timeout=30) as response:
             return float(json.load(response)["data"]["myself"]["clientBalance"])
 
-    def resume(self):
+    def _resume_once(self):
         query = ("mutation { podResume(input: { podId: \"" + POD +
                  "\", gpuCount: 1 }) { id desiredStatus gpuCount } }")
         request = urllib.request.Request(
@@ -130,10 +130,33 @@ class Cloud:
             headers={**self.headers, "Content-Type": "application/json"},
             data=json.dumps({"query": query}).encode())
         with urllib.request.urlopen(request, timeout=30) as response:
-            body = json.load(response)
-        resumed = (body.get("data") or {}).get("podResume") or {}
-        if resumed.get("id") != POD or resumed.get("gpuCount") != 1:
-            raise RuntimeError(f"Runpod did not resume the exact one-GPU target: {body}")
+            return json.load(response)
+
+    def resume(self, wait_seconds=0, poll_seconds=300, report=print):
+        """Resume the retained pod, optionally waiting out a host-capacity refusal.
+
+        Runpod refuses a resume when its host has no free GPU. M13 lost two hosts to exactly this,
+        and it says nothing about the work: the pod is still stopped, nothing is billed, and the
+        access is untouched. Waiting is therefore free, and it is the difference between a
+        milestone that runs tonight and one that needs a human to retry it. Only this one refusal
+        is retried; every other failure raises immediately.
+        """
+        deadline = time.monotonic() + max(0.0, float(wait_seconds))
+        attempt = 0
+        while True:
+            attempt += 1
+            body = self._resume_once()
+            resumed = (body.get("data") or {}).get("podResume") or {}
+            if resumed.get("id") == POD and resumed.get("gpuCount") == 1:
+                return attempt
+            messages = " ".join(str(e.get("message", "")) for e in body.get("errors") or [])
+            capacity = "not enough free gpus" in messages.lower()
+            if not capacity or time.monotonic() >= deadline:
+                raise RuntimeError(f"Runpod did not resume the exact one-GPU target: {body}")
+            report(f"[reserved13] attempt {attempt}: host has no free GPU; retrying in "
+                   f"{poll_seconds}s ({(deadline - time.monotonic()) / 3600:.1f} h of wait left). "
+                   f"Nothing is billed while the pod is stopped.", flush=True)
+            time.sleep(poll_seconds)
 
 
 def run(command, **kwargs):
@@ -235,7 +258,7 @@ def checkpoint_prep_command(checkpoint_rel, build_checkpoint_rel, digest, remote
         " | sha256sum -c --status -; mv " + pending_arg + " " + checkpoint_arg + "; fi")
 
 
-def main():
+def main(wait_for_capacity_seconds=0.0):
     if RESULT.exists():
         raise RuntimeError(f"preserve existing controller receipt {RESULT}")
     LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -371,7 +394,11 @@ def main():
         signal.signal(sig, interrupted)
     deadline = time.monotonic() + max_hours * 3600
     try:
-        cloud.resume()
+        record["resume_attempts"] = cloud.resume(
+            wait_seconds=wait_for_capacity_seconds,
+            report=lambda message, flush=True: (print(message, flush=flush),
+                                                record.update(last_resume_note=message),
+                                                save(record)))
         started = True
         record["stage"] = "waiting-for-ssh"
         save(record)
@@ -511,5 +538,9 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args()
-    main()
+    parser.add_argument("--wait-for-capacity-hours", type=float, default=0.0,
+                        help="wait this long for the retained host to free a GPU before giving "
+                             "up. Nothing is billed while the pod is stopped and the access is "
+                             "untouched, so waiting costs nothing but time.")
+    args = parser.parse_args()
+    main(wait_for_capacity_seconds=args.wait_for_capacity_hours * 3600.0)

@@ -1,0 +1,33 @@
+{
+  "status": "FAILED",
+  "stage": "failed",
+  "pod_id": "k3aee2m68765em",
+  "implementation_commit": "353edff2c4e95bb4d538795286f2d818c830e169",
+  "started_utc": "2026-09-16T21:32:24.857388+00:00",
+  "balance_start_usd": 351.3756991909,
+  "max_hours": 107.2,
+  "stage_cap_hours": {
+    "A_pre_encode": 52.0,
+    "B_tagged_transaction": 55.2
+  },
+  "m20_registry_sha256": "6d881d8d0b9ad3aebb042a10016e4d4a3ef4df674e08b4bada6114b932278193",
+  "m20_live_new_spend_at_cap_usd": 336.8747222222222,
+  "dbsf_reproduction_sha256": "f2aae6f08f60a124e0ee6767bdb932b76e202d6ea9f24b2e65c109766e645358",
+  "max_total_hourly_usd": 1.6636111111111112,
+  "target_total_hourly_usd": 1.6636111111111112,
+  "other_retained_storage_hourly_usd": 0.14375,
+  "all_retained_hourly_usd": 1.8073611111111112,
+  "max_all_retained_interval_usd": 193.74911111111112,
+  "extra_retained_storage_interval_usd": 15.409999999999998,
+  "expected_reserved_vector_bytes": 44023565568,
+  "remote_free_required_before_preencode_bytes": 166023565568,
+  "build_config_sha256": "32b73c50d87ec66eb6373cedea80eeca5fb8248f48b56441bb0b8badd856a257",
+  "build_record_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+  "checkpoint": "work/m13-final/cycle3.pt",
+  "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+  "six_result_sha256": "f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23",
+  "updated_utc": "2026-09-16T21:32:25.724409+00:00",
+  "error": "RuntimeError: Runpod did not resume the exact one-GPU target: {'errors': [{'message': 'There are not enough free GPUs on the host machine to start this pod.', 'path': ['podResume'], 'extensions': {'code': 'RUNPOD'}}], 'data': {'podResume': None}}",
+  "balance_end_usd": 351.3756991909,
+  "wallet_delta_usd": 0.0
+}

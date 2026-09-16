@@ -53,6 +53,34 @@ before the long repeatable work starts.
    is unchanged and now applies to the tagged scoring stage; the pre-encode has its own registered
    cap. Recorded in `m20/REGISTRATION.md` §5.
 
+## Execution attempt 1 — refused by Runpod capacity, nothing spent
+
+Launched 2026-09-16 21:32 UTC after both reviews. Every preflight passed: clean pushed tree at
+`353edff`, the six-set result still `INCOMPLETE_RESERVED`, the DBSF reproduction receipt `PASSED`,
+the live quote matching the registered rate, the stage caps summing, the live cost $336.87 inside
+the registered $337.50, and all three pods `EXITED`. Runpod then refused the resume: **"There are
+not enough free GPUs on the host machine to start this pod."**
+
+Nothing was spent. Wallet delta $0.00, no `m8-reserved-spent` tag, pod still `EXITED`, reserved
+access **UNSPENT**. The receipt is preserved at
+`results/m13_reserved_cloud_attempt1_nocapacity_2026-09-16.json`.
+
+The controller now accepts `--wait-for-capacity-hours`: it retries **only** this one refusal, every
+five minutes, for as long as you allow. Nothing is billed while the pod is stopped and the access
+is untouched, so waiting costs nothing but time; every other failure still raises immediately. To
+retry:
+
+```bash
+cd /home/dylan/asymetric-dual-encoders/work/m13cloud
+git fetch origin main && git checkout --detach origin/main
+test ! -e results/m13_reserved_cloud.json && test ! -e logs/m13-reserved-cloud.log
+setsid nohup .venv/bin/python -u scripts/m13_reserved_cloud.py --wait-for-capacity-hours 12 \
+  > ../m20/logs/reserved_controller.log 2>&1 < /dev/null &
+```
+
+If the host stays full, the retained A100 may have to be replaced, which is an owner decision: the
+pod holds the M13 build artifacts and the checkpoint, and `m14/HANDOFF.md` is STOP-only.
+
 ## Noted, not fixed
 
 Running the `m10src` suite rewrites `results/m10_contrast_E1.json`, a real registered result file,
