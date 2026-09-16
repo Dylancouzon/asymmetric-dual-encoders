@@ -11,7 +11,7 @@
 > remains authoritative and unchanged for the preview.
 
 > **Amended 2026-09-16 by owner ruling R22 (`m13/RULINGS.md`).** The work above is now split:
-> steps 2 and 3 (reserved transaction, broad validation — "BEIR-18" is now BEIR-13 with an
+> steps 2 and 3 (reserved transaction, broad validation — "BEIR-18" is now BEIR-15 with an
 > eight-system descriptive roster) belong to **M20**; steps 4–8 and 10 (release) to **M22**; step 9
 > (upstream PR) to **M23**. Paths, hashes and gates below are unchanged.
 

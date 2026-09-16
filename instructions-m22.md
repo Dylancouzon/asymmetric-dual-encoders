@@ -2,16 +2,16 @@
 
 **Created 2026-09-16 under owner ruling R22 (Dylan).** Takes the release half of the original M20
 mandate so that M20 stays evaluation-only. Runs after `m20/STATUS.md` reports the reserved four and
-BEIR-13 complete. No new measurement, no training, no protected access.
+BEIR-15 complete. No new measurement, no training, no protected access.
 
 ## Deliverables
 
 1. **Card revision** of `DylanCouzon/constella-nano` as a later revision of the existing
    repository: the frozen weights (`6bb167dc`) do not change. The card carries the reserved-four
-   and BEIR-13 descriptive tables with their contact labels and FEVER caveat, the M13 registered
+   and BEIR-15 descriptive tables with their contact labels and FEVER caveat, the M13 registered
    results unchanged, and drops the "research preview" framing. Numbers come from
    `m21/BENCHMARKS.md`, extended from `results/m13_reserved_run.json` and
-   `results/m20_beir13_run.json`; nothing is recomputed or re-partitioned. Zero and document-tower
+   `results/m20_beir15_run.json`; nothing is recomputed or re-partitioned. Zero and document-tower
    cards get the same tables where they apply.
 2. **Release discipline** inherited from `m14/HANDOFF.md` steps 4–8 and 10: fresh staging from the
    verified bytes, documented packaging transforms only, length-stratified parity including the

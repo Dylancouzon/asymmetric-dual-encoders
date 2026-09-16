@@ -22,7 +22,7 @@ with confirmation sealed and released Zero v1 retained.
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
 | M19 | Deterministic short-query Zero feasibility | **Closed 2026-09-13** as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development result label-sensitive, confirmation sealed, Zero v1 retained; `m19/STATUS.md` |
-| M20 | Reserved four + BEIR-13 descriptive evaluation, eight-system roster, dataset/vector archive | **Active** (opened 2026-09-16, R22); `m20/STATUS.md`, `instructions-m20.md` |
+| M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active** (opened 2026-09-16, R22); `m20/STATUS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 | M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
 | M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | After M22; `instructions-m23.md`, plan in `m21/FASTEMBED.md` |
@@ -35,7 +35,7 @@ with confirmation sealed and released Zero v1 retained.
 | Pending E arms, M10.3 build, M10.4 judging, LoTTE, costs | M13 |
 | M13 nano release | M14 preview (R20), M20 official release |
 | M14 reserved four, BEIR-18, upstream FastEmbed PR | M20 (R20, 2026-09-15) |
-| M20 official release; M20 upstream FastEmbed PR; "BEIR-18" | M22; M23; BEIR-13 in M20 (R22, 2026-09-16) |
+| M20 official release; M20 upstream FastEmbed PR; "BEIR-18" | M22; M23; BEIR-15 in M20 (R22, 2026-09-16) |
 | M14 paper | M15 |
 | M15 image model | M16 |
 | M16 better-zero ideas | M17 |

@@ -1,7 +1,7 @@
 # M20 planning inputs (2026-09-16)
 
 Facts gathered in the planning session so the execution session does not repeat the lookups.
-Nothing here is a registration; `m20/REGISTRATION.md` and `m20/beir13_registry.json` are written
+Nothing here is a registration; `m20/REGISTRATION.md` and `m20/beir15_registry.json` are written
 and pushed by the execution session before observation. Values marked *expected* are from the BEIR
 paper and must be verified against the download.
 
@@ -34,7 +34,7 @@ Fusion inputs must be truncated to depth 100 *before* DBSF (mu and sigma are com
 prefetch); the M12 self-exclusion condition applies to the DBSF rows. Reproduce one six-set DBSF
 number from `m12/six_dbsf.json` with the extended code before it runs on new data.
 
-## BEIR-13 candidates
+## BEIR-15 candidates
 
 Ten are already scored or reserved. HF revisions were read on 2026-09-16 (`HfApi.dataset_info`);
 HF wrapper licence tags are **not** licence evidence (M7 ledger) — the primary-source evidence in
@@ -50,20 +50,25 @@ HF wrapper licence tags are **not** licence evidence (M7 ledger) — the primary
 | MS MARCO | `BeIR/msmarco` | `a918e0d1` | 8,841,823 / 6,980 (dev) | comparator-training; validation-only licence role | new |
 | NQ | `BeIR/nq` | `b7253e6c` | 2,681,468 / 3,452 | M7-dev (250k subset); comparator-training | new |
 | HotpotQA | `BeIR/hotpotqa` | `a7e8bab2` | 5,233,329 / 7,405 | M7-dev; comparator-training | new |
-| Touché-2020 | `BeIR/webis-touche2020` | `7ebed360` | 382,545 / 49 | source-family contact with ArguAna | new, **only if args.me licence verified** |
+| Touché-2020 | `BeIR/webis-touche2020` | `7ebed360` | 382,545 / 49 | source-family contact with ArguAna; licence disclosed | new |
+| Quora | `BeIR/quora` | `54934c6f` | 522,931 / 10,000 | comparator-training; **no primary-source licence — evaluation-only row (R22)** | new |
+| Climate-FEVER | `BeIR/climate-fever` | `d4edc15f` | 5,416,593 / 1,535 | teacher-disclosed (FEVER corpus); **no affirmative licence — evaluation-only row (R22)**; corpus is FEVER's Wikipedia, so reuse the reserved FEVER shards after hash verification | new queries; corpus shared |
 
-Excluded: Climate-FEVER (no affirmative licence, M7), Quora (no primary-source licence, M7),
-BioASQ, Signal-1M, TREC-NEWS, Robust04 (not freely redistributable).
+Excluded: BioASQ, Signal-1M, TREC-NEWS, Robust04 (not freely redistributable). Quora and
+Climate-FEVER are included under R22 as evaluation-only rows because they are part of the standard
+public benchmark; their licence status is disclosed in every table and they remain out of training,
+targets, negatives and generation seeds in every role.
 
-New Stella document encodes: ≈ 17.5M passages (MS MARCO, NQ, HotpotQA, Touché, ten CQADupStack
-forums) on top of the reserved ≈ 10.1M. Arctic-M (LEAF documents) and bge-small encode the same
+New Stella document encodes: ≈ 18.0M passages (MS MARCO, NQ, HotpotQA, Touché, Quora, ten
+CQADupStack forums) on top of the reserved ≈ 10.1M; Climate-FEVER adds queries only if its corpus
+hashes match FEVER's. Arctic-M (LEAF documents) and bge-small encode the same
 corpora; both are much cheaper than Stella. Historical local caches under `work/enc*` may hold
 Stella HotpotQA vectors from M7 dev; reuse only if hash-bound to the same revision and fp16
 contract, otherwise re-encode.
 
 ## Cost sketch
 
-Reserved cap stands at 55.2 h × $1.6636111111/h ≈ $92. BEIR-13's encode is ≈ 1.75× the reserved
+Reserved cap stands at 55.2 h × $1.6636111111/h ≈ $92. BEIR-15's encode is ≈ 1.75× the reserved
 volume; register its own cap in `m20/REGISTRATION.md` from the measured reserved rate
 (`results/m13_encode_benchmark*.json`) rather than this sketch. Working expectation: total M20
 compute well under half the $1,000 ceiling. Three stopped 500 GB volumes bill continuously; the
@@ -84,5 +89,5 @@ SHA-256, and re-hash at both targets is the verification.
    read-exclusion, access log audited).
 4. Advance `work/m13cloud` to `origin/main`; check pod state, price and wallet.
 5. One cloud session: reserved transaction first (tag, four datasets, eight systems), then
-   BEIR-13 remaining corpora, then archive pull; pod STOP in `finally`.
+   BEIR-15 remaining corpora, then archive pull; pod STOP in `finally`.
 6. Results, receipts, `m10_final_run.json` → `COMPLETE`, ledger boundary note, `m20/STATUS.md`.

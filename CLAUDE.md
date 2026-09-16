@@ -21,7 +21,7 @@ M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M14 (Nano r
 M17, M18, M19 and M21 are closed historical evidence. M18 shipped an internal Qdrant project-memory
 system but no improved encoder; M19 closed `ENCODER_INCONCLUSIVE` with its confirmation surface
 still sealed, so it establishes neither improvement nor equivalence and released Zero v1 stays
-selected. **M20 is the active execution milestone** — reserved four and BEIR-13 descriptive
+selected. **M20 is the active execution milestone** — reserved four and BEIR-15 descriptive
 evaluation only, under R22; official release is M22 and the upstream FastEmbed PRs are M23 — and
 no session may spend access until it follows
 `instructions-m20.md`. Paper milestone references in older files are historical. Harness

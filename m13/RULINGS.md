@@ -196,19 +196,22 @@ systems then run in one transaction; Zero reuses the Stella document vectors and
 a second corpus-scale encode. All rows remain descriptive, zero alpha, and do not alter the
 completed six-set claims. If access has already been spent, do not reopen it merely to add Zero.
 
-## R22 — M20 scope: BEIR-13, extended descriptive roster, three-way split, archive (Dylan, 2026-09-16)
+## R22 — M20 scope: BEIR-15, extended descriptive roster, three-way split, archive (Dylan, 2026-09-16)
 
 Made in the M20 planning session, before any reserved payload was opened (no `m8-reserved-spent`
 tag exists on origin at ruling time). Four decisions, each answered by the owner on 2026-09-16:
 
-1. **Broad set.** "BEIR-18" is replaced by **BEIR-13: the public BEIR datasets that meet the M7
-   eval-use licence standard.** Excluded and why: Climate-FEVER (no affirmative licence, dropped in
-   M7), Quora (no primary-source licence, banned in M7), BioASQ, Signal-1M, TREC-NEWS and Robust04
-   (not freely redistributable). Touché-2020 is included only if its primary source (args.me)
-   licence is verified before the pin; it is labelled source-family contact with ArguAna.
+1. **Broad set.** "BEIR-18" is replaced by **BEIR-15: the fifteen public BEIR datasets.**
+   Excluded: BioASQ, Signal-1M, TREC-NEWS and Robust04 (not freely redistributable). The session
+   first proposed thirteen, dropping Climate-FEVER (no affirmative licence, dropped from M7's
+   partitions) and Quora (no primary-source licence, banned from M7 dev); the owner ruled both back
+   in **for evaluation only**: "For testing it's okay, since they are part of the benchmark
+   everyone uses." Their licence status is disclosed on every table, and the training-source rule
+   is untouched: neither may ever supply gradients, targets, negatives or generation seeds.
+   Touché-2020 is labelled source-family contact with ArguAna and its licence status disclosed.
    CQADupStack counts as one dataset of twelve forums. Every row carries a contact label
-   (clean / reserved / M7-dev / teacher-disclosed / comparator-training). Descriptive, `alpha = 0`,
-   never mixed into or reinterpreting M13's registered gates. Owner: "approved".
+   (clean / reserved / M7-dev / teacher-disclosed / comparator-training / licence-unverified).
+   Descriptive, `alpha = 0`, never mixed into or reinterpreting M13's registered gates.
 2. **Roster.** Beyond the inherited four (Nano, dense Zero, BGE-small, LEAF asym), the same
    pre-observation amendment adds four descriptive systems that need no document-scale encode:
    `stella-query` (the symmetric teacher, Stella query tower on the same Stella shards), `bm25`
@@ -216,7 +219,7 @@ tag exists on origin at ruling time). Four decisions, each answered by the owner
    operator, `m12src/qfusion.py`). The registered R1/R2 estimands and NDO-3 weights are unchanged;
    the additions produce no new estimand. Owner: "Add" (Stella, BM25) and Nano + fusion confirmed.
 3. **Split.** M20 becomes evaluation-only: amendment, executor extension, two reviews, one cloud
-   session covering the reserved four and BEIR-13, archive, pod STOP. **M22** owns the official
+   session covering the reserved four and BEIR-15, archive, pod STOP. **M22** owns the official
    Nano release (card revision, private-first upload, verification, public flip, storage-retirement
    request). **M23** owns the upstream FastEmbed PRs. Owner: "3 approved".
 4. **Archive.** Raw corpora/queries/qrels and the fp16 Stella document vectors for every evaluated

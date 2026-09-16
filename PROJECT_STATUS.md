@@ -2,7 +2,7 @@
 
 **Constella Zero, the Stella document tower and Constella Nano are public; Nano is a research
 preview.** M13 and M14 are closed. M20 (opened 2026-09-16, R22) owns the still-unspent reserved
-evaluation and the BEIR-13 descriptive run; M22 owns the official release and M23 the upstream
+evaluation and the BEIR-15 descriptive run; M22 owns the official release and M23 the upstream
 FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md`.
 
 ## Research and product
@@ -18,7 +18,7 @@ FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md
 | Zero v1.1 (M17) | Closed 2026-09-12, negative result: no screen arm met eligibility; released Zero v1 remains shipped |
 | Project memory (M18) | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`; the system is usable with released Zero v1 |
 | M19 | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development results were label-sensitive, confirmation remained sealed and released Zero v1 stays selected |
-| M20 | Active: reserved four and BEIR-13 descriptive evaluation over an eight-system roster (Nano, Zero, BGE-small, LEAF, Stella-query, BM25, two DBSF@100 fusions), then archive. Release is M22, upstream PRs M23 |
+| M20 | Active: reserved four and BEIR-15 descriptive evaluation over an eight-system roster (Nano, Zero, BGE-small, LEAF, Stella-query, BM25, two DBSF@100 fusions), then archive. Release is M22, upstream PRs M23 |
 | M21 | Closed 2026-09-15: research-preview documentation, canonical benchmark tables, model-card publication and FastEmbed polish completed |
 
 ## Verification and limits
@@ -32,8 +32,8 @@ FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md
   immutable and remains the research-preview artifact.
 - Absolute per-dataset bge-small and LEAF rows are not published. The committed evidence supports
   Nano's absolute row and the registered comparator deltas without re-deriving aggregates.
-- The reserved four and BEIR-13 remain **UNSPENT**. They have no result and belong to M20; this
-  preview does not imply one. "BEIR-18" in older files means this BEIR-13 (R22).
+- The reserved four and BEIR-15 remain **UNSPENT**. They have no result and belong to M20; this
+  preview does not imply one. "BEIR-18" in older files means this BEIR-15 (R22).
 - M20 must run those evaluations under their registered access rules; M22 then completes the
   official release and M23 opens the upstream FastEmbed PRs. M19 closed without opening
   confirmation; its development evidence does not establish improvement, non-improvement or

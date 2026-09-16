@@ -8,7 +8,7 @@ reviewed, no code changed, no pod started, no protected payload opened. Reserved
 ## Next action
 
 Follow `instructions-m20.md` in order. First deliverable is the pre-observation registration
-(`m20/REGISTRATION.md`, `m20/beir13_registry.json`, dated amendment in
+(`m20/REGISTRATION.md`, `m20/beir15_registry.json`, dated amendment in
 `m10/final_run_registry.json`), pushed before any executor change is run against real data.
 Planning inputs that save the next session a lookup are in `m20/PLAN.md`.
 
