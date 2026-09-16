@@ -56,3 +56,10 @@ The artifacts this smoke produced under `results/` and `work/m13-reserved-enc/*/
 deleted afterwards, so the cloud session starts from an empty state and the whole table is
 produced on one device. Mixing a 3080 row into an A100 table is exactly the silent inconsistency
 this project avoids. The numbers above are the receipt.
+
+## Resume check (added after the fusion-input hash binding)
+
+With only `nano+bm25 dbsf@100` deleted and the run repeated, the runner recomputed BM25's and
+Nano's top-100 runs, matched them against the hashes their own scored rows had recorded, and
+reproduced **0.743325403** exactly. That exercises the resume path, the recorded-hash binding and
+the determinism of the persisted runs in one go.

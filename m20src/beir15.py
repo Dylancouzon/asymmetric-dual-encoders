@@ -199,13 +199,22 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
     for system in R.DERIVED_SYSTEMS:
         if system not in pending:
             continue
+        for needed in R.DERIVED_SYSTEMS[system]:
+            if not score_path(corpus_name, needed).exists():
+                raise RuntimeError(f"{corpus_name}/{system}: input {needed} is not scored")
         dense_key, lexical_key = R.DERIVED_SYSTEMS[system]
         runs, inputs = {}, {}
         for key in (dense_key, lexical_key):
             path = R.run_path(run_root, RUN_STAGE, key, corpus_name)
-            digest = R.sha_file(path)
-            runs[key], _ = R.load_run(path, digest)
-            inputs[key] = {"run_path": str(path.relative_to(REPO)), "run_sha256": digest}
+            # Bind to the hash the INPUT's own score row recorded, not to whatever is on disk now.
+            # On a resume where the input was scored by an earlier process, that is the only thing
+            # standing between a corrupted or stale run file and a silently wrong fused number.
+            recorded = json.loads(score_path(corpus_name, key).read_text()).get("run_sha256")
+            if not recorded:
+                raise RuntimeError(f"{corpus_name}/{key}: scored row carries no run hash; "
+                                   f"{system} cannot be derived from it")
+            runs[key], _ = R.load_run(path, recorded)
+            inputs[key] = {"run_path": str(path.relative_to(REPO)), "run_sha256": recorded}
         fused = R.dbsf_at_depth(runs[dense_key], runs[lexical_key])
         finish(system, R.per_query_ndcg10(fused, qrels),
                {"inputs": inputs,
