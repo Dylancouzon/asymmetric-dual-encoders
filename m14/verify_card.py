@@ -15,17 +15,14 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[1]
 CARD = REPO / "m14/MODEL_CARD.md"
 NANO = REPO / "work/m14-preview/staging"
-ZERO = REPO / "work/release/zero-v1"
 DOC = REPO / "work/release/stella-doc-onnx"
 FASTEMBED_CHECKOUT = REPO / "work/m14-preview/fastembed"
 FASTEMBED_BRANCH = "constella-research-preview"
 FASTEMBED_COMMIT = "47a50907415a90f26d4b49d7a01efe210848813e"
 NANO_NAME = "DylanCouzon/constella-nano"
-ZERO_NAME = "DylanCouzon/constella-zero"
 DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"
 EXPECTED_HASHES = {
     NANO / "model.onnx": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
-    ZERO / "model.onnx": "6c8a9d0753330cb5291b4df005ecfaa04a27b587f6af6f0986778dc43fb9ec0a",
     DOC / "model.onnx": "fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9",
 }
 
@@ -55,14 +52,13 @@ def main() -> None:
         capture_output=True,
         text=True,
     ).stdout.strip()
-    assert 'NANO_NAME = "DylanCouzon/constella-nano"' in card
-    assert 'ZERO_NAME = "DylanCouzon/constella-zero"' in card
+    assert 'NAME = "DylanCouzon/constella-nano"' in card
     assert 'DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"' in card
     assert "REPO_ID" not in card
     assert "add_custom_model(" not in card
     assert "Dylancouzon/fastembed.git@constella-research-preview" in card
 
-    for directory in (NANO, ZERO, DOC, FASTEMBED_CHECKOUT):
+    for directory in (NANO, DOC, FASTEMBED_CHECKOUT):
         if not directory.is_dir():
             raise FileNotFoundError(f"required offline directory is missing: {directory}")
     actual_hashes = {path: sha256_file(path) for path in EXPECTED_HASHES}
@@ -90,7 +86,6 @@ def main() -> None:
             "HF_DATASETS_OFFLINE": "1",
             "TOKENIZERS_PARALLELISM": "false",
             "CONSTELLA_NANO_PATH": str(NANO),
-            "CONSTELLA_ZERO_PATH": str(ZERO),
             "CONSTELLA_DOC_PATH": str(DOC),
         }
     )
@@ -118,38 +113,39 @@ def main() -> None:
 
     TextEmbedding.add_custom_model = refuse_bridge
 
-    start = card.index("<!-- m14-card-usage-start -->")
-    end = card.index("<!-- m14-card-usage-end -->")
+    start = card.index("<!-- card-usage-start -->")
+    end = card.index("<!-- card-usage-end -->")
     usage = card[start:end]
     snippets = re.findall(r"```python\n(.*?)\n```", usage, flags=re.DOTALL)
-    assert len(snippets) == 4
+    assert len(snippets) == 1
+    script = "\n\n".join(snippets)
+    script = script.replace(
+        "TextEmbedding(DOC_NAME)",
+        "TextEmbedding(DOC_NAME, specific_model_path=str(DOC))",
+    )
+    script = script.replace(
+        "TextEmbedding(NAME)",
+        "TextEmbedding(NAME, specific_model_path=str(NANO))",
+    )
     namespace: dict[str, object] = {}
-    exec(compile("\n\n".join(snippets), f"{CARD} (staged usage snippets)", "exec"), namespace)
+    namespace.update({"DOC": DOC, "NANO": NANO})
+    exec(compile(script, f"{CARD} (staged usage snippets)", "exec"), namespace)
 
     query_model = namespace["query_model"]
-    zero_model = namespace["zero_model"]
-    doc_model = namespace["doc_model"]
-    q = namespace["q"]
-    documents = namespace["D"]
-    docs = namespace["docs"]
-    hits = namespace["hits"]
-    zero_hits = namespace["zero_hits"]
-    assert namespace["NANO_NAME"] == NANO_NAME
-    assert namespace["ZERO_NAME"] == ZERO_NAME
+    doc_model = namespace["document_model"]
+    q = namespace["query_embedding"]
+    docs = namespace["documents"]
+    hits = namespace["results"]
+    assert namespace["NAME"] == NANO_NAME
     assert namespace["DOC_NAME"] == DOC_NAME
     assert type(query_model.model).__name__ == "PooledNormalizedEmbedding"
-    assert type(zero_model.model).__name__ == "OnnxTextEmbedding"
     assert type(doc_model.model).__name__ == "OnnxTextEmbedding"
-    assert q.shape == (1024,) and documents.shape == (2, 1024)
-    # M21: FastEmbed's mean_pooling no longer promotes the pooled vector to float64,
-    # so the card's example needs no manual cast and the query is 4,096 bytes natively.
+    assert q.shape == (1024,)
     assert q.dtype == np.dtype(np.float32)
     assert q.nbytes == 4096
-    assert np.isfinite(q).all() and np.isfinite(documents).all()
-    assert namespace["qdrant_url"] is None
+    assert np.isfinite(q).all()
     assert namespace["client"]._client.__class__.__name__ == "QdrantLocal"
     assert hits[0].payload["text"] == docs[0]
-    assert zero_hits[0].payload["text"] in docs
     assert hub_calls == 0
 
     receipt = {
@@ -162,12 +158,11 @@ def main() -> None:
         "working_tree_matches_staged": True,
         "usage_block_executed": True,
         "usage_python_blocks_executed": len(snippets),
-        "repo_ids": {"query": NANO_NAME, "alternate_query": ZERO_NAME, "document": DOC_NAME},
+        "repo_ids": {"query": NANO_NAME, "document": DOC_NAME},
         "offline": {
             "hub_access_refused": True,
             "hub_calls": hub_calls,
             "nano_directory": str(NANO.relative_to(REPO)),
-            "zero_directory": str(ZERO.relative_to(REPO)),
             "document_directory": str(DOC.relative_to(REPO)),
             "model_sha256": {
                 str(path.relative_to(REPO)): digest for path, digest in actual_hashes.items()
@@ -180,7 +175,6 @@ def main() -> None:
             "module_path": str(module_path),
             "stale_import_path_refused": True,
             "query_family": type(query_model.model).__name__,
-            "alternate_query_family": type(zero_model.model).__name__,
             "document_family": type(doc_model.model).__name__,
             "add_custom_model_refused": True,
         },
@@ -190,20 +184,14 @@ def main() -> None:
                 "per_vector_bytes": int(q.nbytes),
             },
             "query_shape": list(q.shape),
-            "document_shape": list(documents.shape),
             "query_norm": float(np.linalg.norm(q)),
-            "document_norms": [float(x) for x in np.linalg.norm(documents, axis=1)],
             "qdrant": {
                 "mode": "local in-memory",
-                "collection": namespace["COLLECTION_NAME"],
+                "collection": "documents",
                 "size": 1024,
                 "distance": "Cosine",
                 "nano_ranking": [
                     {"document": hit.payload["text"], "score": float(hit.score)} for hit in hits
-                ],
-                "zero_ranking": [
-                    {"document": hit.payload["text"], "score": float(hit.score)}
-                    for hit in zero_hits
                 ],
             },
             "all_finite": True,

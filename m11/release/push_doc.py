@@ -309,10 +309,10 @@ def render_card():
                  "`export_doc.py --check` with fp16 out of the export dir")
     subs = {}
     p32 = res["parity_model.onnx"]
+    subs["PARITY_FIXTURE_COUNT"] = str(res["n_fixtures"])
     subs["PARITY_FP32_COS"] = f"{p32['min_cos']:.8f}"
     subs["PARITY_FP32_ABS"] = f"{p32['max_abs']:.2e}"
-    subs["PARITY_FP32_NORMS"] = f"{p32['out_norms'][0]:.6f}–{p32['out_norms'][1]:.6f}"
-    card = card.replace("259 real", f"{res['n_fixtures']} real")
+    subs["PARITY_FP32_NORMS"] = f"{p32['out_norms'][0]:.6f} to {p32['out_norms'][1]:.6f}"
     for k, v in subs.items():
         card = card.replace(k, v)
     left = re.findall(r"\b(PARITY_[A-Z0-9_]+|BATCH_INV_FP16)\b", card)

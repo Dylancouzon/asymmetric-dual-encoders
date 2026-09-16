@@ -15,118 +15,117 @@ pipeline_tag: feature-extraction
 
 # stella-en-400M-v5-doc-onnx
 
-**stella-en-400M-v5-doc-onnx** is the shared document tower for an asymmetric retrieval family.
-It indexes documents once, in the cloud; the small
-[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) and stronger
-[`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) query encoders can both search
-that same 1024-dimensional index without re-encoding it. The document side is not cheap: this is a
-400M-parameter transformer, deliberately moved out of the per-query path.
+This is the document encoder used by the Constella asymmetric retrieval models. It converts
+English documents into normalized 1024-dimensional vectors. Index documents with this model,
+then search the index with either
+[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) or
+[`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano).
 
-This is an ONNX conversion of
-[`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5), pinned at
-`ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`. There was no training, fine-tuning, or distillation:
-the format changed, not the weights. The graph includes pooling and normalization and needs
-neither torch nor `trust_remote_code`.
+The model is an ONNX conversion of
+[`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5) at revision
+`ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`. The weights were not trained or fine-tuned during
+conversion. Pooling and normalization are included in the graph, and inference does not require
+PyTorch or `trust_remote_code`.
 
-> **Research preview.** Reserved-four evaluation and broad descriptive BEIR-18 validation for the
-> family are pending and unspent; no result is claimed for either. The three models are registered
-> on the preview branch below, not in an upstream FastEmbed release yet.
+| Property | Value |
+|---|---|
+| Role | Document encoder |
+| Output | 1024-dimensional normalized fp32 vector |
+| Architecture | Stella 400M transformer |
+| Languages | English |
+| Maximum input length | 512 tokens |
+| Query prefix | Not applicable; this artifact is for documents only |
+| Compatible query encoders | constella-zero and constella-nano |
 
-## Usage
+## Installation
+
+Native FastEmbed support is currently available from the Constella preview branch:
 
 ```console
 pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview"
 ```
 
+## Usage
+
 ```python
-import numpy as np
 from fastembed import TextEmbedding
 
 NAME = "REPO_ID"
-doc_model = TextEmbedding(NAME)
-docs = [
+
+documents = [
     "Marie Curie conducted pioneering research on radioactivity.",
     "The Nile is a major north-flowing river in northeastern Africa.",
 ]
-D = np.stack(list(doc_model.embed(docs)))
-assert D.shape == (2, 1024) and D.dtype == np.float32
+
+model = TextEmbedding(NAME)
+embeddings = list(model.embed(documents))
 ```
 
-FastEmbed fetches `model.onnx` and the tokenizer. Its native registration passes through the
-graph's normalized output unchanged.
+Store the returned vectors in a cosine-similarity index. Use constella-zero or constella-nano to
+encode queries against that index.
 
-### Sentence Transformers
-
-For the source model in torch—a different artifact—and its supported prompted query path. This
-example needs `pip install sentence-transformers torch`, which the FastEmbed path above does not:
-
-```python
-from sentence_transformers import SentenceTransformer
-
-st = SentenceTransformer(
-    "NovaSearch/stella_en_400M_v5",
-    revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
-    trust_remote_code=True,
-    config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False},
-)
-D_torch = st.encode(docs, normalize_embeddings=True)
-Q_torch = st.encode(
-    ["who discovered radium?"], prompt_name="s2p_query", normalize_embeddings=True
-)
-```
+This graph is the document path only. If you use the original Stella model for queries, use its
+`s2p_query` prompt as described on the source model card. Do not use this artifact as an
+unprompted Stella query encoder.
 
 ## How it works
 
-The source Stella model is asymmetric. This graph is the **document path only**. Queries for the
-source model require its `s2p_query` prompt; neither this graph nor FastEmbed adds it. For this
-family, use Zero or Nano instead. Those query encoders share this document space, but that
-geometric compatibility is not a claim of retrieval parity, equivalence, or a tie.
-
-The graph computes:
+The graph applies Stella's document path and then computes:
 
 ```text
-masked mean over last_hidden_state → 2_Dense_1024 → L2 normalization
+masked mean over last_hidden_state -> 2_Dense_1024 -> L2 normalization
 ```
 
-Inputs are int64 `input_ids` and `attention_mask`; output is normalized fp32 `(batch, 1024)`.
-Inputs are English-only, truncate at 512 tokens, and do not support paired sequences or
-`token_type_ids`.
+Inputs are int64 `input_ids` and `attention_mask`. The output is a normalized fp32 array with
+shape `(batch, 1024)`. Inputs are truncated at 512 tokens. Paired sequences and `token_type_ids`
+are not supported.
+
+## Conversion accuracy
+
+The ONNX graph was compared with the original PyTorch document path on PARITY_FIXTURE_COUNT
+Natural Questions passages. The fixtures cover short, medium, boundary-length, and over-length
+inputs.
+
+| Comparison | Minimum cosine similarity | Maximum absolute error |
+|---|---:|---:|
+| ONNX CPU vs PyTorch | PARITY_FP32_COS | PARITY_FP32_ABS |
+| ONNX CUDA vs ONNX CPU | 1.000000 | 9.07e-05 |
+
+Output norms were PARITY_FP32_NORMS. Encoding the same text alone or in a ragged batch produced
+bit-identical results.
 
 ## Files
 
-| file | precision | size |
+| File | Precision | Size |
 |---|---|---:|
-| `model.onnx` | fp32 | ~1.75 GB |
+| `model.onnx` | fp32 | about 1.75 GB |
 
-The graph uses opset 17, standard ONNX operators, and no external-data initializers. Tokenizer
-metadata changes Stella's 32768/8000 length declarations to 512 and disables fixed-512 padding so
-FastEmbed uses dynamic batch-longest padding. The weights and graph are unchanged.
+The graph uses ONNX opset 17, standard operators, and no external-data initializers. The tokenizer
+uses dynamic padding and truncates at 512 tokens.
 
-There is deliberately no fp16 graph. A candidate reached only **0.662 minimum cosine** against the
-fp32 reference on CUDA. Its CPU result was misleading because ONNX Runtime up-converted it.
+An fp16 graph is not included. The tested fp16 conversion reached a minimum cosine similarity of
+0.662 against the fp32 reference on CUDA and was not accurate enough to release.
 
-## Measured parity
+## Training
 
-The fp32 graph was checked against the torch document path on 259 frozen, length-stratified Natural
-Questions passages, including the 511/512/513 boundary and over-length truncation.
+No training, fine-tuning, or distillation was performed for this conversion. The graph contains
+the source Stella weights and the same document-side computation in ONNX format.
 
-| comparison | minimum cosine | maximum absolute error |
-|---|---:|---:|
-| ONNX CPU vs torch | PARITY_FP32_COS | PARITY_FP32_ABS |
-| ONNX CUDA vs CPU | 1.000000 | 9.07e-05 |
+## Limitations
 
-Output norms are PARITY_FP32_NORMS, and ragged-batch invariance is bit-identical.
+- This artifact encodes documents only. It does not apply Stella's query prompt.
+- The model is English-only and truncates inputs after 512 tokens.
+- The 400M-parameter encoder and 1.75 GB graph are intended for indexing, not lightweight query
+  serving.
+- Compatibility with the Constella query encoders means they share a vector space. It does not
+  mean the query encoders have equal retrieval quality.
 
-## Licence and attribution
+## License and provenance
 
-NovaSearch releases the pinned Stella weights under MIT; this repo redistributes them in ONNX form
-under the same terms and claims no separate licence. Stella derives from
-[`Alibaba-NLP/gte-large-en-v1.5`](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5)
-(Apache-2.0), but this conversion redistributes no Python model implementation. Cite Stella for
-the model itself.
+NovaSearch releases the pinned Stella weights under the MIT license. This repository redistributes
+the same weights in ONNX form under that license. Stella derives from
+[`Alibaba-NLP/gte-large-en-v1.5`](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5), which is
+Apache-2.0 licensed.
 
-## Provenance
-
-Converted from `NovaSearch/stella_en_400M_v5` at
-`ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20` with `torch.onnx.export`, opset 17 and constant folding.
-No training. Parity fixtures are 259 frozen, length-stratified Natural Questions passages.
+The graph was exported with `torch.onnx.export`, opset 17, and constant folding. Its SHA-256 is
+`fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9`.
