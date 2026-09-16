@@ -199,6 +199,11 @@ def remote_command(stage_a_deadline_epoch):
         f"--stage-deadline {stage_a_deadline_epoch:.0f} --tower-order {towers}"
         for tower in towers.split(","))
     stage_b = "; ".join([
+        # BM25 is new in the tagged transaction and loads the reserved CORPORA there, with the
+        # datasets library offline. Prove that exact route works while the access is still
+        # unspent: this runs under the corpus-only claim, opens no query or qrel, and a failure
+        # here costs nothing, whereas the same failure after the tag costs the access.
+        "HF_DATASETS_OFFLINE=1 .venv/bin/python m8src/pre_encode.py --preflight-only",
         # The zero tower resolves its pinned Hub revision, so its snapshot is fetched here rather
         # than under HF_HUB_OFFLINE; everything after this point is offline.
         "PYTHONPATH=m13src:m20src .venv/bin/python -m reserved_support "
