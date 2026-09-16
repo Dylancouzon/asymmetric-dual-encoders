@@ -61,3 +61,27 @@ M13 still owes the cloud/build driver and guarded final-evaluation executor with
 Passing unit checks does not certify either unwritten execution path. Keep registrations and
 guards when reusing components; never read reserved qrels, `work/m9reserve` or
 `results/frozen_eval/untouched-*` outside the registered evaluation transaction.
+
+## M20 checks
+
+The reserved and BEIR-15 executors are covered by the M13 suite, which also carries the new M20
+tests. It uses synthetic fixtures and scratch directories and touches no protected payload:
+
+    PYTHONPATH="$PWD:$PWD/m7src" CUDA_VISIBLE_DEVICES="" .venv/bin/python -m pytest -q m13src
+
+Two receipts are run prerequisites rather than tests, and both are already committed:
+
+    PYTHONPATH=m20src:m12src:m7src M7_ENCODER=stella-400M-v5 \
+      .venv/bin/python m20src/dbsf_reproduction.py --datasets scifact nfcorpus
+    .venv/bin/python m20src/tower_rate_benchmark.py --device cuda
+
+The first proves the extended roster reproduces M12's registered DBSF@100 operator, what the
+released `constella-zero` bundle costs a reported number against the frozen table, and that dense
+depth 100 equals depth 1000 truncated. The second measures the three document towers' relative
+encode cost, which is what the M20 hour caps and the in-run projection gate are built from; run it
+one tower per process, because leaving all three resident on a small card measured Arctic-M
+eighteen times too slow.
+
+`run_checks.sh` currently rewrites `results/m10_contrast_E1.json`, a real registered result file.
+That is pre-existing and unrelated to M20, but check `git status` after running it and restore the
+file rather than committing the damage.
