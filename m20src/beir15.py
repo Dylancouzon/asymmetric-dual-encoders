@@ -82,9 +82,15 @@ def load_public(corpus_name):
     queries = load_dataset(source, "queries", revision=revision)["queries"]
     split = "dev" if corpus_name == "msmarco" else "test"
     if corpus_name.startswith("cqadup-"):
+        # CQADupStack keeps its labels in the forum's own repository, already pinned above.
+        qrels_source, qrels_revision = source, revision
         rows = load_dataset(source, "default", revision=revision, split=split)
     else:
-        rows = load_dataset(f"{source}-qrels", revision=None, split=split)
+        # BEIR publishes labels in a SEPARATE repository with its own revision. Leaving it
+        # unpinned would let a republished label set move a reported number silently.
+        row = next(r for r in registry()["datasets"] if r["key"] == corpus_name)
+        qrels_source, qrels_revision = row["qrels_source"], row["qrels_revision"]
+        rows = load_dataset(qrels_source, revision=qrels_revision, split=split)
     qrels = {}
     for row in rows:
         qrels.setdefault(str(row["query-id"]), {})[str(row["corpus-id"])] = int(row["score"])
@@ -98,7 +104,8 @@ def load_public(corpus_name):
     if not q_ids:
         raise RuntimeError(f"{corpus_name}: no queries carry {split} qrels")
     return {"doc_ids": doc_ids, "doc_texts": doc_texts, "q_ids": q_ids, "q_texts": q_texts,
-            "qrels": qrels, "source": source, "revision": revision, "split": split}
+            "qrels": qrels, "source": source, "revision": revision, "split": split,
+            "qrels_source": qrels_source, "qrels_revision": qrels_revision}
 
 
 def shards_for(system, corpus_name):
@@ -142,6 +149,7 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
         _write(score_path(corpus_name, system), {
             "status": "COMPLETE", "dataset": corpus_name, "system": system,
             "source": payload["source"], "revision": payload["revision"],
+            "qrels_source": payload["qrels_source"], "qrels_revision": payload["qrels_revision"],
             "split": payload["split"], "n_docs": len(payload["doc_ids"]),
             "n_queries": len(q_ids), "mean_ndcg10": float(values.mean()),
             "scores": {q: scores[q] for q in q_ids}, **extra})

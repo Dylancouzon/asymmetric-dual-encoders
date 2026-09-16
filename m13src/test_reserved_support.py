@@ -319,3 +319,23 @@ def test_validate_output_requires_the_persisted_run_for_a_fusion_input(tmp_path)
     datasets["fever"]["run_sha256"] = "0" * 64
     with pytest.raises(ValueError, match="persisted top-100 run"):
         R.validate_output(record, cfg, system)
+
+
+def test_reserved_support_never_imports_the_corpus_only_entry_point():
+    """`paths_guard.claim` refuses a second, different claim in one process. The tagged
+    transaction holds `m13src.score13`, so importing `m8src/pre_encode.py` -- which claims the
+    corpus-only entry at import time -- would raise inside the transaction, AFTER the reserved
+    access had been spent. BM25 needs corpus text, so this is a live path, not a hypothetical."""
+    source = (Path(R.REPO) / "m13src" / "reserved_support.py").read_text()
+    offenders = [line.strip() for line in source.splitlines()
+                 if "pre_encode" in line and not line.lstrip().startswith("#")
+                 and "deliberately does NOT import" not in line]
+    assert not offenders, offenders
+
+
+def test_only_one_allowlist_claim_is_reachable_from_the_transaction(monkeypatch):
+    import paths_guard
+
+    monkeypatch.setattr(paths_guard, "_claim", "m13src.score13", raising=False)
+    with pytest.raises(paths_guard.ProtectedPathRefusal, match="already claimed"):
+        import pre_encode  # noqa: F401  -- claims m8src.pre_encode at import time

@@ -344,7 +344,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/scifact-qrels",
+      "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029"
     },
     {
       "key": "nfcorpus",
@@ -355,7 +357,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/nfcorpus-qrels",
+      "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65"
     },
     {
       "key": "scidocs",
@@ -366,7 +370,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/scidocs-qrels",
+      "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc"
     },
     {
       "key": "trec-covid",
@@ -377,7 +383,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/trec-covid-qrels",
+      "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10"
     },
     {
       "key": "fiqa",
@@ -388,7 +396,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/fiqa-qrels",
+      "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a"
     },
     {
       "key": "arguana",
@@ -399,7 +409,9 @@
       ],
       "scored_in": "beir15",
       "also_scored_in": "M13 six-set",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/arguana-qrels",
+      "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7"
     },
     {
       "key": "fever",
@@ -445,7 +457,9 @@
       "scored_in": "beir15",
       "split": "dev",
       "licence_role": "validation only",
-      "licence_primary_source": "https://microsoft.github.io/msmarco/Notice.html \u2014 \"non-commercial research purposes only\"; recorded in research/m7-data-licensing.md row 1 and its 2026-09-04 validation-use rule change. Never gradients, targets, negatives or generation seeds."
+      "licence_primary_source": "https://microsoft.github.io/msmarco/Notice.html \u2014 \"non-commercial research purposes only\"; recorded in research/m7-data-licensing.md row 1 and its 2026-09-04 validation-use rule change. Never gradients, targets, negatives or generation seeds.",
+      "qrels_source": "BeIR/msmarco-qrels",
+      "qrels_revision": "253fbf8a3f8d4a0932b63882b5162bedc84779f5"
     },
     {
       "key": "nq",
@@ -457,7 +471,9 @@
       ],
       "scored_in": "beir15",
       "split": "test",
-      "note": "M7 development used a 250k-document subset of this corpus for fusion selection."
+      "note": "M7 development used a 250k-document subset of this corpus for fusion selection.",
+      "qrels_source": "BeIR/nq-qrels",
+      "qrels_revision": "519acd4e48bb3e5da22b2b888ce36c614f4f2bc9"
     },
     {
       "key": "hotpotqa",
@@ -468,7 +484,9 @@
         "comparator-training"
       ],
       "scored_in": "beir15",
-      "split": "test"
+      "split": "test",
+      "qrels_source": "BeIR/hotpotqa-qrels",
+      "qrels_revision": "b15429e9244c8ec966985d7778427c3b1543b314"
     },
     {
       "key": "webis-touche2020",
@@ -479,7 +497,9 @@
       ],
       "scored_in": "beir15",
       "split": "test",
-      "note": "Same args.me source family as ArguAna, which Stella discloses. Licence status disclosed on every table."
+      "note": "Same args.me source family as ArguAna, which Stella discloses. Licence status disclosed on every table.",
+      "qrels_source": "BeIR/webis-touche2020-qrels",
+      "qrels_revision": "dea3c4c7339f61c3e1abc42b9bdbf337b115aa97"
     },
     {
       "key": "quora",
@@ -492,7 +512,9 @@
       "scored_in": "beir15",
       "split": "test",
       "licence_role": "evaluation only (R22)",
-      "licence_note": "No primary-source licence; banned from M7 dev for that reason. Included under R22 because it is part of the standard public benchmark. Never gradients, targets, negatives or generation seeds."
+      "licence_note": "No primary-source licence; banned from M7 dev for that reason. Included under R22 because it is part of the standard public benchmark. Never gradients, targets, negatives or generation seeds.",
+      "qrels_source": "BeIR/quora-qrels",
+      "qrels_revision": "7906857d63e4b4d41fd16c954c929c3ff3c580d9"
     },
     {
       "key": "climate-fever",
@@ -506,7 +528,9 @@
       "split": "test",
       "licence_role": "evaluation only (R22)",
       "licence_note": "No affirmative licence; dropped from M7's partitions for that reason. Included under R22 as part of the standard public benchmark. Never gradients, targets, negatives or generation seeds.",
-      "corpus_reuse": "Its corpus is FEVER's Wikipedia. The reserved FEVER document shards are reused ONLY if the Climate-FEVER corpus id and text hashes match FEVER's exactly; otherwise it is encoded separately. Its queries and qrels are public and are NOT reserved."
+      "corpus_reuse": "Its corpus is FEVER's Wikipedia. The reserved FEVER document shards are reused ONLY if the Climate-FEVER corpus id and text hashes match FEVER's exactly; otherwise it is encoded separately. Its queries and qrels are public and are NOT reserved.",
+      "qrels_source": "BeIR/climate-fever-qrels",
+      "qrels_revision": "ca2c7ed51cf8b40c10c23a099a27eceb3678156b"
     }
   ],
   "excluded_datasets": {
@@ -602,5 +626,6 @@
       "_climate_fever_note": "Climate-FEVER's corpus is FEVER's Wikipedia but the published document counts differ (5,416,593 vs 5,416,568), so the reserved FEVER shards are NOT reusable and it is encoded separately. The executor still compares its corpus id and text hashes to FEVER's and records the comparison rather than assuming either answer. Its 5.42M documents are included in the cap below; an earlier sketch in m20/PLAN.md omitted them."
     },
     "_headroom_warning": "Stage C's cap is only about 1.1x its expectation, because 187 new hours at $1.8025/h is $337.07 against $342.96 of recorded headroom: the budget, not the estimate, is what sets it. BEIR-15's ~23.7M new documents across three fp32 towers is the dominant cost and there is no slack left to absorb a slower-than-projected run. The reserved transaction is ordered FIRST so the irreplaceable access lands before this risk is taken. If the projection gate trips in stage C the run stops cleanly and the owner decides between raising the ceiling, narrowing BEIR-15, or accepting a partial descriptive table; no executor may decide that."
-  }
+  },
+  "_qrels_pin_note": "BEIR publishes labels in a SEPARATE repository from the corpus and queries, with its own revision. Pinning only the dataset revision would leave the qrels unpinned and a republished label set could change a reported number silently. Revisions read 2026-09-16. The reserved four have no entry here: their labels are the frozen payloads in results/frozen_eval/, hash-pinned in results/eval_manifest.json, and are read only inside the tagged transaction. CQADupStack labels live in the forum's own repository under the `default` config and are covered by the forum revision already pinned above."
 }

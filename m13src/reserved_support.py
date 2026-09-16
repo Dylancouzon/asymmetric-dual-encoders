@@ -154,25 +154,56 @@ def cache_for(system, dataset, repo=REPO, verify=True):
     return doc_ids, vectors
 
 
+def _doc_text(row):
+    title = (row.get("title") or "").strip()
+    text = (row.get("text") or "").strip()
+    return f"{title} {text}".strip() if title else text
+
+
 def corpus_for(dataset, repo=REPO):
     """Document ids and texts for the lexical system, authenticated against the frozen manifest.
 
-    This is the public corpus, the same bytes `m8src/pre_encode.py` already hashed pre-tag.  It is
-    read here because BM25 has no pre-encoded vectors to stand in for it.  Ids come from the
-    pre-encode's shared id file, so BM25 and every dense system rank the same document list in the
-    same order.
-    """
-    import pre_encode as P
+    This is the public corpus, the same bytes the pre-encode already hashed pre-tag.  It is read
+    here because BM25 has no pre-encoded vectors to stand in for it, and the ids are checked
+    against the pre-encode's shared id file so BM25 and every dense system rank the same document
+    list in the same order.
 
-    corpus, source, revision = P.load_corpus(dataset)
-    identity = P.authenticate_corpus(dataset, corpus, revision)
+    It deliberately does NOT import `m8src/pre_encode.py`.  That module CLAIMS the corpus-only
+    allowlist entry at import time, and `paths_guard.claim` refuses a second, different claim in
+    one process -- so importing it here would raise inside the tagged transaction, after the
+    reserved access had already been spent.  The loading is therefore inlined under the
+    `m13src.score13` capability this process already holds.
+    """
+    from datasets import load_dataset
+
+    from hashing import sha_stream_list
+
+    registry = json.loads((Path(repo) / "m20" / "beir15_registry.json").read_text())
+    forums = registry["cqadupstack"]["forums"]
+    if dataset.startswith("cqadup-"):
+        row = forums[dataset.split("-", 1)[1]]
+        source, revision = row["source"], row["revision"]
+    else:
+        row = next(r for r in registry["datasets"] if r["key"] == dataset)
+        source, revision = row["source"], row["revision"]
+    corpus = load_dataset(source, "corpus", revision=revision)["corpus"]
+    expected = json.loads((Path(repo) / "results" / "eval_manifest.json").read_text())[
+        "m7_untouched_final"][dataset]
+    identity = {
+        "n_docs": len(corpus),
+        "corpus_ids_sha256": sha_stream_list(str(value) for value in corpus["_id"]),
+        "corpus_text_sha256": sha_stream_list(_doc_text(item) for item in corpus),
+    }
+    bad = [key for key in identity if identity[key] != expected.get(key)]
+    if bad:
+        raise ValueError(f"{dataset}: public corpus differs from the frozen manifest on {bad}")
     doc_ids = [str(value) for value in corpus["_id"]]
-    doc_texts = [P._doc_text(row) for row in corpus]
+    doc_texts = [_doc_text(item) for item in corpus]
     ids_path = Path(repo) / "work" / "m13-reserved-enc" / "corpora" / dataset / "doc_ids.json"
-    if ids_path.exists():
-        shared = [str(value) for value in json.loads(ids_path.read_text())]
-        if shared != doc_ids:
-            raise ValueError(f"{dataset}: BM25 document order differs from the pre-encoded order")
+    if not ids_path.exists():
+        raise ValueError(f"{dataset}: the pre-encode's shared document-id file is missing")
+    if [str(value) for value in json.loads(ids_path.read_text())] != doc_ids:
+        raise ValueError(f"{dataset}: BM25 document order differs from the pre-encoded order")
     return doc_ids, doc_texts, {"source": source, "revision": revision, **identity}
 
 
