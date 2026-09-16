@@ -29,6 +29,15 @@ and R22. None of them reinterprets the reserved stage, widens its estimands, or 
    `nano+bm25 dbsf@100` (R22). Zero and Stella-query reuse Nano's Stella document shards; the
    inherited prohibition on *substituting* Zero+BM25 for the dense Zero row stands. If evidence
    shows the payload was opened before the amendment was pushed, document the omission; never reopen.
+   The registration must also pin, literally: the `constella-zero` Hub revision and file hashes
+   used; the Stella query prompt string and tokenization/length contract for `stella-query`; the
+   BM25 and DBSF parameters; the CQADupStack aggregation (mean of the twelve forum nDCG@10 values,
+   BEIR convention); the two archive destinations by exact bucket/prefix and mounted path; and the
+   crash rule that governs the reserved transaction — `reserved.crash` in
+   `m10/final_run_registry.json` (per-system atomic outputs, resume at the first incomplete system
+   under the identical tagged code/registry/pre-encode identity, scores suppressed until all
+   complete). R14 withdrew the six-set post-tag continuation (`_six_crash`); it did not touch
+   `reserved.crash`. State that reading explicitly so no executor can treat resume as a second access.
 2. **Executor extension.** Extend and test `m13src/reserved_support.py`,
    `m13src/reserved_transaction.py`, `m8src/pre_encode.py` and `scripts/m13_reserved_cloud.py`
    from the tested three-system base to the eight-system roster and the BEIR-15 datasets, without
@@ -41,8 +50,10 @@ and R22. None of them reinterprets the reserved stage, widens its estimands, or 
    `results/m10_final_run.json` to end `COMPLETE`. All rows descriptive, `alpha = 0`, FEVER's
    double-contamination caveat disclosed.
 4. **BEIR-15 descriptive validation** in the same cloud session, clearly labelled, with the pins,
-   exclusions and per-row contact labels of `m20/beir15_registry.json`. Ten of the fifteen are
-   already scored (six-set, reserved four); only the remaining corpora are encoded. It must not be
+   exclusions and per-row contact labels of `m20/beir15_registry.json`. Eight of the fifteen are
+   fully covered by the six-set and the reserved transaction (FEVER, DBpedia-entity); CQADupStack
+   is covered for two of its twelve forums and needs the other ten; the remaining six datasets are
+   new. Only corpora without verified Stella shards are encoded. It must not be
    mixed into or reinterpret M13's registered gates. Result: `results/m20_beir15_run.json` plus
    per-query rows under `results/m20_beir15_scores/`.
 5. **Archive.** Raw corpora/queries/qrels and fp16 Stella document vectors for every evaluated
@@ -60,9 +71,11 @@ and R22. None of them reinterprets the reserved stage, widens its estimands, or 
   55.2 hours at at most $1.6636111111/hour including storage. BEIR-15 adds roughly 18M Stella
   documents; register its own hour cap in `m20/REGISTRATION.md` before renting. The $1,000 cloud
   ceiling is a ceiling, not a target.
-- The reserved evaluation is a single transaction and a single access. A crash resumes only at a
-  missing shard or system; a rerun is not a second access. BEIR-15 is not protected access but
-  runs under the same manifest, hash and atomic-output discipline.
+- The reserved evaluation is a single transaction and a single access. Pre-tag, a crash resumes
+  only at a missing document shard (no protected read has happened). Post-tag, the only admissible
+  continuation is `reserved.crash` as stated in deliverable 1; nothing re-opens a dataset a
+  complete system has already persisted, and no flag permits a rerun. BEIR-15 is not protected
+  access but runs under the same manifest, hash and atomic-output discipline.
 - Entry point for artifact paths, hashes, restore commands and the reserved checklist remains
   `m14/HANDOFF.md` (steps 1–3), read together with R20 and R22.
 

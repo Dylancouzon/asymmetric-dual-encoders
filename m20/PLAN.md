@@ -36,7 +36,8 @@ number from `m12/six_dbsf.json` with the extended code before it runs on new dat
 
 ## BEIR-15 candidates
 
-Ten are already scored or reserved. HF revisions were read on 2026-09-16 (`HfApi.dataset_info`);
+Eight datasets are fully covered by the six-set and the reserved transaction; CQADupStack is
+covered for two of twelve forums; six are new. HF revisions were read on 2026-09-16 (`HfApi.dataset_info`);
 HF wrapper licence tags are **not** licence evidence (M7 ledger) — the primary-source evidence in
 `m7/LEDGER.md` §"Source-level licence evidence" governs.
 
@@ -46,8 +47,8 @@ HF wrapper licence tags are **not** licence evidence (M7 ledger) — the primary
 | FiQA, ArguAna | six-set | frozen | — | teacher-disclosed | scored (M13) |
 | FEVER | `BeIR/fever` | `426aea4d` | 5,416,568 / 6,666 | reserved; teacher-disclosed; comparator-training | reserved four |
 | DBpedia-entity | `BeIR/dbpedia-entity` | `6029bd92` | 4,635,922 / 400 | reserved | reserved four |
-| CQADupStack (12 forums) | `mteb/cqadupstack-*` | android `e03f271e`, english `fa6afc4c`, gaming `1c976986`, gis `080d0534`, mathematica `fc1af0b6`, physics `9c2faaa0`, programmers `339629ee`, stats `6b474f6f`, tex `2b6f1e27`, unix `3197b091`, webmasters `c691d4af`, wordpress `6117bc48` | ≈ 457k / 13,145 total | android/english reserved; programmers/physics M7-dev; others clean | 2 reserved, 10 new (≈ 394k docs) |
-| MS MARCO | `BeIR/msmarco` | `a918e0d1` | 8,841,823 / 6,980 (dev) | comparator-training; validation-only licence role | new |
+| CQADupStack (12 forums; dataset score = mean of the 12 forum nDCG@10 values, BEIR convention; per-forum rows also reported) | `mteb/cqadupstack-*` | android `e03f271e`, english `fa6afc4c`, gaming `1c976986`, gis `080d0534`, mathematica `fc1af0b6`, physics `9c2faaa0`, programmers `339629ee`, stats `6b474f6f`, tex `2b6f1e27`, unix `3197b091`, webmasters `c691d4af`, wordpress `6117bc48` | ≈ 457k / 13,145 total | android/english reserved; programmers/physics M7-dev; others clean | 2 reserved, 10 new (≈ 394k docs) |
+| MS MARCO | `BeIR/msmarco` | `a918e0d1` | 8,841,823 / 6,980 (dev) | comparator-training; validation-only licence role (primary source: microsoft.github.io/msmarco/Notice.html, "non-commercial research purposes only"; recorded in `research/m7-data-licensing.md` row 1 and its 2026-09-04 validation-use rule change) | new |
 | NQ | `BeIR/nq` | `b7253e6c` | 2,681,468 / 3,452 | M7-dev (250k subset); comparator-training | new |
 | HotpotQA | `BeIR/hotpotqa` | `a7e8bab2` | 5,233,329 / 7,405 | M7-dev; comparator-training | new |
 | Touché-2020 | `BeIR/webis-touche2020` | `7ebed360` | 382,545 / 49 | source-family contact with ArguAna; licence disclosed | new |
@@ -77,9 +78,22 @@ archive (deliverable 5) is what makes their retirement possible in M22.
 ## Archive sizing
 
 fp16 1024-d Stella vectors are 2 KB per document: ≈ 57 GB for all ≈ 28M public-BEIR documents.
-Raw corpora, queries and qrels compress to roughly 25–30 GB. Both targets (object storage and `D:`)
-receive the same hashed tarballs; `results/m20_archive_manifest.json` lists every file, size and
-SHA-256, and re-hash at both targets is the verification.
+Raw corpora, queries and qrels compress to roughly 25–30 GB. Both targets receive the same hashed
+tarballs; `results/m20_archive_manifest.json` lists every file, size and SHA-256, and re-hash at
+both targets is the verification. Proposed exact destinations, to be fixed in the registration:
+local `/mnt/d/constella-archive/beir15/` (Windows `D:\constella-archive\beir15\`); object storage
+bucket and prefix **to be named by the owner** before the run (provider and account are not in the
+repo). Credentials never enter git, logs or the pod image.
+
+## Identities the registration must pin (Astra review, 2026-09-16)
+
+- `constella-zero`: the Hub **weights** revision and per-file SHA-256 actually loaded (card
+  revision `0e9cd89e` is not the weights revision; resolve it from `m11/release/` records).
+- `stella-query`: the literal Stella s2p query prompt string, max length and truncation side, and
+  the fp32-on-CUDA / TF32-off contract matching the document encode.
+- `bm25` and DBSF parameters as in the roster table; the depth-100 truncation order.
+- The crash rule reading: `reserved.crash` governs the reserved transaction; R14's withdrawal
+  applied to the six-set `_six_crash` continuation only.
 
 ## Order of work
 
