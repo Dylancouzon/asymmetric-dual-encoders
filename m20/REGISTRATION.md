@@ -149,17 +149,32 @@ Layout below the prefix, identical on both targets:
 
 ```
 beir15/
-  MANIFEST.json
-  datasets/<dataset>/{corpus,queries,qrels}.<ext>.zst
-  vectors/stella-ffeb2b7e/<dataset>/shard-00000.fp16.npy ...
-  vectors/{bge-small-5c38ec7c,arctic-m-e58a8f75}/<dataset>/...
+  MANIFEST.json                                   # copy of results/m20_archive_manifest.json
+  datasets/<corpus>/corpus.jsonl.gz               # every corpus, from the pinned HF revision
+  datasets/<corpus>/queries.jsonl.gz              # public corpora only
+  datasets/<corpus>/qrels.jsonl.gz                # public corpora only
+  vectors/stella-ffeb2b7e/<corpus>/manifest.json
+  vectors/stella-ffeb2b7e/<corpus>/shard_00000.npy ...   # the hash-recorded fp16 shards, as written
+  vectors/bge-small-5c38ec7c/<corpus>/...
+  vectors/arctic-m-e58a8f75/<corpus>/...
 ```
+
+gzip rather than zstd: it is in the standard library on every host involved, and the archive's size
+is dominated by fp16 vectors that do not compress. Payload bytes are written with `mtime=0` so the
+manifest hash is reproducible.
+
+**The reserved four's queries and qrels are deliberately not copied into the archive.** They are
+already durable in git at `results/frozen_eval/untouched-*.json` and hash-pinned in
+`results/eval_manifest.json`. Copying them would be a fresh protected read that buys nothing. Their
+corpora and document vectors are archived in full, which is what a future re-evaluation needs, and
+the manifest records the pointer.
 
 Stopped Runpod volumes are not the archive.
 
-**Open dependency:** no object-storage account, bucket or credentials existed on the box at
-registration time. The archive step cannot complete until the owner provides them. It does not
-block the reserved transaction or BEIR-15, which are ordered before it.
+**Open dependency:** at registration time the box had no object-storage account, bucket or
+credentials, and no `rclone` binary. The archive step cannot complete until the owner provides
+them. It blocks neither the reserved transaction nor BEIR-15, which are ordered before it, and the
+local `D:` half of the archive can be built and verified without it.
 
 ## 5. Budget
 

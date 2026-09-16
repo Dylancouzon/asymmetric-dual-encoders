@@ -465,11 +465,19 @@ if __name__ == "__main__":
                         help="reserved: the registered reserved four. beir15: every other "
                              "registered BEIR-15 corpus; the reserved four are never re-encoded "
                              "here and their rows come from the tagged transaction.")
+    parser.add_argument("--corpora", nargs="+", default=None,
+                        help="restrict the batch to these corpus names; used for smoke runs and "
+                             "for splitting a long stage across processes")
     parser.add_argument("--cap-hours", type=float, default=None,
                         help="registered stage cap; the projection gate stops at a shard boundary "
                              "if the measured rate cannot finish inside it")
     args = parser.parse_args()
     batch = RESERVED_DATASETS if args.batch == "reserved" else beir15_encode_datasets()
+    if args.corpora:
+        unknown = [name for name in args.corpora if name not in batch]
+        if unknown:
+            parser.error(f"not in the --batch {args.batch} corpus list: {unknown}")
+        batch = tuple(args.corpora)
     if args.preflight_only:
         preflight(batch)
     elif args.system:
