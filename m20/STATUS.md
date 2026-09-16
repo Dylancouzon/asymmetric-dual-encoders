@@ -45,11 +45,11 @@ before the long repeatable work starts.
 
 3. **Stage C has about 6% cap headroom against the budget, not against the estimate.** BEIR-15
    needs roughly 23.7M new document encodes across three fp32 towers, including Climate-FEVER's
-   5.42M, which `m20/PLAN.md` had omitted. The registered caps total 242.2 h, of which 187 h is new
-   spend at $337.07 against $342.96 of recorded headroom. If the in-run projection gate trips, the
-   run stops cleanly and the choice between raising the ceiling, narrowing BEIR-15 and accepting a
-   partial descriptive table is the owner's.
-3. **The inherited 55.2-hour reserved allowance priced one document tower of three.** M13's number
+   5.42M, which `m20/PLAN.md` had omitted. The registered caps total 237.2 h, costing $336.87 of
+   new spend at the live quote against $342.96 of recorded headroom. If the in-run projection gate
+   trips, the run stops cleanly and the choice between raising the ceiling, narrowing BEIR-15 and
+   accepting a partial descriptive table is the owner's.
+4. **The inherited 55.2-hour reserved allowance priced one document tower of three.** M13's number
    is unchanged and now applies to the tagged scoring stage; the pre-encode has its own registered
    cap. Recorded in `m20/REGISTRATION.md` §5.
 
