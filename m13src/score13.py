@@ -629,15 +629,15 @@ def reserved_batch(cfg, conf, rows_candidate):
     return {"status": "complete", "systems": done, "datasets": res["datasets"]}
 
 
-def reserved_only_run(cfg=None):
-    """Enter M14's separately tagged reserved transaction through this allowlisted module."""
+def reserved_only_run(cfg=None, publish_only=False):
+    """Enter the separately tagged reserved transaction through this allowlisted module."""
     import paths_guard
 
     paths_guard.claim("m13src.score13", note="M14 execution of the triggered reserved four")
     paths_guard.install()
     import reserved_transaction
 
-    return reserved_transaction.run(cfg or access13.production())
+    return reserved_transaction.run(cfg or access13.production(), publish_only=publish_only)
 
 
 # ------------------------------------------------------------------ the transaction
@@ -920,11 +920,14 @@ def main(argv=None):
     ap.add_argument("--preflight-only", action="store_true")
     ap.add_argument("--reserved-only", action="store_true",
                     help="M14-only execution of the separately tagged reserved four")
+    ap.add_argument("--reserved-publish-only", action="store_true",
+                    help="re-commit and push an already-computed reserved result after a failed "
+                         "push; reads no payload, scores nothing")
     a = ap.parse_args(argv)
-    if a.reserved_only:
+    if a.reserved_only or a.reserved_publish_only:
         if a.infra_retry or a.recover or a.preflight_only:
             ap.error("--reserved-only cannot be combined with six-set run modes")
-        return reserved_only_run()
+        return reserved_only_run(publish_only=a.reserved_publish_only)
     return run(access13.production(), infra_retry=a.infra_retry, preflight_only=a.preflight_only,
                recover=a.recover)
 

@@ -163,11 +163,18 @@ gzip rather than zstd: it is in the standard library on every host involved, and
 is dominated by fp16 vectors that do not compress. Payload bytes are written with `mtime=0` so the
 manifest hash is reproducible.
 
-**The reserved four's queries and qrels are deliberately not copied into the archive.** They are
-already durable in git at `results/frozen_eval/untouched-*.json` and hash-pinned in
-`results/eval_manifest.json`. Copying them would be a fresh protected read that buys nothing. Their
-corpora and document vectors are archived in full, which is what a future re-evaluation needs, and
-the manifest records the pointer.
+**The reserved four's queries and qrels are exported by the tagged transaction, not by the
+archiving pass.** R22 asks for queries and qrels for every evaluated dataset, and dropping the
+reserved ones would be a scope reduction no executor may make. They also cannot be read by a later
+archiving pass without a second protected access. So the transaction writes them into the archive
+layout itself, from the payloads it has already opened and authenticated for scoring: no additional
+protected read, and the deliverable intact. The archive builder **requires** those files for a
+reserved corpus and fails if they are absent; it never opens a reserved payload to fill the gap.
+The frozen originals stay in `results/frozen_eval/`, hash-pinned in `results/eval_manifest.json`.
+
+Verification is a re-hash at **both** targets: `--verify` re-hashes the local copy against the
+manifest, and `--verify-remote` asks object storage for its own SHA-256 of every stored object and
+compares. `rclone copy --checksum` alone is a transfer check, not the registered verification.
 
 Stopped Runpod volumes are not the archive.
 
@@ -225,20 +232,34 @@ records the comparison rather than assuming either answer.
 
 | stage | protected? | expected | **cap** |
 |---|---|---:|---:|
-| A. reserved corpora download, pre-encode, BM25 index | no, pre-tag | ≈ 45 h | **52 h** |
-| B. tagged reserved transaction: query encode, search, BM25 retrieval, fusion, report | yes | ≈ 5 h | **55.2 h** (inherited, unchanged) |
-| C. BEIR-15: download, pre-encode, index, score | no | ≈ 113 h | **125 h** |
-| D. archive build, upload, re-hash verification | no | ≈ 8 h | **10 h** |
-| **M20 total** | | **≈ 171 h** | **242.2 h** |
+| A. reserved corpora download, pre-encode | no, pre-tag | ≈ 45 h | **52 h** |
+| B. tagged reserved transaction | yes | ≈ 5 h | **55.2 h** (inherited, unchanged) |
+| C. BEIR-15: download, pre-encode, score | no | ≈ 113 h | **120 h** |
+| D. archive build, transfer, re-hash verification | no | ≈ 8 h | **10 h** |
+| **M20 total** | | **≈ 171 h** | **237.2 h** |
 
-Of the 242.2-hour cap, 55.2 h is the already-committed reserved line and **187 h is new spend**:
-187 × $1.8025 = **$337.07**, inside the $342.96 of recorded headroom. Expected spend is about $209
-of new compute. The controller refuses to start if the wallet cannot cover the full conservative
-cap and refuses any stage that would exceed its own cap.
+New spend is priced as
 
-**Stage C has roughly 10% cap headroom, and the budget rather than the estimate is what sets it.**
-BEIR-15's 23.7M new documents across three fp32 towers is the dominant cost of M20 and there is no
-slack left to absorb a slower-than-projected run. The reserved transaction is therefore ordered
+```
+m20_total_hours × all_retained_hourly − inherited_reserved_allowance_hours × target_pod_hourly
+= 237.2 × $1.8025 − 55.2 × $1.6636111111 = $335.72
+```
+
+against $342.96 of recorded headroom, so committed plus new is **$992.76** of the $1,000 ceiling.
+The subtraction removes only the target-pod hours already inside `committed_usd`; the two sibling
+volumes bill during those hours too and are **not** subtracted. An earlier version of this
+registration priced 187 hours at the all-retained rate and so omitted 55.2 hours of sibling
+storage, $7.67, which put the plan $1.77 over the ceiling. Corrected pre-observation after review.
+
+The controller recomputes this from the **live** quote at launch and refuses if the live price
+makes the registered plan cost more than registered, or if committed plus new would exceed the
+ceiling. Each stage has its own wall clock: the controller hands the pre-encode processes one
+absolute stage deadline and wraps each stage in `timeout`, so a slow pre-encode cannot eat the
+tagged transaction's budget.
+
+**Stage C's cap is about 1.06× its expectation, because the ceiling rather than the estimate sets
+it.** BEIR-15's 23.7M new documents across three fp32 towers is the dominant cost of M20 and there
+is no slack to absorb a slower-than-projected run. The reserved transaction is therefore ordered
 first, so the irreplaceable access lands before this risk is taken. If the projection gate trips in
 stage C the run stops cleanly and **the owner decides** between raising the ceiling, narrowing
 BEIR-15, or accepting a partial descriptive table. No executor may decide that, and no executor may
@@ -248,12 +269,17 @@ inconsistency this project exists to avoid.
 
 ### In-run projection gate
 
-A cap alone does not stop a run that is silently five times slower than planned. After the first
-completed corpus for each tower, the executor computes the measured passages per second and
-projects the remaining hours for that stage. If the projection exceeds the stage's remaining cap,
-the run stops cleanly at a shard boundary and reports, rather than burning the cap to discover the
-same thing later. Before the tag this costs nothing; after the tag the reserved result is already
-durable per system.
+A cap alone does not stop a run that is silently five times slower than planned. After every shard
+the pre-encode projects, from the rate it has actually measured, when the **whole stage** will
+finish: its own remaining documents at its own rate, plus every tower that has not run yet,
+converted through the registered cost ratios. If that lands past the stage's absolute deadline the
+run stops at a shard boundary and reports, rather than burning the cap to discover the same thing
+later. Every shard already written is hash-recorded and resumable. Before the tag this costs
+nothing; after it, the reserved result is already durable per completed system.
+
+The registered document volumes it projects against are the ones the cap was built from,
+10,115,709 for the reserved four and 23,744,806 for BEIR-15, not the corpora downloaded so far,
+which would make the projection most optimistic exactly when least is known.
 
 ## 6. Order of execution
 

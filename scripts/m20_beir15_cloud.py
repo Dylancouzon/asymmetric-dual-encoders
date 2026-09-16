@@ -60,7 +60,12 @@ def stage_caps():
     return caps["C_beir15"], caps["D_archive"]
 
 
-def remote_command(cap_c):
+def remote_command(stage_c_deadline_epoch, cap_c, cap_d):
+    """Stage C and stage D under SEPARATE wall clocks, like the reserved controller.
+
+    `timeout` is the hard backstop; the projection gate inside the pre-encode is the soft one that
+    stops at a shard boundary. Neither stage is protected access, so a kill costs only time.
+    """
     env = (
         "export HF_HOME=/home/dylan/.cache/huggingface "
         "HF_HUB_CACHE=/home/dylan/.cache/huggingface/hub "
@@ -70,20 +75,24 @@ def remote_command(cap_c):
         "TOKENIZERS_PARALLELISM=false "
         "PYTHONPATH=m20src:m13src:m12src:m8src:m7src:bench; "
     )
-    commands = [
+    towers = "nano-dense,bge-small-en-v1.5,leaf-ir-asym"
+    checks = [
         ".venv/bin/python -m py_compile m20src/roster.py m20src/beir15.py m20src/archive.py",
         ".venv/bin/python -c 'import roster; print(roster.assert_registered_identities())'",
-        f".venv/bin/python -u m8src/pre_encode.py --system nano-dense --device cuda "
-        f"--batch beir15 --cap-hours {cap_c}",
-        f".venv/bin/python -u m8src/pre_encode.py --system bge-small-en-v1.5 --device cuda "
-        f"--batch beir15 --cap-hours {cap_c}",
-        f".venv/bin/python -u m8src/pre_encode.py --system leaf-ir-asym --device cuda "
-        f"--batch beir15 --cap-hours {cap_c}",
-        ".venv/bin/python -u m20src/beir15.py --device cuda",
+    ]
+    stage_c = "; ".join(
+        [f".venv/bin/python -u m8src/pre_encode.py --system {tower} --device cuda --batch beir15 "
+         f"--stage-deadline {stage_c_deadline_epoch:.0f} --tower-order {towers}"
+         for tower in towers.split(",")]
+        + [".venv/bin/python -u m20src/beir15.py --device cuda"])
+    stage_d = "; ".join([
         f".venv/bin/python -u m20src/archive.py --build --root {REMOTE_ARCHIVE}",
         f".venv/bin/python -u m20src/archive.py --verify --root {REMOTE_ARCHIVE}",
-    ]
-    return "cd " + shlex.quote(REMOTE) + "; " + env + "set -e; " + "; ".join(commands)
+    ])
+    body = "; ".join(checks) + "; " \
+        + f"timeout {int(cap_c * 3600)} bash -c " + shlex.quote("set -e; " + stage_c) + "; " \
+        + f"timeout {int(cap_d * 3600)} bash -c " + shlex.quote("set -e; " + stage_d)
+    return "cd " + shlex.quote(REMOTE) + "; " + env + "set -e; " + body
 
 
 def require_reserved_complete():
@@ -98,23 +107,62 @@ def require_reserved_complete():
         raise RuntimeError("m8-reserved-spent is not on origin; the reserved receipt is not durable")
 
 
-def pull_archive(record):
+def pull_results(record, timeout_seconds):
+    """Bring BEIR-15's results back, check they are COMPLETE, and make them durable.
+
+    The pod writes these files and never pushes them. Without this the controller could report
+    PASSED while the entire descriptive table existed only on a machine about to be stopped.
+    """
+    for relative in ("results/m20_beir15_run.json", "results/m20_corpus_pins.json",
+                     "results/m20_beir15_preencode.json"):
+        run(["scp", "-F", str(SSH_CONFIG), f"{SSH_ALIAS}:{REMOTE}/{relative}",
+             str(REPO / relative)], timeout=1800)
+    (REPO / "results" / "m20_beir15_scores").mkdir(parents=True, exist_ok=True)
+    run(["rsync", "-a", "--partial", "-e", f"ssh -F {SSH_CONFIG}",
+         f"{SSH_ALIAS}:{REMOTE}/results/m20_beir15_scores/",
+         str(REPO / "results" / "m20_beir15_scores") + "/"], timeout=timeout_seconds)
+    table = json.loads(BEIR15_RESULT.read_text())
+    if table.get("status") != "COMPLETE":
+        raise RuntimeError(f"BEIR-15 table is {table.get('status')}: missing {table.get('missing')}")
+    if table.get("registry_sha256") != sha(M20_REGISTRY):
+        raise RuntimeError("BEIR-15 table was produced against a different registration")
+    record["beir15_result_sha256"] = sha(BEIR15_RESULT)
+    record["beir15_datasets"] = len(table.get("datasets", []))
+    record["beir15_systems"] = len(table.get("systems", []))
+
+
+def pull_archive(record, timeout_seconds):
     """Copy the built archive to the local D: target, then re-hash it there."""
     LOCAL_ARCHIVE.mkdir(parents=True, exist_ok=True)
-    run(["rsync", "-a", "--partial", "--info=progress2", "-e",
-         f"ssh -F {SSH_CONFIG}", f"{SSH_ALIAS}:{REMOTE}/{REMOTE_ARCHIVE}/",
-         str(LOCAL_ARCHIVE) + "/"], timeout=None)
     run(["scp", "-F", str(SSH_CONFIG),
          f"{SSH_ALIAS}:{REMOTE}/results/m20_archive_manifest.json", str(ARCHIVE_MANIFEST)],
-        timeout=600)
+        timeout=1800)
+    run(["rsync", "-a", "--partial", "--info=progress2", "-e", f"ssh -F {SSH_CONFIG}",
+         f"{SSH_ALIAS}:{REMOTE}/{REMOTE_ARCHIVE}/", str(LOCAL_ARCHIVE) + "/"],
+        timeout=timeout_seconds)
     verify = subprocess.run(
         [str(REPO / ".venv/bin/python"), str(REPO / "m20src/archive.py"),
-         "--verify", "--root", str(LOCAL_ARCHIVE)], cwd=REPO, text=True, capture_output=True)
+         "--verify", "--root", str(LOCAL_ARCHIVE)], cwd=REPO, text=True, capture_output=True,
+        timeout=timeout_seconds)
     record["local_archive_verify"] = verify.stdout.strip()[-2000:]
     if verify.returncode:
         raise RuntimeError(f"local archive verification failed: {verify.stdout.strip()[-500:]}")
     record["local_archive_root"] = str(LOCAL_ARCHIVE)
     record["archive_manifest_sha256"] = sha(ARCHIVE_MANIFEST)
+
+
+def commit_results(record):
+    paths = ["results/m20_beir15_run.json", "results/m20_beir15_scores",
+             "results/m20_corpus_pins.json", "results/m20_beir15_preencode.json",
+             "results/m20_archive_manifest.json"]
+    existing = [p for p in paths if (REPO / p).exists()]
+    run(["git", "add", "--"] + existing, cwd=REPO)
+    run(["git", "commit", "-m",
+         f"m20: BEIR-15 descriptive results and archive manifest "
+         f"({record.get('beir15_result_sha256', '')[:12]})"], cwd=REPO)
+    run(["git", "push", "origin", f"HEAD:{BRANCH}"], cwd=REPO, timeout=1800)
+    record["results_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO,
+                                                       text=True).strip()
 
 
 def main(argv=None):
@@ -211,11 +259,13 @@ def main(argv=None):
                                f"archive need at least {MIN_REMOTE_FREE_BYTES}")
 
         remote_log, remote_exit = "/tmp/m20-beir15.log", "/tmp/m20-beir15.exit"
-        command = (remote_command(cap_c) if not args.archive_only else
+        stage_c_deadline = time.time() + cap_c * 3600
+        record["stage_c_deadline_epoch"] = stage_c_deadline
+        command = (remote_command(stage_c_deadline, cap_c, cap_d) if not args.archive_only else
                    "cd " + shlex.quote(REMOTE) +
                    "; set -e; PYTHONPATH=m20src:m13src:m12src:m8src:m7src:bench "
-                   f".venv/bin/python -u m20src/archive.py --build --verify "
-                   f"--root {REMOTE_ARCHIVE}")
+                   f"timeout {int(cap_d * 3600)} .venv/bin/python -u m20src/archive.py "
+                   f"--build --verify --root {REMOTE_ARCHIVE}")
         inner = "( " + command + " ); rc=$?; echo $rc > " + remote_exit
         launch = ("rm -f " + remote_exit + " " + remote_log + "; nohup bash -lc " +
                   shlex.quote(inner) + " > " + remote_log + " 2>&1 < /dev/null & echo $!")
@@ -248,14 +298,18 @@ def main(argv=None):
             raise TimeoutError(f"stage C/D exceeded its {max_hours}-hour allowance")
 
         run(["scp", "-F", str(SSH_CONFIG), SSH_ALIAS + ":" + remote_log, str(LOG)], timeout=600)
+        transfer_budget = max(600, int(deadline - time.monotonic()))
+        record["stage"] = "pulling-results"
+        save(record)
+        if not args.archive_only:
+            pull_results(record, transfer_budget)
         record["stage"] = "pulling-archive"
         save(record)
-        pull_archive(record)
-        run(["git", "fetch", "origin", BRANCH], cwd=REPO, timeout=300)
-        run(["git", "merge", "--ff-only", f"origin/{BRANCH}"], cwd=REPO, timeout=300)
+        pull_archive(record, max(600, int(deadline - time.monotonic())))
+        record["stage"] = "publishing"
+        save(record)
+        commit_results(record)
         record.update(status="PASSED", stage="finished")
-        if BEIR15_RESULT.is_file():
-            record["beir15_result_sha256"] = sha(BEIR15_RESULT)
     except BaseException as error:
         record.update(status="FAILED", stage="failed", error=f"{type(error).__name__}: {error}")
         raise

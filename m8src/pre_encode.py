@@ -341,38 +341,76 @@ class Projection:
     """Stop a stage that is going to blow its registered cap, instead of discovering it at the cap.
 
     A cap alone does not protect a paid run: a job five times slower than planned spends the whole
-    allowance before anyone sees it.  After each shard this re-projects the stage from the rate
-    actually observed for this tower, and refuses at a shard boundary -- the only place where
-    stopping costs nothing, because the shard just written is hash-recorded and resumable.
+    allowance before anyone sees it.  This re-projects after every shard and refuses at a shard
+    boundary -- the only place where stopping costs nothing, because the shard just written is
+    hash-recorded and resumable.
+
+    Three things it has to get right, each of which an earlier version got wrong:
+
+    * **One wall clock for the whole stage.**  The three towers run as three separate processes.
+      The deadline is therefore an ABSOLUTE time handed down by the controller, not each process's
+      own summed encode seconds, so a slow first tower shortens the second one's budget instead of
+      each getting the full cap.
+    * **Every tower, not just this one.**  A tower that has not started yet still has to fit. Its
+      cost is projected from THIS tower's measured rate through the registered cost ratios in
+      `results/m20_tower_rate_benchmark.json`, which is what that measurement is for.
+    * **The registered volume, not the corpora downloaded so far.**  Counting only pinned corpora
+      would make the projection most optimistic exactly when least is known.  The batch totals are
+      the registered ones the cap was built from.
     """
 
-    def __init__(self, remaining_docs, cap_hours, label, elapsed_hours=0.0, min_rows=100_000):
-        self.remaining = dict(remaining_docs)          # system -> documents still to encode
-        self.cap_hours = float(cap_hours)
+    def __init__(self, tower, tower_order, expected_docs, deadline_epoch, cost_ratio, label,
+                 min_rows=100_000):
+        if tower not in tower_order:
+            raise ValueError(f"{tower!r} is not in the registered tower order {tower_order}")
+        self.tower = tower
+        self.tower_order = list(tower_order)
+        self.expected_docs = int(expected_docs)
+        self.deadline_epoch = float(deadline_epoch)
+        self.cost_ratio = dict(cost_ratio)
         self.label = label
-        self.elapsed_hours = float(elapsed_hours)
         self.min_rows = int(min_rows)
-        self.rows, self.seconds = {}, {}
+        self.rows = 0
+        self.seconds = 0.0
 
-    def observe(self, system, rows, seconds):
-        self.rows[system] = self.rows.get(system, 0) + int(rows)
-        self.seconds[system] = self.seconds.get(system, 0.0) + float(seconds)
-        self.remaining[system] = max(0, self.remaining.get(system, 0) - int(rows))
-        self.elapsed_hours += float(seconds) / 3600.0
-        if self.rows[system] < self.min_rows:
+    def _pending_towers(self):
+        return self.tower_order[self.tower_order.index(self.tower) + 1:]
+
+    def observe(self, _system, rows, seconds):
+        self.rows += int(rows)
+        self.seconds += float(seconds)
+        if self.rows < self.min_rows:
             return
-        rate = self.rows[system] / max(self.seconds[system], 1e-9)
-        projected = self.elapsed_hours + sum(
-            self.remaining.get(name, 0) / (self.rows[name] / max(self.seconds[name], 1e-9))
-            for name in self.remaining if self.rows.get(name)) / 3600.0
-        unmeasured = [name for name in self.remaining
-                      if self.remaining[name] and not self.rows.get(name)]
-        if projected > self.cap_hours:
+        rate = self.rows / max(self.seconds, 1e-9)           # documents per second, this tower
+        remaining = max(0, self.expected_docs - self.rows) / rate
+        for other in self._pending_towers():
+            ratio = self.cost_ratio[other] / self.cost_ratio[self.tower]
+            remaining += self.expected_docs / (rate / ratio)
+        finish_at = time.time() + remaining
+        if finish_at > self.deadline_epoch:
+            over = (finish_at - self.deadline_epoch) / 3600.0
             raise RuntimeError(
-                f"{self.label}: projected {projected:.1f} h exceeds the registered cap "
-                f"{self.cap_hours:.1f} h at the measured rate ({system} {rate:.0f}/s). "
-                f"Stopping at a shard boundary; every shard written so far is hash-recorded and "
-                f"resumable. Towers not yet measured: {unmeasured or 'none'}.")
+                f"{self.label}: projected to finish {over:.1f} h past the registered stage "
+                f"deadline at the measured rate ({self.tower} {rate:.0f} docs/s, "
+                f"{self.rows:,}/{self.expected_docs:,} done, towers still to run "
+                f"{self._pending_towers() or 'none'}). Stopping at a shard boundary; every shard "
+                f"written is hash-recorded and resumable.")
+
+
+def tower_cost_ratios():
+    """Registered relative document-encode cost per tower, keyed by this file's system names."""
+    rows = json.loads((REPO / "results" / "m20_tower_rate_benchmark.json").read_text())["towers"]
+    by_tower = {name: row["cost_relative_to_stella"] for name, row in rows.items()}
+    return {"nano-dense": by_tower["stella-400M-v5"],
+            "bge-small-en-v1.5": by_tower["bge-small-en-v1.5"],
+            "leaf-ir-asym": by_tower["arctic-m-v1.5"]}
+
+
+def expected_batch_docs(batch):
+    """The registered document volume the stage cap was built from."""
+    budget = json.loads(REGISTRY.read_text())["budget"]["document_volumes"]
+    return int(budget["reserved_four_docs"] if batch == "reserved"
+               else budget["beir15_new_docs_expected"])
 
 
 def _summary(datasets, summary_path):
@@ -415,18 +453,10 @@ def beir15_encode_datasets():
     return tuple(name for name in corpus_sources() if name not in RESERVED_DATASETS)
 
 
-def main(system, device, datasets=RESERVED_DATASETS, cap_hours=None, label="pre-encode"):
+def main(system, device, datasets=RESERVED_DATASETS, projection=None, label="pre-encode"):
     if system not in SYSTEMS:
         raise ValueError(f"unknown system {system!r}")
     reserved_batch = tuple(datasets) == tuple(RESERVED_DATASETS)
-    projection = None
-    if cap_hours:
-        pins = json.loads(CORPUS_PINS.read_text()) if CORPUS_PINS.exists() else {}
-        frozen = json.loads((REPO / "results" / "eval_manifest.json").read_text())[
-            "m7_untouched_final"]
-        known = {name: (frozen[name]["n_docs"] if name in frozen
-                        else pins.get(name, {}).get("n_docs", 0)) for name in datasets}
-        projection = Projection({system: sum(known.values())}, cap_hours, label)
     encoder = Encoder(system, device)
     for dataset in datasets:
         encode_dataset(encoder, dataset, projection=projection)
@@ -468,9 +498,12 @@ if __name__ == "__main__":
     parser.add_argument("--corpora", nargs="+", default=None,
                         help="restrict the batch to these corpus names; used for smoke runs and "
                              "for splitting a long stage across processes")
-    parser.add_argument("--cap-hours", type=float, default=None,
-                        help="registered stage cap; the projection gate stops at a shard boundary "
-                             "if the measured rate cannot finish inside it")
+    parser.add_argument("--stage-deadline", type=float, default=None,
+                        help="absolute unix time by which the WHOLE stage, every tower, must "
+                             "finish; the controller passes one clock to all three processes")
+    parser.add_argument("--tower-order", default="nano-dense,bge-small-en-v1.5,leaf-ir-asym",
+                        help="the order the controller runs the towers in; towers after --system "
+                             "in this list are projected from this one's measured rate")
     args = parser.parse_args()
     batch = RESERVED_DATASETS if args.batch == "reserved" else beir15_encode_datasets()
     if args.corpora:
@@ -481,6 +514,13 @@ if __name__ == "__main__":
     if args.preflight_only:
         preflight(batch)
     elif args.system:
-        main(args.system, args.device, batch, args.cap_hours, f"pre-encode/{args.batch}")
+        projection = None
+        if args.stage_deadline:
+            projection = Projection(
+                tower=args.system, tower_order=args.tower_order.split(","),
+                expected_docs=expected_batch_docs(args.batch),
+                deadline_epoch=args.stage_deadline, cost_ratio=tower_cost_ratios(),
+                label=f"pre-encode/{args.batch}")
+        main(args.system, args.device, batch, projection, f"pre-encode/{args.batch}")
     else:
         parser.error("--system is required unless --preflight-only is used")

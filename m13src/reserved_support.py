@@ -460,6 +460,46 @@ def validate_output(record, cfg, system):
     return record
 
 
+def export_reserved_payload_archive(cfg, root):
+    """Write the reserved four's queries and qrels into the archive, INSIDE the transaction.
+
+    R22 requires raw corpora, queries and qrels for every evaluated dataset at both archive
+    targets. The reserved labels can only be read under the capability this transaction holds, so
+    they are exported here, from payloads already opened and authenticated for scoring, rather
+    than by a later archiving pass reopening protected data. This adds no protected read: every
+    dataset's payload has already been loaded by the systems above.
+
+    The format matches `m20src/archive.py`: gzipped JSON lines, mtime zeroed so the bytes and the
+    manifest hash are reproducible.
+    """
+    import gzip
+
+    root = Path(root)
+    written = {}
+    for dataset in DATASETS:
+        qids, qtexts, qrels, payload_hashes = load_payload(cfg, dataset)
+        out = root / "datasets" / dataset
+        out.mkdir(parents=True, exist_ok=True)
+        rows = {
+            "queries.jsonl.gz": [{"_id": qid, "text": text} for qid, text in zip(qids, qtexts)],
+            "qrels.jsonl.gz": [{"query-id": qid, "corpus-id": did, "score": int(score)}
+                               for qid in qids for did, score in sorted(qrels[qid].items())],
+        }
+        entry = {"payload_hashes": payload_hashes}
+        for name, items in rows.items():
+            path = out / name
+            tmp = path.with_suffix(path.suffix + ".tmp")
+            with open(tmp, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as stream:
+                for item in items:
+                    stream.write((json.dumps(item, sort_keys=True) + "\n").encode())
+            tmp.replace(path)
+            entry[name] = {"path": str(path.relative_to(root)), "bytes": path.stat().st_size,
+                           "sha256": sha_file(path), "rows": len(items)}
+        written[dataset] = entry
+        print(f"[reserved13] archived {dataset} queries and qrels", flush=True)
+    return written
+
+
 def _plan(qids_by_dataset, B, seed):
     rng = np.random.default_rng(int(seed))
     plan, digest = {}, hashlib.sha256(f"B={B};seed={seed}".encode())

@@ -69,7 +69,14 @@ def _dump_jsonl(path, rows):
 
 
 def build_corpus(root, corpus_name):
-    """corpus.jsonl.gz for any corpus; queries/qrels too when the corpus is public."""
+    """corpus.jsonl.gz for any corpus; queries and qrels too.
+
+    For a PUBLIC corpus the queries and qrels are dumped here. For a RESERVED one they were
+    already written, into this same layout, by the tagged transaction
+    (`reserved_support.export_reserved_payload_archive`), from payloads it had legitimately open.
+    They are REQUIRED here: R22 asks for queries and qrels for every evaluated dataset, and a
+    missing file is a failure rather than something to substitute a pointer for.
+    """
     out = Path(root) / "datasets" / corpus_name
     files = {}
     corpus, source, revision = P.load_corpus(corpus_name)
@@ -80,11 +87,21 @@ def build_corpus(root, corpus_name):
                             "text": row.get("text") or ""} for row in corpus))
     files["corpus.jsonl.gz"] = path
     if corpus_name in P.RESERVED_DATASETS:
+        missing = [name for name in ("queries.jsonl.gz", "qrels.jsonl.gz")
+                   if not (out / name).is_file()]
+        if missing:
+            raise RuntimeError(
+                f"{corpus_name}: {missing} were not exported by the reserved transaction. They "
+                f"can only be written from inside it; re-running the archive cannot produce them "
+                f"and this module must never reopen a reserved payload to fill the gap.")
+        for name in ("queries.jsonl.gz", "qrels.jsonl.gz"):
+            files[name] = out / name
         return files, {"source": source, "revision": revision,
-                       "queries_and_qrels": "results/frozen_eval/untouched-%s.json in git; hashes "
-                                            "pinned in results/eval_manifest.json. Not copied "
-                                            "here: archiving them would be a fresh protected read "
-                                            "that buys nothing." % corpus_name}
+                       "queries_and_qrels": "exported by the tagged reserved transaction from "
+                                            "payloads it already held open; the frozen originals "
+                                            "remain in results/frozen_eval/, hash-pinned in "
+                                            "results/eval_manifest.json"}
+
     import beir15
 
     payload = beir15.load_public(corpus_name)
@@ -100,32 +117,62 @@ def build_corpus(root, corpus_name):
                             for did, score in sorted(row.items())))
     files["qrels.jsonl.gz"] = rpath
     return files, {"source": source, "revision": revision, "split": payload["split"],
+                   "qrels_source": payload["qrels_source"],
+                   "qrels_revision": payload["qrels_revision"],
                    "n_queries": len(payload["q_ids"])}
 
 
 def build_vectors(root, corpus_name):
-    """Copy the hash-recorded fp16 shards and their manifest, one directory per tower."""
+    """Stage every tower's shards for one corpus, enumerated FROM the source manifest.
+
+    Three things this must not do, each of which would let a verified archive be wrong:
+    skip a tower whose shards are absent, accept a staged file on size alone, or hash whatever
+    happens to be on disk into a fresh manifest. The source manifest is the authority: it must be
+    COMPLETE, and every shard it records must hash to what it records, both at the source and at
+    the destination.
+    """
     files = {}
     for tower, directory in R.TOWER_DIR.items():
         source = ENC_ROOT / directory / corpus_name
-        if not (source / "manifest.json").exists():
-            continue
+        manifest_path = source / "manifest.json"
+        if not manifest_path.is_file():
+            raise RuntimeError(f"{corpus_name}/{tower}: no pre-encode manifest at {manifest_path}; "
+                               f"the archive may not omit an evaluated tower")
+        manifest = json.loads(manifest_path.read_text())
+        if manifest.get("status") != "COMPLETE":
+            raise RuntimeError(f"{corpus_name}/{tower}: pre-encode manifest is "
+                               f"{manifest.get('status')!r}, not COMPLETE")
         target = Path(root) / "vectors" / TOWER_ID[tower] / corpus_name
         target.mkdir(parents=True, exist_ok=True)
-        for item in sorted(source.iterdir()):
-            if item.suffix not in (".npy", ".json") or item.name.endswith(".tmp.npy"):
-                continue
-            destination = target / item.name
-            if not destination.exists() or destination.stat().st_size != item.stat().st_size:
-                shutil.copy2(item, destination)
-            files[f"vectors/{TOWER_ID[tower]}/{corpus_name}/{item.name}"] = destination
+        wanted = {f"shard_{sid}.npy": row["sha256"] for sid, row in manifest["shards"].items()}
+        n_shards = int(manifest.get("n_shards", len(wanted)))
+        if len(wanted) != n_shards:
+            raise RuntimeError(f"{corpus_name}/{tower}: manifest records {len(wanted)} shards but "
+                               f"claims {n_shards}")
+        for name, digest in sorted(wanted.items()):
+            origin = source / name
+            if not origin.is_file() or R.sha_file(origin) != digest:
+                raise RuntimeError(f"{origin}: missing or does not match its recorded hash")
+            destination = target / name
+            if not destination.is_file() or R.sha_file(destination) != digest:
+                shutil.copy2(origin, destination)
+                if R.sha_file(destination) != digest:
+                    raise RuntimeError(f"{destination}: copy does not match the recorded hash")
+            files[f"vectors/{TOWER_ID[tower]}/{corpus_name}/{name}"] = destination
+        destination = target / "manifest.json"
+        if not destination.is_file() or R.sha_file(destination) != R.sha_file(manifest_path):
+            shutil.copy2(manifest_path, destination)
+        files[f"vectors/{TOWER_ID[tower]}/{corpus_name}/manifest.json"] = destination
     return files
 
 
 def build(root, corpora=None):
+    """Stage the whole registered inventory. A partial archive is a failure, not a smaller archive."""
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
-    corpora = list(corpora or P.corpus_sources())
+    required = list(P.corpus_sources())
+    corpora = list(corpora or required)
+    complete = set(corpora) == set(required)
     entries, datasets = {}, {}
     for corpus_name in corpora:
         files, meta = build_corpus(root, corpus_name)
@@ -135,12 +182,15 @@ def build(root, corpora=None):
         datasets[corpus_name] = meta
         print(f"[archive] {corpus_name}: staged", flush=True)
     manifest = {
-        "status": "BUILT",
-        "purpose": "M20 deliverable 5 (R22): raw corpora, public queries/qrels and fp16 document "
+        "status": "BUILT" if complete else "PARTIAL",
+        "purpose": "M20 deliverable 5 (R22): raw corpora, queries, qrels and fp16 document "
                    "vectors for every evaluated dataset, so a future Stella-space encoder can be "
                    "re-evaluated without another corpus encode.",
-        "reserved_labels": "results/frozen_eval/untouched-*.json in git; hashes in "
-                           "results/eval_manifest.json. Deliberately not copied here.",
+        "required_corpora": required,
+        "corpora": corpora,
+        "reserved_labels": "exported by the tagged reserved transaction; the frozen originals "
+                           "stay in results/frozen_eval/, hash-pinned in "
+                           "results/eval_manifest.json",
         "towers": TOWER_ID,
         "datasets": datasets,
         "files": {name: {"bytes": path.stat().st_size, "sha256": R.sha_file(path)}
@@ -150,14 +200,20 @@ def build(root, corpora=None):
     manifest["n_files"] = len(manifest["files"])
     MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n")
     (root / "MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(json.dumps({"status": "BUILT", "files": manifest["n_files"],
+    print(json.dumps({"status": manifest["status"], "files": manifest["n_files"],
                       "bytes": manifest["total_bytes"]}))
+    if not complete:
+        raise RuntimeError("archive is PARTIAL: "
+                           f"missing {sorted(set(required) - set(corpora))}")
     return manifest
 
 
 def verify(root, manifest_path=MANIFEST):
     """Re-hash every manifested file under `root`. This is the archive's acceptance test."""
     manifest = json.loads(Path(manifest_path).read_text())
+    if manifest.get("status") != "BUILT":
+        raise RuntimeError(f"manifest status is {manifest.get('status')!r}; only a complete "
+                           f"archive can be accepted")
     root = Path(root)
     problems = []
     for name, row in manifest["files"].items():
@@ -175,12 +231,41 @@ def verify(root, manifest_path=MANIFEST):
     return problems
 
 
+def verify_remote(remote, manifest_path=MANIFEST):
+    """Re-hash the OBJECT-STORAGE copy against the manifest, which `rclone copy` does not do.
+
+    The registration promises re-hash verification at BOTH targets. `rclone hashsum sha256` asks
+    the destination for its own checksums, so this compares stored objects rather than trusting
+    the transfer.
+    """
+    manifest = json.loads(Path(manifest_path).read_text())
+    out = subprocess.run(["rclone", "hashsum", "sha256", remote], check=True, text=True,
+                         capture_output=True).stdout
+    remote_hashes = {}
+    for line in out.splitlines():
+        parts = line.strip().split(None, 1)
+        if len(parts) == 2:
+            remote_hashes[parts[1].strip()] = parts[0].strip().lower()
+    problems = []
+    for name, row in manifest["files"].items():
+        got = remote_hashes.get(name)
+        if got is None:
+            problems.append(f"{name}: absent at {remote}")
+        elif got != row["sha256"]:
+            problems.append(f"{name}: sha256 differs at {remote}")
+    print(json.dumps({"status": "VERIFIED" if not problems else "FAILED", "remote": remote,
+                      "files": len(manifest["files"]), "problems": problems[:20]}))
+    return problems
+
+
 def upload(root, remote):
     """rclone copy to the registered bucket/prefix. Credentials stay in the local rclone config."""
     if ":" not in remote:
         raise ValueError("--remote must be an rclone target such as `constella:bucket/prefix`")
     subprocess.run(["rclone", "copy", "--checksum", "--progress", str(root), remote], check=True)
-    print(json.dumps({"status": "UPLOADED", "remote": remote}))
+    print(json.dumps({"status": "UPLOADED", "remote": remote,
+                      "next": "--verify-remote re-hashes the stored objects; `rclone copy` alone "
+                              "is not the registered verification"}))
 
 
 def main(argv=None):
@@ -191,9 +276,12 @@ def main(argv=None):
     parser.add_argument("--verify", action="store_true")
     parser.add_argument("--upload", action="store_true")
     parser.add_argument("--remote", default=None)
+    parser.add_argument("--verify-remote", action="store_true",
+                        help="re-hash the object-storage copy against the manifest")
     args = parser.parse_args(argv)
-    if not (args.build or args.verify or args.upload):
-        parser.error("one of --build, --verify or --upload is required")
+    if not (args.build or args.verify or args.upload or args.verify_remote):
+        parser.error("one of --build, --verify, --upload or --verify-remote is required")
+    problems = []
     if args.build:
         build(args.root, args.corpora)
     if args.upload:
@@ -201,8 +289,12 @@ def main(argv=None):
             parser.error("--upload needs --remote")
         upload(args.root, args.remote)
     if args.verify:
-        return 1 if verify(args.root) else 0
-    return 0
+        problems += verify(args.root)
+    if args.verify_remote:
+        if not args.remote:
+            parser.error("--verify-remote needs --remote")
+        problems += verify_remote(args.remote)
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":

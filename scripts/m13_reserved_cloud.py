@@ -165,7 +165,15 @@ def update_ssh(pod):
     return True
 
 
-def remote_command():
+def remote_command(stage_a_deadline_epoch):
+    """The remote pipeline, with stage A and stage B under SEPARATE wall clocks.
+
+    One deadline for both stages would let a slow pre-encode eat the tagged transaction's budget,
+    which is the opposite of what the registered caps are for.  `timeout` is the hard backstop;
+    the projection gate inside the pre-encode is the soft one that stops at a shard boundary.
+    Killing stage B mid-system is survivable by design: outputs are per-system and atomic, and
+    `reserved.crash` (ruling R23) resumes at the first incomplete system.
+    """
     env = (
         "export HF_HOME=/home/dylan/.cache/huggingface "
         "HF_HUB_CACHE=/home/dylan/.cache/huggingface/hub "
@@ -174,8 +182,9 @@ def remote_command():
         "OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 "
         "TOKENIZERS_PARALLELISM=false; "
     )
-    cap_a, _cap_b = stage_caps()
-    commands = [
+    cap_a, cap_b = stage_caps()
+    towers = "nano-dense,bge-small-en-v1.5,leaf-ir-asym"
+    checks = [
         ".venv/bin/python -m py_compile m8src/pre_encode.py m13src/reserved_support.py "
         "m13src/reserved_transaction.py m13src/score13.py m20src/roster.py m20src/beir15.py",
         "PYTHONPATH=m13src:m20src .venv/bin/python -m pytest -q m13src/test_reserved_support.py",
@@ -184,20 +193,23 @@ def remote_command():
         "PYTHONPATH=m20src .venv/bin/python -c "
         "'import roster; print(roster.assert_registered_identities())'",
         ".venv/bin/python m8src/pre_encode.py --preflight-only",
-        f".venv/bin/python -u m8src/pre_encode.py --system nano-dense --device cuda "
-        f"--cap-hours {cap_a}",
-        f".venv/bin/python -u m8src/pre_encode.py --system bge-small-en-v1.5 --device cuda "
-        f"--cap-hours {cap_a}",
-        f".venv/bin/python -u m8src/pre_encode.py --system leaf-ir-asym --device cuda "
-        f"--cap-hours {cap_a}",
+    ]
+    stage_a = "; ".join(
+        f".venv/bin/python -u m8src/pre_encode.py --system {tower} --device cuda "
+        f"--stage-deadline {stage_a_deadline_epoch:.0f} --tower-order {towers}"
+        for tower in towers.split(","))
+    stage_b = "; ".join([
         # The zero tower resolves its pinned Hub revision, so its snapshot is fetched here rather
         # than under HF_HUB_OFFLINE; everything after this point is offline.
         "PYTHONPATH=m13src:m20src .venv/bin/python -m reserved_support "
         "--preflight-models --device cuda",
         "HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 "
         ".venv/bin/python -u m13src/score13.py --reserved-only",
-    ]
-    return "cd " + shlex.quote(REMOTE) + "; " + env + "set -e; " + "; ".join(commands)
+    ])
+    body = "; ".join(checks) + "; " \
+        + f"timeout {int(cap_a * 3600)} bash -c " + shlex.quote("set -e; " + stage_a) + "; " \
+        + f"timeout {int(cap_b * 3600)} bash -c " + shlex.quote("set -e; " + stage_b)
+    return "cd " + shlex.quote(REMOTE) + "; " + env + "set -e; " + body
 
 
 def checkpoint_prep_command(checkpoint_rel, build_checkpoint_rel, digest, remote=REMOTE):
@@ -298,11 +310,26 @@ def main():
     other_storage_hourly = sum(storage_hourly(pod) for pod in pods[1:])
     all_retained_hourly = target_total_hourly + other_storage_hourly
     extra_retained_storage_usd = other_storage_hourly * max_hours
-    # Price the WHOLE registered M20 plan against the ceiling, not just this controller's share:
-    # stages C and D follow on the same wallet and the same budget line.
-    if (float(allocation.get("committed_usd", math.inf)) + float(budget["new_spend_at_cap_usd"]) >
+    # Price the WHOLE registered M20 plan against the ceiling from the LIVE quote, not from the
+    # registered figure: stages C and D follow on the same wallet and the same budget line, the
+    # sibling volumes bill through the inherited 55.2 hours as well, and a registered number that
+    # drifts from the live price must fail here rather than be trusted.
+    m20_total = float(budget["stage_caps_hours"]["m20_total"])
+    if abs(m20_total - sum(float(budget["stage_caps_hours"][key]) for key in
+                           ("A_reserved_pre_encode_unprotected", "B_tagged_reserved_transaction",
+                            "C_beir15", "D_archive"))) > 1e-9:
+        raise RuntimeError("registered M20 stage caps do not sum to the registered total")
+    live_new_spend = (m20_total * all_retained_hourly
+                      - INHERITED_RESERVED_ALLOWANCE * target_total_hourly)
+    if live_new_spend > float(budget["new_spend_at_cap_usd"]) + 1e-6:
+        raise RuntimeError(f"live prices make the registered plan cost ${live_new_spend:.2f}, "
+                           f"above the registered ${budget['new_spend_at_cap_usd']:.2f}")
+    if (float(allocation.get("committed_usd", math.inf)) + live_new_spend >
             float(allocation.get("budget_ceiling_usd", -math.inf))):
-        raise RuntimeError("the registered M20 stage caps exceed the project budget ceiling")
+        raise RuntimeError(f"the registered M20 stage caps cost ${live_new_spend:.2f} of new spend "
+                           f"on top of ${allocation.get('committed_usd')} committed, above the "
+                           f"${allocation.get('budget_ceiling_usd')} ceiling")
+    record_live_new_spend = live_new_spend
     balance_start = cloud.balance()
     if balance_start < max_hours * all_retained_hourly:
         raise RuntimeError("current wallet cannot cover this controller's conservative allowance "
@@ -313,6 +340,7 @@ def main():
               "balance_start_usd": balance_start, "max_hours": max_hours,
               "stage_cap_hours": {"A_pre_encode": cap_a, "B_tagged_transaction": cap_b},
               "m20_registry_sha256": sha(M20_REGISTRY),
+              "m20_live_new_spend_at_cap_usd": record_live_new_spend,
               "dbsf_reproduction_sha256": sha(DBSF_RECEIPT),
               "max_total_hourly_usd": MAX_TOTAL_HOURLY,
               "target_total_hourly_usd": target_total_hourly,
@@ -398,7 +426,9 @@ def main():
 
         remote_log = "/tmp/m13-reserved.log"
         remote_exit = "/tmp/m13-reserved.exit"
-        inner = "( " + remote_command() + " ); rc=$?; echo $rc > " + remote_exit
+        stage_a_deadline = time.time() + cap_a * 3600
+        record["stage_a_deadline_epoch"] = stage_a_deadline
+        inner = ("( " + remote_command(stage_a_deadline) + " ); rc=$?; echo $rc > " + remote_exit)
         launch = ("rm -f " + remote_exit + " " + remote_log + "; nohup bash -lc " +
                   shlex.quote(inner) + " > " + remote_log + " 2>&1 < /dev/null & echo $!")
         remote_pid = int(ssh(launch, capture_output=True).stdout.strip())

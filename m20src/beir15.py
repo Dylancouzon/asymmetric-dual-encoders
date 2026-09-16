@@ -109,9 +109,14 @@ def load_public(corpus_name):
 
 
 def shards_for(system, corpus_name):
+    """Document vectors for one system, with every shard re-hashed against its manifest.
+
+    verify=True is not optional: the shard bytes are the document identity behind every number in
+    this table, and re-hashing them costs about a minute per full pass against a run measured in
+    days."""
     import reserved_support as RS
 
-    return RS.cache_for(system, corpus_name, repo=REPO, verify=False)
+    return RS.cache_for(system, corpus_name, repo=REPO, verify=True)
 
 
 def score_path(corpus_name, system):
@@ -148,6 +153,7 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
             raise RuntimeError(f"{corpus_name}/{system}: nDCG outside [0, 1]")
         _write(score_path(corpus_name, system), {
             "status": "COMPLETE", "dataset": corpus_name, "system": system,
+            "registry_sha256": R.sha_file(REPO / "m20" / "beir15_registry.json"),
             "source": payload["source"], "revision": payload["revision"],
             "qrels_source": payload["qrels_source"], "qrels_revision": payload["qrels_revision"],
             "split": payload["split"], "n_docs": len(payload["doc_ids"]),
@@ -155,9 +161,28 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
             "scores": {q: scores[q] for q in q_ids}, **extra})
         print(f"[beir15] {corpus_name}/{system}: {values.mean():.6f}", flush=True)
 
+    def producer_run_ready(system):
+        """A completed producer's persisted run, if it is still exactly what it recorded.
+
+        Re-running a producer whose row is already scored would rewrite the very file the scored
+        row is supposed to authenticate. Reuse it instead, and recompute only when it is gone.
+        """
+        path = R.run_path(run_root, RUN_STAGE, system, corpus_name)
+        score_file = score_path(corpus_name, system)
+        if system in pending or not score_file.exists() or not path.exists():
+            return None
+        recorded = json.loads(score_file.read_text()).get("run_sha256")
+        if not recorded or R.sha_file(path) != recorded:
+            raise RuntimeError(f"{corpus_name}/{system}: persisted run does not match the hash its "
+                               f"scored row recorded; delete the row to rescore it deliberately")
+        return recorded
+
+    derived_pending = [s for s in R.DERIVED_SYSTEMS if s in pending]
+    needed_producers = {key for s in derived_pending for key in R.DERIVED_SYSTEMS[s]}
+
     # BM25 first: it is the only system that needs the document TEXT, which is the largest object
     # in this function, and freeing it before the dense passes keeps the peak down.
-    if "bm25" in pending or any(s in pending for s in R.DERIVED_SYSTEMS):
+    if "bm25" in pending or ("bm25" in needed_producers and producer_run_ready("bm25") is None):
         import fusion
 
         run = R.bm25_run(payload["doc_ids"], payload["doc_texts"], q_ids, payload["q_texts"])
@@ -168,15 +193,18 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
                    {"config": fusion.BM25_CONFIG, "depth": fusion.DEPTH,
                     "empty_runs": int(sum(1 for q in q_ids if not run.get(q))),
                     "run_path": str(path.relative_to(REPO)), "run_sha256": digest})
+        else:
+            recorded = json.loads(score_path(corpus_name, "bm25").read_text()).get("run_sha256")
+            if recorded and digest != recorded:
+                raise RuntimeError(f"{corpus_name}/bm25: rebuilt run does not reproduce the hash "
+                                   f"its completed row recorded")
         del run
     payload["doc_texts"] = None
 
     for system in R.DENSE_SYSTEMS:
-        if system not in pending and not (
-                system in R.RUN_PRODUCERS
-                and any(s in pending and system in R.DERIVED_SYSTEMS[s]
-                        for s in R.DERIVED_SYSTEMS)):
-            continue
+        if system not in pending:
+            if system not in needed_producers or producer_run_ready(system) is not None:
+                continue
         doc_ids, doc_vectors = shards_for(system, corpus_name)
         if doc_ids != payload["doc_ids"]:
             raise RuntimeError(f"{corpus_name}/{system}: shard document order differs from the "
@@ -194,6 +222,11 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
             extra["run_sha256"] = R.save_run(path, R.truncate(run), q_ids)
         if system in pending:
             finish(system, R.per_query_ndcg10(run, qrels), extra)
+        elif extra.get("run_sha256"):
+            recorded = json.loads(score_path(corpus_name, system).read_text()).get("run_sha256")
+            if recorded and extra["run_sha256"] != recorded:
+                raise RuntimeError(f"{corpus_name}/{system}: rebuilt run does not reproduce the "
+                                   f"hash its completed row recorded")
         del run, doc_vectors
 
     for system in R.DERIVED_SYSTEMS:
@@ -240,6 +273,7 @@ def reserved_scores(corpus_name, system):
 def assemble(out_path=RESULT):
     """Build the descriptive table from every persisted per-(dataset, system) row."""
     rows = dataset_rows()
+    registry_sha = R.sha_file(REPO / "m20" / "beir15_registry.json")
     per_corpus, missing = {}, []
     for row in rows:
         for member in row["members"]:
@@ -255,7 +289,20 @@ def assemble(out_path=RESULT):
                 if not path.exists():
                     missing.append(f"{member}/{system}")
                     continue
-                per_corpus[member][system] = json.loads(path.read_text())
+                blob = json.loads(path.read_text())
+                if blob.get("status") != "COMPLETE" or blob.get("system") != system \
+                        or blob.get("dataset") != member:
+                    raise RuntimeError(f"{path}: incomplete or mislabelled scored row")
+                if blob.get("registry_sha256") != registry_sha:
+                    raise RuntimeError(f"{path}: scored against a different registration")
+                per_corpus[member][system] = blob
+    # Every system on one corpus must have scored the same query set, or the per-dataset means
+    # are not comparable and the fused rows are not derived from their own inputs' queries.
+    for member, systems in per_corpus.items():
+        sets = {system: sorted(blob["scores"]) for system, blob in systems.items()
+                if "scores" in blob}
+        if sets and len({tuple(v) for v in sets.values()}) != 1:
+            raise RuntimeError(f"{member}: systems scored different query sets")
     table = {}
     for row in rows:
         table[row["key"]] = {"contact": row["contact"], "aggregation": row["aggregation"],

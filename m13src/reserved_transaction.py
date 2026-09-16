@@ -20,6 +20,7 @@ MANIFEST = A.REPO / "results" / "m13_reserved_manifest.json"
 RESULT = A.REPO / "results" / "m13_reserved_run.json"
 PREENCODE = A.REPO / "results" / "m13_reserved_preencode.json"
 LOCK = A.REPO / "work" / "m13-reserved.lock"
+ARCHIVE_ROOT = A.REPO / "work" / "m20-archive"
 CODE_FILES = (
     "m13src/score13.py",
     "m13src/reserved_transaction.py",
@@ -251,13 +252,40 @@ def _continuation(cfg, conf):
     return manifest, begin
 
 
-def run(cfg=None, preflight_only=False):
+def publish(cfg):
+    """Re-commit and push an already-computed reserved result after a failed push.
+
+    The transaction writes its result files and only then commits. A crash or a network failure in
+    between leaves complete, durable-on-disk outputs that the ordinary entry point refuses to touch
+    because `RESULT.exists()`. That refusal is right -- nothing may be re-scored -- but it left no
+    way to publish what was already paid for. This path opens no payload, scores nothing, changes
+    no number, and refuses unless the result is already present and already COMPLETE.
+    """
+    if not RESULT.exists():
+        raise ValueError("there is no computed reserved result to publish")
+    final = json.loads(Path(cfg.result_path).read_text())
+    if final.get("end_status") != "COMPLETE" or "reserved" not in final:
+        raise ValueError("the six-set result does not already carry a complete reserved report")
+    if final["reserved"].get("manifest_sha256") != A.sha256_file(MANIFEST):
+        raise ValueError("the reserved result does not match the BEGIN manifest on disk")
+    ok, command, error = A.commit_and_push(
+        cfg, [cfg.ledger_path, cfg.result_path, cfg.scores_dir / "reserved", RESULT],
+        f"m13: RESERVED-RUN-END {A.sha256_file(RESULT)[:12]} (publish-only)")
+    if not ok:
+        raise RuntimeError(f"reserved result still not durable: {command}: {error}")
+    print(json.dumps({"status": "PUBLISHED", "result_sha256": A.sha256_file(RESULT)}), flush=True)
+    return 0
+
+
+def run(cfg=None, preflight_only=False, publish_only=False):
     import score13 as S
 
     cfg = cfg or A.production()
     conf = json.loads(cfg.registry_path.read_text())
     reserved_cfg = replace(cfg, spent_tag=TAG, lock_path=LOCK)
     A.acquire_lock(reserved_cfg)
+    if publish_only:
+        return publish(cfg)
     exists, where = A.spent_tag_exists(reserved_cfg, conf)
     if preflight_only:
         problems, _prior_result, _preencode_result = preflight(cfg)
@@ -283,8 +311,14 @@ def run(cfg=None, preflight_only=False):
     summary = S.reserved_batch(cfg, conf, None)
     if summary.get("status") != "complete" or "contrasts" not in summary:
         raise RuntimeError("reserved batch did not return a complete descriptive report")
+    # R22's archive needs the reserved queries and qrels. They are exported HERE, from payloads
+    # this transaction has already opened and authenticated, so the archiving pass never has to
+    # reopen protected data. No additional protected read happens.
+    archived = R.export_reserved_payload_archive(cfg, ARCHIVE_ROOT)
     record = {
         **summary,
+        "reserved_payload_archive": {"root": str(ARCHIVE_ROOT.relative_to(cfg.repo)),
+                                     "datasets": archived},
         "manifest_sha256": A.sha256_file(MANIFEST),
         "begin_commit": begin,
         "spent_tag": TAG,

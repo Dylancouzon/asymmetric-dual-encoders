@@ -193,7 +193,8 @@ def test_reserved_only_claims_before_transaction(monkeypatch):
     monkeypatch.setattr(paths_guard, "claim", lambda entry, note="": events.append(("claim", entry)))
     monkeypatch.setattr(paths_guard, "install", lambda: events.append(("install", None)))
     monkeypatch.setattr(reserved_transaction, "run",
-                        lambda received: events.append(("run", received)) or 17)
+                        lambda received, publish_only=False:
+                        events.append(("run", received)) or 17)
     assert S.reserved_only_run(cfg) == 17
     assert events == [("claim", "m13src.score13"), ("install", None), ("run", cfg)]
 
