@@ -230,3 +230,15 @@ tag exists on origin at ruling time). Four decisions, each answered by the owner
 Per-query nDCG@10 rows are persisted for every system and dataset. After the spent tag the reserved
 four join the known-test class for future projects but remain unusable for re-deciding anything in
 this project; M20's ledger records that boundary.
+
+## R23 — Reserved-transaction crash rule is `reserved.crash` (Dylan, 2026-09-16)
+
+Both roadmap reviewers (Astra, Sol) read R14 — "no post-tag continuation" for M13's six-set run —
+as possibly banning any post-tag continuation, while the reserved registration's own `crash` field
+("per-system atomic outputs; resume at the first incomplete system; scores suppressed until all
+complete") and M13's tested reserved executor implement per-system resume. Asked explicitly, the
+owner chose **per-system resume**: `reserved.crash` governs the reserved transaction as registered
+and tested. A crash after `m8-reserved-spent` resumes at the first incomplete system under the
+identical tagged code/registry/pre-encode identity; a persisted complete system is never re-scored
+or re-opened; no aggregate is emitted until all systems complete; no flag permits a rerun. R14 is
+unchanged for the six-set records it governed. Made before any reserved payload was opened.

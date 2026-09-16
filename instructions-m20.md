@@ -36,8 +36,8 @@ and R22. None of them reinterprets the reserved stage, widens its estimands, or 
    crash rule that governs the reserved transaction — `reserved.crash` in
    `m10/final_run_registry.json` (per-system atomic outputs, resume at the first incomplete system
    under the identical tagged code/registry/pre-encode identity, scores suppressed until all
-   complete). R14 withdrew the six-set post-tag continuation (`_six_crash`); it did not touch
-   `reserved.crash`. State that reading explicitly so no executor can treat resume as a second access.
+   complete). Owner ruling **R23** (2026-09-16) confirms `reserved.crash` governs; R14 governed the
+   six-set run only. Cite R23 in the registration so no executor can treat resume as a second access.
 2. **Executor extension.** Extend and test `m13src/reserved_support.py`,
    `m13src/reserved_transaction.py`, `m8src/pre_encode.py` and `scripts/m13_reserved_cloud.py`
    from the tested three-system base to the eight-system roster and the BEIR-15 datasets, without
@@ -73,7 +73,7 @@ and R22. None of them reinterprets the reserved stage, widens its estimands, or 
   ceiling is a ceiling, not a target.
 - The reserved evaluation is a single transaction and a single access. Pre-tag, a crash resumes
   only at a missing document shard (no protected read has happened). Post-tag, the only admissible
-  continuation is `reserved.crash` as stated in deliverable 1; nothing re-opens a dataset a
+  continuation is `reserved.crash` per R23, as stated in deliverable 1; nothing re-opens a dataset a
   complete system has already persisted, and no flag permits a rerun. BEIR-15 is not protected
   access but runs under the same manifest, hash and atomic-output discipline.
 - Entry point for artifact paths, hashes, restore commands and the reserved checklist remains

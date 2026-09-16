@@ -92,8 +92,8 @@ repo). Credentials never enter git, logs or the pod image.
 - `stella-query`: the literal Stella s2p query prompt string, max length and truncation side, and
   the fp32-on-CUDA / TF32-off contract matching the document encode.
 - `bm25` and DBSF parameters as in the roster table; the depth-100 truncation order.
-- The crash rule reading: `reserved.crash` governs the reserved transaction; R14's withdrawal
-  applied to the six-set `_six_crash` continuation only.
+- The crash rule: `reserved.crash` governs the reserved transaction (owner ruling R23,
+  2026-09-16); R14 applied to the six-set run only.
 
 ## Order of work
 

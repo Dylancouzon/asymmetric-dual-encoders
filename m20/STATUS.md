@@ -12,10 +12,21 @@ Follow `instructions-m20.md` in order. First deliverable is the pre-observation 
 `m10/final_run_registry.json`), pushed before any executor change is run against real data.
 Planning inputs that save the next session a lookup are in `m20/PLAN.md`.
 
+## Review
+
+Planning documents reviewed read-only by Astra (NO-GO, five findings, all folded in;
+`m20/REVIEW_ASTRA_2026-09-16.md`) and re-checked by Sol (one item open: the post-tag crash rule,
+settled by owner ruling R23). Both access logs audited clean. Rulings R22 and R23 in
+`m13/RULINGS.md`.
+
+## Open items for the owner
+
+- Name the object-storage bucket/prefix for the archive before the cloud session.
+
 ## Blockers
 
-None recorded. Live pod state and wallet were not checked in the planning session; check both
-before renting.
+None. Live pod state and wallet were not checked in the planning session; check both before
+renting.
 
 ## Pointers
 
