@@ -21,6 +21,9 @@ then search the index with either
 [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) or
 [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano).
 
+> Research preview: Native FastEmbed support currently requires the Constella preview branch
+> shown below. The published evaluation is limited to the results described in the model cards.
+
 The model is an ONNX conversion of
 [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5) at revision
 `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`. The weights were not trained or fine-tuned during
@@ -36,6 +39,15 @@ PyTorch or `trust_remote_code`.
 | Maximum input length | 512 tokens |
 | Query prefix | Not applicable; this artifact is for documents only |
 | Compatible query encoders | constella-zero and constella-nano |
+
+## The Constella family
+
+The name Constella combines "constellation" and "Stella." The document embeddings are the fixed
+stars, and the query encoder navigates their shared vector space.
+
+Zero and Nano are swappable at query time. Both can search documents encoded by this model, so
+you can change query encoders without re-encoding documents or rebuilding the collection. This
+compatibility does not mean they produce identical rankings or have equal retrieval quality.
 
 ## Installation
 

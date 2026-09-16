@@ -25,6 +25,9 @@ It produces normalized 1024-dimensional vectors that search documents encoded by
 The same document index also works with the stronger
 [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) query encoder.
 
+> Research preview: Native FastEmbed support currently requires the Constella preview branch
+> shown below. The published evaluation is limited to the results described in this card.
+
 | Property | Value |
 |---|---|
 | Role | Query encoder |
@@ -34,6 +37,17 @@ The same document index also works with the stronger
 | Maximum input length | 512 tokens |
 | Query prefix | None |
 | Document encoder | `DylanCouzon/stella-en-400M-v5-doc-onnx` |
+| Recommended retrieval | Hybrid with BM25 and DBSF at prefetch 100 |
+
+## The Constella family
+
+The name Constella combines "constellation" and "Stella." The document embeddings are the fixed
+stars, and the query encoder navigates their shared vector space.
+
+Zero and Nano are swappable at query time. Both can search the same document index, so you can
+choose between them without re-encoding documents or rebuilding the collection. They do not
+produce identical rankings: Zero is the faster option, while Nano has higher retrieval scores on
+the six reported datasets. The "zero" name refers to its transformer-free query path.
 
 ## Installation
 
@@ -134,11 +148,12 @@ therefore be interpreted separately from the other four.
 
 Note: Stella discloses training or evaluation contact with ArguAna and FiQA.
 
-For hybrid retrieval, combine constella-zero with BM25 using Qdrant's distribution-based score
-fusion (DBSF) and prefetch 100 candidates from each side. This setup scored 0.4887 mean nDCG@10
-across all six datasets and 0.4912 across the four datasets without disclosed Stella contact.
-The evaluated lexical side used `bm25s` with Lucene defaults, so results may differ with another
-BM25 implementation.
+The recommended deployment setup for Zero is hybrid retrieval. Retrieve with both Zero and BM25,
+then combine their results with Qdrant's distribution-based score fusion (DBSF), prefetching 100
+candidates from each side. This setup scored 0.4887 mean nDCG@10 across all six datasets and
+0.4912 across the four datasets without disclosed Stella contact. The evaluated lexical side used
+`bm25s` with Lucene defaults, so results may differ with another BM25 implementation. Dense-only
+retrieval remains supported when a lexical index is unavailable or unnecessary.
 
 Zero did not establish an improvement over BM25 in the six-dataset statistical test. Its measured
 difference was +0.0165 nDCG@10, but the adjusted test threshold was not met. This is not an

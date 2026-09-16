@@ -67,13 +67,16 @@ for rid, want in MANIFESTS.items():
 # both cards say what we think they say
 for rid, must, mustnot in [
         (ZERO, ["library_name: fastembed", "Distance.COSINE", "TextEmbedding(NAME)",
-                "DBSF", "prefetch 100", "338,076"],
+                "Research preview", "swappable at query time", "fixed", "DBSF",
+                "recommended deployment setup", "prefetch 100", "338,076"],
                ["convex", "registered", "reserved-four", "np.stack"]),
         (DOC,  ["library_name: fastembed", "TextEmbedding(NAME)", "s2p_query",
-                "259", "Natural Questions passages", "0.99999988"],
+                "Research preview", "swappable at query time", "fixed", "259",
+                "Natural Questions passages", "0.99999988"],
                ["registered", "reserved-four", "np.stack", "add_custom_model"]),
         (NANO, ["library_name: fastembed", "TextEmbedding(NAME)", "34,540,672",
-                "199,999,721", "DylanCouzon/constella-zero"],
+                "Research preview", "swappable at query time", "fixed", "199,999,721",
+                "DylanCouzon/constella-zero"],
                ["registered", "reserved-four", "np.stack", "add_custom_model"])]:
     card = open(hf_hub_download(rid, "README.md")).read()
     miss = [m for m in must if m not in card]

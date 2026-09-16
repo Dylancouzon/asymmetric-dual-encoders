@@ -24,6 +24,9 @@ It produces normalized 1024-dimensional vectors that search documents encoded by
 The same document index also works with the faster
 [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) query encoder.
 
+> Research preview: Native FastEmbed support currently requires the Constella preview branch
+> shown below. The published evaluation is limited to the results described in this card.
+
 | Property | Value |
 |---|---|
 | Role | Query encoder |
@@ -34,6 +37,16 @@ The same document index also works with the faster
 | Maximum input length | 512 tokens |
 | Query prefix | None |
 | Document encoder | `DylanCouzon/stella-en-400M-v5-doc-onnx` |
+
+## The Constella family
+
+The name Constella combines "constellation" and "Stella." The document embeddings are the fixed
+stars, and the query encoder navigates their shared vector space.
+
+Nano and Zero are swappable at query time. Both can search the same document index, so you can
+choose between them without re-encoding documents or rebuilding the collection. They do not
+produce identical rankings: Nano has higher retrieval scores on the six reported datasets, while
+Zero is the faster option.
 
 ## Installation
 
