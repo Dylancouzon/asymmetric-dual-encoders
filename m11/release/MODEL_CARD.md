@@ -107,9 +107,6 @@ for result in results:
 FastEmbed handles pooling and L2 normalization. Do not use the document model as an unprompted
 query encoder. Use constella-zero, constella-nano, or Stella's prompted query path instead.
 
-For a side-by-side example with Nano and Zero searching one playful space-travel collection, see
-the [runnable demo](https://github.com/Dylancouzon/asymmetric-dual-encoders/tree/main/demo).
-
 ### NumPy reference implementation
 
 The repository also includes `zero_encoder.py`, a reference implementation that does not require

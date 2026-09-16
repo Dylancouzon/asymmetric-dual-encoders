@@ -114,9 +114,6 @@ query path instead.
 To switch from Nano to Zero without rebuilding the document index, change `NAME` to
 `DylanCouzon/constella-zero`.
 
-For a side-by-side example with Nano and Zero searching one playful space-travel collection, see
-the [runnable demo](https://github.com/Dylancouzon/asymmetric-dual-encoders/tree/main/demo).
-
 ## How it works
 
 Nano starts from
