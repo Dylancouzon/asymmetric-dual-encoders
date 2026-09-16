@@ -10,6 +10,11 @@
 > paths, hashes, restore commands, packaging transforms, parity requirements, disclosures —
 > remains authoritative and unchanged for the preview.
 
+> **Amended 2026-09-16 by owner ruling R22 (`m13/RULINGS.md`).** The work above is now split:
+> steps 2 and 3 (reserved transaction, broad validation — "BEIR-18" is now BEIR-13 with an
+> eight-system descriptive roster) belong to **M20**; steps 4–8 and 10 (release) to **M22**; step 9
+> (upstream PR) to **M23**. Paths, hashes and gates below are unchanged.
+
 > **M13 is closed and unpublished.** Fetch `origin/main` plus tags and require
 > `refs/tags/m13-closed^{commit}` to be an ancestor of `origin/main`. Under owner ruling R19, M14
 > owns both the triggered reserved A100 execution and publication. Do not publish until the
