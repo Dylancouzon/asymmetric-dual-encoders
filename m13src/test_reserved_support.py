@@ -340,3 +340,15 @@ def test_only_one_allowlist_claim_is_reachable_from_the_transaction(monkeypatch)
     monkeypatch.setattr(paths_guard, "_claim", "m13src.score13", raising=False)
     with pytest.raises(paths_guard.ProtectedPathRefusal, match="already claimed"):
         import pre_encode  # noqa: F401  -- claims m8src.pre_encode at import time
+
+
+def test_bm25_package_versions_are_gated_and_recorded(monkeypatch):
+    """m7src/fusion.py puts bm25s and PyStemmer into its CACHE KEY, but only when a cache path is
+    supplied, and M20 supplies none. Without this gate a different stemmer or scoring build would
+    have moved every lexical and fused number with nothing in the output to show it."""
+    assert R.R20.bm25_versions() == {"bm25s": "0.3.11", "PyStemmer": "3.1.0"}
+    assert R.R20.assert_registered_bm25_versions() == R.R20.bm25_versions()
+    monkeypatch.setattr(R.R20, "bm25_versions",
+                        lambda: {"bm25s": "9.9.9", "PyStemmer": "3.1.0"})
+    with pytest.raises(ValueError, match="differs from the registered"):
+        R.R20.assert_registered_bm25_versions()

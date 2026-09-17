@@ -1,0 +1,56 @@
+{
+  "status": "MEASURED",
+  "device": "cuda",
+  "total_vram_bytes": 10736893952,
+  "document_text": "synthetic filler truncated to the 512-token cap; no corpus",
+  "protected_evaluation_access": false,
+  "towers": {
+    "bge-small-en-v1.5": {
+      "tokens_per_document": 512,
+      "by_batch_size": {
+        "256": {
+          "peak_bytes": 2359706112,
+          "ok": true
+        },
+        "128": {
+          "peak_bytes": 1250836992,
+          "ok": true
+        },
+        "64": {
+          "peak_bytes": 696402432,
+          "ok": true
+        },
+        "32": {
+          "peak_bytes": 419185152,
+          "ok": true
+        }
+      }
+    },
+    "arctic-m-v1.5": {
+      "tokens_per_document": 512,
+      "by_batch_size": {
+        "256": {
+          "peak_bytes": 5010397696,
+          "ok": true
+        },
+        "128": {
+          "peak_bytes": 2794232320,
+          "ok": true
+        },
+        "64": {
+          "peak_bytes": 1686149632,
+          "ok": true
+        },
+        "32": {
+          "peak_bytes": 1132108288,
+          "ok": true
+        }
+      }
+    },
+    "stella-400M-v5": {
+      "batch_tokens": 32768,
+      "peak_bytes": 5701463040,
+      "ok": true
+    }
+  }
+}

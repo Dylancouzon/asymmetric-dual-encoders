@@ -129,12 +129,16 @@ def assert_registered_identities(repo=REPO):
                 or row["dim"] != tower["dim"]:
             problems.append(f"{name}: registered tower identity differs from the executor")
     bm = by_key["bm25"]
+    bm_versions = bm25_versions
     import fusion
 
     if (bm["k1"], bm["b"], bm["method"], bm["retrieval_depth"]) != (
             fusion.BM25_CONFIG["k1"], fusion.BM25_CONFIG["b"], fusion.BM25_CONFIG["method"],
             fusion.DEPTH):
         problems.append("registered BM25 parameters differ from m7src/fusion.py")
+    if bm_versions() != bm["package_versions_pinned_at_registration"]:
+        problems.append(f"installed BM25 stack {bm_versions()} differs from the registered "
+                        f"{bm['package_versions_pinned_at_registration']}")
     for key in DERIVED_SYSTEMS:
         if by_key[key]["prefetch_depth"] != FUSION_DEPTH:
             problems.append(f"{key}: registered prefetch depth differs from the executor")
@@ -302,11 +306,50 @@ def registered_nano_dependency(repo=REPO):
 
 # ------------------------------------------------------------------ BM25 and DBSF
 
+def bm25_versions():
+    """The installed versions of the two packages that DEFINE the lexical function.
+
+    `m7src/fusion.py` puts these in its cache key, which is how a version change is normally made
+    visible -- but only when a cache path is supplied, and M20 supplies none.  So on M20's paths
+    nothing would have recorded that `bm25s` or `PyStemmer` had changed, and a different stemmer
+    or scoring build would have moved every lexical and fused number silently.  Recording them in
+    each BM25 row closes that.
+    """
+    from importlib.metadata import PackageNotFoundError, version
+
+    out = {}
+    for package in ("bm25s", "PyStemmer"):
+        try:
+            out[package] = version(package)
+        except PackageNotFoundError as error:
+            raise RuntimeError(f"BM25 REFUSED: no installed distribution metadata for "
+                               f"{package!r}, so the lexical function cannot be pinned into the "
+                               f"result ({error})")
+    return out
+
+
+def assert_registered_bm25_versions(repo=REPO):
+    """Refuse if the installed lexical stack differs from the registered one.
+
+    Registered at `m20/beir15_registry.json` systems[bm25].package_versions_pinned_at_registration.
+    A change here is disclosed, never silently inherited.
+    """
+    registered = {s["key"]: s for s in registration(repo)["systems"]}["bm25"][
+        "package_versions_pinned_at_registration"]
+    got = bm25_versions()
+    if got != registered:
+        raise ValueError(f"installed BM25 stack {got} differs from the registered {registered}; "
+                         f"this changes the lexical function and must be re-registered, not "
+                         f"silently inherited")
+    return got
+
+
 def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
     """M7's frozen lexical function, unchanged: bm25s lucene k1=1.2 b=0.75, depth 1000,
     zero-score rows and self-hits dropped.  Those two filters are part of the frozen function."""
     import fusion
 
+    assert_registered_bm25_versions()
     return fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=cache_path)
 
 

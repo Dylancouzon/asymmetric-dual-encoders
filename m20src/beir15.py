@@ -191,6 +191,7 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
         if "bm25" in pending:
             finish("bm25", R.per_query_ndcg10(run, qrels),
                    {"config": fusion.BM25_CONFIG, "depth": fusion.DEPTH,
+                    "package_versions": R.bm25_versions(),
                     "empty_runs": int(sum(1 for q in q_ids if not run.get(q))),
                     "run_path": str(path.relative_to(REPO)), "run_sha256": digest})
         else:

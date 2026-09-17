@@ -322,6 +322,7 @@ def _score_bm25(cfg):
             "n_queries": len(scores),
             "payload_hashes": payload_hashes,
             "corpus_identity": corpus_identity,
+            "bm25_package_versions": R20.bm25_versions(),
             "empty_runs": int(sum(1 for q in qids if not run.get(q))),
             "run_path": str(path.relative_to(cfg.repo)),
             "run_sha256": R20.save_run(path, R20.truncate(run), qids),
@@ -391,7 +392,8 @@ def score_system(cfg, conf, system, _rows_candidate=None, outputs=None):
         import fusion
 
         encoder_identity = {"query_model": "bm25s", "compute_dtype": "n/a",
-                            "config": fusion.BM25_CONFIG, "depth": fusion.DEPTH}
+                            "config": fusion.BM25_CONFIG, "depth": fusion.DEPTH,
+                            "package_versions": R20.bm25_versions()}
     return {
         "status": "COMPLETE",
         "system": system,
