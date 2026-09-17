@@ -65,6 +65,17 @@ ENV = {
     "M7_DEVICE": "cuda", "M7_ENCODER": "stella-400M-v5",
     "OMP_NUM_THREADS": "4", "MKL_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4",
     "TOKENIZERS_PARALLELISM": "false",
+    # A 50,000-document `teacher.encode` call is length-sorted, so one call sweeps batch shapes
+    # from many short documents to 64x512 and the caching allocator accumulates segments it cannot
+    # reuse: 23.06 GiB reserved on this 10.24 GiB card for 1.76 GiB of live tensors. Past the
+    # device ceiling WSL's driver falls back to host memory over PCIe rather than raising OOM, so
+    # `num_alloc_retries` stays 0 and throughput collapses silently -- 74 then 25 docs/s, which is
+    # what tripped the projection gate on 2026-09-17. Expandable segments bound the reservation to
+    # 4.40 GiB and restore 179 docs/s. It changes fragmentation handling only: not batch
+    # composition, not fp32/TF32-disabled, not max_length, not the stored dtype. Verified by
+    # re-encoding FEVER 0:50000 and reproducing the already-written shard byte for byte.
+    # Receipt: results/m20_allocator_probe.json.
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
 }
 
 

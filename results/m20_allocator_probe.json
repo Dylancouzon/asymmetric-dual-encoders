@@ -1,0 +1,104 @@
+{
+  "status": "PASSED",
+  "purpose": "diagnose the stage-A projection-gate stop of 2026-09-17 and verify the fix changes no vector",
+  "protected_evaluation_access": false,
+  "date_utc": "2026-09-17",
+  "host": {
+    "gpu": "NVIDIA GeForce RTX 3080",
+    "gpu_memory_bytes": 10736893952,
+    "platform": "WSL2",
+    "cores": 16
+  },
+  "trigger": {
+    "event": "m8src/pre_encode.py Projection gate stopped stage A at a shard boundary",
+    "measured_rate_docs_per_second": 37,
+    "projected_overrun_hours": 58.3,
+    "rows_done": 100000,
+    "expected_docs": 10115709,
+    "protected_access_spent": false,
+    "shards_written_and_hash_recorded": 2
+  },
+  "observations": [
+    {
+      "name": "corpus token profile by position",
+      "method": "stella tokenizer, truncation at 512, 3000 documents per slice, statistics only",
+      "fever_docs": 5416568,
+      "slices": {
+        "0:3000": {"mean": 85.2, "p50": 60, "p95": 252, "frac_at_512": 0.007},
+        "50000:53000": {"mean": 86.3, "p50": 60, "p95": 265, "frac_at_512": 0.008},
+        "100000:103000": {"mean": 84.9, "p50": 60, "p95": 272, "frac_at_512": 0.006},
+        "1000000:1003000": {"mean": 113.2, "p50": 79, "p95": 341, "frac_at_512": 0.020},
+        "4000000:4003000": {"mean": 115.6, "p50": 82, "p95": 342, "frac_at_512": 0.015}
+      },
+      "conclusion": "shard 0 and shard 1 are statistically identical text; the 73 -> 25 docs/s fall is not the data"
+    },
+    {
+      "name": "sustained encode in 2000-document calls, default allocator",
+      "documents": 40000,
+      "rate_docs_per_second": 141.0,
+      "decay": "none; per-chunk rate flat from 4k to 40k",
+      "gpu_telemetry": {
+        "temperature_c": [55, 74],
+        "sm_clock_mhz": [1560, 1635],
+        "max_sm_clock_mhz": 2100,
+        "power_draw_w": [311.9, 314.5],
+        "note": "power-limited, not thermally throttled"
+      },
+      "conclusion": "the GPU sustains the workload; thermal throttling and GPU capability are excluded"
+    },
+    {
+      "name": "same work in 50000-document calls, default allocator",
+      "calls": [
+        {"documents": "0:50000", "rate_docs_per_second": 74.1, "seconds": 674},
+        {"documents": "50000:100000", "rate_docs_per_second": 25.4, "seconds": 1969}
+      ],
+      "production_run_for_comparison": [72.9, 25.1],
+      "torch_num_threads": 8,
+      "conclusion": "reproduces the production rates in a clean process; call size is the cause and the launcher's 4-thread pinning is not"
+    },
+    {
+      "name": "allocator telemetry during the 50000-document calls",
+      "peak_reserved_bytes_gib": 23.06,
+      "live_allocated_bytes_gib": 1.76,
+      "device_memory_gib": 10.24,
+      "num_alloc_retries": 0,
+      "conclusion": "the caching allocator reserved 23.06 GiB on a 10.24 GiB device for 1.76 GiB of live tensors. A length-sorted 50k call sweeps batch shapes from many short documents to 64x512, so segments accumulate unreusable. Past the device ceiling WSL's driver falls back to host memory over PCIe instead of raising OOM, which is why num_alloc_retries stayed 0 and why results/m20_vram_probe.json passed honestly without detecting this."
+    }
+  ],
+  "fix": {
+    "change": "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True",
+    "what_it_does_not_change": [
+      "batch composition (batch_tokens 32768, length-sorted order)",
+      "fp32 compute with TF32 matmul disabled",
+      "max_length 512 and the document prefix",
+      "fp16 document storage",
+      "any registered estimand, weight, threshold, partition, alpha or cap"
+    ],
+    "verification": {
+      "method": "re-encode documents 0:50000 of FEVER under the fix and compare the sha256 of the fp16 shard against the shard the production stage-A run already wrote with the default allocator",
+      "sha256_new": "2497dfcb51a3b4cbdf0e2f93922862fdfbf909fbdec1623394e8870706576eb4",
+      "sha256_production_shard_00000": "2497dfcb51a3b4cbdf0e2f93922862fdfbf909fbdec1623394e8870706576eb4",
+      "byte_identical": true
+    },
+    "measured_effect": {
+      "rate_docs_per_second": 179.2,
+      "seconds_for_50000": 279,
+      "peak_reserved_bytes_gib": 4.40,
+      "speedup_vs_default_same_call": 2.42
+    }
+  },
+  "stage_a_projection_after_fix": {
+    "expected_docs": 10115709,
+    "sum_cost_relative_to_stella": 1.4657230473416791,
+    "stella_equivalent_docs": 14826600,
+    "hours_at_179_2_docs_per_second": 23.0,
+    "hours_at_the_conservative_141_docs_per_second": 29.2,
+    "registered_cap_hours": 52.0,
+    "note": "the 52 h cap was derived from an A100 at 100.76 docs/s on 153-token SQuAD surrogate passages; the real corpora average 85 tokens, which is why this GPU can exceed the surrogate rate. The in-run projection gate remains armed and re-measures live."
+  },
+  "scope": {
+    "covers": "stages A and B, whose processes the launcher spawns with its ENV",
+    "stage_c_note": "m20src/beir15.py is launched separately and sets no environment of its own; it imports pre_encode and uses the same Encoder, so its invocation must carry the same setting"
+  },
+  "artifacts_written": "none outside results/m20_allocator_probe.json; all probe vectors were written to a scratchpad and discarded"
+}

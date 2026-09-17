@@ -1,0 +1,28 @@
+{
+  "status": "FAILED",
+  "mode": "local",
+  "authority": "m13/RULINGS.md R24",
+  "stage_caps_hours": {
+    "A": 52.0,
+    "B": 55.2
+  },
+  "started_utc": "2026-09-17T06:00:44.885614+00:00",
+  "problems": [],
+  "facts": {
+    "head": "698094fc5bec50871f044ba9ad86f335c08cfb77",
+    "six_end_status": "INCOMPLETE_RESERVED",
+    "reserved_access_unspent": true,
+    "free_bytes": 573233098752,
+    "gpu": {
+      "available": true,
+      "name": "NVIDIA GeForce RTX 3080",
+      "vram": 10736893952
+    },
+    "reserved_support_tests": "19 passed in 1.22s",
+    "roster_identity": "True {'bm25s': '0.3.11', 'PyStemmer': '3.1.0'}",
+    "corpus_preflight": "PASSED"
+  },
+  "stage_a_deadline_epoch": 1789812044.8856924,
+  "error": "RuntimeError: stageA-nano-dense exited 1 after 0.8 h; see /home/dylan/asymetric-dual-encoders/work/m20/logs/stageA-nano-dense.log",
+  "finished_utc": "2026-09-17T06:49:17.451859+00:00"
+}

@@ -21,8 +21,30 @@ The launcher keeps every readiness gate of the cloud controller that is not clou
 own docstring lists what it keeps and what it drops. Run the preflight first and read it. Stage B
 spends the one-shot reserved access; `reserved.crash` (R23) governs a crash after the tag.
 
-Stage C, BEIR-15, is `m20src/beir15.py` and comes after stage B completes. Stage D, the archive, is
-`m20src/archive.py` and is blocked on object storage; see the open items below.
+Stage C, BEIR-15, is `m20src/beir15.py` and comes after stage B completes. It is launched
+separately and sets no environment of its own, so its invocation must carry
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` — see the stage-A stop below. Stage D, the
+archive, is `m20src/archive.py` and is blocked on object storage; see the open items below.
+
+## Stage A stopped once on 2026-09-17, and why it now fits
+
+The projection gate stopped the first launch at a shard boundary after 100,000 documents:
+37 docs/s measured, 58.3 h past the stage-A deadline. It worked exactly as registered — nothing
+protected was touched, access stayed unspent, both shards are hash-recorded and resumable.
+
+The cause was not the data (FEVER token length is flat across the two shards, 85.2 vs 86.3 mean),
+not thermal (40k documents in 2,000-document calls hold 141 docs/s at 68–74 °C), and not the
+launcher's thread pinning (the rates reproduce in a clean 8-thread process). A length-sorted
+50,000-document call fragments the caching allocator — 23.06 GiB reserved on a 10.24 GiB card for
+1.76 GiB of live tensors — and WSL's driver then falls back to host memory over PCIe instead of
+raising OOM, so `num_alloc_retries` stayed 0 and `results/m20_vram_probe.json` passed honestly
+without seeing it.
+
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` bounds the reservation to 4.40 GiB and gives
+179 docs/s, and re-encoding FEVER 0:50000 under it reproduces the already-written shard **byte for
+byte**. No registered parameter, estimand or encoding contract changed. Stage A now projects 23 h
+(29 h at the conservative 141 docs/s) against the 52 h cap, and the gate stays armed.
+Receipt: `results/m20_allocator_probe.json`.
 
 ## Done
 
