@@ -327,9 +327,14 @@ def _score_bm25(cfg):
             "run_path": str(path.relative_to(cfg.repo)),
             "run_sha256": R20.save_run(path, R20.truncate(run), qids),
         }
-        # FEVER and DBpedia carry about 10M passages between them. Drop this dataset's text
-        # before loading the next corpus, so the peak holds one corpus rather than two.
+        # Measured: FEVER's BM25 peaks at 20.1 GB and MS MARCO's at 20.9 GB on a 26.7 GB box,
+        # and two large corpora in ONE process reached 23.7 GB. Dropping this dataset's text and
+        # collecting before the next corpus loads is what keeps the peak at one corpus rather than
+        # two. Datasets are ordered largest-first, so the worst case happens on the cleanest heap.
+        import gc
+
         del doc_texts, run
+        gc.collect()
         print(f"[reserved13] bm25: {dataset} complete ({len(scores):,} queries)", flush=True)
     return datasets
 

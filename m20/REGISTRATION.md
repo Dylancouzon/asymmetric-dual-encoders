@@ -302,3 +302,66 @@ much larger and entirely repeatable BEIR-15 work.
 Once `m8-reserved-spent` is on origin, FEVER, DBpedia-entity, cqadup-android and cqadup-english
 join the known-test class for future projects and are **unusable for re-deciding anything in this
 project**. `m20/STATUS.md` and the ledger record that boundary at completion.
+
+## 8. Amendment, 2026-09-17: execution host (ruling R24)
+
+M20 executes on the **local RTX 3080 box**, not the retained Runpod A100, because Runpod refused
+that pod's resume 77 times over seven hours for lack of a free GPU on its host. Nothing was spent
+on either attempt. Full reasoning and conditions: `m13/RULINGS.md` R24 and
+`research/m20-host-decision-brief-astra-2026-09-17.md`.
+
+Nothing scientific changes. Model revisions, prompts, the 512-token contract, fp32 compute with
+TF32 matmul disabled, fp16 document storage, exact retrieval, the eight-system roster, every
+estimand, weight, threshold, partition, bootstrap constant and alpha are all as registered above.
+`reserved.crash` still governs.
+
+The cloud-specific deliverables of §5 are replaced. The stage caps stay as hour bounds and the
+projection gate still runs, but they are local wall clocks; there is no pod, price, wallet or STOP
+receipt. `scripts/m20_local_run.py` is the launcher and keeps every readiness gate of the cloud
+controller that is not cloud plumbing, writing `results/m20_local_run.json` as the receipt. The
+retained pods stay STOP-only and their storage keeps billing, measured at about $0.41/hour across
+the three against the $0.2174/hour the M13 allocation assumed.
+
+### Feasibility, measured rather than assumed
+
+Astra's endorsement was conditional on establishing that the workload actually fits. It does.
+
+**GPU memory**, `results/m20_vram_probe.json`, on batches made entirely of 512-token documents
+rather than the 153-token average the throughput benchmark used:
+
+| tower | setting | peak |
+|---|---|---:|
+| bge-small-en-v1.5 | batch 256 | 2.36 GB |
+| Arctic-M v1.5 | batch 256 | 5.01 GB |
+| Stella 400M v5 | 32,768-token budget | 5.70 GB |
+
+The card has 10.7 GB and each tower encodes in its own process, so **no registered batch size or
+token budget needs to change**.
+
+**Host memory**, `results/m20_bm25_memory_probe_*.json`. BM25 indexing happens inside the tagged
+transaction, so this had to be settled before the tag, on the real corpora:
+
+| corpus | documents | peak RSS |
+|---|---:|---:|
+| Natural Questions | 2,681,468 | 9.7 GB |
+| HotpotQA | 5,233,329 | 12.5 GB |
+| FEVER | 5,416,568 | 20.1 GB |
+| MS MARCO | 8,841,823 | 20.9 GB |
+| FEVER then MS MARCO in one process | — | 23.7 GB |
+
+The box has 26.7 GB. **Document count is a poor predictor**: FEVER needs 60% more memory than
+HotpotQA at almost the same document count, because text length and vocabulary dominate. An
+extrapolation from the first two corpora predicted 12.7 GB for FEVER and would have been wrong by
+7.4 GB. This is the tightest point in the whole plan, so the BM25 datasets run largest-first and
+each dataset's text is freed and collected before the next corpus loads.
+
+**Disk.** 534 GB free on `/` against 147 GB of vectors across all three towers, plus downloads and
+archive staging, with the registered 120 GB scoring floor preserved by the launcher's check.
+
+### One defect this validation found
+
+`m7src/fusion.py` records the `bm25s` and `PyStemmer` versions into its **cache key**, and only
+when a cache path is supplied. M20's paths supply none, so a changed lexical stack would have moved
+every BM25 and fused number with nothing in any output to show it. `m20src/roster.py` now refuses
+unless the installed versions equal the registered ones, and every BM25 row records them.
+

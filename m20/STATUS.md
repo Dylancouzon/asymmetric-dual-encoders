@@ -1,95 +1,79 @@
-# M20 status — registered and implemented; cloud session not started
+# M20 status — ready to execute locally; reserved access still UNSPENT
 
-**Opened 2026-09-16 under R22.** Reserved access is still **UNSPENT**: no `m8-reserved-spent` tag
-locally or on origin, and `results/m10_final_run.json` still ends `INCOMPLETE_RESERVED`. No pod has
-been resumed and no protected payload has been opened.
+**Opened 2026-09-16 under R22. Host changed to the local box 2026-09-17 under R24.**
 
-Work is on branch `m20-exec`.
+Reserved access is **UNSPENT**: no `m8-reserved-spent` tag locally or on origin, and
+`results/m10_final_run.json` still ends `INCOMPLETE_RESERVED`. No pod was ever resumed and no
+protected payload has been opened. All three retained pods are `EXITED` and stay STOP-only.
+
+Everything is merged to `main` and pushed.
+
+## Start here to execute
+
+```bash
+cd /home/dylan/asymetric-dual-encoders
+.venv/bin/python -u scripts/m20_local_run.py               # preflight only, changes nothing
+setsid nohup .venv/bin/python -u scripts/m20_local_run.py --execute \
+  > work/m20/logs/local_run.log 2>&1 < /dev/null &         # stage A then stage B, ~2 days
+```
+
+The launcher keeps every readiness gate of the cloud controller that is not cloud plumbing, and its
+own docstring lists what it keeps and what it drops. Run the preflight first and read it. Stage B
+spends the one-shot reserved access; `reserved.crash` (R23) governs a crash after the tag.
+
+Stage C, BEIR-15, is `m20src/beir15.py` and comes after stage B completes. Stage D, the archive, is
+`m20src/archive.py` and is blocked on object storage; see the open items below.
 
 ## Done
 
-- **Deliverable 1, registration.** `m20/REGISTRATION.md`, `m20/beir15_registry.json` and the dated
-  `_amended_2026_09_16` block in `m10/final_run_registry.json`, pushed before any executor change
-  ran against real data. Reversing the amendment reproduces the pre-amendment registry
-  byte-for-byte, which is the hash the frozen six-set result pinned, so the amendment is provably
-  confined to the roster.
-- **Deliverable 2, executor extension.** `m20src/roster.py` holds the eight-system roster shared by
-  the protected transaction and the BEIR-15 pass. `m13src/reserved_support.py`,
-  `m13src/score13.py`, `m13src/reserved_transaction.py`, `m8src/pre_encode.py` and
-  `scripts/m13_reserved_cloud.py` extended. 276 `m13src` tests pass.
-- **Deliverable 4 and 5 implementations.** `m20src/beir15.py` and `m20src/archive.py`.
-- **Stage C smoked end to end** on SciFact, all eight systems, reproducing every independently
-  published number. See `m20/SMOKE.md`.
-- **Registered DBSF prerequisite met.** `results/m20_dbsf_reproduction.json`, all three deltas
-  exactly zero.
-
-## Next action
-
-Two reviews (essential-only, allowlisted files, reserved read-exclusion, access log audited), then
-the cloud session in four stages: A pre-encode, B tagged reserved transaction, C BEIR-15,
-D archive. Stages A and B are `scripts/m13_reserved_cloud.py`; C and D are
-`scripts/m20_beir15_cloud.py`, with the pod stopped in between so the reserved receipt is durable
-before the long repeatable work starts.
+- **Registration** (`m20/REGISTRATION.md`, `m20/beir15_registry.json`, the dated
+  `_amended_2026_09_16` block in `m10/final_run_registry.json`). Reversing the registry amendment
+  reproduces the pre-amendment bytes exactly, which is the hash the frozen six-set result pinned.
+- **Executor** extended to the eight-system roster across `m20src/roster.py`,
+  `m13src/reserved_support.py`, `m13src/score13.py`, `m13src/reserved_transaction.py` and
+  `m8src/pre_encode.py`. 279 `m13src` tests pass.
+- **BEIR-15 runner and archive builder**, `m20src/beir15.py` and `m20src/archive.py`.
+- **Two review rounds.** Astra NO-GO with seven P1 blockers, all fixed; Fable GO with no blockers.
+  `m20/REVIEW_TRIAGE.md`.
+- **Host validation.** Astra ENDORSE WITH CONDITIONS, all conditions discharged. `m13/RULINGS.md`
+  R24, `m20/REGISTRATION.md` §8.
+- **Evidence the numbers are right.** `m20/SMOKE.md`: the real BEIR-15 path on SciFact reproduces
+  every independently published value. `results/m20_dbsf_reproduction.json`: three zero deltas.
+- **Feasibility measured, not assumed.** `results/m20_vram_probe.json` and
+  `results/m20_bm25_memory_probe_*.json`. No registered parameter needed changing.
 
 ## Open items for the owner
 
-1. **Object storage.** No account, bucket, credentials or `rclone` binary exists on the box. The
-   `D:` half of the archive can be built and verified without it; the object-storage half cannot.
-   This blocks the exit criterion "archive verified at both targets", nothing earlier.
-2. **The wallet may not cover the whole plan.** The Runpod balance was **$351.51** on 2026-09-16.
-   The reserved controller needs $193.74 of cover for stages A and B and starts fine; the BEIR-15
-   controller needs $234.95 for stages C and D and would also start. But gross billing across the
-   whole plan at cap is $428.69, and even the *expected* 171 hours bill about $309, which leaves
-   almost nothing. Top the wallet up before stage C or expect the pod to be cut off mid-encode.
-   All three pods were `EXITED` and the target's quote matched the registered rate.
+1. **Object storage.** No account, bucket, credentials or `rclone` on the box. The `D:` half of the
+   archive can be built and verified without it; the object-storage half cannot. This blocks the
+   exit criterion "archive verified at both targets", nothing earlier. `m20src/archive.py
+   --verify-remote` is implemented and waiting.
+2. **Retained storage bills about $0.41/hour** across the three stopped pods, roughly double the
+   $0.2174/hour the M13 allocation assumed, whether or not anything runs. Measured over a 7-hour
+   window with everything stopped. Retirement is M22's to request; they stay STOP-only until then.
+3. **Stage C is the long pole:** about 130 hours of local GPU for BEIR-15 against about 52 for the
+   reserved four. Nothing blocks it, but it is five days of the machine.
 
-3. **Stage C has about 6% cap headroom against the budget, not against the estimate.** BEIR-15
-   needs roughly 23.7M new document encodes across three fp32 towers, including Climate-FEVER's
-   5.42M, which `m20/PLAN.md` had omitted. The registered caps total 237.2 h, costing $336.87 of
-   new spend at the live quote against $342.96 of recorded headroom. If the in-run projection gate
-   trips, the run stops cleanly and the choice between raising the ceiling, narrowing BEIR-15 and
-   accepting a partial descriptive table is the owner's.
-4. **The inherited 55.2-hour reserved allowance priced one document tower of three.** M13's number
-   is unchanged and now applies to the tagged scoring stage; the pre-encode has its own registered
-   cap. Recorded in `m20/REGISTRATION.md` §5.
+## The tightest point in the plan
 
-## Execution attempt 1 — refused by Runpod capacity, nothing spent
-
-Launched 2026-09-16 21:32 UTC after both reviews. Every preflight passed: clean pushed tree at
-`353edff`, the six-set result still `INCOMPLETE_RESERVED`, the DBSF reproduction receipt `PASSED`,
-the live quote matching the registered rate, the stage caps summing, the live cost $336.87 inside
-the registered $337.50, and all three pods `EXITED`. Runpod then refused the resume: **"There are
-not enough free GPUs on the host machine to start this pod."**
-
-Nothing was spent. Wallet delta $0.00, no `m8-reserved-spent` tag, pod still `EXITED`, reserved
-access **UNSPENT**. The receipt is preserved at
-`results/m13_reserved_cloud_attempt1_nocapacity_2026-09-16.json`.
-
-The controller now accepts `--wait-for-capacity-hours`: it retries **only** this one refusal, every
-five minutes, for as long as you allow. Nothing is billed while the pod is stopped and the access
-is untouched, so waiting costs nothing but time; every other failure still raises immediately. To
-retry:
-
-```bash
-cd /home/dylan/asymetric-dual-encoders/work/m13cloud
-git fetch origin main && git checkout --detach origin/main
-test ! -e results/m13_reserved_cloud.json && test ! -e logs/m13-reserved-cloud.log
-setsid nohup .venv/bin/python -u scripts/m13_reserved_cloud.py --wait-for-capacity-hours 12 \
-  > ../m20/logs/reserved_controller.log 2>&1 < /dev/null &
-```
-
-If the host stays full, the retained A100 may have to be replaced, which is an owner decision: the
-pod holds the M13 build artifacts and the checkpoint, and `m14/HANDOFF.md` is STOP-only.
+BM25's peak host memory. FEVER needs 20.1 GB and MS MARCO 20.9 GB on a 26.7 GB box, and two large
+corpora in one process reached 23.7 GB. Document count does not predict it: FEVER needs 60% more
+than HotpotQA at almost the same count. The datasets run largest-first and each corpus's text is
+freed and collected before the next loads. If a future change touches that ordering or that
+freeing, re-measure before running.
 
 ## Noted, not fixed
 
-Running the `m10src` suite rewrites `results/m10_contrast_E1.json`, a real registered result file,
-which `CLAUDE.md` forbids. It was restored to HEAD. This is pre-existing on `main` and unrelated to
-M20, but it means `run_checks.sh` cannot be run casually on a clean tree.
+- Running the `m10src` suite rewrites `results/m10_contrast_E1.json`, a real registered result
+  file, which `CLAUDE.md` forbids. Pre-existing on `main`. Check `git status` after `run_checks.sh`.
+- Three review debt items are recorded in `m20/REVIEW_TRIAGE.md` and deliberately not fixed.
 
 ## Pointers
 
-- Registration: `m20/REGISTRATION.md`, `m20/beir15_registry.json`. Smoke: `m20/SMOKE.md`.
-- Rulings: `m13/RULINGS.md` R19, R20, R22, R23. Mandate: `instructions-m20.md`.
-- Artifact paths, hashes, restore commands: `m14/HANDOFF.md`.
-- Follow-on milestones: `instructions-m22.md` (release), `instructions-m23.md` (upstream PRs).
+- Mandate `instructions-m20.md`. Rulings `m13/RULINGS.md` R19, R20, R22, R23, R24.
+- Registration `m20/REGISTRATION.md`, `m20/beir15_registry.json`. Smoke `m20/SMOKE.md`.
+- Reviews `m20/REVIEW_TRIAGE.md`, `research/m20-codex-impl-review-2026-09-16.md`,
+  `research/m20-host-decision-brief-astra-2026-09-17.md`.
+- Failed cloud attempts `results/m13_reserved_cloud_attempt{1,2}_nocapacity_*.json`.
+- Artifact paths, hashes, restore commands `m14/HANDOFF.md`. Checks `HARNESS.md`.
+- Follow-on `instructions-m22.md` (release), `instructions-m23.md` (upstream PRs).

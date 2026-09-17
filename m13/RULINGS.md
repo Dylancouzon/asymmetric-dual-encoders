@@ -242,3 +242,45 @@ and tested. A crash after `m8-reserved-spent` resumes at the first incomplete sy
 identical tagged code/registry/pre-encode identity; a persisted complete system is never re-scored
 or re-opened; no aggregate is emitted until all systems complete; no flag permits a rerun. R14 is
 unchanged for the six-set records it governed. Made before any reserved payload was opened.
+
+## R24 — M20 executes on the local GPU, not the retained A100 (Dylan, 2026-09-17)
+
+Made before any reserved payload was opened; no `m8-reserved-spent` tag exists on origin at ruling
+time, and `results/m10_final_run.json` still ends `INCOMPLETE_RESERVED`.
+
+**Why.** The registered execution pin names one retained Runpod A100, `k3aee2m68765em`, STOP-only.
+On 2026-09-16 the controller passed every preflight and Runpod refused the resume: "There are not
+enough free GPUs on the host machine to start this pod." It refused 77 times over seven hours.
+Nothing was spent; the two receipts are
+`results/m13_reserved_cloud_attempt1_nocapacity_2026-09-16.json` and
+`results/m13_reserved_cloud_attempt2_nocapacity_2026-09-17.json`. M13 had already lost two hosts to
+this same condition, so waiting has no demonstrated bound.
+
+**Ruling.** M20 executes on the local RTX 3080 box. The owner approved the recommendation on
+2026-09-17 subject to validation, and Astra returned ENDORSE WITH CONDITIONS
+(`research/m20-host-decision-brief-astra-2026-09-17.md`).
+
+**What this changes.** The execution host, and with it the cloud-specific deliverables: pod
+identity, hourly price and wallet cover, resume and SSH handling, remote transfer and the STOP
+confirmation are replaced by `scripts/m20_local_run.py`, which keeps every readiness gate of
+`scripts/m13_reserved_cloud.py` that is not cloud plumbing and writes
+`results/m20_local_run.json` as the execution receipt. The registered stage caps become local wall
+clocks; the hour caps still bound each stage and the projection gate still runs.
+
+**What this does not change.** No estimand, NDO-3 weight, threshold, partition, bootstrap constant,
+alpha, contrast or release rule. Model revisions, prompts, the 512-token contract, fp32 compute
+with TF32 matmul disabled, fp16 document storage, exact retrieval and the full eight-system roster
+are all preserved, as is the completed six-set evidence. `reserved.crash` (R23) continues to govern
+the transaction.
+
+**Conditions, all discharged before the tag.** Live CUDA access and sufficient RAM, VRAM and disk
+must be established on representative worst-case work, not extrapolated:
+`results/m20_vram_probe.json` measures every tower on all-512-token batches, and
+`results/m20_bm25_memory_probe*.json` measures BM25's peak on the real corpora. The installed
+lexical stack is now gated rather than assumed, because `m7src/fusion.py` records `bm25s` and
+`PyStemmer` only into a cache key that M20's paths never build.
+
+**What is unchanged about the retained pods.** They stay STOP-only. Choosing a local host grants no
+authority to terminate a pod or destroy a volume, and their storage keeps billing — measured at
+about $0.41/hour across the three, roughly double the $0.2174/hour the M13 allocation assumed.
+Retirement remains M22's to request.

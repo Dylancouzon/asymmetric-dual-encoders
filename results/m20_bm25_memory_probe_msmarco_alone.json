@@ -1,0 +1,27 @@
+{
+  "status": "MEASURED",
+  "host": {
+    "MemTotal": "26673332 kB",
+    "SwapTotal": "7340032 kB",
+    "free_bytes_root": 573233803264
+  },
+  "rows": [
+    {
+      "corpus": "msmarco",
+      "source": "BeIR/msmarco",
+      "revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+      "n_docs": 8841823,
+      "corpus_text_bytes": 2969059106,
+      "peak_rss_after_load_bytes": 7397359616,
+      "peak_rss_bytes": 20902150144,
+      "load_seconds": 192.3487029490061,
+      "index_and_retrieve_seconds": 469.25218152301386,
+      "n_probe_queries": 64,
+      "nonempty_runs": 64
+    }
+  ],
+  "protected_evaluation_access": false,
+  "reserved_corpus_contact": [],
+  "_reserved_corpus_note": "corpus text only, under the corpus-only allowlist entry, which is the same contact m8src/pre_encode.py makes with these corpora before the tag. No query or qrel was opened; the probe queries are synthetic.",
+  "purpose": "does m7src/fusion.py's BM25 fit in this box's RAM at MS MARCO scale"
+}

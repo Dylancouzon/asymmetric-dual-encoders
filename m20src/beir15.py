@@ -200,7 +200,13 @@ def run_corpus(corpus_name, encoders, device="cuda", chunk=50_000):
                 raise RuntimeError(f"{corpus_name}/bm25: rebuilt run does not reproduce the hash "
                                    f"its completed row recorded")
         del run
+    # The corpus text is the largest object here and BM25 is the only system that needs it.
+    # Measured peaks are 20.9 GB for MS MARCO on a 26.7 GB box, so returning it before the dense
+    # passes is not housekeeping, it is what makes the largest corpora fit.
+    import gc
+
     payload["doc_texts"] = None
+    gc.collect()
 
     for system in R.DENSE_SYSTEMS:
         if system not in pending:
