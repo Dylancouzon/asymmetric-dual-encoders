@@ -46,6 +46,13 @@ byte**. No registered parameter, estimand or encoding contract changed. Stage A 
 (29 h at the conservative 141 docs/s) against the 52 h cap, and the gate stays armed.
 Receipt: `results/m20_allocator_probe.json`.
 
+Sol reviewed the stop, the fix and the relaunch: **GO WITH CONDITIONS**, one P1 — the launcher
+minted a fresh `now + 52 h` on every execution, so repeated relaunches could have accumulated past
+a cap the registration defines as **one** wall clock. Fixed: the earliest preserved attempt
+receipt's deadline now binds. Effective slip to date is 1.83 h. The binding stage-A deadline is
+**epoch 1789812044.886**; stage A must finish, or the owner must rule, before it.
+Record: `research/m20-allocator-review-sol-2026-09-17.md`.
+
 ## Done
 
 - **Registration** (`m20/REGISTRATION.md`, `m20/beir15_registry.json`, the dated

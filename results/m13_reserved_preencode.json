@@ -1,0 +1,31 @@
+{
+  "status": "RUNNING",
+  "datasets": [
+    "fever",
+    "dbpedia-entity",
+    "cqadup-android",
+    "cqadup-english"
+  ],
+  "systems": {
+    "nano-dense": {
+      "fever": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/fever/manifest.json",
+        "manifest_sha256": "6a8a405b7e5f01dc626116dacf422ff4a8fc893e03c783d2789d52609cd6b978",
+        "n_docs": 5416568,
+        "n_shards": 109,
+        "source_revision": "426aea4d30c65c041f093ae072e25fb5a0e64659",
+        "vector_bytes": 11093145216
+      }
+    },
+    "bge-small-en-v1.5": {},
+    "leaf-ir-asym": {}
+  },
+  "guard": {
+    "entry": "m8src.pre_encode",
+    "kinds": [],
+    "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
+    "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
+  },
+  "updated_utc": 1789672637.6842945
+}

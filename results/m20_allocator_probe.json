@@ -62,7 +62,8 @@
       "live_allocated_bytes_gib": 1.76,
       "device_memory_gib": 10.24,
       "num_alloc_retries": 0,
-      "conclusion": "the caching allocator reserved 23.06 GiB on a 10.24 GiB device for 1.76 GiB of live tensors. A length-sorted 50k call sweeps batch shapes from many short documents to 64x512, so segments accumulate unreusable. Past the device ceiling WSL's driver falls back to host memory over PCIe instead of raising OOM, which is why num_alloc_retries stayed 0 and why results/m20_vram_probe.json passed honestly without detecting this."
+      "conclusion": "the caching allocator reserved 23.06 GiB on a 10.24 GiB device for 1.76 GiB of live tensors. A length-sorted 50k call sweeps batch shapes from many short documents to 64x512, so segments accumulate unreusable. Reserving 2.25x the device's physical memory without an OOM is consistent with WSL's documented host-memory fallback, which is also why num_alloc_retries stayed 0 and why results/m20_vram_probe.json passed honestly without detecting this.",
+      "limitation": "the host-memory fallback is inferred from the reservation exceeding physical VRAM and from the absence of OOM, not measured directly at the driver. The operational diagnosis and the fix do not depend on which mechanism serves the over-subscription: the measured quantities are the reservation, the rate and the byte-identical output (Sol review, 2026-09-17)."
     }
   ],
   "fix": {
@@ -75,6 +76,7 @@
       "any registered estimand, weight, threshold, partition, alpha or cap"
     ],
     "verification": {
+      "scope_of_this_evidence": "one 50,000-document FEVER shard under the nano-dense (stella) tower. It establishes that allocator policy is not an encoding operator on the path that actually runs, which is what the resume and the registered contract depend on. It is not a proof of byte-universality across every tower and batch shape; that would need the fragmented-state shard re-encoded under the fix, plus representative bge-small and arctic-m batches under both settings (Sol review, 2026-09-17).",
       "method": "re-encode documents 0:50000 of FEVER under the fix and compare the sha256 of the fp16 shard against the shard the production stage-A run already wrote with the default allocator",
       "sha256_new": "2497dfcb51a3b4cbdf0e2f93922862fdfbf909fbdec1623394e8870706576eb4",
       "sha256_production_shard_00000": "2497dfcb51a3b4cbdf0e2f93922862fdfbf909fbdec1623394e8870706576eb4",

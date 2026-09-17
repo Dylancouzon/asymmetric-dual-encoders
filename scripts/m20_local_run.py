@@ -206,8 +206,18 @@ def main(argv=None):
     if RECEIPT.exists():
         raise RuntimeError(f"preserve the existing execution receipt {RECEIPT}")
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    # The registration defines ONE wall clock for stage A, not one per attempt. Minting a fresh
+    # `now + cap` on every execution would let repeated relaunches accumulate past the registered
+    # 52 h while each process stayed inside its own newly issued deadline -- silently assuming an
+    # owner decision the plan reserves (Sol review, 2026-09-17, P1). Every preserved attempt
+    # receipt carries the deadline it ran under; the earliest one binds.
     deadline = time.time() + cap_a * 3600
+    for prior in sorted(RECEIPT.parent.glob("m20_local_run_attempt*.json")):
+        earlier = json.loads(prior.read_text()).get("stage_a_deadline_epoch")
+        if earlier:
+            deadline = min(deadline, float(earlier))
     record["stage_a_deadline_epoch"] = deadline
+    record["stage_a_deadline_inherited"] = deadline < time.time() + cap_a * 3600 - 1
     try:
         elapsed_a = 0.0
         for tower in TOWERS:
