@@ -36,7 +36,7 @@ named in its row. Spot-check state is tracked in the last section.
 | M18: bounded specialized Zero table, dense screen | +0.007591 nDCG@10 vs v1 [-0.000844, 0.018995], passed the +0.005 gate | `m18/FINDINGS.md` | descriptive/gated | the fused result +0.002953 [0, 0.008858] FAILED the +0.010 fused gate; ENCODER_NO_IMPROVEMENT |
 | M19: label-sensitive Precision@10 delta | between +0.016667 and +0.075000 against a +0.03 gate | `m19/FINDINGS.md` | post-hoc sensitivity, descriptive | ENCODER_INCONCLUSIVE; decisive gates remain assignment-sensitive |
 | M17: vocabulary extension made results worse | five arms 0.021–0.035 nDCG@10 below untrained V0 (0.6153) | `research/m17-m19-postmortem-2026-09-13.md`, `m17/FINDINGS.md` | descriptive, closed negative | the inversion was never diagnosed |
-| Absorbable transformations (M7/M8) | rank agreement 1.000 without renormalization, 0.000 with renormalization | `m8/FINDINGS.md`, `research/m1-m6-findings.md` | diagnostic (algebraic, exact) | centering, whitening, top-PC removal and per-token scalar weights are absorbable into a lookup table; only multiplicity-dependent pooling and n-gram rows add capacity |
+| Absorbable transformations (M7/M8) | max abs difference 1.67e-16 (centering), 3.33e-16 (whitening), 3.33e-16 (SIF post-processing), 9.31e-14 (per-token weights), 2.82e-14 (full SIF); count saturation differs by 0.129 and is not absorbable | `results/m7_absorb_check.json`, `m7src/absorb_check.py`, `m8/FINDINGS.md` | diagnostic (algebraic, exact) | **Corrected 2026-09-17.** The sub-agent's "rank agreement 1.000 / 0.000" appears in no source and is withdrawn. Absorbability holds under the normalized weighted-mean pooling this architecture uses, and fails under sum pooling |
 | Dev against six-set retention gap | dev out-of-domain retention 0.764 nearly equals six-set retention 0.755; all-six dev retention 0.915 | `m7/STATUS.md` | diagnostic | in-distribution dev bias was real and disclosed in advance |
 
 ## 2. Candidate net-new findings, as ranked by the sub-agent
@@ -86,7 +86,11 @@ named in its row. Spot-check state is tracked in the last section.
 
 | batch | checked by | date | outcome |
 |---|---|---|---|
-| headline contrasts C1a/C1b/C2a/C2b, latency triple, Nano per-dataset rows | pending | | |
-| M12 DBSF depth ladder | pending | | |
-| M9 edge artifact sizes and container limits | pending | | |
-| M7 C1/C2/C3 and clean-4 robustness | pending | | |
+| headline contrasts C1a/C1b/C2a/C2b, latency triple, Nano per-dataset rows | session, then a fact-check sub-agent against `m21/BENCHMARKS.md` and `m13/STATUS.md` | 2026-09-17 | Match, digit for digit |
+| M12 DBSF depth ladder and the two fusion operators | session, then the fact-check sub-agent | 2026-09-17 | Match |
+| M9 edge artifact sizes, query-length ladder and container limits | session, then the fact-check sub-agent | 2026-09-17 | Match. The 3.4 / 4.5 ms pair is sourced after all |
+| M7 C1/C2/C3, clean-4 robustness, retention denominators | session, then the fact-check sub-agent | 2026-09-17 | Match |
+| Teacher sweep denominators | session, against `m7/RESULTS.md` | 2026-09-17 | 11 candidates over two sweeps, Spearman 0.000 over the eight of the first. "mxbai is 8th of 11" |
+| Absorbability | session, against `m7src/absorb_check.py` and `results/m7_absorb_check.json` | 2026-09-17 | The earlier figures were wrong and are replaced |
+| Appendix A lines from M8, M17, M18, M19 | pending: those FINDINGS files sat outside the review allowlist | | |
+| Nano served-path parity metric name | fact-check sub-agent | 2026-09-17 | "comparison error", not "cosine error". Draft corrected |
