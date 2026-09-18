@@ -67,3 +67,22 @@ named-file allowlists only.
   it runs. Section 9 folds it into one experiment that also prices the Stella query tower and
   replaces the synthetic index with real vectors.
 - v2 written and committed. Round two launched: a focused Codex Sol re-review and an andrey-review.
+- Round two returned. `REVIEWS/andrey-2026-09-17.md` and `REVIEWS/codex-sol-rereview-2026-09-17.md`.
+  - andrey-review: **fix-then-ship, and not close.** One same-day finding, a preprint with no
+    bibliography, now fixed. Its other three findings are the open measurements the paper names.
+  - Codex Sol re-review: 11 of the 13 round-one findings confirmed fixed; two dispositions
+    overclaimed and are now real. Five new defects found and fixed, including displayed sums in the
+    latency table that do not add (the record rounds components, totals and ratios independently)
+    and two sentences that were false as written, "holds no state" and "changes no stored bytes".
+- Humanizer pass run last, as the gate order requires. No puffery vocabulary, no em dashes, no curly
+  quotes. The real finding was density: 15 uses of "X rather than Y", the negative-parallelism
+  shape. Seven rewritten as positive statements; the rest carry a genuine contrast.
+- The Codex writing pass is deliberately held. It restructures a whole piece, and running it before
+  M20 and the open measurements land would churn prose that has to change. It runs when the content
+  is final, then the humanizer again after it.
+- **State at the end of this session.** Draft v2 plus references, ten sections and one appendix,
+  reviewed by four independent passes and pushed on `m15-whitepaper`. Three numbers block a
+  shippable paper: the Stella query tower's latency under the common serving protocol, TurboQuant
+  recall against binary, int8 and fp16, and a swap against a real persistent collection. The Section
+  9 experiment produces all three in one run on the M5 Pro, with committed vectors, no training and
+  no protected access. It awaits Dylan's go.
