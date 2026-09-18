@@ -43,3 +43,27 @@ named-file allowlists only.
 - First full draft: `m15/PAPER.md`, sections 1 to 9 plus one appendix, section 5.4 held open for M20.
 - Branch pushed to origin. Review round one launched: a number-by-number fact check, a hostile-reviewer
   pass, and a Codex `gpt-5.6-sol` adversarial correctness review. Brief: `m15/REVIEWS/BRIEF-common.md`.
+- Review round one returned three passes. Records: `REVIEWS/codex-sol-2026-09-17.md`,
+  `REVIEWS/factcheck-2026-09-17.md`, `REVIEWS/fable-hostile-2026-09-17.md`.
+- Draft v1 did not survive it. Three problems were structural rather than editorial:
+  1. **The paper contradicted itself on artifact size.** Section 6.1 had the table smaller than the
+     student; section 6.3 had it 5.9 times larger. The two rows measure different packagings from
+     different milestones. v2 reports both with their definitions and withdraws the one-sided claim.
+  2. **The LEAF contrast is not a shared-index comparison.** LEAF-asym encodes documents with
+     `snowflake-arctic-embed-m-v1.5` at 768 dimensions. Its teacher ceiling on our six is 0.5264
+     against Stella's 0.5744, and the established delta is a third of that gap. v2 discloses it and
+     reports retention of each system's own tower: 0.979 for LEAF-asym, 0.9256 derived for ours.
+  3. **The cost numbers mixed two harnesses.** v2 reports the same-harness collapse, five times as
+     encoders to 1.96 times as systems, and keeps the cross-harness figures apart.
+- Also fixed: the synthetic index is now disclosed, the quantization quality claim is withdrawn
+  pending recall, "tie" is gone, the unresolved count is three and enumerated, the absorbability
+  result carries its pooling condition, and the clean-4 headline registration is dated per family.
+- Promoted from the evidence into the paper: the fused table system reaching the inference-free
+  band with no query-side network, the 19-times rescore trap, the inert objective at 99.75%, the
+  subword-fragmentation correlation that moved nothing, and the index-bytes ladder.
+- **A deferred deliverable surfaced.** Owner ruling, Dylan 2026-08-30 in `m9/RESULTS.md`: the
+  TurboQuant comparison against binary, int8 and fp16, on latency, footprint and recall at up to one
+  million documents, was deferred to the whitepaper. Section 6.4 cannot make a quality claim until
+  it runs. Section 9 folds it into one experiment that also prices the Stella query tower and
+  replaces the synthetic index with real vectors.
+- v2 written and committed. Round two launched: a focused Codex Sol re-review and an andrey-review.
