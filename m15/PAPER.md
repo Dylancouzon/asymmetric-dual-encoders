@@ -243,15 +243,23 @@ measured, so on this hardware it is not a quality-against-speed trade at all.
 
 ### 7.1 Teacher Quality Does Not Predict Distilled Quality
 
-We measured 11 teachers and compared each teacher's own retrieval ceiling against the quality of the
-table distilled from it. The Spearman correlation over the eight comparable rows is 0.000. The
-highest-ceiling candidate ranked fifth as a teacher and landed 0.0480 below the incumbent, and we
-withdrew it the same day we approved it.
+We measured 11 teachers in two sweeps and compared each teacher's own retrieval ceiling against the
+quality of the table distilled from it. Over the eight candidates of the first sweep the Spearman
+correlation between the two is 0.000. The highest-ceiling candidate ranked fifth on the metric that
+ships, landed 0.0480 [-0.0608, -0.0349] below the incumbent, and we withdrew it the same day we
+approved it. Only one candidate beat the incumbent, at +0.0365 [0.0249, 0.0481], and it became the
+document tower this paper freezes.
 
-This is a counterexample, not a law. It says that selecting a teacher on its own benchmark score is
-unjustified, and that the only reliable selection signal we found is distilling a candidate and
-measuring the student. For a lookup-table student that costs little, which is what makes the sweep
-affordable in the first place.
+Two related mechanisms failed the same way. Pooling does not explain the ranking: the same weights
+read out as a mean move the ratio from 0.526 to 0.472. Cosine agreement with the teacher does not
+either: it rises with the distillation weight while nDCG@10 falls, so it mis-ranks candidates.
+
+The sweep is closed-form, flat, dev-only, and scored on two components of one dataset family
+against each teacher's own documents, so it ranks candidates rather than predicting their scores.
+Within that scope the reading is a counterexample and not a law: selecting a teacher on its own
+benchmark score is unjustified, and the only reliable signal we found is distilling the candidate
+and measuring the student. For a lookup-table student that is cheap, which is what makes a sweep of
+this width affordable at all.
 
 ### 7.2 A Lookup Table Absorbs Its Own Post-Processing
 
