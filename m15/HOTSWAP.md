@@ -27,10 +27,11 @@ warmups, 20 synthetic 20-word queries, medians over three trials.
 
 - BM25 alone and the Stella query tower as swap options are tabulated, but no single live swap
   transcript covers them the way the Nano/Zero pair is covered.
-- The plain-English page's edge pairing of 3.4 ms with Zero and 4.5 ms with Nano inside a 256 MB
-  container does not appear in `results/edge_prototype.json`, `results/edge_variant.json` or
-  `results/ann_sweep.json`. This matches `m21/BENCHMARKS.md` discrepancy item 12. **Do not cite
-  these two numbers in the paper until a committed result file is found.**
+- The sub-agent flagged the 3.4 ms / 4.5 ms edge pairing as untraceable. **That flag is wrong and
+  is retracted here.** `m9/RESULTS.md` carries the measurement table: at a 256 MB container limit,
+  binary quantization with `rescore=false`, 202 MB resident, 3.387 ms for Zero and 4.469 ms for
+  Nano, rendered in the prose as 3.4 ms and 4.5 ms. The sub-agent's allowlist omitted
+  `m9/RESULTS.md`. Verified directly on 2026-09-17.
 - `results/costs.json` is a different and older table over a different model set. It does not hold
   the Zero, Nano and bge-small numbers above.
 - `results/ann_sweep.json` covers bge-small and lightretriever-qwen2.5-1.5b, not Zero or Nano.
