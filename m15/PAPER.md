@@ -1,9 +1,10 @@
 # Swapping the Query Encoder Over a Frozen Document Index
 
 **Draft v2, 2026-09-17. Not for circulation.** Sections marked `[M20]` wait on the reserved four and
-BEIR-15. Sections marked `[open]` name a measurement this paper owes. Numbers trace to committed
-result files through `EVIDENCE_INDEX.md`, whose spot-check table records what a reviewer verified
-against the source and when.
+BEIR-15. Sections marked `[open]` name a measurement this paper owes. Every result number traces to a committed
+file through `EVIDENCE_INDEX.md`, whose spot-check table records what a reviewer verified against
+the source and when. The parity and engineering figures in Section 3 come from the milestone status
+files named beside them and are not yet indexed.
 
 ## Abstract
 
@@ -19,7 +20,8 @@ Running a cheap query encoder against a frozen teacher's index is not new. LEAF 
 published the lookup-table construction, and backward-compatible training named the goal years
 earlier. What has not been done is the measurement: prior work ships one cheap query encoder per
 index, and nobody has put two tiers, the teacher's own tower, and a lexical channel on one index and
-priced retention against system cost under a protocol registered before the numbers existed.
+priced retention against system cost under a pre-registered benchmark partition. Section 4 dates
+what was registered when, per family.
 
 The distilled student establishes superiority over bge-small on both the contamination-clean
 partition and the full six (+0.017648 and +0.027449 nDCG@10). The lookup table retains 0.755 of the
@@ -29,14 +31,17 @@ The result that changes how the frontier reads is about cost. Inside one harness
 that differ by about five times as encoders differ by 1.96 times as whole systems at typical query
 length, because both pay the same approximate search. The gap widens to 5.10 times at 51 to 120
 words and narrows under memory pressure. Which tier ships the smaller artifact depends on how you
-package it, and the two packagings we measured disagree. Below the transformer tier, query-encoder
-compute stops deciding system cost; the index and its quantization decide it.
+package it, and the two packagings we measured disagree. At short and medium query length the index and its
+quantization decide system cost rather than the choice of query encoder. At long queries the encoder
+returns as the deciding term.
 
 ## 1. Introduction
 
 Retrieval systems are evaluated as one model and deployed as two. The document index is built once,
 costs a corpus-scale encode, and cannot be rebuilt whenever a better query model appears. The query
-encoder runs once per request and holds no state. Replacing it changes no stored bytes.
+encoder runs once per request and stores nothing per document. Replacing it rewrites no document
+vector, although it does change which query-side artifact the server loads, and Section 6.3 shows
+those artifacts are not small.
 
 That property is established. LEAF releases `-asym` checkpoints for exactly this mode and calls it
 mixed-checkpoint inference. pyNIFE distills a per-token lookup table against a frozen off-the-shelf
@@ -47,16 +52,17 @@ of upgrading a model without re-embedding a corpus. We build on all of it and cl
 The gap is narrower and it is about measurement. Prior work ships one cheap query encoder per index.
 Nobody has measured several query encoders on one held-fixed index, across a near-zero-compute tier,
 a distilled transformer tier, the teacher's own tower, and a lexical channel, and priced what each
-retains against what it costs in a running system, under a protocol registered before the numbers
-arrived. Two questions fall out of that setting and out of no single-encoder study:
+retains against what it costs in a running system, under a benchmark partition registered in
+advance on a contamination argument. Two questions fall out of that setting and out of no single-encoder study:
 
 - How much quality does each tier retain from the frozen tower it shares?
 - At what point does query-encoder compute stop deciding system cost?
 
 **Contributions.**
 
-1. A retention-against-cost frontier over one frozen index, with a near-zero-compute tier, a
-   sub-35M transformer tier, and a lexical channel on the same document vectors (Sections 5, 6).
+1. A retention-against-cost frontier over one frozen index, spanning a near-zero-compute tier, a
+   sub-35M transformer tier, the teacher's own query tower, and a lexical channel fused with the
+   dense results (Sections 5, 6).
 2. Registered head-to-head results for the transformer tier against bge-small and LEAF-asym, with
    the unresolved contrast reported as unresolved and the document-tower confound disclosed (5.1).
 3. Evidence that the encoder-level cost advantage of a lookup table shrinks to under two times at
@@ -126,7 +132,7 @@ the encoder, and brings a prefetch depth with it. Section 5.3 prices that.
 The headline partition is `clean-4`: nfcorpus, scidocs, scifact, and trec-covid, the four of our six
 BEIR datasets with no disclosed teacher overlap. Stella discloses exposure to ArguAna, FiQA, and
 FEVER. We report all six beside `clean-4` in every table and report the difference between the two
-partitions as its own row. No dataset entered or left the headline after a number was seen.
+partitions as its own row. No dataset entered or left either partition after a number was seen.
 
 **Registration dates differ by family and we state them.** The partition itself was pre-registered
 for both families, in `m7/LEDGER.md`, on the contamination argument alone. For the student's family
@@ -252,7 +258,8 @@ measured it under the common serving protocol. Section 9 names the experiment th
 The shape is the paper. Dropping from a 400M query tower to a 34.5M student costs 0.074 retention.
 Dropping from the student to a table costs another 0.171 and saves about seven milliseconds of
 encoder time, which Section 6 shows is worth about one millisecond of system time at typical query
-length. Adding a term count to the table recovers most of the drop at no query-side compute.
+length. Adding a lexical channel to the table recovers most of the drop with no query-side neural network.
+Tokenizing and scoring terms is still work; the transformer forward pass is what disappears.
 
 ### 5.5 Breadth `[M20]`
 
@@ -282,11 +289,14 @@ which is the gap Section 9 names.
 Add the search. On an Apple M5 Pro against a **synthetic** one-million-vector index of random
 1024-dimensional rows, four threads, default `ef`, latency and architecture only:
 
-| Query length | `zero`, encode + search | `nano`, encode + search | Ratio |
+| Query length | `zero`: encode, search, total | `nano`: encode, search, total | Ratio |
 |---|---|---|---:|
-| 6 to 10 words | 0.234 + 0.845 = 1.09 ms | 1.173 + 0.935 = 2.13 ms | 1.96x |
-| 21 to 50 words | 0.566 + 0.805 = 1.37 ms | 3.201 + 0.942 = 4.14 ms | 3.02x |
-| 51 to 120 words | 0.696 + 0.775 = 1.46 ms | 6.451 + 1.010 = 7.46 ms | 5.10x |
+| 6 to 10 words | 0.234, 0.845, 1.09 ms | 1.173, 0.935, 2.13 ms | 1.96x |
+| 21 to 50 words | 0.566, 0.805, 1.37 ms | 3.201, 0.942, 4.14 ms | 3.02x |
+| 51 to 120 words | 0.696, 0.775, 1.46 ms | 6.451, 1.010, 7.46 ms | 5.10x |
+
+Components, totals, and ratios are each rounded independently in the committed record, so a
+displayed total can differ from the sum of its displayed parts in the last digit.
 
 Inside this one harness the encoders differ by about five times, not the 61 to 65 of Section 6.1,
 because the two protocols measure different builds on different hardware. The collapse to report is
