@@ -352,3 +352,148 @@ def test_bm25_package_versions_are_gated_and_recorded(monkeypatch):
                         lambda: {"bm25s": "9.9.9", "PyStemmer": "3.1.0"})
     with pytest.raises(ValueError, match="differs from the registered"):
         R.R20.assert_registered_bm25_versions()
+
+
+# --- Astra review 2026-09-18: the archive must never reopen a protected payload ----------------
+
+def _payload_fixture(tmp_path, dataset="fever"):
+    """A synthetic frozen payload plus the manifest hashes that authenticate it."""
+    import access13 as A
+
+    frozen = tmp_path / "frozen_eval"
+    frozen.mkdir(parents=True, exist_ok=True)
+    queries = {"q2": "second query", "q1": "first query"}
+    qrels = {"q1": {"d1": 1}, "q2": {"d2": 2}}
+    (frozen / f"untouched-{dataset}.json").write_text(
+        json.dumps({"queries": queries, "qrels": qrels}))
+    qids = sorted(queries)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"m7_untouched_final": {dataset: {
+        "qids_sha256": A.sha_json(qids),
+        "qtexts_sha256": A.sha_json([queries[q] for q in qids]),
+        "qrels_sha256": A.sha_json(qrels),
+    }}}))
+    return SimpleNamespace(frozen_eval_dir=frozen, manifest_path=manifest)
+
+
+def test_archive_export_uses_the_open_payload_and_never_reopens_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "DATASETS", ("fever",))
+    monkeypatch.setattr(R, "_PAYLOAD_CACHE", {})
+    cfg = _payload_fixture(tmp_path)
+    root = tmp_path / "archive"
+
+    R.load_payload(cfg, "fever")                      # the transaction's own authenticated open
+    written = R.export_reserved_payload_archive(cfg, root)
+    assert set(written) == {"fever"}
+    assert (root / "payload_archive.json").exists(), "the record must be persisted as it is written"
+
+    # The decisive case: take the protected payload away entirely. A continuation in which every
+    # system output already exists caches nothing, and must still complete from the archive.
+    (cfg.frozen_eval_dir / "untouched-fever.json").unlink()
+    monkeypatch.setattr(R, "_PAYLOAD_CACHE", {})
+    again = R.export_reserved_payload_archive(cfg, root)
+    assert again == written
+
+
+def test_archive_export_refuses_rather_than_reopening_a_payload(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "DATASETS", ("fever",))
+    monkeypatch.setattr(R, "_PAYLOAD_CACHE", {})
+    cfg = _payload_fixture(tmp_path)
+    root = tmp_path / "archive"
+
+    # Nothing open and nothing archived: it must refuse, not read the payload that is sitting there.
+    with pytest.raises(ValueError, match="refusing to reopen protected data"):
+        R.export_reserved_payload_archive(cfg, root)
+
+    R.load_payload(cfg, "fever")
+    R.export_reserved_payload_archive(cfg, root)
+    # A damaged archive is not a licence to reopen the payload either.
+    (root / "datasets" / "fever" / "qrels.jsonl.gz").write_bytes(b"corrupt")
+    monkeypatch.setattr(R, "_PAYLOAD_CACHE", {})
+    with pytest.raises(ValueError, match="refusing to reopen protected data"):
+        R.export_reserved_payload_archive(cfg, root)
+
+
+def test_load_payload_is_memoized_so_scoring_opens_each_payload_once(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "_PAYLOAD_CACHE", {})
+    cfg = _payload_fixture(tmp_path)
+    first = R.load_payload(cfg, "fever")
+    (cfg.frozen_eval_dir / "untouched-fever.json").unlink()
+    assert R.load_payload(cfg, "fever") is first
+
+
+# --- Astra review 2026-09-18: a crash between the two finalization writes must be recoverable ---
+
+def _finalization_fixture(tmp_path, monkeypatch):
+    """The exact state a crash between RESULT and the six-set update leaves behind."""
+    import access13 as A
+    import reserved_transaction as T
+
+    results = tmp_path / "results"
+    results.mkdir(parents=True, exist_ok=True)
+    manifest = results / "m13_reserved_manifest.json"
+    manifest.write_text(json.dumps({"status": "READY"}) + "\n")
+    six = results / "m10_final_run.json"
+    six.write_text(json.dumps({"end_status": "INCOMPLETE_RESERVED", "freeze_sha256": "f" * 8},
+                              indent=1) + "\n")
+    result = results / "m13_reserved_run.json"
+    result.write_text(json.dumps({
+        "status": "complete",
+        "contrasts": {"nano-dense": 0.1},
+        "manifest_sha256": A.sha256_file(manifest),
+        "prior_incomplete_result_sha256": A.sha256_file(six),
+    }, indent=2) + "\n")
+
+    monkeypatch.setattr(T, "MANIFEST", manifest)
+    monkeypatch.setattr(T, "RESULT", result)
+    pushed = {}
+    monkeypatch.setattr(T.A, "commit_and_push",
+                        lambda cfg, paths, message: (pushed.update(message=message) or
+                                                     (True, "", "")))
+    cfg = SimpleNamespace(result_path=six, ledger_path=tmp_path / "LEDGER.md",
+                          scores_dir=tmp_path / "scores", repo=tmp_path)
+    return T, cfg, six, result, pushed
+
+
+def test_publish_finishes_an_interrupted_finalization_without_rescoring(tmp_path, monkeypatch):
+    T, cfg, six, result, pushed = _finalization_fixture(tmp_path, monkeypatch)
+
+    assert T.publish(cfg) == 0
+    final = json.loads(six.read_text())
+    assert final["end_status"] == "COMPLETE"
+    assert final["original_end_status"] == "INCOMPLETE_RESERVED"
+    assert final["reserved"] == json.loads(result.read_text())
+    assert "RESERVED-RUN-END" in cfg.ledger_path.read_text()
+    assert pushed["message"].startswith("m13: RESERVED-RUN-END")
+
+
+def test_publish_refuses_a_six_set_result_that_is_not_the_recorded_prior(tmp_path, monkeypatch):
+    T, cfg, six, _result, _pushed = _finalization_fixture(tmp_path, monkeypatch)
+    six.write_text(json.dumps({"end_status": "INCOMPLETE_RESERVED", "freeze_sha256": "e" * 8},
+                              indent=1) + "\n")
+    with pytest.raises(ValueError, match="not the one the reserved result recorded"):
+        T.publish(cfg)
+
+
+def test_publish_still_refuses_a_result_that_does_not_match_the_begin_manifest(tmp_path,
+                                                                               monkeypatch):
+    T, cfg, _six, result, _pushed = _finalization_fixture(tmp_path, monkeypatch)
+    record = json.loads(result.read_text())
+    record["manifest_sha256"] = "0" * 64
+    result.write_text(json.dumps(record, indent=2) + "\n")
+    with pytest.raises(ValueError, match="does not match the BEGIN manifest"):
+        T.publish(cfg)
+
+
+def test_handoff_accepts_the_regenerated_tracked_preencode_receipt(monkeypatch):
+    import reserved_transaction as T
+
+    monkeypatch.setattr(T, "_status_lines",
+                        lambda cfg: [" M results/m13_reserved_preencode.json"])
+    monkeypatch.setattr(T.A, "sh", lambda cfg, *command: "sha")
+    monkeypatch.setattr(T, "PREENCODE", Path("/nonexistent/m13_reserved_preencode.json"))
+    assert T._clean_pushed(SimpleNamespace()) == []
+
+    monkeypatch.setattr(T, "_status_lines",
+                        lambda cfg: [" M results/m10_final_run.json"])
+    assert T._clean_pushed(SimpleNamespace()) != []

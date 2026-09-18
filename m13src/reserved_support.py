@@ -207,10 +207,23 @@ def corpus_for(dataset, repo=REPO):
     return doc_ids, doc_texts, {"source": source, "revision": revision, **identity}
 
 
+_PAYLOAD_CACHE = {}
+
+
 def load_payload(cfg, dataset):
-    """Open and authenticate one frozen reserved query/qrel payload."""
+    """Open and authenticate one frozen reserved query/qrel payload.
+
+    Memoized for the life of the process. The payload is immutable and is hash-authenticated on
+    first load, so a second read buys no assurance and costs another protected open. The archive
+    exporter below consumes these cached objects instead of reopening the files, which is what
+    makes the registered "no additional protected read" archive contract true rather than merely
+    claimed (Astra review, 2026-09-18, P1).
+    """
     import access13 as A
 
+    key = (str(cfg.frozen_eval_dir), dataset)
+    if key in _PAYLOAD_CACHE:
+        return _PAYLOAD_CACHE[key]
     payload = json.loads((Path(cfg.frozen_eval_dir) / f"untouched-{dataset}.json").read_text())
     expected = json.loads(Path(cfg.manifest_path).read_text())["m7_untouched_final"][dataset]
     qids = sorted(str(q) for q in payload["queries"])
@@ -225,7 +238,8 @@ def load_payload(cfg, dataset):
         raise ValueError(f"{dataset}: protected payload hash mismatch: {bad}")
     if set(qids) != set(payload["qrels"]):
         raise ValueError(f"{dataset}: query/qrel id sets differ")
-    return qids, qtexts, payload["qrels"], got
+    _PAYLOAD_CACHE[key] = (qids, qtexts, payload["qrels"], got)
+    return _PAYLOAD_CACHE[key]
 
 
 class QueryEncoder(R20.QueryEncoder):
@@ -470,6 +484,20 @@ def validate_output(record, cfg, system):
     return record
 
 
+def _archive_intact(root, entry):
+    """Is a previously exported dataset still on disk, byte for byte, as its record describes?"""
+    for name in ("queries.jsonl.gz", "qrels.jsonl.gz"):
+        recorded = entry.get(name)
+        if not recorded:
+            return False
+        path = Path(root) / recorded["path"]
+        if not path.exists() or path.stat().st_size != recorded["bytes"]:
+            return False
+        if sha_file(path) != recorded["sha256"]:
+            return False
+    return True
+
+
 def export_reserved_payload_archive(cfg, root):
     """Write the reserved four's queries and qrels into the archive, INSIDE the transaction.
 
@@ -481,13 +509,33 @@ def export_reserved_payload_archive(cfg, root):
 
     The format matches `m20src/archive.py`: gzipped JSON lines, mtime zeroed so the bytes and the
     manifest hash are reproducible.
+
+    It exports ONLY from payloads this process already holds, and each dataset's record is
+    persisted as it is written. A continuation in which every system output already exists loads no
+    payload, so nothing is cached; it then reuses the archive the earlier attempt wrote, after
+    re-hashing it, and refuses outright rather than reopening protected data to rebuild it. Before
+    the memoization and this check the exporter reopened all four payloads on every run, including
+    such a continuation, which contradicted the contract the call site claimed (Astra review,
+    2026-09-18, P1).
     """
     import gzip
 
     root = Path(root)
-    written = {}
+    root.mkdir(parents=True, exist_ok=True)
+    record_path = root / "payload_archive.json"
+    written = json.loads(record_path.read_text()) if record_path.exists() else {}
     for dataset in DATASETS:
-        qids, qtexts, qrels, payload_hashes = load_payload(cfg, dataset)
+        key = (str(cfg.frozen_eval_dir), dataset)
+        if key not in _PAYLOAD_CACHE:
+            entry = written.get(dataset)
+            if entry and _archive_intact(root, entry):
+                print(f"[reserved13] {dataset} queries and qrels already archived and verified; "
+                      "no protected read", flush=True)
+                continue
+            raise ValueError(
+                f"{dataset}: its payload is not open in this process and no verified archive of it "
+                "exists; refusing to reopen protected data to build the archive")
+        qids, qtexts, qrels, payload_hashes = _PAYLOAD_CACHE[key]
         out = root / "datasets" / dataset
         out.mkdir(parents=True, exist_ok=True)
         rows = {
@@ -506,6 +554,11 @@ def export_reserved_payload_archive(cfg, root):
             entry[name] = {"path": str(path.relative_to(root)), "bytes": path.stat().st_size,
                            "sha256": sha_file(path), "rows": len(items)}
         written[dataset] = entry
+        # Persist as each dataset lands, so a crash after the last system completes cannot leave
+        # the archive unbuildable without another protected read.
+        tmp = record_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(written, indent=2, sort_keys=True) + "\n")
+        tmp.replace(record_path)
         print(f"[reserved13] archived {dataset} queries and qrels", flush=True)
     return written
 
