@@ -1,4 +1,14 @@
-# M20 status — ready to execute locally; reserved access still UNSPENT
+# M20 status — stage A all but done; stage B HELD on an Astra NO-GO; access still UNSPENT
+
+**2026-09-18: the run is stopped before stage B and awaiting owner direction.** Astra reviewed
+stage-B readiness at `7d72f56` and returned **NO-GO** with two P1 defects and one P2; all three
+were reproduced against the code. The launcher process was killed between stages so it could not
+enter stage B automatically; the `leaf-ir-asym` pre-encode was left running because stage A is
+unprotected and its output is durable. No tag exists on origin and no protected payload has been
+opened. Findings and the decision awaiting you: `research/m20-stageb-review-astra-2026-09-18.md`.
+
+Per `CLAUDE.md`, a second NO-GO means pause and take owner direction rather than layering on more
+machinery, so no remediation has been started.
 
 **Opened 2026-09-16 under R22. Host changed to the local box 2026-09-17 under R24.**
 
