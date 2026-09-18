@@ -32,7 +32,7 @@ that differ by about five times as encoders differ by 1.96 times as whole system
 length, because both pay the same approximate search. The gap widens to 5.10 times at 51 to 120
 words and narrows under memory pressure. Which tier ships the smaller artifact depends on how you
 package it, and the two packagings we measured disagree. At short and medium query length the index and its
-quantization decide system cost rather than the choice of query encoder. At long queries the encoder
+quantization decide system cost more than the choice of query encoder does. At long queries the encoder
 returns as the deciding term.
 
 ## 1. Introduction
@@ -104,13 +104,13 @@ query-side output, so their vectors land in the space the index already indexes.
 ## 3. The Swap Contract
 
 A swap is legal when the replacement emits vectors the index can score: same dimensionality, same
-normalization, same similarity. We verify rather than assume it. The table's served path agrees with
+normalization, same similarity. We verify it. The table's served path agrees with
 its numpy reference to 4.470e-08. The student's served path agrees with its reference at a minimum
 cosine of 1.0 and a maximum comparison error of 1.1548399925231934e-07. The Stella query tower, run
 through the published document graph with its prompt, reproduces the torch query path at a minimum
 cosine of 1.00000000.
 
-Four things do not travel with the swap, and all four fail silently rather than loudly.
+Four things do not travel with the swap, and all four fail silently.
 
 **The prompt.** Stella as a query encoder needs its `s2p_query` prefix. Without it the vector keeps
 the right shape and the right norm and scores at cosine 0.80 against the correct one. The table and
@@ -124,8 +124,8 @@ PAD rows into the encoder and cosine against the correct vector falls to 0.35.
 while the table and the document tower pool inside ONNX and stay float32. Two query paths against
 one index did not share a vector width until we fixed it upstream.
 
-**The operator.** Replacing a dense tier with a fused one changes the retrieval operator rather than
-the encoder, and brings a prefetch depth with it. Section 5.3 prices that.
+**The operator.** Replacing a dense tier with a fused one changes the retrieval operator, and brings
+a prefetch depth along with it. Section 5.3 prices that.
 
 ## 4. Protocol
 
@@ -139,8 +139,8 @@ for both families, in `m7/LEDGER.md`, on the contamination argument alone. For t
 the headline designation also predates every six-set number. For the table's family, whose six-set
 confirmatory run completed on 2026-08-28, `clean-4` was pre-registered as an exposure-restricted
 descriptive analysis and was designated the headline afterwards. It moved against the table, which
-is the direction that makes the designation credible rather than convenient, and we report both
-partitions everywhere so a reader can apply either rule.
+is the direction that makes the designation credible, and we report both partitions everywhere so a
+reader can apply either rule.
 
 Two confirmatory families ran under two registered procedures. The student's family tests four
 contrasts in a fixed sequence, each at a one-sided alpha of 0.025, with the one-sided 2.5% lower
@@ -232,7 +232,7 @@ DBSF increases monotonically with prefetch depth: 0.4660, 0.4849, 0.4887, and 0.
 0.4625, 0.4856, 0.4912, and 0.4974 on `clean-4`, at depths 10, 50, 100, and 1000. **The registered
 depth cost us the best number in the table.** Depth 1000 on `clean-4` reaches 0.4974, 0.0062 above
 the registered headline. We fixed depth 100 in advance on a realism argument, before any six-set
-access, and we report the deeper number rather than quietly keeping the registered one. On the
+access, and we report the deeper number here. On the
 development suite, where four components allow a wider sweep, the ranking between the three fusion
 operators inverts at depth 10; that inversion is a development-set observation and no six-set
 evidence supports or contradicts it.
@@ -240,8 +240,8 @@ evidence supports or contradicts it.
 ### 5.4 The Frontier
 
 Retention is each system's six-set macro divided by its own frozen document tower's symmetric
-ceiling. Cells marked *derived* are arithmetic over committed rows rather than a committed
-aggregate, and they carry no interval. **The table is incomplete until the reference row has a
+ceiling. Cells marked *derived* are arithmetic we did over committed rows, so they carry no
+interval. **The table is incomplete until the reference row has a
 latency.** The Stella query tower is the point every other row is priced against, and no run has
 measured it under the common serving protocol. Section 9 names the experiment that fills the cell.
 
@@ -315,7 +315,7 @@ a system claim.
 
 ### 6.3 Which Tier Is the Bigger Artifact Depends on the Packaging
 
-The two packagings we measured disagree, and we report both rather than pick the flattering one.
+The two packagings we measured disagree, so we report both.
 
 | Packaging | `zero` | Student | Ordering |
 |---|---:|---:|---|
@@ -404,7 +404,7 @@ have represented the result. They can still help as a prior or an initialization
 **The condition matters.** Absorbing an affine transformation needs pooling whose token coefficients
 sum to one, which mean and weighted-mean pooling satisfy. Under sum pooling it fails: replacing each
 row by `A e(t) + b` yields `Aq + nb` rather than `Aq + b`, so the offset scales with query length.
-Per-token weighting additionally needs weights fixed by token identity alone. Pure linear maps carry
+Per-token weighting also needs weights fixed by token identity alone. Pure linear maps carry
 no condition.
 
 Two things sit outside the architecture's reach and one is a decoy. Count saturation, which reads
