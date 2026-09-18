@@ -243,11 +243,11 @@ measured it under the common serving protocol. Section 9 names the experiment th
 |---|---|---:|---:|---:|
 | Stella query tower | Stella 400M | 0.5744 | 1.000 | unmeasured `[open]` |
 | `nano`, 34.5M | Stella 400M | 0.5317 *derived* | 0.9256 *derived* | 7.2511 ms |
-| bge-small | its own | 0.5042 | — | 6.8400 ms |
+| bge-small | its own | 0.5042 | n/a | 6.8400 ms |
 | `mdbr-leaf-ir`, 23M | arctic-m-v1.5 109M | 0.5155 | 0.979 | unmeasured here |
 | `zero` table | Stella 400M | 0.4339 | 0.755 | 0.1119 ms |
-| `zero` + BM25, DBSF at 100 | Stella 400M | 0.4887 | — | 0.1119 ms plus lexical |
-| BM25 | none | 0.4174 | — | no neural network |
+| `zero` + BM25, DBSF at 100 | Stella 400M | 0.4887 | n/a | 0.1119 ms plus lexical |
+| BM25 | none | 0.4174 | n/a | no neural network |
 
 The shape is the paper. Dropping from a 400M query tower to a 34.5M student costs 0.074 retention.
 Dropping from the student to a table costs another 0.171 and saves about seven milliseconds of
