@@ -264,43 +264,20 @@ def publish(cfg):
     The transaction writes its result files and only then commits. A crash or a network failure in
     between leaves complete, durable-on-disk outputs that the ordinary entry point refuses to touch
     because `RESULT.exists()`. That refusal is right -- nothing may be re-scored -- but it left no
-    way to publish what was already paid for. This path opens no payload, scores nothing and
-    changes no number.
+    way to publish what was already paid for. This path opens no payload, scores nothing, changes
+    no number, and refuses unless the result is already present and already COMPLETE.
 
-    It also covers the window between the two finalization writes. `run` writes RESULT and only
-    then updates the six-set result; a crash in between used to close both doors, because ordinary
-    continuation refuses on `RESULT.exists()` while this path refused on the six-set still reading
-    `INCOMPLETE_RESERVED` -- leaving durable scores that no provided path could finish, with the
-    access already spent (Astra review, 2026-09-18, P1). When the six-set is still the incomplete
-    one this now finishes the remaining result and ledger writes from the persisted RESULT, after
-    authenticating it against the BEGIN manifest and confirming the six-set on disk is byte for
-    byte the one that RESULT was computed against. The tagged identity is untouched.
+    It deliberately does NOT try to finish a finalization that crashed between writing RESULT and
+    updating the six-set result. That window leaves the scores durable and the numbers intact; only
+    the bookkeeping is unfinished, and completing it automatically would mean a second, weaker
+    authentication path running after the access is spent. A human decides there instead
+    (Sol re-review, 2026-09-18: the automatic version authenticated pointers, not content).
     """
     if not RESULT.exists():
         raise ValueError("there is no computed reserved result to publish")
-    record = json.loads(RESULT.read_text())
-    if record.get("manifest_sha256") != A.sha256_file(MANIFEST):
-        raise ValueError("the reserved result does not match the BEGIN manifest on disk")
     final = json.loads(Path(cfg.result_path).read_text())
     if final.get("end_status") != "COMPLETE" or "reserved" not in final:
-        if final.get("end_status") != "INCOMPLETE_RESERVED":
-            raise ValueError(f"the six-set result is neither complete nor the incomplete one this "
-                             f"result was computed against: {final.get('end_status')!r}")
-        if A.sha256_file(cfg.result_path) != record.get("prior_incomplete_result_sha256"):
-            raise ValueError("the six-set result on disk is not the one the reserved result "
-                             "recorded as its prior; refusing to finalize against different bytes")
-        updated = dict(final)
-        updated["original_end_status"] = final["end_status"]
-        updated["original_incomplete_result_sha256"] = record["prior_incomplete_result_sha256"]
-        updated["reserved"] = record
-        updated["end_status"] = "COMPLETE"
-        updated["reserved_completed"] = A.utcnow()
-        A.write_atomic(cfg.result_path, json.dumps(updated, indent=1) + "\n")
-        A.ledger_append(cfg, f"- {A.utcnow()} — **RESERVED-RUN-END** result "
-                        f"`{A.sha256_file(RESULT)[:16]}`; finalized from the persisted reserved "
-                        "result after an interrupted finalization; nothing re-scored, no payload "
-                        "opened; descriptive only, zero alpha.")
-        final = json.loads(Path(cfg.result_path).read_text())
+        raise ValueError("the six-set result does not already carry a complete reserved report")
     if final["reserved"].get("manifest_sha256") != A.sha256_file(MANIFEST):
         raise ValueError("the reserved result does not match the BEGIN manifest on disk")
     ok, command, error = A.commit_and_push(
