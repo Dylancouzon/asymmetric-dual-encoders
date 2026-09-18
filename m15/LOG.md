@@ -28,3 +28,18 @@ named-file allowlists only.
   - **Git.** Commit and push the `m15-whitepaper` branch as work proceeds.
   - Sub-agents: Dylan authorized "plenty" of them for research and review, which overrides the
     global one-to-two limit for this milestone. Codex Sol is the adversarial reviewer.
+- Research sub-agents returned. `EVIDENCE_INDEX.md`, `NOVELTY.md` and `HOTSWAP.md` written from
+  their reports, with provenance and a spot-check gate on every number.
+- **Novelty finding that changes the framing.** Index-preserving query-encoder swap is prior art:
+  LEAF ships it as mixed-checkpoint inference, pyNIFE published the lookup-table construction in
+  November 2025, and backward/forward-compatible training name the general goal. The paper keeps
+  the swap as its organizing frame and claims the measured frontier, not the mechanism. Raised with
+  Dylan at the end of this session because he named hot-swap as the differentiator.
+- **Sub-agent error caught and retracted.** The hot-swap audit flagged the 3.4 ms / 4.5 ms edge
+  numbers as untraceable. `m9/RESULTS.md` carries them (3.387 ms and 4.469 ms at a 256 MB limit,
+  202 MB resident). The audit's allowlist omitted that file. Verified directly.
+- Verified against sources myself: the four registered contrasts, the serving table, the DBSF depth
+  ladder, the M7 confirmatory family, the artifact sizes, and the teacher-learnability denominators.
+- First full draft: `m15/PAPER.md`, sections 1 to 9 plus one appendix, section 5.4 held open for M20.
+- Branch pushed to origin. Review round one launched: a number-by-number fact check, a hostile-reviewer
+  pass, and a Codex `gpt-5.6-sol` adversarial correctness review. Brief: `m15/REVIEWS/BRIEF-common.md`.
