@@ -235,7 +235,9 @@ evidence supports or contradicts it.
 
 Retention is each system's six-set macro divided by its own frozen document tower's symmetric
 ceiling. Cells marked *derived* are arithmetic over committed rows rather than a committed
-aggregate, and they carry no interval.
+aggregate, and they carry no interval. **The table is incomplete until the reference row has a
+latency.** The Stella query tower is the point every other row is priced against, and no run has
+measured it under the common serving protocol. Section 9 names the experiment that fills the cell.
 
 | Query side | Frozen tower | Six-set macro | Retention | Warm p50, 20 words |
 |---|---|---:|---:|---:|
@@ -317,6 +319,9 @@ survives both readings is the mechanism: a lookup table moves cost from compute 
 an edge device storage is the scarce resource.
 
 ### 6.4 Quantization Is a Precondition, and Rescoring Is a Trap
+
+This section supports two claims, footprint and latency, and it makes no deployment
+recommendation, because the comparison that would justify one has not run.
 
 A one-million-document index serves inside a 256 MB container, and only under binary quantization.
 With rescoring disabled the whole system answers in 3.387 ms with the table and 4.469 ms with the
@@ -475,6 +480,31 @@ Training sources permit commercial derived weights. MS MARCO is excluded from tr
 and appears only as a validation diagnostic. That matters for reading Section 5: the neural
 comparators there train on MS MARCO and our two tiers do not, so those comparisons carry a
 training-exposure asymmetry in the comparators' favor. BM25 trains on nothing.
+
+## References
+
+- Shen, Y., Xiong, Y., Xia, W., and Soatto, S. Towards Backward-Compatible Representation Learning.
+  CVPR 2020.
+  https://openaccess.thecvf.com/content_CVPR_2020/papers/Shen_Towards_Backward-Compatible_Representation_Learning_CVPR_2020_paper.pdf
+- Ramanujan, V., Vasu, P. K. A., Farhadi, A., Tuzel, O., and Pouransari, H. Forward Compatible
+  Training for Large-Scale Embedding Retrieval Systems. arXiv:2112.02805.
+  https://arxiv.org/pdf/2112.02805
+- Query Encoder Distillation via Embedding Alignment is a Strong Baseline Method to Boost Dense
+  Retriever Online Efficiency. arXiv:2306.11550. https://arxiv.org/abs/2306.11550
+- LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations.
+  arXiv:2509.12539, ACL 2026. https://arxiv.org/html/2509.12539v2
+  Released checkpoints: https://huggingface.co/MongoDB/mdbr-leaf-ir-asym
+- LightRetriever. arXiv:2505.12260 (v5, 2026-01-30). https://arxiv.org/abs/2505.12260
+- Tulkens, S. pyNIFE. 2025-11-03. https://github.com/stephantul/pynife
+- Model2Vec. https://github.com/MinishLab/model2vec
+- Cho, J. H., and Hariharan, B. On the Efficacy of Knowledge Distillation. ICCV 2019.
+  https://arxiv.org/abs/1910.01348
+- Mirzadeh, S. I., Farajtabar, M., Li, A., Levine, N., Matsukawa, A., and Ghasemzadeh, H. Improved
+  Knowledge Distillation via Teacher Assistant. AAAI 2020. https://arxiv.org/abs/1902.03393
+
+Author and title lines are copied from the works' own pages except where marked. Verify each against
+the published record before submission; two entries carried from internal notes, CARE and ERA, are
+omitted here until re-fetched.
 
 ## Appendix A: Avenues That Closed
 
