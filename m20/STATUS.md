@@ -7,8 +7,21 @@ enter stage B automatically; the `leaf-ir-asym` pre-encode was left running beca
 unprotected and its output is durable. No tag exists on origin and no protected payload has been
 opened. Findings and the decision awaiting you: `research/m20-stageb-review-astra-2026-09-18.md`.
 
-Per `CLAUDE.md`, a second NO-GO means pause and take owner direction rather than layering on more
-machinery, so no remediation has been started.
+Astra's three findings were fixed in `cca23bb` with seven synthetic tests (286 m13src tests pass).
+Sol's focused P1 re-review of those fixes returned **NO-GO again**, with three P1s: a crash in the
+narrow window between writing a dataset's archive files and persisting its record is unrecoverable
+without another protected read; archive reuse is verified only against the mutable record it wrote
+itself, not against the registered payload hashes; and `publish` authenticates two pointer fields
+rather than the result's content, so the new completion path would accept an altered result. One of
+the added tests demonstrates the third defect rather than guarding against it.
+Record: `research/m20-stageb-rereview-sol-2026-09-18.md`.
+
+**This is the second NO-GO, and the governance budget — one implementation review plus one focused
+P1 re-review — is spent.** `CLAUDE.md` directs pausing to simplify or take owner direction rather
+than adding further locks, schemas or review cycles, so no third remediation round has been
+started. Note that all three remaining findings live in recovery paths that exist only to make an
+unattended stage B survive a crash; every one of them is new, untested code that would run *after*
+the access is spent.
 
 **Opened 2026-09-16 under R22. Host changed to the local box 2026-09-17 under R24.**
 
