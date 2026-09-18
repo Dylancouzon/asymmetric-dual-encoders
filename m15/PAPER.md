@@ -1,7 +1,8 @@
 # Swapping the Query Encoder Over a Frozen Document Index
 
 **Draft, 2026-09-17. Not for circulation.** Sections marked `[M20]` wait on the reserved four and
-BEIR-15. Every number traces to a committed result file; the trace table is `EVIDENCE_INDEX.md`.
+BEIR-15. Numbers trace to committed result files through `EVIDENCE_INDEX.md`, whose spot-check
+table records which batches a reviewer has verified against the source.
 
 ## Abstract
 
@@ -9,21 +10,23 @@ A dual-encoder retrieval system has one expensive asset and one cheap one. Encod
 a full pass over every document and produces an index that resists change. Encoding a query costs
 one forward pass and produces nothing that has to be stored. We treat the two sides accordingly:
 we hold `stella_en_400M_v5` frozen as the document tower, 1024 dimensions, and we replace only the
-query side. Four query encoders share that one index. Two of them, a per-token lookup table with no
-query-time neural network and a 34,540,672-parameter distilled transformer, we trained ourselves
-against the frozen tower. Two more, the original Stella query tower and BM25, come for free.
+query side. Three dense query encoders emit into that one index: a per-token lookup table with no
+query-time neural network, a 34,540,672-parameter distilled transformer, and the tower's own query
+path. BM25 joins them as the lexical half of a fused system, over its own inverted index.
 
 We report what each tier costs and what it retains, under a benchmark partition registered before
 any number existed. The distilled student establishes superiority over bge-small on both the
 contamination-clean partition and the full six (+0.017648 and +0.027449 nDCG@10) and over LEAF-asym
 on the full six (+0.016181), while the clean partition against LEAF stays unresolved (-0.001063).
 The lookup table retains 0.755 of the teacher's quality on the same six at 0.1119 ms warm median
-query time, 65 times faster than either transformer tier.
+query time, 61 to 65 times faster than the two transformer tiers we compare it against.
 
-The measurement that surprised us is the one about cost. The two query encoders differ by 50 to 100
-times in isolation, and by 1.11 to 3.28 times once the search itself is counted. The near-zero-compute
-tier also carries the larger artifact: 270.1 MB against 46.1 MB. A near-zero query encoder buys much
-less than its own latency number promises, and the index configuration decides how much.
+The measurement that surprised us is the one about cost. The two tiers differ by roughly 50 times as
+encoders and by 1.96 times as whole systems at typical query length, because both pay the same
+search. The gap widens with query length, reaching 5.10 times at 51 to 120 words, and it moves
+between 1.11 and 3.28 times across index configurations. The near-zero-compute tier also carries the
+larger artifact: 270.1 MB against 46.1 MB. A near-zero query encoder buys much less than its own
+latency number promises, and the query length and the index decide how much.
 
 ## 1. Introduction
 
@@ -53,11 +56,13 @@ That is what this paper provides.
    near-zero-compute tier and a sub-35M transformer tier measured under one protocol (Sections 4, 5).
 2. Registered head-to-head results for the transformer tier against bge-small and against LEAF-asym,
    with the unresolved contrast reported as unresolved (Section 5).
-3. Evidence that the cost advantage of a near-zero query encoder largely disappears at the system
-   level, and that the lookup table is the larger deployed artifact (Section 6).
-4. Two method results that transfer beyond this system: a teacher's own retrieval quality does not
-   predict the quality of what distills out of it, and a wide class of post-hoc embedding
-   transformations is exactly absorbable into a lookup table, so it cannot add capacity (Section 7).
+3. Evidence that the cost advantage of a near-zero query encoder shrinks by one to two orders of
+   magnitude at the system level, depends on query length, and arrives with the larger deployed
+   artifact (Section 6).
+4. Two method results with reach beyond this system: across the eight teachers we distilled, a
+   teacher's own retrieval quality carried no signal about the quality of what distilled out of it,
+   and a named class of post-hoc embedding transformations is exactly absorbable into a lookup table
+   under mean pooling, so it cannot add capacity (Section 7).
 5. An account of what a swap costs operationally, including the four places where it is not free
    (Section 3).
 
@@ -68,14 +73,18 @@ cosine similarity. Every result in this paper searches the same document vectors
 CUDA and CPU paths agree to a minimum cosine of 1.000000 and a maximum absolute difference of
 9.07e-05, so an index built on one device holds on the other.
 
-**The swappable side.** Four query encoders:
+**The swappable side.** Three dense query encoders emit 1024-dimensional vectors into the frozen
+index:
 
 | Tier | What it is | Query-time compute |
 |---|---|---|
-| `zero` | A per-token lookup table distilled against the frozen tower, served int8 | Table lookup and a sum. No neural network |
+| `zero` | A per-token lookup table distilled against the frozen tower, served int8 | Row lookup and a normalized weighted mean. No neural network |
 | `nano` | A 34,540,672-parameter transformer student, distilled against the same tower | One small forward pass |
 | Stella query | The tower's own query path, with its `s2p_query` prompt | One 400M forward pass |
-| BM25 | Lexical scoring, fused with a dense tier | No neural network |
+
+BM25 appears throughout as a comparator and as the lexical half of the fused systems. It is not a
+fourth query encoder: it scores against its own inverted index and emits nothing into the dense
+space. Section 5.3 reports what changes when a fused operator replaces a dense one.
 
 The two tiers we built never saw the document tower's weights change. Their training target is the
 tower's own query-side output, so their output lands in a space the index already indexes.
@@ -85,8 +94,8 @@ tower's own query-side output, so their output lands in a space the index alread
 A swap is legal when the replacement produces vectors the index can score: same dimensionality,
 same normalization, same similarity function. Both tiers meet that by construction, and we verify
 it rather than assume it. The lookup table's served path agrees with its numpy reference to
-4.470e-08. The student's served path agrees with its reference to a maximum cosine error of
-1.1548399925231934e-07 at a minimum cosine of 1.0. The Stella query tower, run through the published
+4.470e-08. The student's served path agrees with its reference at a minimum cosine of 1.0 and a
+maximum comparison error of 1.1548399925231934e-07. The Stella query tower, run through the published
 document graph with its prompt, reproduces the torch query path at minimum cosine 1.00000000.
 
 Four things do not come along for free, and all four fail silently.
@@ -114,14 +123,18 @@ registered `clean-4` as the headline before any six-set number existed, we repor
 in every table, and we report the difference between the two partitions as its own row. Datasets
 were never added to or removed from the headline after a number was seen.
 
-Confirmatory contrasts use a one-sided 2.5% lower bound in a fixed sequence, with sign-flip p-values
-and Holm control across the family. Quality numbers come from exact search. Approximate-search recall
-never enters a quality comparison; it appears only in Section 6, where the question is deployment
-behavior.
+Two confirmatory families ran, under two different registered procedures, and we keep them apart.
+The student's family (Section 5.1) tests four contrasts in a fixed sequence, each at a one-sided
+alpha of 0.025, and its decision statistic is the one-sided 2.5% lower bound. The table's family
+(Section 5.2) tests three contrasts with sign-flip p-values under Holm control across the family.
 
-We distinguish three verdicts and never blur them. **Established** means the registered lower bound
-excluded the bar. **Unresolved** means it did not. Unresolved is not equivalence, and we compute no
-equivalence intervals, so the paper never claims two systems are the same.
+**Established** means the contrast satisfied its whole registered rule, which for the table's family
+includes the Holm threshold and not only the interval. **Unresolved** means it did not, for any
+reason. Unresolved is not equivalence. We computed no equivalence interval for any contrast in this
+paper, so nothing here supports a claim that two systems match.
+
+Quality numbers come from exact search. Approximate-search recall never enters a quality comparison;
+it appears only in Section 6, where the question is deployment behavior.
 
 ## 5. Retrieval Quality
 
@@ -152,7 +165,7 @@ Retention is 0.755. Three registered contrasts:
 |---|---:|---|---:|---|
 | Table against LightRetriever's 0.4583 bar | -0.0243 | [-0.0405, -0.0086] | 0.997 | Resolved below the bar |
 | Table against BM25's 0.4174 | +0.0165 | [+0.0017, +0.0311] | 0.0149 against Holm 0.0083 | Unresolved |
-| Fused system against OpenSearch's 0.4868 | +0.0043 | [-0.0063, +0.0151] | 0.219 | Unresolved, a statistical tie |
+| Fused system against OpenSearch's 0.4868 | +0.0043 | [-0.0063, +0.0151] | 0.219 | Unresolved |
 
 The second row is the one worth dwelling on. The confidence interval excludes zero, and the
 familywise correction still refuses the claim. We report it as unresolved because that is what the
@@ -179,8 +192,10 @@ at prefetch depth 100, with zero fitted parameters. The two split differently ac
 | DBSF at prefetch 100, zero fitted parameters | 0.4887 | 0.4912 |
 | convex0 at depth 1000, dev-fitted, not available in Qdrant | 0.4911 | 0.4866 |
 
-We computed no equivalence interval, so this is a tie in the strict sense that neither is
-established over the other.
+Neither operator is established over the other, and we computed no equivalence interval for the
+pair, so the paper takes no position on which is better. The two rows are descriptive. The
+deployable recommendation is the parameter-free operator, which is a product choice and not a
+measured superiority.
 
 DBSF increases monotonically with prefetch depth: 0.4660, 0.4849, 0.4887, and 0.4898 on all six, and
 0.4625, 0.4856, 0.4912, and 0.4974 on `clean-4`, at depths 10, 50, 100, and 1000. **The registered
@@ -214,14 +229,24 @@ millisecond, and the two transformers need about 65 times longer.
 
 ### 6.2 The Same Encoders Inside a System
 
-Now add the search. On an Apple M5 Pro with a one-million-document index, the ratio between the two
-query paths collapses from the 50-to-100 times measured on the encoders alone to between 1.11 and
-3.28 times, depending entirely on index configuration. Under memory pressure the two paths converge
-further. The encoder stops being the bottleneck as soon as anything else in the system is one.
+Now add the search. On an Apple M5 Pro against a synthetic one-million-vector index, four threads,
+default `ef`, the two paths compare like this:
 
-We think this is the most useful negative result in the paper, because the headline latency number
-of a lookup-table query encoder is the number a reader will quote, and it does not survive contact
-with a search.
+| Query length | `zero`, encode + search | `nano`, encode + search | Ratio |
+|---|---|---|---:|
+| 6 to 10 words | 0.234 + 0.845 = 1.09 ms | 1.173 + 0.935 = 2.13 ms | 1.96x |
+| 21 to 50 words | 0.566 + 0.805 = 1.37 ms | 3.201 + 0.942 = 4.14 ms | 3.02x |
+| 51 to 120 words | 0.696 + 0.775 = 1.46 ms | 6.451 + 1.010 = 7.46 ms | 5.10x |
+
+Two conditions govern the ratio. Search is a floor of about 0.85 ms that both paths pay, so at
+typical query length the encoders' 50-fold difference becomes a 1.96-fold system difference. Query
+length then moves it: a table lookup is linear in tokens and a transformer is not, so the gap reaches
+5.10 times at 51 to 120 words. A separate sweep over index configurations and memory limits, at 6 to
+10-word queries, puts the ratio between 1.11 and 3.28 times, and under memory pressure the two paths
+converge further.
+
+This is the most useful negative result in the paper. The tenth-of-a-millisecond figure is the one a
+reader will quote, and any claim about query-side cost has to name a query length and an index.
 
 ### 6.3 The Cheap Encoder Is the Big Artifact
 
@@ -237,17 +262,20 @@ With binary quantization and rescoring disabled the whole system answers in 3.38
 and 4.469 ms with the student, using 202 MB. The uncompressed fp16 index technically answers at
 every tested limit and is unusable at all of them: 532 ms at 256 MB, and still 225 ms with 2 GB.
 Binary quantization is 16 times smaller than the originals and also the fastest configuration
-measured, so on this hardware it is not a quality-against-speed trade at all.
+measured, so on this hardware it costs nothing in latency or footprint. What it costs in retrieval
+quality is not measured here. This experiment records compression, feasibility, and latency; the
+recall comparison between quantization modes is open work, and no quality claim follows from these
+numbers.
 
 ## 7. Two Results That Transfer
 
-### 7.1 Teacher Quality Does Not Predict Distilled Quality
+### 7.1 A Teacher's Own Quality Carried No Signal About Its Distilled Table
 
 We measured 11 teachers in two sweeps and compared each teacher's own retrieval ceiling against the
 quality of the table distilled from it. Over the eight candidates of the first sweep the Spearman
-correlation between the two is 0.000. The highest-ceiling candidate ranked fifth on the metric that
-ships, landed 0.0480 [-0.0608, -0.0349] below the incumbent, and we withdrew it the same day we
-approved it. Only one candidate beat the incumbent, at +0.0365 [0.0249, 0.0481], and it became the
+correlation between the two is 0.000. The table distilled from the highest-ceiling candidate ranked
+fifth on the metric that ships, landed 0.0480 [-0.0608, -0.0349] below the incumbent's table, and we
+withdrew that teacher the same day we approved it. Only one candidate beat the incumbent, at +0.0365 [0.0249, 0.0481], and it became the
 document tower this paper freezes.
 
 Two related mechanisms failed the same way. Pooling does not explain the ranking: the same weights
@@ -256,22 +284,46 @@ either: it rises with the distillation weight while nDCG@10 falls, so it mis-ran
 
 The sweep is closed-form, flat, dev-only, and scored on two components of one dataset family
 against each teacher's own documents, so it ranks candidates rather than predicting their scores.
-Within that scope the reading is a counterexample and not a law: selecting a teacher on its own
-benchmark score is unjustified, and the only reliable signal we found is distilling the candidate
-and measuring the student. For a lookup-table student that is cheap, which is what makes a sweep of
+Within that scope the reading is a counterexample and not a law. Eight observations in one
+distillation setting cannot show that teacher quality has no predictive value across architectures,
+student classes, or training regimes. They do show that in this setting it had none, which is enough
+to make leaderboard-order teacher selection an unjustified shortcut. The only reliable signal we
+found is distilling the candidate and measuring the student. For a lookup-table student that is cheap, which is what makes a sweep of
 this width affordable at all.
 
-### 7.2 A Lookup Table Absorbs Its Own Post-Processing
+### 7.2 A Lookup Table Absorbs Its Own Post-Processing, Under One Condition
 
-Centering, whitening, top principal component removal, and per-token scalar weighting are all
-exactly absorbable into a freely parameterized per-token table. We verified this algebraically and
-then numerically: rank agreement is 1.000 without renormalization and 0.000 with it. The practical
-consequence is a ceiling argument. Any of these transformations applied on top of a trained table
-cannot add capacity, because the trained table could already have represented the result. Only
-operations the table cannot express, such as multiplicity-dependent pooling or rows for units larger
-than a token, change what is reachable.
+The architecture is a row lookup, a weighted mean over the query's token multiset, and an L2
+normalization. Under that pooling, the standard post-processing stack is exactly absorbable into the
+rows, because a mean commutes with the transformation: `mean(W[t] - mu) = mean(W[t]) - mu` for every
+multiset. We checked each transformation numerically against an explicitly reconstructed table, on
+ragged multisets with repeats, at vocabulary 500 and 64 dimensions:
 
-This argument holds for any per-token lookup-table query encoder, not only ours.
+| Transformation applied after pooling | Table that reproduces it | Maximum absolute difference |
+|---|---|---:|
+| Centering | `W' = W - mu` | 1.67e-16 |
+| Whitening or any linear map | `W' = W A^T` | 3.33e-16 |
+| Top principal component removal after centering | `W' = (W - mu) P^T` | 3.33e-16 |
+| Per-token scalar weights, such as IDF or SIF | `W' = c_t W_t` | 9.31e-14 |
+| The whole SIF recipe at once | `W' = c_t (W - mu) P^T` | 2.82e-14 |
+
+The consequence is a ceiling argument. None of these levers can raise what the architecture can
+reach, because a trained table could already have represented the result. They can still help as a
+prior or an initialization, which is a much weaker claim than the one the lever list started with.
+
+**The condition matters and we state it.** Absorbability of an affine transformation needs pooling
+whose token coefficients sum to one, which mean and weighted-mean pooling satisfy. Under sum pooling
+it fails: replacing each row by `A e(t) + b` yields `Aq + nb` rather than `Aq + b`, so the offset
+scales with query length. Per-token weighting additionally needs weights fixed by token identity
+alone. Pure linear maps carry no such condition.
+
+Two things are genuinely outside the architecture's reach, and one is a decoy. Count saturation,
+which reads each token once regardless of repeats, depends on a query's multiplicity vector while a
+row is shared across all queries; it differs from the plain mean by 0.129 and no choice of rows
+fixes it. An n-gram or phrase row adds a feature no unigram bag can express, because two queries
+with the same multiset in a different order are identical to a unigram table. The decoy is
+length-dependent scaling: any positive scalar function of query length is removed by the final L2
+normalization, so it is a no-op rather than a lever.
 
 ### 7.3 How Much a Development Macro Overstates
 
@@ -287,8 +339,11 @@ development macro overstated it by 0.16.
 first two. The all-six-minus-clean-4 difference is a partition sensitivity, not a causal estimate of
 contamination.
 
-**Unresolved is not equivalence.** Four contrasts in this paper fail to resolve. We computed no
-equivalence intervals for any of them, so none of them supports a claim that two systems match.
+**Unresolved is not equivalence.** Three confirmatory contrasts fail to resolve: the student against
+LEAF-asym on clean-4, the table against BM25, and the fused system against OpenSearch. We computed
+no equivalence interval for any of them, and the descriptive comparison between the two fusion
+operators has no interval at all. None of these four comparisons supports a claim that two systems
+match.
 
 **Interval scope.** The reported intervals come from query resampling. They exclude
 training-seed variation, so they understate total uncertainty for any claim about a recipe rather
@@ -313,8 +368,9 @@ Artifacts, revisions, hashes, and harness commands. The student is published at
 The student saw exactly 199,999,721 training examples; this is not 200,000,000 and we do not round it.
 
 Training sources permit commercial derived weights. MS MARCO is excluded from training in every
-role and appears only as a validation diagnostic, which matters here because every comparator in
-Section 5 trains on it and neither of our tiers does.
+role and appears only as a validation diagnostic. This matters for reading Section 5: the neural
+comparators there train on MS MARCO and our two tiers do not, so any comparison against them carries
+a training-exposure asymmetry in the comparators' favor. BM25 trains on nothing and is unaffected.
 
 ## Appendix A: Avenues That Closed
 
