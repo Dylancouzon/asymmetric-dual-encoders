@@ -263,9 +263,10 @@ and 4.469 ms with the student, using 202 MB. The uncompressed fp16 index technic
 every tested limit and is unusable at all of them: 532 ms at 256 MB, and still 225 ms with 2 GB.
 Binary quantization is 16 times smaller than the originals and also the fastest configuration
 measured, so on this hardware it costs nothing in latency or footprint. What it costs in retrieval
-quality is not measured here. This experiment records compression, feasibility, and latency; the
-recall comparison between quantization modes is open work, and no quality claim follows from these
-numbers.
+quality is not measured here. This experiment records compression, feasibility, and latency, and no
+quality claim follows from it. The comparison this section needs, TurboQuant against binary, int8,
+and fp16 on latency, footprint, and recall at up to one million documents, is deferred to this paper
+and has not yet run. `[deferred measurement]`
 
 ## 7. Two Results That Transfer
 

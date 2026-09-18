@@ -58,6 +58,23 @@ nobody would attack gets cut. Concretely:
 - `LOG.md` — decisions and session record.
 - `REVIEWS/` — review briefs and returned findings, verbatim.
 
+## Measurements this paper owes
+
+**The quantization comparison is a deferred deliverable of this milestone, not new scope.** Owner
+ruling, Dylan 2026-08-30, recorded in `m9/RESULTS.md`: TurboQuant (int4) is Qdrant's preferred
+quantization method and is the one the whitepaper should benchmark. The full comparison of
+TurboQuant against binary, int8, and fp16, on latency, footprint **and recall**, was deferred to
+this paper so that everything is benchmarked together instead of piecemeal. One million documents
+is the confirmed upper bound for that testing. Section 6.4 cannot make a quality claim about
+quantization until this runs.
+
+Reference hardware is the Apple M5 Pro, which M20 is not using. The 24 GB limit means sequential
+jobs and both watermark environment variables.
+
+A second candidate measurement, smaller and not yet authorized, is in `HOTSWAP.md`: one persistent
+Qdrant collection built once, queried by each encoder in one server lifetime, to convert the
+paper's central framing from asserted to measured.
+
 ## Blocked on M20
 
 Section 6's reserved-four and BEIR-15 rows, and any breadth claim that depends on them. Section 7
