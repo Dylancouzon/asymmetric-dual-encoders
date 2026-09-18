@@ -86,3 +86,11 @@ named-file allowlists only.
   recall against binary, int8 and fp16, and a swap against a real persistent collection. The Section
   9 experiment produces all three in one run on the M5 Pro, with committed vectors, no training and
   no protected access. It awaits Dylan's go.
+- Owner decisions at session close (Dylan, 2026-09-17):
+  - **Hold the Section 9 experiment until M20 finishes.** One machine at a time. The paper stays at
+    v2 and M15 continues on sections that need no new numbers. The experiment keeps its design in
+    Section 9 and in `HOTSWAP.md`, and it runs after M20 closes.
+  - **Hot-swap is the frame, not the claim.** The current draft stands: LEAF and pyNIFE cited as
+    prior art in the introduction, the contribution stated as the measured frontier.
+  - **One paper, both tiers.** The registered default holds, and it is the only framing that carries
+    the knee result.
