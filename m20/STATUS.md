@@ -1,5 +1,29 @@
 # M20 status — stages A and B COMPLETE; reserved access SPENT; stage C is next
 
+## RESUME HERE
+
+If the session begins with "resume M20", **launch stage C and do not ask first.** Dylan authorized
+this on 2026-09-19, after four review rounds closed every blocker on the stage-C invocation. It is
+about five days of the local GPU, it is unprotected, it is resumable, and it cannot touch the spent
+reserved access or the numbers already produced.
+
+```bash
+cd /home/dylan/asymetric-dual-encoders
+.venv/bin/python -u scripts/m20_local_run.py --stage-c            # read this preflight first
+setsid nohup .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute \
+  > work/m20/logs/stage_c.log 2>&1 < /dev/null &
+```
+
+Then watch it: first shard rate per tower, dataset completions, and
+`Traceback|Error|FAILED|OOM|Killed|assert`. `setsid nohup` matters — a harness interrupt kills a
+plain background job. Expect 130–215 docs/s for stella-class encoding on this box; a rate far
+below that is the allocator symptom in `m20/FINDINGS.md`, not normal variation.
+
+Three things that are easy to get wrong here, all covered below: do not invoke `m20src/beir15.py`
+directly, the reserved four must never be re-decided, and the projection gate is not resume-aware
+so a refusal on relaunch may be counting finished work as outstanding.
+
+
 **Opened 2026-09-16 under R22. Host moved to the local box 2026-09-17 under R24.**
 
 **The reserved access has been spent, once, as registered.** `m8-reserved-spent` is on origin at
