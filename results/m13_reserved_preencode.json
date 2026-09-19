@@ -1,5 +1,5 @@
 {
-  "status": "RUNNING",
+  "status": "COMPLETE",
   "datasets": [
     "fever",
     "dbpedia-entity",
@@ -16,10 +16,111 @@
         "n_shards": 109,
         "source_revision": "426aea4d30c65c041f093ae072e25fb5a0e64659",
         "vector_bytes": 11093145216
+      },
+      "dbpedia-entity": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/dbpedia-entity/manifest.json",
+        "manifest_sha256": "c0196958ddcc6787a0c61b9382a3e447b38bb31b5d234a50994dd6b73e60cf2c",
+        "n_docs": 4635922,
+        "n_shards": 93,
+        "source_revision": "6029bd92b4a912ce92b2b0972999e297f76dbcbc",
+        "vector_bytes": 9494380160
+      },
+      "cqadup-android": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-android/manifest.json",
+        "manifest_sha256": "608e0c3e1e192eebd2648bb8642dc92e8ce1884511ed37e1a7ddb665d90a7fdc",
+        "n_docs": 22998,
+        "n_shards": 1,
+        "source_revision": "e03f271e3f4a75f49787c838a62f671b35bc9004",
+        "vector_bytes": 47100032
+      },
+      "cqadup-english": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-english/manifest.json",
+        "manifest_sha256": "00557c25dafacddf11906797a00ec3cc87482110946dd9ef2de9f4c7c330b763",
+        "n_docs": 40221,
+        "n_shards": 1,
+        "source_revision": "fa6afc4ce926dafd42b7b7c0a19ae40c4632d895",
+        "vector_bytes": 82372736
       }
     },
-    "bge-small-en-v1.5": {},
-    "leaf-ir-asym": {}
+    "bge-small-en-v1.5": {
+      "fever": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/fever/manifest.json",
+        "manifest_sha256": "b96507da4331edb490753460fcd26cd26e791311729f42eccf187b28eb741eea",
+        "n_docs": 5416568,
+        "n_shards": 109,
+        "source_revision": "426aea4d30c65c041f093ae072e25fb5a0e64659",
+        "vector_bytes": 4159938176
+      },
+      "dbpedia-entity": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/dbpedia-entity/manifest.json",
+        "manifest_sha256": "97c5767d669807ce12d0eadac11832ee125032d7253ce601f7fad8e0b66dbba7",
+        "n_docs": 4635922,
+        "n_shards": 93,
+        "source_revision": "6029bd92b4a912ce92b2b0972999e297f76dbcbc",
+        "vector_bytes": 3560400000
+      },
+      "cqadup-android": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-android/manifest.json",
+        "manifest_sha256": "4640b3bb037e0f289ed4686e3cce002fefbc0f64bbc9fd0d1bed276707f5b424",
+        "n_docs": 22998,
+        "n_shards": 1,
+        "source_revision": "e03f271e3f4a75f49787c838a62f671b35bc9004",
+        "vector_bytes": 17662592
+      },
+      "cqadup-english": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-english/manifest.json",
+        "manifest_sha256": "edde417898c81c080b51ee62fbf22d06ffa7dbbc1a947900fa7ce39d09257c98",
+        "n_docs": 40221,
+        "n_shards": 1,
+        "source_revision": "fa6afc4ce926dafd42b7b7c0a19ae40c4632d895",
+        "vector_bytes": 30889856
+      }
+    },
+    "leaf-ir-asym": {
+      "fever": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/fever/manifest.json",
+        "manifest_sha256": "4e9b9d960afdda3cd2e1c0b31032bf612c4bf9f4c9b7f823bd711bd6bdf0b68a",
+        "n_docs": 5416568,
+        "n_shards": 109,
+        "source_revision": "426aea4d30c65c041f093ae072e25fb5a0e64659",
+        "vector_bytes": 8319862400
+      },
+      "dbpedia-entity": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/dbpedia-entity/manifest.json",
+        "manifest_sha256": "d693af28815f29f3957199f0f312ba347e50f2ab8fdaa5746d7ddfcb6330539c",
+        "n_docs": 4635922,
+        "n_shards": 93,
+        "source_revision": "6029bd92b4a912ce92b2b0972999e297f76dbcbc",
+        "vector_bytes": 7120788096
+      },
+      "cqadup-android": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-android/manifest.json",
+        "manifest_sha256": "332607f785b599a8b745928d7969fa45f529a4ae484f29772813bea0193f6732",
+        "n_docs": 22998,
+        "n_shards": 1,
+        "source_revision": "e03f271e3f4a75f49787c838a62f671b35bc9004",
+        "vector_bytes": 35325056
+      },
+      "cqadup-english": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-english/manifest.json",
+        "manifest_sha256": "e3d66747e677eb7b6945429a750bff2a9e530e40d760faab2516756cfdbd6cac",
+        "n_docs": 40221,
+        "n_shards": 1,
+        "source_revision": "fa6afc4ce926dafd42b7b7c0a19ae40c4632d895",
+        "vector_bytes": 61779584
+      }
+    }
   },
   "guard": {
     "entry": "m8src.pre_encode",
@@ -27,5 +128,5 @@
     "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
     "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
   },
-  "updated_utc": 1789672637.6842945
+  "updated_utc": 1789725842.5569718
 }
