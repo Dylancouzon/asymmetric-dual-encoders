@@ -34,3 +34,5 @@ or permit M9 close-out while an M10-derived recipe decision remains open. M13 ow
 - 2026-09-15T02:02:06.080102+00:00 — **FINAL-RUN access** (six) `scidocs`: 25,657 docs / 1,000 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scidocs.json`.
 - 2026-09-15T02:46:34.850774+00:00 — **FINAL-RUN access** (six) `trec-covid`: 171,332 docs / 50 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/trec-covid.json`.
 - 2026-09-15T07:39:09.603594+00:00 — **FINAL-RUN-END** (full, INCOMPLETE_RESERVED) result sha256 `f5b5ad8a63060fbe` outcome `REJECTED:C1b,C1a,C2a`
+
+- 2026-09-19T01:05:27.653486+00:00 — **RESERVED-RUN-BEGIN** implementation `be7cf89dbb89`; prior six result `f5b5ad8a6306`; systems ['nano-dense', 'zero-dense', 'stella-query', 'bge-small-en-v1.5', 'leaf-ir-asym', 'bm25', 'zero+bm25 dbsf@100', 'nano+bm25 dbsf@100']; zero alpha.

@@ -1,0 +1,29 @@
+{
+  "status": "READY",
+  "implementation_commit": "be7cf89dbb8950667d46e4bc4818ac8814b9a45f",
+  "code_sha256": "250c15222dd0367657baca4c4434206b86f18427bf51c2b8b82ad6f4cc0f51d5",
+  "registry_sha256": "59b8e3deabd3bd0f5127ecf00faf5878e1f6d4483d5cb9b4a824d5dafd516a61",
+  "freeze_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+  "freeze_file_sha256": "d2cbca571dbd9608eee9ce0683aaabb729d77fb130fddc0be0fdeff4635eeded",
+  "six_result_sha256": "f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23",
+  "preencode_sha256": "8c0e279a3e559dc45667ceeb37558631ac37a96e995e87e8457c173f0a7ef886",
+  "systems": [
+    "nano-dense",
+    "zero-dense",
+    "stella-query",
+    "bge-small-en-v1.5",
+    "leaf-ir-asym",
+    "bm25",
+    "zero+bm25 dbsf@100",
+    "nano+bm25 dbsf@100"
+  ],
+  "datasets": [
+    "fever",
+    "dbpedia-entity",
+    "cqadup-android",
+    "cqadup-english"
+  ],
+  "spent_tag": "m8-reserved-spent",
+  "written": "2026-09-19T01:05:27.641297+00:00",
+  "scope": "descriptive reserved NDO-3 plus double-contaminated FEVER sensitivity; zero alpha"
+}
