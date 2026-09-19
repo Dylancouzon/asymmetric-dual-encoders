@@ -21,10 +21,10 @@ M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M14 (Nano r
 M17, M18, M19 and M21 are closed historical evidence. M18 shipped an internal Qdrant project-memory
 system but no improved encoder; M19 closed `ENCODER_INCONCLUSIVE` with its confirmation surface
 still sealed, so it establishes neither improvement nor equivalence and released Zero v1 stays
-selected. **M20 is the active execution milestone** — reserved four and BEIR-15 descriptive
-evaluation only, under R22; official release is M22 and the upstream FastEmbed PRs are M23 — and
-no session may spend access until it follows
-`instructions-m20.md`. Paper milestone references in older files are historical. Harness
+selected. **M20 is the active execution milestone.** Its stages A and B are complete: the reserved access was
+spent once on 2026-09-19 (`m8-reserved-spent`), `results/m10_final_run.json` ends `COMPLETE`, and the
+reserved four are now **known-test** — never again usable to decide anything in this project. Stage C
+(BEIR-15) is next and is unprotected. Read `m20/STATUS.md` and `m20/FINDINGS.md` before touching it. Paper milestone references in older files are historical. Harness
 improvements remain ordinary maintenance. Do not infer execution readiness from the historical
 phrase “half A ready to push” or from a closed milestone's executable status.
 
