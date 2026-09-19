@@ -1,0 +1,385 @@
+{
+  "status": "complete",
+  "scope": "Registered descriptive reserved batch; zero alpha; no gate or release claim.",
+  "roster": [
+    "nano-dense",
+    "zero-dense",
+    "stella-query",
+    "bge-small-en-v1.5",
+    "leaf-ir-asym",
+    "bm25",
+    "zero+bm25 dbsf@100",
+    "nano+bm25 dbsf@100"
+  ],
+  "roster_authority": "R20 and R22; m10/final_run_registry.json reserved._amended_2026_09_16",
+  "B": 10000,
+  "seed": 902,
+  "quantile_method": "inverted_cdf",
+  "draw_plan_sha256": "f561eed3c139c639ac5321574b570b4522dc0448ad3792f4dd174337382c5258",
+  "systems": {
+    "nano-dense": {
+      "fever": 0.6230984560722036,
+      "dbpedia-entity": 0.4189765409073661,
+      "cqadup-android": 0.4774029565644179,
+      "cqadup-english": 0.42980206351971395
+    },
+    "zero-dense": {
+      "fever": 0.69782584641904,
+      "dbpedia-entity": 0.3899764065120685,
+      "cqadup-android": 0.4430688077958405,
+      "cqadup-english": 0.36901099465336656
+    },
+    "stella-query": {
+      "fever": 0.8206733933857581,
+      "dbpedia-entity": 0.46033448681660694,
+      "cqadup-android": 0.5275105681586092,
+      "cqadup-english": 0.5182541578780542
+    },
+    "bge-small-en-v1.5": {
+      "fever": 0.8662048443835864,
+      "dbpedia-entity": 0.4002522909472384,
+      "cqadup-android": 0.4760606309296488,
+      "cqadup-english": 0.4558009680767162
+    },
+    "leaf-ir-asym": {
+      "fever": 0.8671164927623974,
+      "dbpedia-entity": 0.4519706871481198,
+      "cqadup-android": 0.5259640860384368,
+      "cqadup-english": 0.47068709410892634
+    },
+    "bm25": {
+      "fever": 0.5036395292461568,
+      "dbpedia-entity": 0.3044769680760439,
+      "cqadup-android": 0.3951521308749954,
+      "cqadup-english": 0.34813231176460674
+    },
+    "zero+bm25 dbsf@100": {
+      "fever": 0.7558548987977167,
+      "dbpedia-entity": 0.40304984389688725,
+      "cqadup-android": 0.46291720725099467,
+      "cqadup-english": 0.4016239134712472
+    },
+    "nano+bm25 dbsf@100": {
+      "fever": 0.6878500808247031,
+      "dbpedia-entity": 0.4295857594362685,
+      "cqadup-android": 0.47496200012743395,
+      "cqadup-english": 0.4323492200160012
+    }
+  },
+  "contrasts": {
+    "R1": {
+      "a": "nano-dense",
+      "b": "bge-small-en-v1.5",
+      "ndo3": {
+        "delta_raw": 0.003197980249505574,
+        "ci95_raw": [
+          -0.006945181195617759,
+          0.01341682614077144
+        ],
+        "weights": {
+          "dbpedia-entity": 0.5,
+          "cqadup-android": 0.25,
+          "cqadup-english": 0.25
+        }
+      },
+      "equal_weight_macro": {
+        "delta_raw": -0.001977442987368466,
+        "ci95_raw": [
+          -0.011461903803702161,
+          0.007477994403639233
+        ],
+        "weights": {
+          "dbpedia-entity": 0.3333333333333333,
+          "cqadup-android": 0.3333333333333333,
+          "cqadup-english": 0.3333333333333333
+        }
+      },
+      "query_pooled": {
+        "delta_raw": -0.012135741682929501,
+        "ci95_raw": [
+          -0.02187378258965844,
+          -0.002360980059019484
+        ],
+        "weights": {
+          "dbpedia-entity": 0.14986886474334957,
+          "cqadup-android": 0.2618958411390034,
+          "cqadup-english": 0.5882352941176471
+        }
+      },
+      "leave_one_out": {
+        "dbpedia-entity": {
+          "delta_raw": -0.012328289461116547,
+          "ci95_raw": [
+            -0.023702701657517818,
+            -0.000988320108599288
+          ],
+          "weights": {
+            "cqadup-android": 0.5,
+            "cqadup-english": 0.5
+          }
+        },
+        "cqadup-android": {
+          "delta_raw": 0.0038165317877510395,
+          "ci95_raw": [
+            -0.008286979591153154,
+            0.01604213524022495
+          ],
+          "weights": {
+            "dbpedia-entity": 0.6666666666666666,
+            "cqadup-english": 0.3333333333333333
+          }
+        },
+        "cqadup-english": {
+          "delta_raw": 0.012930275185008189,
+          "ci95_raw": [
+            0.00017646318039199775,
+            0.025635699218325474
+          ],
+          "weights": {
+            "dbpedia-entity": 0.6666666666666666,
+            "cqadup-android": 0.3333333333333333
+          }
+        }
+      },
+      "per_dataset": {
+        "fever": {
+          "delta_raw": -0.24310638831138262,
+          "ci95_raw": [
+            -0.2518260230418689,
+            -0.2344019360359832
+          ],
+          "n": 6666,
+          "classification": "double-contaminated sensitivity; zero alpha"
+        },
+        "dbpedia-entity": {
+          "delta_raw": 0.018724249960127694,
+          "ci95_raw": [
+            0.0019281360623061067,
+            0.035499417319466466
+          ],
+          "n": 400,
+          "classification": "descriptive; zero alpha"
+        },
+        "cqadup-android": {
+          "delta_raw": 0.0013423256347691777,
+          "ci95_raw": [
+            -0.017086987484878923,
+            0.01942900696399068
+          ],
+          "n": 699,
+          "classification": "descriptive; zero alpha"
+        },
+        "cqadup-english": {
+          "delta_raw": -0.02599890455700227,
+          "ci95_raw": [
+            -0.039652345224870295,
+            -0.01231736355570189
+          ],
+          "n": 1570,
+          "classification": "descriptive; zero alpha"
+        }
+      }
+    },
+    "R2": {
+      "a": "nano-dense",
+      "b": "leaf-ir-asym",
+      "ndo3": {
+        "delta_raw": -0.038858613136184696,
+        "ci95_raw": [
+          -0.048782720760096016,
+          -0.029004588644224318
+        ],
+        "weights": {
+          "dbpedia-entity": 0.5,
+          "cqadup-android": 0.25,
+          "cqadup-english": 0.25
+        }
+      },
+      "equal_weight_macro": {
+        "delta_raw": -0.04081343543466168,
+        "ci95_raw": [
+          -0.04994498583664339,
+          -0.0317806244075553
+        ],
+        "weights": {
+          "dbpedia-entity": 0.3333333333333333,
+          "cqadup-android": 0.3333333333333333,
+          "cqadup-english": 0.3333333333333333
+        }
+      },
+      "query_pooled": {
+        "delta_raw": -0.0417127710841904,
+        "ci95_raw": [
+          -0.051629330360120906,
+          -0.03189818582031617
+        ],
+        "weights": {
+          "dbpedia-entity": 0.14986886474334957,
+          "cqadup-android": 0.2618958411390034,
+          "cqadup-english": 0.5882352941176471
+        }
+      },
+      "leave_one_out": {
+        "dbpedia-entity": {
+          "delta_raw": -0.04472308003161565,
+          "ci95_raw": [
+            -0.05577678765350204,
+            -0.03355899947820172
+          ],
+          "weights": {
+            "cqadup-android": 0.5,
+            "cqadup-english": 0.5
+          }
+        },
+        "cqadup-android": {
+          "delta_raw": -0.03562444102357329,
+          "ci95_raw": [
+            -0.047481200781961067,
+            -0.02376483112782029
+          ],
+          "weights": {
+            "dbpedia-entity": 0.6666666666666666,
+            "cqadup-english": 0.3333333333333333
+          }
+        },
+        "cqadup-english": {
+          "delta_raw": -0.038183140651842126,
+          "ci95_raw": [
+            -0.05045970496805442,
+            -0.02598375207276049
+          ],
+          "weights": {
+            "dbpedia-entity": 0.6666666666666666,
+            "cqadup-android": 0.3333333333333333
+          }
+        }
+      },
+      "per_dataset": {
+        "fever": {
+          "delta_raw": -0.24401803669019384,
+          "ci95_raw": [
+            -0.2527570461292618,
+            -0.23528879639447584
+          ],
+          "n": 6666,
+          "classification": "double-contaminated sensitivity; zero alpha"
+        },
+        "dbpedia-entity": {
+          "delta_raw": -0.03299414624075374,
+          "ci95_raw": [
+            -0.049477489384825046,
+            -0.016826585877940108
+          ],
+          "n": 400,
+          "classification": "descriptive; zero alpha"
+        },
+        "cqadup-android": {
+          "delta_raw": -0.04856112947401891,
+          "ci95_raw": [
+            -0.06532675429226066,
+            -0.03192837428872493
+          ],
+          "n": 699,
+          "classification": "descriptive; zero alpha"
+        },
+        "cqadup-english": {
+          "delta_raw": -0.040885030589212404,
+          "ci95_raw": [
+            -0.05525311522454952,
+            -0.02632380774633295
+          ],
+          "n": 1570,
+          "classification": "descriptive; zero alpha"
+        }
+      }
+    }
+  },
+  "contrast_note": "R1 and R2 are the only registered contrasts and are unchanged by the roster extension; the five added systems enter neither.",
+  "reserved_payload_archive": {
+    "root": "work/m20-archive",
+    "datasets": {
+      "fever": {
+        "payload_hashes": {
+          "qids_sha256": "472ef3c5b868e704c69fb356ffcd7cc7aab7669b5607bc7934e586f94c20c27c",
+          "qtexts_sha256": "cdba235e15a2a72e5e781fae8dd5e09ff20eaa9b06506da02c6ceab49c01f2c6",
+          "qrels_sha256": "dbaa21877bdffe89dc4489234c4a15b59c2e05d7b2ff80fc836b9405e7391161"
+        },
+        "queries.jsonl.gz": {
+          "path": "datasets/fever/queries.jsonl.gz",
+          "bytes": 137638,
+          "sha256": "0cb5dca00f46feb108ba1adca3d3c865ba2e2bc579b3bea2e12982258faf2ad4",
+          "rows": 6666
+        },
+        "qrels.jsonl.gz": {
+          "path": "datasets/fever/qrels.jsonl.gz",
+          "bytes": 69824,
+          "sha256": "57f25cb813cb984bfa17321b7c9760d7508911bb6b447d82449e564aceffdd3c",
+          "rows": 7937
+        }
+      },
+      "dbpedia-entity": {
+        "payload_hashes": {
+          "qids_sha256": "04598aafe14ee78964752627a3d8b6fc06c662092312999f3d6d171d4a8e7387",
+          "qtexts_sha256": "9f5de8c226af86db953f78c052f4ff3571aed5436cd66b24f1cd2aec7764e773",
+          "qrels_sha256": "39e0bafdcd8622ac684cede60c84a1ada6eec41840a349fac0a65f8070f2fa2e"
+        },
+        "queries.jsonl.gz": {
+          "path": "datasets/dbpedia-entity/queries.jsonl.gz",
+          "bytes": 8218,
+          "sha256": "dd9db402ecbf707d03068d0f0f74052e3d24a3bc326bdc9ea6896170621d668d",
+          "rows": 400
+        },
+        "qrels.jsonl.gz": {
+          "path": "datasets/dbpedia-entity/qrels.jsonl.gz",
+          "bytes": 464800,
+          "sha256": "c3d4fe7103dd4e281f8807f6d92a5db0e691f2eee6c4cd2f1328a5d0490abf1b",
+          "rows": 43515
+        }
+      },
+      "cqadup-android": {
+        "payload_hashes": {
+          "qids_sha256": "3c9f39c0b5ca8a44772909ad05e5d2f595395417f74300f0b28925d7d3f32411",
+          "qtexts_sha256": "cfc5462931d095375b54da7bd958233bd9614f9eb55e8d404a2b177e31fc79eb",
+          "qrels_sha256": "e60d549e62ba811c2e342b9ea88729d0c001b4e952220995da15716c800606ac"
+        },
+        "queries.jsonl.gz": {
+          "path": "datasets/cqadup-android/queries.jsonl.gz",
+          "bytes": 18350,
+          "sha256": "3516526ba66ee7ac98a6035038e07a6e1fa1bf2ca7e43ff344048f311618a927",
+          "rows": 699
+        },
+        "qrels.jsonl.gz": {
+          "path": "datasets/cqadup-android/qrels.jsonl.gz",
+          "bytes": 9480,
+          "sha256": "200fb2635d0d7f6593315b95d183ba59d07982a714714c9bbe3404b7ade1b2dc",
+          "rows": 1696
+        }
+      },
+      "cqadup-english": {
+        "payload_hashes": {
+          "qids_sha256": "d1761a9f61ec28030661cdfc6a5e5c913788e4901801726a53e9c7fb81d0fc2e",
+          "qtexts_sha256": "9da6edf7193a2ac7726e78de4f4bad29f89015bd46b923ba36b7d9f353e5ae94",
+          "qrels_sha256": "51e44a87232fade6f55bd2506fdc6748bc4fa61ccc05b48a14d44e5f55e8d48a"
+        },
+        "queries.jsonl.gz": {
+          "path": "datasets/cqadup-english/queries.jsonl.gz",
+          "bytes": 39362,
+          "sha256": "2a5cc265cdcf1a5c38a2c45a6b5ebc03c719d4d5a4b8c34db7dfdea7e47a43c5",
+          "rows": 1570
+        },
+        "qrels.jsonl.gz": {
+          "path": "datasets/cqadup-english/qrels.jsonl.gz",
+          "bytes": 22087,
+          "sha256": "c5ff10d011fe5c59aec9fbc9942293b1f907b5b17c06527b08713efcf7d438dc",
+          "rows": 3765
+        }
+      }
+    }
+  },
+  "manifest_sha256": "8761fab23da42410bbdef7f0c16c94118857d78f49efc0528b3c5129bedac428",
+  "begin_commit": "0350d060b870f6b13aa9fc13eafd34121575eb9f",
+  "spent_tag": "m8-reserved-spent",
+  "prior_incomplete_result_sha256": "f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23",
+  "preencode_sha256": "8c0e279a3e559dc45667ceeb37558631ac37a96e995e87e8457c173f0a7ef886",
+  "written": "2026-09-19T01:59:23.662394+00:00"
+}

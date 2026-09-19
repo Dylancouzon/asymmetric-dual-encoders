@@ -36,3 +36,4 @@ or permit M9 close-out while an M10-derived recipe decision remains open. M13 ow
 - 2026-09-15T07:39:09.603594+00:00 — **FINAL-RUN-END** (full, INCOMPLETE_RESERVED) result sha256 `f5b5ad8a63060fbe` outcome `REJECTED:C1b,C1a,C2a`
 
 - 2026-09-19T01:05:27.653486+00:00 — **RESERVED-RUN-BEGIN** implementation `be7cf89dbb89`; prior six result `f5b5ad8a6306`; systems ['nano-dense', 'zero-dense', 'stella-query', 'bge-small-en-v1.5', 'leaf-ir-asym', 'bm25', 'zero+bm25 dbsf@100', 'nano+bm25 dbsf@100']; zero alpha.
+- 2026-09-19T01:59:23.677809+00:00 — **RESERVED-RUN-END** result `48a029af31bfefac`; all three systems / four datasets complete; descriptive only, zero alpha.
