@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run M20's reserved stages A and B on the local GPU, under ruling R24.
+"""Run M20's stages A, B and C on the local GPU, under ruling R24.
 
 `scripts/m13_reserved_cloud.py` is the cloud controller. Most of what it does is cloud plumbing --
 resume a pod, price it, cover it from the wallet, deploy a checkout, STOP it -- but a handful of
@@ -29,8 +29,20 @@ Dropped, because there is no pod and no bill: pod identity, storage and price ch
 cover, cloud allocation checks, resume and SSH handling, remote transfer, STOP confirmation.
 Retained storage keeps billing and the retained pods stay STOP-only; neither is this script's job.
 
-  .venv/bin/python -u scripts/m20_local_run.py            # preflight only, changes nothing
-  .venv/bin/python -u scripts/m20_local_run.py --execute  # stage A then stage B
+Stage C is the same shape for BEIR-15, and is here for the same reason: `m20src/beir15.py` is a
+scorer. Its document-vector path loads existing shards and fails on a missing one, it never
+schedules an encode, and it carries no deadline, timeout or projection gate, so running it alone
+would neither do the ~23.7M documents of missing corpus work nor enforce the registered single
+120 h cap (Astra review, 2026-09-19). Stage C pre-encodes BEIR-15's own corpora on all three
+towers and then scores, under one retained deadline, with the projection gate armed against the
+registered volume. It reuses the reserved four's shards rather than re-encoding them, and it
+inverts two preflight gates rather than skipping them: by then the access must be SPENT and the
+six-set result must read COMPLETE.
+
+  .venv/bin/python -u scripts/m20_local_run.py             # preflight only, changes nothing
+  .venv/bin/python -u scripts/m20_local_run.py --execute   # stage A then stage B
+  .venv/bin/python -u scripts/m20_local_run.py --stage-c   # stage C preflight only
+  .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute   # stage C
 """
 from __future__ import annotations
 
@@ -47,6 +59,7 @@ import time
 REPO = Path(__file__).resolve().parents[1]
 PY = str(REPO / ".venv" / "bin" / "python")
 RECEIPT = REPO / "results" / "m20_local_run.json"
+STAGE_C_RECEIPT = REPO / "results" / "m20_stage_c_run.json"
 LOG_DIR = REPO / "work" / "m20" / "logs"
 REGISTRY = REPO / "m20" / "beir15_registry.json"
 DBSF_RECEIPT = REPO / "results" / "m20_dbsf_reproduction.json"
@@ -93,8 +106,26 @@ def stage_caps():
     return caps["A_reserved_pre_encode_unprotected"], caps["B_tagged_reserved_transaction"]
 
 
-def preflight():
-    """Every gate that must hold before the access can be spent. Opens no protected payload."""
+def stage_c_cap():
+    return json.loads(REGISTRY.read_text())["budget"]["stage_caps_hours"]["C_beir15"]
+
+
+def stage_c_disk_floor():
+    """The registered 120 GB scoring floor plus BEIR-15's own fp16 vectors, plus headroom."""
+    docs = json.loads(REGISTRY.read_text())["budget"]["document_volumes"][
+        "beir15_new_docs_expected"]
+    return 120_000_000_000 + docs * (1024 + 384 + 768) * 2 + 2_000_000_000
+
+
+def preflight(stage="AB"):
+    """Every gate that must hold before a stage runs. Opens no protected payload.
+
+    Stage C inverts two of stage A/B's gates rather than skipping them: by then the access must be
+    SPENT and the six-set result must read COMPLETE, because stage C runs after the transaction,
+    not before it. Everything else -- clean pushed tree, GPU, compile, tests, roster and BM25
+    identity, corpus route -- applies to both, and stage C checks the corpus route for its own
+    batch and holds a disk floor sized for its own vectors.
+    """
     problems, facts = [], {}
 
     dirty = sh("git", "status", "--porcelain=v1", "--untracked-files=all").stdout
@@ -109,8 +140,11 @@ def preflight():
 
     six = json.loads(SIX_RESULT.read_text())
     facts["six_end_status"] = six.get("end_status")
-    if six.get("end_status") != "INCOMPLETE_RESERVED":
-        problems.append(f"six-set result ends {six.get('end_status')!r}, not INCOMPLETE_RESERVED")
+    want_six = "COMPLETE" if stage == "C" else "INCOMPLETE_RESERVED"
+    if six.get("end_status") != want_six:
+        problems.append(f"six-set result ends {six.get('end_status')!r}, not {want_six}")
+    if stage == "C" and "reserved" not in six:
+        problems.append("the six-set result carries no reserved report; stage B has not completed")
     if not (six.get("decision_record") or {}).get("reserved_batch_runs"):
         problems.append("the frozen six-set decision did not trigger the reserved batch")
 
@@ -120,14 +154,20 @@ def preflight():
     spent = subprocess.run(["git", "ls-remote", "--exit-code", "origin",
                             "refs/tags/m8-reserved-spent"], cwd=REPO, capture_output=True)
     facts["reserved_access_unspent"] = bool(spent.returncode)
-    if spent.returncode == 0:
+    if stage == "C":
+        if spent.returncode != 0:
+            problems.append("m8-reserved-spent is not on origin; stage C runs after the "
+                            "transaction, not instead of it")
+    elif spent.returncode == 0:
         problems.append("m8-reserved-spent already exists on origin; the access is spent")
 
+    floor = stage_c_disk_floor() if stage == "C" else MIN_FREE_BYTES
     free = shutil.disk_usage(REPO).free
     facts["free_bytes"] = free
-    if free < MIN_FREE_BYTES:
-        problems.append(f"{free} free bytes; the reserved vectors plus the registered 120 GB "
-                        f"scoring floor need {MIN_FREE_BYTES}")
+    facts["disk_floor_bytes"] = floor
+    if free < floor:
+        problems.append(f"{free} free bytes; this stage's vectors plus the registered 120 GB "
+                        f"scoring floor need {floor}")
 
     try:
         gpu = json.loads(sh(PY, "-c",
@@ -160,7 +200,8 @@ def preflight():
         problems.append(f"roster or BM25 version gate failed: "
                         f"{(identity.stderr or identity.stdout).strip()[-400:]}")
 
-    corpora = sh(PY, "m8src/pre_encode.py", "--preflight-only", timeout=3600, check=False)
+    corpora = sh(PY, "m8src/pre_encode.py", "--preflight-only",
+                 "--batch", "beir15" if stage == "C" else "reserved", timeout=7200, check=False)
     if corpora.returncode:
         problems.append(f"corpus preflight failed: "
                         f"{(corpora.stderr or corpora.stdout).strip()[-400:]}")
@@ -185,12 +226,79 @@ def run_stage(label, command, cap_hours, env=None, log=None):
     return elapsed
 
 
+def run_stage_c(cap_c, record):
+    """Stage C: encode BEIR-15's own corpora, then score, under ONE retained deadline.
+
+    `m20src/beir15.py` is a scorer: its document-vector path loads existing shards and fails on a
+    missing one, it never schedules an encode, and it holds no deadline, timeout or projection
+    gate. Running it alone would neither do the ~23.7M documents of missing corpus work nor enforce
+    the registered single 120 h cap (Astra review, 2026-09-19, P1). This does both, with the same
+    primitives stage A used: one absolute deadline handed to every tower so a slow one shortens the
+    next rather than each getting the full cap, the pre-encode projection gate armed against the
+    registered BEIR-15 volume, and the scorer bounded by whatever time is left.
+    """
+    deadline = time.time() + cap_c * 3600
+    for prior in sorted(RECEIPT.parent.glob("m20_stage_c_run_attempt*.json")):
+        earlier = json.loads(prior.read_text()).get("stage_c_deadline_epoch")
+        if earlier:
+            deadline = min(deadline, float(earlier))
+    record["stage_c_deadline_epoch"] = deadline
+    record["stage_c_deadline_inherited"] = deadline < time.time() + cap_c * 3600 - 1
+
+    encode_hours = 0.0
+    for tower in TOWERS:
+        encode_hours += run_stage(
+            f"stageC-preencode-{tower}",
+            [PY, "-u", "m8src/pre_encode.py", "--batch", "beir15", "--system", tower,
+             "--device", "cuda", "--stage-deadline", f"{deadline:.0f}",
+             "--tower-order", ",".join(TOWERS)],
+            cap_hours=max(0.05, (deadline - time.time()) / 3600))
+    record["stage_c_preencode_hours"] = encode_hours
+    record["stage_c_score_hours"] = run_stage(
+        "stageC-score", [PY, "-u", "m20src/beir15.py", "--device", "cuda"],
+        cap_hours=max(0.05, (deadline - time.time()) / 3600))
+    return record
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true",
                         help="run stages A and B. Without it this is preflight only and changes "
                              "nothing.")
+    parser.add_argument("--stage-c", action="store_true",
+                        help="run stage C, BEIR-15: pre-encode its own corpora on all three "
+                             "towers, then score, under one retained deadline. Requires stage B "
+                             "complete. Without --execute this is preflight only.")
     args = parser.parse_args(argv)
+
+    if args.stage_c:
+        cap_c = stage_c_cap()
+        problems, facts = preflight(stage="C")
+        record = {"status": "REFUSED" if problems else "PASSED", "mode": "local", "stage": "C",
+                  "authority": "m13/RULINGS.md R24; m20/REGISTRATION.md stage C",
+                  "stage_caps_hours": {"C": cap_c},
+                  "started_utc": datetime.now(timezone.utc).isoformat(),
+                  "problems": problems, "facts": facts}
+        if problems or not args.execute:
+            print(json.dumps(record, indent=2))
+            return 2 if problems else 0
+        if STAGE_C_RECEIPT.exists():
+            raise RuntimeError(f"preserve the existing stage-C receipt {STAGE_C_RECEIPT}")
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        try:
+            record = run_stage_c(cap_c, record)
+            record["status"] = "COMPLETE"
+        except BaseException as error:
+            record["status"] = "FAILED"
+            record["error"] = f"{type(error).__name__}: {error}"
+            raise
+        finally:
+            record["finished_utc"] = datetime.now(timezone.utc).isoformat()
+            STAGE_C_RECEIPT.write_text(json.dumps(record, indent=2) + "\n")
+        print(json.dumps({"status": record["status"],
+                          "hours": {k: v for k, v in record.items() if k.endswith("_hours")}},
+                         indent=2))
+        return 0
 
     cap_a, cap_b = stage_caps()
     problems, facts = preflight()
