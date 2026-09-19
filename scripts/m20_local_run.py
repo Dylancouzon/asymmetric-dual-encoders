@@ -110,6 +110,26 @@ def stage_c_cap():
     return json.loads(REGISTRY.read_text())["budget"]["stage_caps_hours"]["C_beir15"]
 
 
+def stage_c_scorer_reserve_hours():
+    """Hours of the stage-C cap held back for scoring, derived from the registration's own figures.
+
+    The projection gate only ever projects encoding: its own tower's remaining documents plus the
+    towers after it. Nothing reserved time for the scorer that runs afterwards under the same
+    deadline, so encoding could be allowed to consume essentially the whole cap and the stage would
+    discover it had no time to score only after five days of encoding (Sol re-review, 2026-09-19,
+    P1). This is not a new constant: the registration expects stage C to take 113 h of its 120 h
+    cap, and its own registered volume and A100 rate imply the encode share, so the remainder is
+    what it budgeted for download and scoring.
+    """
+    budget = json.loads(REGISTRY.read_text())["budget"]
+    docs = budget["document_volumes"]["beir15_new_docs_expected"]
+    # `all_three` is the registered combined ratio and sits in the same dict as the three towers;
+    # summing the dict double-counts it.
+    ratio = budget["tower_cost_relative_to_stella"]["all_three"]
+    encode_hours = docs * ratio / budget["a100_stella_fp32_passages_per_second"] / 3600
+    return max(1.0, budget["expected_hours"]["C_beir15"] - encode_hours)
+
+
 def stage_c_disk_floor():
     """The registered 120 GB scoring floor plus BEIR-15's own fp16 vectors, plus headroom."""
     docs = json.loads(REGISTRY.read_text())["budget"]["document_volumes"][
@@ -237,27 +257,43 @@ def run_stage_c(cap_c, record):
     next rather than each getting the full cap, the pre-encode projection gate armed against the
     registered BEIR-15 volume, and the scorer bounded by whatever time is left.
     """
-    deadline = time.time() + cap_c * 3600
-    for prior in sorted(RECEIPT.parent.glob("m20_stage_c_run_attempt*.json")):
-        earlier = json.loads(prior.read_text()).get("stage_c_deadline_epoch")
-        if earlier:
-            deadline = min(deadline, float(earlier))
-    record["stage_c_deadline_epoch"] = deadline
-    record["stage_c_deadline_inherited"] = deadline < time.time() + cap_c * 3600 - 1
+    deadline = record["stage_c_deadline_epoch"]
+    # The scorer runs after the towers under the same clock, and the projection gate only ever
+    # projects encoding. Hand the towers a deadline short of the real one by the registered
+    # download-and-score allowance, so encoding cannot eat the time scoring needs.
+    reserve = stage_c_scorer_reserve_hours()
+    encode_deadline = deadline - reserve * 3600
+    record["stage_c_scorer_reserve_hours"] = reserve
 
     encode_hours = 0.0
     for tower in TOWERS:
         encode_hours += run_stage(
             f"stageC-preencode-{tower}",
             [PY, "-u", "m8src/pre_encode.py", "--batch", "beir15", "--system", tower,
-             "--device", "cuda", "--stage-deadline", f"{deadline:.0f}",
+             "--device", "cuda", "--stage-deadline", f"{encode_deadline:.0f}",
              "--tower-order", ",".join(TOWERS)],
-            cap_hours=max(0.05, (deadline - time.time()) / 3600))
+            cap_hours=_remaining_hours(encode_deadline, "stage-C pre-encode"))
     record["stage_c_preencode_hours"] = encode_hours
     record["stage_c_score_hours"] = run_stage(
         "stageC-score", [PY, "-u", "m20src/beir15.py", "--device", "cuda"],
-        cap_hours=max(0.05, (deadline - time.time()) / 3600))
+        cap_hours=_remaining_hours(deadline, "stage-C scoring"))
     return record
+
+
+def _remaining_hours(deadline, what):
+    """Time left before an absolute deadline, or a refusal -- never a fresh floor of minutes.
+
+    `max(0.05, remaining)` handed every phase three more minutes after the deadline had passed, so
+    a sequence of phases could carry execution beyond the registered cap (Sol re-review,
+    2026-09-19, P1). Past the deadline the answer is to stop and let a human decide, not to grant
+    another slice.
+    """
+    remaining = (deadline - time.time()) / 3600
+    if remaining <= 0:
+        raise RuntimeError(f"{what}: the registered stage-C deadline has passed; stopping rather "
+                           f"than granting more time. Everything encoded so far is hash-recorded "
+                           f"and resumable.")
+    return remaining
 
 
 def main(argv=None):
@@ -273,6 +309,11 @@ def main(argv=None):
 
     if args.stage_c:
         cap_c = stage_c_cap()
+        # The clock starts BEFORE the preflight, not after it. The registered stage explicitly
+        # includes download, and the stage-C preflight loads every BEIR-15 corpus -- up to hours of
+        # it on a cold cache. Starting the deadline afterwards would leave that work outside the
+        # cap it belongs to (Sol re-review, 2026-09-19, P1).
+        started = time.time()
         problems, facts = preflight(stage="C")
         record = {"status": "REFUSED" if problems else "PASSED", "mode": "local", "stage": "C",
                   "authority": "m13/RULINGS.md R24; m20/REGISTRATION.md stage C",
@@ -285,6 +326,19 @@ def main(argv=None):
         if STAGE_C_RECEIPT.exists():
             raise RuntimeError(f"preserve the existing stage-C receipt {STAGE_C_RECEIPT}")
         LOG_DIR.mkdir(parents=True, exist_ok=True)
+        # Fix the deadline and make it DURABLE before five days of work begins. Held only in
+        # memory it would survive an exception but not a kill, a host failure or a power cut, and a
+        # relaunch would then mint a fresh 120 h instead of inheriting this one (Sol re-review,
+        # 2026-09-19, P1). The earliest preserved attempt receipt binds, exactly as stage A's does.
+        deadline = started + cap_c * 3600
+        for prior in sorted(RECEIPT.parent.glob("m20_stage_c_run_attempt*.json")):
+            earlier = json.loads(prior.read_text()).get("stage_c_deadline_epoch")
+            if earlier:
+                deadline = min(deadline, float(earlier))
+        record["stage_c_deadline_epoch"] = deadline
+        record["stage_c_deadline_inherited"] = deadline < started + cap_c * 3600 - 1
+        record["status"] = "RUNNING"
+        STAGE_C_RECEIPT.write_text(json.dumps(record, indent=2) + "\n")
         try:
             record = run_stage_c(cap_c, record)
             record["status"] = "COMPLETE"

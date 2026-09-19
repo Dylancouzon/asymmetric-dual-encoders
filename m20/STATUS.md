@@ -44,10 +44,24 @@ The launcher keeps every readiness gate of the cloud controller that is not clou
 own docstring lists what it keeps and what it drops. Run the preflight first and read it. Stage B
 spends the one-shot reserved access; `reserved.crash` (R23) governs a crash after the tag.
 
-Stage C, BEIR-15, is `m20src/beir15.py` and comes after stage B completes. It is launched
-separately and sets no environment of its own, so its invocation must carry
-`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` — see the stage-A stop below. Stage D, the
-archive, is `m20src/archive.py` and is blocked on object storage; see the open items below.
+Stage C, BEIR-15, runs through the launcher and comes after stage B:
+
+```bash
+.venv/bin/python -u scripts/m20_local_run.py --stage-c             # preflight only
+setsid nohup .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute \
+  > work/m20/logs/stage_c.log 2>&1 < /dev/null &
+```
+
+**Do not invoke `m20src/beir15.py` directly.** It is a scorer: its document-vector path loads
+existing shards and fails on a missing one, it never schedules an encode, and it carries no
+deadline, timeout or projection gate, so alone it would neither do the ~23.7M documents of missing
+corpus work nor enforce the registered 120 h cap (Astra, 2026-09-19). `--stage-c` pre-encodes
+BEIR-15's own corpora on all three towers and then scores, under one durable deadline that starts
+before the preflight, with 17.06 h of the cap held back for download and scoring and the
+projection gate armed against the registered volume.
+
+Stage D, the archive, is `m20src/archive.py` and is blocked on object storage; see the open items
+below.
 
 ## Stage A stopped once on 2026-09-17, and why it now fits
 
