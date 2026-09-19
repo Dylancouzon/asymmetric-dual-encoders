@@ -23,9 +23,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 import time
+
+# Stage C is launched on its own, not by `scripts/m20_local_run.py`, so it inherits none of the
+# launcher's environment. Without this it hits exactly the fragmentation collapse that cost stage A
+# a day on 2026-09-17: a length-sorted 50,000-document encode reserves far more than this card
+# holds, WSL's driver spills to host memory over PCIe rather than raising OOM, and throughput falls
+# from ~180 to ~25 docs/s with num_alloc_retries still reading 0. Stage C's cap is only 1.06x its
+# estimate, so there is no slack to absorb that. Set before torch is imported anywhere below;
+# `setdefault` leaves an explicit caller override alone. Evidence and the byte-identity check that
+# shows it changes no vector: results/m20_allocator_probe.json.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import numpy as np
 
