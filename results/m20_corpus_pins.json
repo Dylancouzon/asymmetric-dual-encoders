@@ -1,0 +1,26 @@
+{
+  "nfcorpus": {
+    "corpus_ids_sha256": "2f9ca958559d5ba358844c0d30b53645228718399dcaa1fe12fcbf794cea78ec",
+    "corpus_text_sha256": "af11001664bb29a846a9d7ad30660b2dc24f2eff27ace0382ff0c808ec34df52",
+    "hf_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+    "n_docs": 3633
+  },
+  "scidocs": {
+    "corpus_ids_sha256": "33f848303b9ba1d231f744f07d6bc4f2b5c4da59d4c367a227c5cc9125b771bb",
+    "corpus_text_sha256": "8dc17d709d3e649fc21b4e6bec3d695e23a03af3748be6929c117e9881ca2740",
+    "hf_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+    "n_docs": 25657
+  },
+  "scifact": {
+    "corpus_ids_sha256": "910fa704be1169078067c56977e2444b34c7db4dbe19a12df254d5946fa9fbba",
+    "corpus_text_sha256": "cf7245417cb5b9065881c2e1e81bf4d9d369b6e0129a5026bb1cc53b78b2c9a6",
+    "hf_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+    "n_docs": 5183
+  },
+  "trec-covid": {
+    "corpus_ids_sha256": "ab45c2bef152b2c6920a0b730f12f2c57412a68d9eed404aa99099c2fa919bf2",
+    "corpus_text_sha256": "15138560e8417562842066171f42bd9413ec23591e62f0a2546bc2a2d826891e",
+    "hf_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+    "n_docs": 171332
+  }
+}

@@ -72,6 +72,47 @@ is itself a risk.
   measurement of contamination.
 - Intervals quantify query resampling only. They exclude training-seed variation.
 
+## A cap gate is only as good as the sample it arms on
+
+Stage C's first launch refused after 0.6 h: 59 docs/s measured, 59.9 h past a deadline the run
+actually clears by ~31 h. The gate was not wrong about its own arithmetic. It was wrong about
+what a document is.
+
+`Projection` arms at `min_rows=100_000` and extrapolates cumulative **documents per second**. The
+BEIR-15 encode order runs `scifact, nfcorpus, scidocs, trec-covid, fiqa, arguana` first --
+272,117 documents, **1.1%** of the 23,744,806 volume, and the longest in the set. So the gate
+measured the slowest 1.1% and projected it across the other 98.9%.
+
+Measured mean capped-512 token lengths (stella tokenizer, 8,000 evenly spaced documents each):
+
+| corpus | docs | mean tokens | | corpus | docs | mean tokens |
+|---|---|---|---|---|---|---|
+| msmarco | 8,841,823 | 77.1 | | webis-touche2020 | 382,545 | 234.9 |
+| climate-fever | 5,416,593 | 116.9 | | scifact | 5,183 | 326.7 |
+| hotpotqa | 5,233,329 | 67.7 | | nfcorpus | 3,633 | 348.0 |
+| nq | 2,681,468 | 108.2 | | quora | 522,931 | 16.4 |
+
+Volume-weighted mean **92.2 tokens/doc** against the ~300 the gate sampled.
+
+**Token throughput never moved.** scifact 13,400 tok/s, nfcorpus 14,300, stage A FEVER 15,200.
+Only docs/s moved, and it moved because document length moved. The 2,190M tokens cost 45.4 h on
+the stella-class tower and 66.5 h across all three at the conservative rate -- an implied 145
+docs/s, inside the 130-215 docs/s the reserved four actually ran at on this box.
+
+**The lesson worth carrying.** Documents per second is not a stable unit across a
+non-uniform-length batch, and the arming threshold of a projection gate is a *sampling* decision,
+not a warm-up delay. Fixed by `batch_min_projection_rows`: 1,000,000 rows for BEIR-15, which
+reaches ~728,000 documents into msmarco, and the unchanged 100,000 for the uniformly short
+reserved batch. Raising it delays the gate without weakening it **only because** this order
+front-loads the slowest documents, so a prefix sample keeps its pessimistic bias -- a reorder
+putting msmarco first would have made the gate optimistic, which is the failure its own docstring
+warns against.
+
+Adversarial review (Astra, 2026-09-20) confirmed the diagnosis and added the limit of the claim:
+front-loading makes the *initial* sample conservative, it does not make every later prefix
+conservative, since climate-fever and touché documents come after millions of short msmarco ones.
+Record: `research/m20-stagec-gate-review-astra-2026-09-20.md`.
+
 ## Accepted debt
 
 The pre-encode projection gate is not resume-aware: a relaunched tower counts already-encoded

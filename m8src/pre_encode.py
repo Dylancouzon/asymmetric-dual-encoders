@@ -357,6 +357,14 @@ class Projection:
     * **The registered volume, not the corpora downloaded so far.**  Counting only pinned corpora
       would make the projection most optimistic exactly when least is known.  The batch totals are
       the registered ones the cap was built from.
+    * **A sample that spans the volume, not just its first corpora.**  The rate is documents per
+      second, but documents are not interchangeable: the batch order runs BEIR-15's six longest
+      corpora first, 272,117 documents averaging ~300 tokens against the batch's 92.2-token mean.
+      Arming after 100,000 of those measured 59 docs/s and projected 59.9 h past a deadline the
+      token-weighted estimate clears by ~35 h (2026-09-19).  `min_rows` must therefore be large
+      enough to reach the corpora that carry the volume.  Raising it delays the gate; it does not
+      weaken it, because the sample stays a PREFIX of the batch and this order front-loads the
+      slowest documents, so the projection keeps its pessimistic bias.
     """
 
     def __init__(self, tower, tower_order, expected_docs, deadline_epoch, cost_ratio, label,
@@ -411,6 +419,19 @@ def expected_batch_docs(batch):
     budget = json.loads(REGISTRY.read_text())["budget"]["document_volumes"]
     return int(budget["reserved_four_docs"] if batch == "reserved"
                else budget["beir15_new_docs_expected"])
+
+
+def batch_min_projection_rows(batch):
+    """How many documents the projection gate must see before it is allowed to refuse.
+
+    The reserved batch's four corpora are uniformly short, so 100,000 rows is already a
+    representative sample of it and this is the value stage A ran under.  BEIR-15 is not uniform:
+    its order front-loads six corpora averaging ~300 tokens that are 1.1% of the volume, while
+    msmarco, hotpotqa, nq and climate-fever carry 93% of it at 68-117 tokens.  1,000,000 rows
+    reaches ~728,000 documents into msmarco, which is what makes the measured rate mean something.
+    See `Projection` and `m20/FINDINGS.md`.
+    """
+    return 100_000 if batch == "reserved" else 1_000_000
 
 
 def _summary(datasets, summary_path):
@@ -520,7 +541,8 @@ if __name__ == "__main__":
                 tower=args.system, tower_order=args.tower_order.split(","),
                 expected_docs=expected_batch_docs(args.batch),
                 deadline_epoch=args.stage_deadline, cost_ratio=tower_cost_ratios(),
-                label=f"pre-encode/{args.batch}")
+                label=f"pre-encode/{args.batch}",
+                min_rows=batch_min_projection_rows(args.batch))
         main(args.system, args.device, batch, projection, f"pre-encode/{args.batch}")
     else:
         parser.error("--system is required unless --preflight-only is used")

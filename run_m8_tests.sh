@@ -18,6 +18,7 @@ run m8src/decide.py               # the ship rule's own end-to-end self-test
 run m8src/test_decide.py          # its reductions and, more importantly, its refusals
 run m8src/test_b3_decide.py       # B3's four verdict branches, three of them unwelcome
 run m8src/test_e14_decide.py      # E14-HEAD's verdict branches, Holm's step-down, the seed pairing
+run m8src/test_projection.py      # the cap gate: refuses a doomed run, admits a viable one
 run m8src/rule_audit.py           # did any registration MOVE after a result read it?
 
 # NOT YET PORTED, and named here so the gap is visible rather than silent. Each becomes a `run`

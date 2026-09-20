@@ -1,4 +1,4 @@
-# M20 status — stages A and B COMPLETE; reserved access SPENT; stage C is next
+# M20 status — stages A and B COMPLETE; reserved access SPENT; stage C RUNNING (attempt 2)
 
 ## RESUME HERE
 
@@ -11,8 +11,18 @@ reserved access or the numbers already produced.
 cd /home/dylan/asymetric-dual-encoders
 .venv/bin/python -u scripts/m20_local_run.py --stage-c            # read this preflight first
 setsid nohup .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute \
-  > work/m20/logs/stage_c.log 2>&1 < /dev/null &
+  >> work/m20/logs/stage_c.log 2>&1 < /dev/null &
 ```
+
+**Append (`>>`), never `>`.** The per-tower logs open in append mode already; the controller log is
+the one a truncating redirect would destroy (Astra, 2026-09-20).
+
+**Attempt 1 stopped itself on 2026-09-19** — the projection gate refused a run that fits, because
+it armed on the longest 1.1% of BEIR-15. Fixed in `batch_min_projection_rows`; see "The projection
+gate refused attempt 1" below and `m20/FINDINGS.md`. Attempt 1's receipt and controller log are
+preserved as `results/m20_stage_c_run_attempt1_projection_stop.json` and
+`work/m20/logs/stage_c_attempt1_projection_stop.log`, and the launcher **inherits attempt 1's
+deadline** from that receipt, so relaunching does not mint a fresh wall clock.
 
 Then watch it: first shard rate per tower, dataset completions, and
 `Traceback|Error|FAILED|OOM|Killed|assert`. `setsid nohup` matters — a harness interrupt kills a
@@ -72,8 +82,10 @@ Intervals quantify query resampling only, not training-seed variation.
 
 ## Next step
 
-**Launch stage C.** Everything it needs is committed and reviewed; it is about five days of the
-machine. After it, stage D (archive) — blocked on object storage, see the open items.
+**Stage C is running** (attempt 2, launched 2026-09-20). Watch the first msmarco shard rates and
+the arming point at ~1,000,000 new rows, roughly 2.1 h in — Astra modelled 138 docs/s and 67.8 h
+projected there, which passes. After it, stage D (archive) — blocked on object storage, see the
+open items.
 
 ## Start here to execute
 
@@ -100,6 +112,34 @@ projection gate armed against the registered volume.
 
 Stage D, the archive, is `m20src/archive.py` and is blocked on object storage; see the open items
 below.
+
+## The projection gate refused attempt 1 on 2026-09-19, and why attempt 2 fits
+
+The gate stopped stage C after 0.6 h at a shard boundary: 59 docs/s measured, projecting 59.9 h
+past the deadline. Nothing protected was touched, the 134,473 documents written are hash-recorded
+and resumable, and the registration had reserved exactly this decision for the owner ("raising the
+ceiling, narrowing BEIR-15, or accepting a partial descriptive table; no executor may decide that").
+
+None of those three was needed, because the run does fit. The gate arms at `min_rows` on
+cumulative **documents per second**, and BEIR-15's order runs its six longest corpora first --
+272,117 documents at ~300 tokens, 1.1% of the volume, against the batch's measured 92.2-token
+mean. Token throughput was flat the whole time (13,400-15,200 tok/s, matching stage A); only
+docs/s moved, tracking length. The 2,190M tokens cost **66.5 h across all three towers** at the
+conservative rate, against **97.9 h** of encode budget remaining.
+
+Fixed by `batch_min_projection_rows`: BEIR-15 arms at 1,000,000 rows, ~728,000 documents into
+msmarco; the uniformly short reserved batch keeps the 100,000 stage A ran under. No existing
+function changed -- Astra verified this by AST diff -- so no already-written vector and no stage
+A/B number can move. Tests: `m8src/test_projection.py`, wired into `run_m8_tests.sh`.
+
+Astra reviewed the diagnosis and the fix: **GO WITH CONDITIONS**, no P0/P1 on the patch, all three
+conditions discharged before relaunch (attempt-1 receipt and log preserved, deadline recalculated
+and inherited, change committed and pushed first).
+Record: `research/m20-stagec-gate-review-astra-2026-09-20.md`.
+
+**The limit of the claim** (Astra): front-loading the long corpora makes the *initial* sample
+conservative; it does not make every later prefix conservative, since climate-fever and touché
+follow millions of short msmarco documents. The gate is an early-stop estimate, not a guarantee.
 
 ## Stage A stopped once on 2026-09-17, and why it now fits
 

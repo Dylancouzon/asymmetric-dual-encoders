@@ -1,0 +1,67 @@
+{
+  "status": "RUNNING",
+  "datasets": [
+    "scifact",
+    "nfcorpus",
+    "scidocs",
+    "trec-covid",
+    "fiqa",
+    "arguana",
+    "msmarco",
+    "nq",
+    "hotpotqa",
+    "webis-touche2020",
+    "quora",
+    "climate-fever",
+    "cqadup-gaming",
+    "cqadup-gis",
+    "cqadup-mathematica",
+    "cqadup-physics",
+    "cqadup-programmers",
+    "cqadup-stats",
+    "cqadup-tex",
+    "cqadup-unix",
+    "cqadup-webmasters",
+    "cqadup-wordpress"
+  ],
+  "systems": {
+    "nano-dense": {
+      "scifact": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/scifact/manifest.json",
+        "manifest_sha256": "d7bfe5a16ce09d466e87ab555f5847af332f2e42e7d3a78dc7377eccda95585f",
+        "n_docs": 5183,
+        "n_shards": 1,
+        "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+        "vector_bytes": 10614912
+      },
+      "nfcorpus": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/nfcorpus/manifest.json",
+        "manifest_sha256": "34c3f83ea345f5c5276733b56bbc313021206b9436c0d5c328b696c8affe1939",
+        "n_docs": 3633,
+        "n_shards": 1,
+        "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+        "vector_bytes": 7440512
+      },
+      "scidocs": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/scidocs/manifest.json",
+        "manifest_sha256": "b78d3db47407634eff3f7908ebe9e63be4ecfeadd14ce859e7f4a418693f5657",
+        "n_docs": 25657,
+        "n_shards": 1,
+        "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+        "vector_bytes": 52545664
+      }
+    },
+    "bge-small-en-v1.5": {},
+    "leaf-ir-asym": {}
+  },
+  "guard": {
+    "entry": "m8src.pre_encode",
+    "kinds": [],
+    "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
+    "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
+  },
+  "updated_utc": 1789859820.8236916
+}
