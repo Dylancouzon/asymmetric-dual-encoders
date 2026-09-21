@@ -1,0 +1,27 @@
+{
+  "purpose": "m20/beir15_registry.json _climate_fever_note registers that the executor COMPARES climate-fever's corpus ids and text hashes to FEVER's and RECORDS the comparison, rather than assuming either answer, because the published document counts differ and that decides whether the reserved FEVER shards are reusable. The comparison was performed but never written down; this is that record.",
+  "method": "Both sides are pre-existing recorded identities; NO corpus was re-read and no protected file was opened. climate-fever's row is the pin written by m8src/pre_encode.py:authenticate_corpus on first encode (results/m20_corpus_pins.json). FEVER's row is the frozen manifest results/eval_manifest.json m7_untouched_final.fever, the same manifest preflight uses. Only the three corpus fields are read; no query, qrel or text content is involved.",
+  "protected_evaluation_access": false,
+  "head": "4e51a034e112028bc955903811bcf77814971ac1",
+  "recorded_utc": "2026-09-21T18:36:41Z",
+  "comparison": {
+    "n_docs": {
+      "climate-fever": 5416593,
+      "fever": 5416568,
+      "equal": false
+    },
+    "corpus_ids_sha256": {
+      "climate-fever": "e4a253617aec69d89e8cff4b9098ee588929de03e34713a3b3c778a5f89db66c",
+      "fever": "ef7c3d7d6d006bb31a43f095df0fbd01006085eb951993becfd3d94470195d67",
+      "equal": false
+    },
+    "corpus_text_sha256": {
+      "climate-fever": "42cdc198136885e0f5895b4c64e0c6649ab1c884323ce6567e9c8ba162ae7788",
+      "fever": "2c71339c8c31179ddb1443e171d83af82658820d0885cf4803a9b42c452a672a",
+      "equal": false
+    }
+  },
+  "identical_corpus": false,
+  "conclusion": "DIFFERENT on all three recorded fields. Climate-FEVER's corpus is not FEVER's, so the reserved FEVER document shards are NOT reusable for it and encoding it separately -- as stage C did, 5,416,593 rows across 109 shards -- was correct. This also means climate-fever's 5.42M documents legitimately belong inside the stage-C cap, as the registry states.",
+  "limitation": "Hash inequality establishes the corpora are not byte-identical. It does not measure how much they OVERLAP: both derive from Wikipedia and a large shared subset is likely. Nothing here is a contamination estimate, and climate-fever is a BEIR-15 descriptive row, not part of either registered contrast."
+}
