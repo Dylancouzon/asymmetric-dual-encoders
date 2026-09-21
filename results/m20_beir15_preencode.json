@@ -29,7 +29,7 @@
       "scifact": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/scifact/manifest.json",
-        "manifest_sha256": "d7bfe5a16ce09d466e87ab555f5847af332f2e42e7d3a78dc7377eccda95585f",
+        "manifest_sha256": "306d6ea2d075ccb1bc56c7e7f0c3f43cfd1985f4454b9395c9e626badf071813",
         "n_docs": 5183,
         "n_shards": 1,
         "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
@@ -38,7 +38,7 @@
       "nfcorpus": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/nfcorpus/manifest.json",
-        "manifest_sha256": "34c3f83ea345f5c5276733b56bbc313021206b9436c0d5c328b696c8affe1939",
+        "manifest_sha256": "693d9682f2c08058425981e5d2540aace03f76203ad2338a4821d37cc692d365",
         "n_docs": 3633,
         "n_shards": 1,
         "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
@@ -47,14 +47,204 @@
       "scidocs": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/scidocs/manifest.json",
-        "manifest_sha256": "b78d3db47407634eff3f7908ebe9e63be4ecfeadd14ce859e7f4a418693f5657",
+        "manifest_sha256": "d9a4582a21b158a90e8dc12c09f7f88b5e1307d5f2ffc77184b5a5a4264926bd",
         "n_docs": 25657,
         "n_shards": 1,
         "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
         "vector_bytes": 52545664
+      },
+      "trec-covid": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/trec-covid/manifest.json",
+        "manifest_sha256": "7622eeb72198159fbd5c336f2fc6d52229fb70c99add225eb2c01c192e4ae084",
+        "n_docs": 171332,
+        "n_shards": 4,
+        "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+        "vector_bytes": 350888448
+      },
+      "fiqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/fiqa/manifest.json",
+        "manifest_sha256": "5cc64a770348582806b80553caa92824a12beae6d831978114474ad70ba2754f",
+        "n_docs": 57638,
+        "n_shards": 2,
+        "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+        "vector_bytes": 118042880
+      },
+      "arguana": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/arguana/manifest.json",
+        "manifest_sha256": "8732b5bc5de43a50ab3efc59c9ee15bd3fa0f744f6c4bf88626e8f8a822ba9ee",
+        "n_docs": 8674,
+        "n_shards": 1,
+        "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+        "vector_bytes": 17764480
+      },
+      "msmarco": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/msmarco/manifest.json",
+        "manifest_sha256": "8021038942bda354b53702d6b0b4712c24cf3b54b7e8beb8c77fc8ac47f5da38",
+        "n_docs": 8841823,
+        "n_shards": 177,
+        "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+        "vector_bytes": 18108076160
+      },
+      "nq": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/nq/manifest.json",
+        "manifest_sha256": "f04bd9c4ba3ab0c0eae0d03c3fb1557f8a57cef736194ef92f65458f19c9af79",
+        "n_docs": 2681468,
+        "n_shards": 54,
+        "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+        "vector_bytes": 5491653376
+      },
+      "hotpotqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/hotpotqa/manifest.json",
+        "manifest_sha256": "7899b5b52628049c773e5a37e0a326fe4133d150b05989fd082c7ec08dad2dd5",
+        "n_docs": 5233329,
+        "n_shards": 105,
+        "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+        "vector_bytes": 10717871232
+      },
+      "webis-touche2020": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/webis-touche2020/manifest.json",
+        "manifest_sha256": "e6fb437de07c6652c4248bf397c13715b6aeba848cbe9ef527632acc7ad10f10",
+        "n_docs": 382545,
+        "n_shards": 8,
+        "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+        "vector_bytes": 783453184
+      },
+      "quora": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/quora/manifest.json",
+        "manifest_sha256": "e56996d59ece54f02acb97cb4a053d04e3abd2caadecf20ea817009d9d7667f2",
+        "n_docs": 522931,
+        "n_shards": 11,
+        "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+        "vector_bytes": 1070964096
+      },
+      "climate-fever": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/climate-fever/manifest.json",
+        "manifest_sha256": "84970113952d3e7979b7b45e9d70968833d86aece6d4c7420e5ea4061872337e",
+        "n_docs": 5416593,
+        "n_shards": 109,
+        "source_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
+        "vector_bytes": 11093196416
+      },
+      "cqadup-gaming": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-gaming/manifest.json",
+        "manifest_sha256": "e68829c78c5ab7439ac8dc7fc581edbddc88e94f03316b667b74bb5bfc8054ca",
+        "n_docs": 45301,
+        "n_shards": 1,
+        "source_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
+        "vector_bytes": 92776576
+      },
+      "cqadup-gis": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-gis/manifest.json",
+        "manifest_sha256": "5f72c9e2b410f3c2f1de7cc3fac3527629be7a9171587cbb6497b93a70be3adb",
+        "n_docs": 37637,
+        "n_shards": 1,
+        "source_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
+        "vector_bytes": 77080704
+      },
+      "cqadup-mathematica": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-mathematica/manifest.json",
+        "manifest_sha256": "3e07377fa665b8e4e2ad79824fa5a789fc447eec14810800894c5299da637f7b",
+        "n_docs": 16705,
+        "n_shards": 1,
+        "source_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
+        "vector_bytes": 34211968
+      },
+      "cqadup-physics": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-physics/manifest.json",
+        "manifest_sha256": "3ab53e25f6cac844015366296e3d6234448442cc261c10222868f9ac61181acc",
+        "n_docs": 38316,
+        "n_shards": 1,
+        "source_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "vector_bytes": 78471296
+      },
+      "cqadup-programmers": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-programmers/manifest.json",
+        "manifest_sha256": "ca2f191a1ca42902d040c9e763df1f0281da9647bc9f354561a46364238ea344",
+        "n_docs": 32176,
+        "n_shards": 1,
+        "source_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "vector_bytes": 65896576
+      },
+      "cqadup-stats": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-stats/manifest.json",
+        "manifest_sha256": "ce464ad3449eb300cc1eb122e5b90a4550ea6bbb1c0cec835536692f930d642b",
+        "n_docs": 42269,
+        "n_shards": 1,
+        "source_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
+        "vector_bytes": 86567040
+      },
+      "cqadup-tex": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-tex/manifest.json",
+        "manifest_sha256": "5065a3af34820b274fe95f799ec0a8c1ecb0a842704005c302feb60b8b723c42",
+        "n_docs": 68184,
+        "n_shards": 2,
+        "source_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
+        "vector_bytes": 139641088
+      },
+      "cqadup-unix": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-unix/manifest.json",
+        "manifest_sha256": "d900cb95d86a9a4a87fb406c26033d2c7cb20402460d514293ddded0993082b3",
+        "n_docs": 47382,
+        "n_shards": 1,
+        "source_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
+        "vector_bytes": 97038464
+      },
+      "cqadup-webmasters": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-webmasters/manifest.json",
+        "manifest_sha256": "be462bab109c26ada12590e37ea6511351e353f0d6a70d21df67eb678e220eb2",
+        "n_docs": 17405,
+        "n_shards": 1,
+        "source_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
+        "vector_bytes": 35645568
+      },
+      "cqadup-wordpress": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/nano-dense/cqadup-wordpress/manifest.json",
+        "manifest_sha256": "1d6f7187250f43294dd2528767a21493afd538d12e04eac4c887374f0d1f42f9",
+        "n_docs": 48605,
+        "n_shards": 1,
+        "source_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
+        "vector_bytes": 99543168
       }
     },
-    "bge-small-en-v1.5": {},
+    "bge-small-en-v1.5": {
+      "scifact": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/scifact/manifest.json",
+        "manifest_sha256": "0d25aa2aa0199f2683f0ce4493116dc78984f4fee63bda0f00aa7960c3f3f0a4",
+        "n_docs": 5183,
+        "n_shards": 1,
+        "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+        "vector_bytes": 3980672
+      },
+      "nfcorpus": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/nfcorpus/manifest.json",
+        "manifest_sha256": "28be3b4a898e8453360f25634cfee2f376e7b18857a458c8eb39ea5ec86b78e2",
+        "n_docs": 3633,
+        "n_shards": 1,
+        "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+        "vector_bytes": 2790272
+      }
+    },
     "leaf-ir-asym": {}
   },
   "guard": {
@@ -63,5 +253,5 @@
     "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
     "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
   },
-  "updated_utc": 1789859820.8236916
+  "updated_utc": 1790021218.5279438
 }

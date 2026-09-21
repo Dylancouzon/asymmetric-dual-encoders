@@ -1,9 +1,111 @@
 {
+  "arguana": {
+    "corpus_ids_sha256": "66b46bf3b2a8193cd52a06ff6d550ad7bffdaddcf8f332ae1c6df9855150171f",
+    "corpus_text_sha256": "da6d695267d2f410eca0e0ef4de0f24192aa5a72fd6b6a3a4f1bc990554f77c3",
+    "hf_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+    "n_docs": 8674
+  },
+  "climate-fever": {
+    "corpus_ids_sha256": "e4a253617aec69d89e8cff4b9098ee588929de03e34713a3b3c778a5f89db66c",
+    "corpus_text_sha256": "42cdc198136885e0f5895b4c64e0c6649ab1c884323ce6567e9c8ba162ae7788",
+    "hf_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
+    "n_docs": 5416593
+  },
+  "cqadup-gaming": {
+    "corpus_ids_sha256": "24f63b9e4d1b1c3434a40b0801533c4e6385e33e92dbf3d37cf04e982edc7bde",
+    "corpus_text_sha256": "fdfad824466a420fe0180e01f55c81c1cbe1bb2280548c05b40c0d86cc5d5f8b",
+    "hf_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
+    "n_docs": 45301
+  },
+  "cqadup-gis": {
+    "corpus_ids_sha256": "261bb759a4ccdf730dd256d1b26c2eb2a8bf1215af7e38d5a422fc81b9ef2c67",
+    "corpus_text_sha256": "763e5374886aa4b7ca52745e61bab80ffa74b0ab7e7e8257458f700f0994c202",
+    "hf_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
+    "n_docs": 37637
+  },
+  "cqadup-mathematica": {
+    "corpus_ids_sha256": "ee8a5fda93386e3f434335b3cfc1dd14733f965b397235a911db3285a410dd56",
+    "corpus_text_sha256": "1e7293c022016bb83c82317144e0ae0a70dbc6b30541e95452770b7d6ebab553",
+    "hf_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
+    "n_docs": 16705
+  },
+  "cqadup-physics": {
+    "corpus_ids_sha256": "2354a8d4c7207a6ff443d8437e4e76470e5d3c46bf2eb317011a526e684fb5bf",
+    "corpus_text_sha256": "856f16df56c9515c7d6acd7e2bc2e4585dbd74c1da80ea1f2264deea6d2d892d",
+    "hf_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+    "n_docs": 38316
+  },
+  "cqadup-programmers": {
+    "corpus_ids_sha256": "434006e6a174b7f7508af49dd89b4ecbdcf92fdec01a253bb7fe23c78723c43e",
+    "corpus_text_sha256": "d7c33d881e5728565ff0b8d42f6da88cd89a8362a6b05ffd5d8b2064bd0f61ed",
+    "hf_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+    "n_docs": 32176
+  },
+  "cqadup-stats": {
+    "corpus_ids_sha256": "e4bb9eab21b9929b18a935aa3247ef2cab66b3d552ef3c41ed553ac1403fee07",
+    "corpus_text_sha256": "8b4fccfa63b42b564c0f7bfa3885769268155ced32d9b0008c5263dc7241bd21",
+    "hf_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
+    "n_docs": 42269
+  },
+  "cqadup-tex": {
+    "corpus_ids_sha256": "3ebf32a96fabcbf9798d59debe9cbe969440f4f3c22a18e2d437b8664b17fa97",
+    "corpus_text_sha256": "ba8043d23853acd6a2250afe4277dd748fe0ceccb75a81bfc9287fbd8fb0b552",
+    "hf_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
+    "n_docs": 68184
+  },
+  "cqadup-unix": {
+    "corpus_ids_sha256": "17130356a0369acddf86f55d6b5a8e45f0f75ba300e9c1817d0940ad13b90baf",
+    "corpus_text_sha256": "2e5bd5abadb699174f7be07372d9c7841507050630b6262f0ba697f278b16364",
+    "hf_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
+    "n_docs": 47382
+  },
+  "cqadup-webmasters": {
+    "corpus_ids_sha256": "6d65b9ebc53158ac266e8fd539c6bac1833ef57aee846c357ade90da9d41042d",
+    "corpus_text_sha256": "d076a17083d94e58a63310f96f974b585086f2cdf4775c1466c81b8d1590b3e0",
+    "hf_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
+    "n_docs": 17405
+  },
+  "cqadup-wordpress": {
+    "corpus_ids_sha256": "9a191cc69a90aa8ebb2bc022f48d78656b2785126bd2f15e83dad62d9e121297",
+    "corpus_text_sha256": "d1e8cec1f1a4d53a4e4b1bcb3a2d74d465b6fe45a7d43cc4cdf5ca11ebccc039",
+    "hf_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
+    "n_docs": 48605
+  },
+  "fiqa": {
+    "corpus_ids_sha256": "9edadfd39a8a05da1789d2e1172878d2714177c2a86eb8d091f54d98eb334857",
+    "corpus_text_sha256": "ad73601b3132ea1338276b0313d95401878592e2aecb49f1c84a0f5bdd8c5759",
+    "hf_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+    "n_docs": 57638
+  },
+  "hotpotqa": {
+    "corpus_ids_sha256": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+    "corpus_text_sha256": "8e805db3af5d1f1a9e1f2529922e75300ff9a3b369809ab80f31b79b1224564a",
+    "hf_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+    "n_docs": 5233329
+  },
+  "msmarco": {
+    "corpus_ids_sha256": "cd86f5b0755c02fda542d3f91593d528ccf3adfd600412337ff63d4c39e7d8ae",
+    "corpus_text_sha256": "947cfaa76b0ebeb720a62543e120919eea7e5699774b9e19023eff21c05c3443",
+    "hf_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+    "n_docs": 8841823
+  },
   "nfcorpus": {
     "corpus_ids_sha256": "2f9ca958559d5ba358844c0d30b53645228718399dcaa1fe12fcbf794cea78ec",
     "corpus_text_sha256": "af11001664bb29a846a9d7ad30660b2dc24f2eff27ace0382ff0c808ec34df52",
     "hf_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
     "n_docs": 3633
+  },
+  "nq": {
+    "corpus_ids_sha256": "420ed0387257af26557af809e2a2d058734ec0b8bdc4734d5764123bdcf1b3bd",
+    "corpus_text_sha256": "3e35a5a0678166fa3c2c06b121ad79b35a2e81a90e1df2331ad9f42e1dbc8bc8",
+    "hf_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+    "n_docs": 2681468
+  },
+  "quora": {
+    "corpus_ids_sha256": "a4a89cc10e92bedd63275bff0a1662d0fa9450a345547ce7b32b9cf602641d8c",
+    "corpus_text_sha256": "461ac05289d98a9acf3b8dae91a54570de6661a52166198fdb4dc7954a410201",
+    "hf_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+    "n_docs": 522931
   },
   "scidocs": {
     "corpus_ids_sha256": "33f848303b9ba1d231f744f07d6bc4f2b5c4da59d4c367a227c5cc9125b771bb",
@@ -22,5 +124,11 @@
     "corpus_text_sha256": "15138560e8417562842066171f42bd9413ec23591e62f0a2546bc2a2d826891e",
     "hf_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
     "n_docs": 171332
+  },
+  "webis-touche2020": {
+    "corpus_ids_sha256": "2d6701480b3e39941829d4600d305d93b4b3ad2d8ad5e887864a883fa6642cb9",
+    "corpus_text_sha256": "ec03e90e05ecf6bd44a4ec6f5a3feec9ca756bfc6c23b4164f6b0b5e1072e929",
+    "hf_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+    "n_docs": 382545
   }
 }

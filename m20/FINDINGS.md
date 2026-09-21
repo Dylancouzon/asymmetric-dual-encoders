@@ -94,10 +94,25 @@ Measured mean capped-512 token lengths (stella tokenizer, 8,000 evenly spaced do
 
 Volume-weighted mean **92.2 tokens/doc** against the ~300 the gate sampled.
 
-**Token throughput never moved.** scifact 13,400 tok/s, nfcorpus 14,300, stage A FEVER 15,200.
-Only docs/s moved, and it moved because document length moved. The 2,190M tokens cost 45.4 h on
-the stella-class tower and 66.5 h across all three at the conservative rate -- an implied 145
-docs/s, inside the 130-215 docs/s the reserved four actually ran at on this box.
+**Token throughput never moved.** The completed nano-dense tower measured this across all 22
+corpora, median docs/s per corpus against the sampled token length:
+
+| corpus | shards | docs/s | tok/doc | tok/s |
+|---|---|---|---|---|
+| quora | 11 | 887 | 16.4 | 14,547 |
+| hotpotqa | 105 | 233 | 67.7 | 15,774 |
+| msmarco | 177 | 203 | 77.1 | 15,651 |
+| nq | 54 | 140 | 108.2 | 15,148 |
+| climate-fever | 109 | 130 | 116.9 | 15,197 |
+| webis-touche2020 | 8 | 55 | 234.9 | 12,920 |
+| scifact | 1 | 41 | 326.7 | 13,395 |
+| nfcorpus | 1 | 41 | 348.0 | 14,268 |
+
+**Documents per second spans 21.6x (41 to 887). Tokens per second spans 1.22x (12,920 to
+15,774).** The gate refused on the first number; the machine only ever delivered the second.
+
+The tower finished in **39.9 h**, inside the 36.9-45.4 h the token model bracketed before it
+started, against the 59 docs/s extrapolation's 163 h.
 
 **The lesson worth carrying.** Documents per second is not a stable unit across a
 non-uniform-length batch, and the arming threshold of a projection gate is a *sampling* decision,

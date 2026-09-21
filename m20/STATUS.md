@@ -82,10 +82,21 @@ Intervals quantify query resampling only, not training-seed variation.
 
 ## Next step
 
-**Stage C is running** (attempt 2, launched 2026-09-20). Watch the first msmarco shard rates and
-the arming point at ~1,000,000 new rows, roughly 2.1 h in — Astra modelled 138 docs/s and 67.8 h
-projected there, which passes. After it, stage D (archive) — blocked on object storage, see the
-open items.
+**Stage C is running** (attempt 2, launched 2026-09-20). The projection gate armed at msmarco
+shard 18 and **passed**, and the **nano-dense tower is COMPLETE in 39.9 h** — all 22 BEIR-15
+corpora, 23,744,786 rows, 22 corpus pins recorded. bge-small-en-v1.5 is encoding now, then
+leaf-ir-asym (~18.6 h for the two at the registered ratios), then scoring inside its 17.06 h
+reserve. After that, stage D (archive) — blocked on object storage, see the open items.
+
+The row count is 20 short of the registered 23,744,806. Fully attributed: every corpus with a
+published count matches exactly, and the whole delta is in the one rounded budget line,
+`cqadupstack_ten_forums: 394,000` against an actual 393,980 (0.005%). Nothing is missing.
+
+`results/m20_climate_fever_comparison.json` records the climate-fever/FEVER corpus comparison the
+registry requires — different on document count and both hashes, so encoding it separately was
+correct. **No code performs that comparison**; it was recorded by hand from the existing pin and
+the frozen manifest. If the registration expects it automatically, `m20src/beir15.py` is where it
+belongs.
 
 ## Start here to execute
 
