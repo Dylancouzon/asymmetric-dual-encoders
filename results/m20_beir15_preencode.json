@@ -243,9 +243,289 @@
         "n_shards": 1,
         "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
         "vector_bytes": 2790272
+      },
+      "scidocs": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/scidocs/manifest.json",
+        "manifest_sha256": "c0e3f159f402d980349bd640ae3fd74962e965fb9c08bfa4acb2cc04b6a0795c",
+        "n_docs": 25657,
+        "n_shards": 1,
+        "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+        "vector_bytes": 19704704
+      },
+      "trec-covid": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/trec-covid/manifest.json",
+        "manifest_sha256": "8e0b805f93be7927bc9b8f3533567bd3aa9cede7a8b3387ffcb495f4cb192eb7",
+        "n_docs": 171332,
+        "n_shards": 4,
+        "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+        "vector_bytes": 131583488
+      },
+      "fiqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/fiqa/manifest.json",
+        "manifest_sha256": "5e35ff8ae8c59c90e4c12e47a65c687f59f5849b87f5ff8f32ead80068e764c6",
+        "n_docs": 57638,
+        "n_shards": 2,
+        "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+        "vector_bytes": 44266240
+      },
+      "arguana": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/arguana/manifest.json",
+        "manifest_sha256": "c7dcc260bcef8729fe0c262887c578fbb969fbc1943e98ddc5471c610640f84f",
+        "n_docs": 8674,
+        "n_shards": 1,
+        "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+        "vector_bytes": 6661760
+      },
+      "msmarco": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/msmarco/manifest.json",
+        "manifest_sha256": "afa36ffa8dac71574b568c3952dd98d1331ebb3009a2d96f99e644aa3fac2c61",
+        "n_docs": 8841823,
+        "n_shards": 177,
+        "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+        "vector_bytes": 6790542720
+      },
+      "nq": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/nq/manifest.json",
+        "manifest_sha256": "2e8e18246b7fb199b8a619c27d4cb209a37dff5b3a78c43cb54c0ea987b683ff",
+        "n_docs": 2681468,
+        "n_shards": 54,
+        "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+        "vector_bytes": 2059374336
+      },
+      "hotpotqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/hotpotqa/manifest.json",
+        "manifest_sha256": "08f0c097d59f84474d1c363bdef61e3faffc02e6fe2d0ec342f1ec2297957e93",
+        "n_docs": 5233329,
+        "n_shards": 105,
+        "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+        "vector_bytes": 4019210112
+      },
+      "webis-touche2020": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/webis-touche2020/manifest.json",
+        "manifest_sha256": "ebedb76292b5a904ad681a6f95b5f3ab49f25351fcf480ee9799ef0cc8cecde2",
+        "n_docs": 382545,
+        "n_shards": 8,
+        "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+        "vector_bytes": 293795584
+      },
+      "quora": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/quora/manifest.json",
+        "manifest_sha256": "1da3659f2bafef1961004e11d4074b33ee2cc7662b1b67d54cd869325eb300fc",
+        "n_docs": 522931,
+        "n_shards": 11,
+        "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+        "vector_bytes": 401612416
+      },
+      "climate-fever": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/climate-fever/manifest.json",
+        "manifest_sha256": "f6a8f91793ec6339db6506dc7dc71780139a13bee7b1f04bb85165ca0f6bf7c8",
+        "n_docs": 5416593,
+        "n_shards": 109,
+        "source_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
+        "vector_bytes": 4159957376
+      },
+      "cqadup-gaming": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-gaming/manifest.json",
+        "manifest_sha256": "55f37a34afbf49b8918f19c6d19a914106dc936084cb9609177afd7b72bd3004",
+        "n_docs": 45301,
+        "n_shards": 1,
+        "source_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
+        "vector_bytes": 34791296
+      },
+      "cqadup-gis": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-gis/manifest.json",
+        "manifest_sha256": "6eb5a22c0b81902a124215d89b0463a9140aa842f6872416c2a43ad87118363e",
+        "n_docs": 37637,
+        "n_shards": 1,
+        "source_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
+        "vector_bytes": 28905344
+      },
+      "cqadup-mathematica": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-mathematica/manifest.json",
+        "manifest_sha256": "2d4d0583e7a33bba2d856c8230b59917df05893594a0f67f997e81f63472e364",
+        "n_docs": 16705,
+        "n_shards": 1,
+        "source_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
+        "vector_bytes": 12829568
+      },
+      "cqadup-physics": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-physics/manifest.json",
+        "manifest_sha256": "693ded34e21ff1f8f3250208320a2629b944b89de0491869751e02d3174c6170",
+        "n_docs": 38316,
+        "n_shards": 1,
+        "source_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "vector_bytes": 29426816
+      },
+      "cqadup-programmers": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-programmers/manifest.json",
+        "manifest_sha256": "017b20b0afafb2040a3f0ae0949339ff0deefd3b5183c4b815e140a7bf89ea38",
+        "n_docs": 32176,
+        "n_shards": 1,
+        "source_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "vector_bytes": 24711296
+      },
+      "cqadup-stats": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-stats/manifest.json",
+        "manifest_sha256": "a3868db44af76a873a85c1b01765616d4f590795da071f345d77916510304251",
+        "n_docs": 42269,
+        "n_shards": 1,
+        "source_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
+        "vector_bytes": 32462720
+      },
+      "cqadup-tex": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-tex/manifest.json",
+        "manifest_sha256": "bd1fa2f6b360092eb72da00d27d293c4957c97e9058ee6e3a51a0d569dde07f0",
+        "n_docs": 68184,
+        "n_shards": 2,
+        "source_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
+        "vector_bytes": 52365568
+      },
+      "cqadup-unix": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-unix/manifest.json",
+        "manifest_sha256": "afdfb98357ac8d8e3431c4a53667c50bd61f16b38049dedd0181d6a2763efd45",
+        "n_docs": 47382,
+        "n_shards": 1,
+        "source_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
+        "vector_bytes": 36389504
+      },
+      "cqadup-webmasters": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-webmasters/manifest.json",
+        "manifest_sha256": "83ff13602469d8f5bb3c9154a5f8e8fe5420bc0baa4061baf9f73491ba586d8e",
+        "n_docs": 17405,
+        "n_shards": 1,
+        "source_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
+        "vector_bytes": 13367168
+      },
+      "cqadup-wordpress": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-wordpress/manifest.json",
+        "manifest_sha256": "0c435e0307a7bce2dec92cc86f0fb094db90fa0bfb040050d7b57f7033665066",
+        "n_docs": 48605,
+        "n_shards": 1,
+        "source_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
+        "vector_bytes": 37328768
       }
     },
-    "leaf-ir-asym": {}
+    "leaf-ir-asym": {
+      "scifact": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/scifact/manifest.json",
+        "manifest_sha256": "9eca596cf67b203733b1547cf286ce77944a57642f897d3d2450dcf708dc6bf9",
+        "n_docs": 5183,
+        "n_shards": 1,
+        "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+        "vector_bytes": 7961216
+      },
+      "nfcorpus": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/nfcorpus/manifest.json",
+        "manifest_sha256": "0bc128c659de13877276d139d2e53956c60dad77a1ea7ea555af92f7eec191e2",
+        "n_docs": 3633,
+        "n_shards": 1,
+        "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+        "vector_bytes": 5580416
+      },
+      "scidocs": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/scidocs/manifest.json",
+        "manifest_sha256": "7e1a12a05b297af599eff789ab0d856c9df601660304358a7acd153e3f69496d",
+        "n_docs": 25657,
+        "n_shards": 1,
+        "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+        "vector_bytes": 39409280
+      },
+      "trec-covid": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/trec-covid/manifest.json",
+        "manifest_sha256": "6e1357170212664534a46e112345eaef3e298ee08b9a4c97b97eee7504e19dfb",
+        "n_docs": 171332,
+        "n_shards": 4,
+        "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+        "vector_bytes": 263166464
+      },
+      "fiqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/fiqa/manifest.json",
+        "manifest_sha256": "1b3b7b5f2cfa8f802807091d1a04ed25f743ff4d1a9ddd1c768eddb3c8c17428",
+        "n_docs": 57638,
+        "n_shards": 2,
+        "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+        "vector_bytes": 88532224
+      },
+      "arguana": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/arguana/manifest.json",
+        "manifest_sha256": "d5c33d2692f7d5b1c1020dfaf19e2f41ff4cafaa51a43f1e67ded36e577165bf",
+        "n_docs": 8674,
+        "n_shards": 1,
+        "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+        "vector_bytes": 13323392
+      },
+      "msmarco": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/msmarco/manifest.json",
+        "manifest_sha256": "8444607867b8f647813f88f070a0ff25fea556f68c082c75d56de1d2ff8458f9",
+        "n_docs": 8841823,
+        "n_shards": 177,
+        "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+        "vector_bytes": 13581062784
+      },
+      "nq": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/nq/manifest.json",
+        "manifest_sha256": "86ce8a30ad71596f7a2d1ece74200ca9e3d0dcd14784ab5371ac219519c81313",
+        "n_docs": 2681468,
+        "n_shards": 54,
+        "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+        "vector_bytes": 4118741760
+      },
+      "hotpotqa": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/hotpotqa/manifest.json",
+        "manifest_sha256": "9b3dcb77a0f67aec535aef87c4e41e020ccfe33c0f66c3d813da41fe4e060340",
+        "n_docs": 5233329,
+        "n_shards": 105,
+        "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+        "vector_bytes": 8038406784
+      },
+      "webis-touche2020": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/webis-touche2020/manifest.json",
+        "manifest_sha256": "f2042f8b85a1a6ca265726c5bedb47baa6d41955f3f86010be68fdeeb884d178",
+        "n_docs": 382545,
+        "n_shards": 8,
+        "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+        "vector_bytes": 587590144
+      },
+      "quora": {
+        "status": "COMPLETE",
+        "manifest": "work/m13-reserved-enc/leaf-ir-asym/quora/manifest.json",
+        "manifest_sha256": "3e9e7b5a16b7358089adb966b0da750992797a6a5026b5c26c8e819182d88efc",
+        "n_docs": 522931,
+        "n_shards": 11,
+        "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+        "vector_bytes": 803223424
+      }
+    }
   },
   "guard": {
     "entry": "m8src.pre_encode",
@@ -253,5 +533,5 @@
     "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
     "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
   },
-  "updated_utc": 1790021218.5279438
+  "updated_utc": 1790078658.2564442
 }

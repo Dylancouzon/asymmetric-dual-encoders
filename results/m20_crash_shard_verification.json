@@ -1,0 +1,40 @@
+{
+  "purpose": "The WSL host crashed during stage C on 2026-09-22 at ~09:10 EDT, mid-encode of the leaf-ir-asym tower. Resume trusts every shard whose recorded sha256 still matches, so before relaunching, every written shard on every tower was re-hashed against its manifest record. A shard that kept its length but lost its contents would pass a size check and enter a published benchmark number silently; only a full re-hash rules that out.",
+  "protected_evaluation_access": false,
+  "_access_note": "Reads document-vector shards and their manifests only. No query, qrel or reserved evaluation payload is opened. The reserved four's shards are included because stage A wrote them and they are unrepeatable now that the access is spent; they are verified here as artifacts, not re-evaluated.",
+  "method": "sha256 over each shard_*.npy in work/m13-reserved-enc/*/*/, compared to manifest.json shards[sid].sha256, the hash m8src/pre_encode.py:encode_dataset records at write time and re-checks on every resume.",
+  "verified_utc": "2026-09-22T22:25:00Z",
+  "head": "1575ef7",
+  "shards_verified": 1978,
+  "bytes_verified_gib": 131.1,
+  "duration_minutes": 19.2,
+  "intact": 1977,
+  "damaged": 1,
+  "damage": [
+    {
+      "path": "work/m13-reserved-enc/leaf-ir-asym/climate-fever/shard_00030.npy",
+      "recorded_bytes": 76800128,
+      "on_disk_bytes": 0,
+      "recorded_sha256": "9c46302ee7f5c3fe655c1a039e468ac4fb0dd32c8b48e421e477dc7f01519f0a",
+      "on_disk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "diagnosis": "ext4 ordered data mode: the crash preserved the metadata (inode and manifest entry) and lost the data blocks. Boot logged 'EXT4-fs (sdd): 8 orphan inodes deleted; recovery complete'.",
+      "remediation": "The 0-byte file was deleted so encode_dataset re-encodes the shard and overwrites its manifest entry. Resume would otherwise have refused on the hash mismatch -- it fails safe, but it fails closed.",
+      "affects_a_number": false,
+      "_why_not": "leaf-ir-asym/climate-fever was mid-corpus and had produced no score. No completed corpus, no per-query row and no published value depended on this shard."
+    }
+  ],
+  "towers_state_after_verification": {
+    "nano-dense": "COMPLETE, 22/22 BEIR-15 corpora, 23744786 rows",
+    "bge-small-en-v1.5": "COMPLETE, 22/22 BEIR-15 corpora, 23744786 rows",
+    "leaf-ir-asym": "11/22 BEIR-15 corpora complete; climate-fever resuming at shard 30 of 109"
+  },
+  "downtime": {
+    "last_shard_written_local": "2026-09-22T09:10:34",
+    "journald_last_write_local": "2026-09-22T08:56:24",
+    "host_back_up_local": "2026-09-22T18:02:07",
+    "approx_hours_lost": 8.9,
+    "cause": "UNDETERMINED. The reboot cleared the kernel ring buffer and journald stopped writing before the crash, so no OOM, thermal or driver evidence survives. Recording this as unknown rather than attributing it.",
+    "budget_consequence": "The stage-C deadline is a durable wall clock and ran through the outage. 31.99 h of encode budget remained at relaunch against ~3.3 h of leaf work, inside a 49.05 h total remaining."
+  },
+  "limitation": "This establishes that the surviving shards are byte-identical to what was written and hash-recorded at the time. It does not independently re-derive the vectors, so it cannot detect an error that was present when a shard was first written and hashed."
+}
