@@ -1,0 +1,844 @@
+{
+  "status": "COMPLETE",
+  "scope": "Broad descriptive BEIR-15 validation. alpha = 0. No gate, no threshold, no superiority or equivalence claim. It does not enter or reinterpret M13's registered six-set inference.",
+  "authority": [
+    "m13/RULINGS.md R20 (dense Zero added to the reserved roster)",
+    "m13/RULINGS.md R22 (BEIR-15, eight-system roster, three-way split, archive)",
+    "m13/RULINGS.md R23 (reserved.crash governs the reserved transaction)"
+  ],
+  "registry_sha256": "6d881d8d0b9ad3aebb042a10016e4d4a3ef4df674e08b4bada6114b932278193",
+  "systems": [
+    "nano-dense",
+    "zero-dense",
+    "stella-query",
+    "bge-small-en-v1.5",
+    "leaf-ir-asym",
+    "bm25",
+    "zero+bm25 dbsf@100",
+    "nano+bm25 dbsf@100"
+  ],
+  "datasets": [
+    "scifact",
+    "nfcorpus",
+    "scidocs",
+    "trec-covid",
+    "fiqa",
+    "arguana",
+    "fever",
+    "dbpedia-entity",
+    "cqadupstack",
+    "msmarco",
+    "nq",
+    "hotpotqa",
+    "webis-touche2020",
+    "quora",
+    "climate-fever"
+  ],
+  "reserved_rows_copied_from": "results/m10_final_scores/reserved",
+  "licence_disclosures": {
+    "quora": "No primary-source licence; banned from M7 dev for that reason. Included under R22 because it is part of the standard public benchmark. Never gradients, targets, negatives or generation seeds.",
+    "climate-fever": "No affirmative licence; dropped from M7's partitions for that reason. Included under R22 as part of the standard public benchmark. Never gradients, targets, negatives or generation seeds."
+  },
+  "table": {
+    "scifact": {
+      "contact": [
+        "clean"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "scifact"
+      ],
+      "systems": {
+        "nano-dense": 0.7210974963001988,
+        "zero-dense": 0.6101307346589266,
+        "stella-query": 0.7795618826803957,
+        "bge-small-en-v1.5": 0.7127069247605036,
+        "leaf-ir-asym": 0.6990132467047363,
+        "bm25": 0.6790938361008712,
+        "zero+bm25 dbsf@100": 0.7173006320494344,
+        "nano+bm25 dbsf@100": 0.7433254028854539
+      },
+      "per_member": {
+        "nano-dense": {
+          "scifact": 0.7210974963001988
+        },
+        "zero-dense": {
+          "scifact": 0.6101307346589266
+        },
+        "stella-query": {
+          "scifact": 0.7795618826803957
+        },
+        "bge-small-en-v1.5": {
+          "scifact": 0.7127069247605036
+        },
+        "leaf-ir-asym": {
+          "scifact": 0.6990132467047363
+        },
+        "bm25": {
+          "scifact": 0.6790938361008712
+        },
+        "zero+bm25 dbsf@100": {
+          "scifact": 0.7173006320494344
+        },
+        "nano+bm25 dbsf@100": {
+          "scifact": 0.7433254028854539
+        }
+      }
+    },
+    "nfcorpus": {
+      "contact": [
+        "clean"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "nfcorpus"
+      ],
+      "systems": {
+        "nano-dense": 0.36308038066321896,
+        "zero-dense": 0.3123921390803689,
+        "stella-query": 0.41343074244382183,
+        "bge-small-en-v1.5": 0.3429509056757635,
+        "leaf-ir-asym": 0.36078725098200964,
+        "bm25": 0.3180390973666754,
+        "zero+bm25 dbsf@100": 0.3442061370004841,
+        "nano+bm25 dbsf@100": 0.36827535888611584
+      },
+      "per_member": {
+        "nano-dense": {
+          "nfcorpus": 0.36308038066321896
+        },
+        "zero-dense": {
+          "nfcorpus": 0.3123921390803689
+        },
+        "stella-query": {
+          "nfcorpus": 0.41343074244382183
+        },
+        "bge-small-en-v1.5": {
+          "nfcorpus": 0.3429509056757635
+        },
+        "leaf-ir-asym": {
+          "nfcorpus": 0.36078725098200964
+        },
+        "bm25": {
+          "nfcorpus": 0.3180390973666754
+        },
+        "zero+bm25 dbsf@100": {
+          "nfcorpus": 0.3442061370004841
+        },
+        "nano+bm25 dbsf@100": {
+          "nfcorpus": 0.36827535888611584
+        }
+      }
+    },
+    "scidocs": {
+      "contact": [
+        "clean"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "scidocs"
+      ],
+      "systems": {
+        "nano-dense": 0.2177103334458522,
+        "zero-dense": 0.16769336543409222,
+        "stella-query": 0.23948933979280213,
+        "bge-small-en-v1.5": 0.20521241453025765,
+        "leaf-ir-asym": 0.20337166273946947,
+        "bm25": 0.15649670985084668,
+        "zero+bm25 dbsf@100": 0.18499017495559555,
+        "nano+bm25 dbsf@100": 0.20314991033048352
+      },
+      "per_member": {
+        "nano-dense": {
+          "scidocs": 0.2177103334458522
+        },
+        "zero-dense": {
+          "scidocs": 0.16769336543409222
+        },
+        "stella-query": {
+          "scidocs": 0.23948933979280213
+        },
+        "bge-small-en-v1.5": {
+          "scidocs": 0.20521241453025765
+        },
+        "leaf-ir-asym": {
+          "scidocs": 0.20337166273946947
+        },
+        "bm25": {
+          "scidocs": 0.15649670985084668
+        },
+        "zero+bm25 dbsf@100": {
+          "scidocs": 0.18499017495559555
+        },
+        "nano+bm25 dbsf@100": {
+          "scidocs": 0.20314991033048352
+        }
+      }
+    },
+    "trec-covid": {
+      "contact": [
+        "clean"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "trec-covid"
+      ],
+      "systems": {
+        "nano-dense": 0.7871157997648055,
+        "zero-dense": 0.5489915794925339,
+        "stella-query": 0.8234312504293929,
+        "bge-small-en-v1.5": 0.7575428373845964,
+        "leaf-ir-asym": 0.830098182134971,
+        "bm25": 0.6098791292899,
+        "zero+bm25 dbsf@100": 0.7184455316573488,
+        "nano+bm25 dbsf@100": 0.8071857107861511
+      },
+      "per_member": {
+        "nano-dense": {
+          "trec-covid": 0.7871157997648055
+        },
+        "zero-dense": {
+          "trec-covid": 0.5489915794925339
+        },
+        "stella-query": {
+          "trec-covid": 0.8234312504293929
+        },
+        "bge-small-en-v1.5": {
+          "trec-covid": 0.7575428373845964
+        },
+        "leaf-ir-asym": {
+          "trec-covid": 0.830098182134971
+        },
+        "bm25": {
+          "trec-covid": 0.6098791292899
+        },
+        "zero+bm25 dbsf@100": {
+          "trec-covid": 0.7184455316573488
+        },
+        "nano+bm25 dbsf@100": {
+          "trec-covid": 0.8071857107861511
+        }
+      }
+    },
+    "fiqa": {
+      "contact": [
+        "teacher-disclosed"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "fiqa"
+      ],
+      "systems": {
+        "nano-dense": 0.47776539081203656,
+        "zero-dense": 0.3727623009067084,
+        "stella-query": 0.5535975932731784,
+        "bge-small-en-v1.5": 0.4034958036456207,
+        "leaf-ir-asym": 0.4164692020953279,
+        "bm25": 0.25319188881146765,
+        "zero+bm25 dbsf@100": 0.3872148306227883,
+        "nano+bm25 dbsf@100": 0.4352894642538025
+      },
+      "per_member": {
+        "nano-dense": {
+          "fiqa": 0.47776539081203656
+        },
+        "zero-dense": {
+          "fiqa": 0.3727623009067084
+        },
+        "stella-query": {
+          "fiqa": 0.5535975932731784
+        },
+        "bge-small-en-v1.5": {
+          "fiqa": 0.4034958036456207
+        },
+        "leaf-ir-asym": {
+          "fiqa": 0.4164692020953279
+        },
+        "bm25": {
+          "fiqa": 0.25319188881146765
+        },
+        "zero+bm25 dbsf@100": {
+          "fiqa": 0.3872148306227883
+        },
+        "nano+bm25 dbsf@100": {
+          "fiqa": 0.4352894642538025
+        }
+      }
+    },
+    "arguana": {
+      "contact": [
+        "teacher-disclosed"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "arguana"
+      ],
+      "systems": {
+        "nano-dense": 0.6232963897287046,
+        "zero-dense": 0.5915600739875732,
+        "stella-query": 0.6368938207164638,
+        "bge-small-en-v1.5": 0.6034479952463456,
+        "leaf-ir-asym": 0.5832537184814233,
+        "bm25": 0.48778035149013416,
+        "zero+bm25 dbsf@100": 0.5800271277113531,
+        "nano+bm25 dbsf@100": 0.5759424827515558
+      },
+      "per_member": {
+        "nano-dense": {
+          "arguana": 0.6232963897287046
+        },
+        "zero-dense": {
+          "arguana": 0.5915600739875732
+        },
+        "stella-query": {
+          "arguana": 0.6368938207164638
+        },
+        "bge-small-en-v1.5": {
+          "arguana": 0.6034479952463456
+        },
+        "leaf-ir-asym": {
+          "arguana": 0.5832537184814233
+        },
+        "bm25": {
+          "arguana": 0.48778035149013416
+        },
+        "zero+bm25 dbsf@100": {
+          "arguana": 0.5800271277113531
+        },
+        "nano+bm25 dbsf@100": {
+          "arguana": 0.5759424827515558
+        }
+      }
+    },
+    "fever": {
+      "contact": [
+        "reserved",
+        "teacher-disclosed",
+        "comparator-training"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "fever"
+      ],
+      "systems": {
+        "nano-dense": 0.6230984560722036,
+        "zero-dense": 0.69782584641904,
+        "stella-query": 0.8206733933857581,
+        "bge-small-en-v1.5": 0.8662048443835864,
+        "leaf-ir-asym": 0.8671164927623974,
+        "bm25": 0.5036395292461568,
+        "zero+bm25 dbsf@100": 0.7558548987977167,
+        "nano+bm25 dbsf@100": 0.6878500808247031
+      },
+      "per_member": {
+        "nano-dense": {
+          "fever": 0.6230984560722036
+        },
+        "zero-dense": {
+          "fever": 0.69782584641904
+        },
+        "stella-query": {
+          "fever": 0.8206733933857581
+        },
+        "bge-small-en-v1.5": {
+          "fever": 0.8662048443835864
+        },
+        "leaf-ir-asym": {
+          "fever": 0.8671164927623974
+        },
+        "bm25": {
+          "fever": 0.5036395292461568
+        },
+        "zero+bm25 dbsf@100": {
+          "fever": 0.7558548987977167
+        },
+        "nano+bm25 dbsf@100": {
+          "fever": 0.6878500808247031
+        }
+      }
+    },
+    "dbpedia-entity": {
+      "contact": [
+        "reserved"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "dbpedia-entity"
+      ],
+      "systems": {
+        "nano-dense": 0.4189765409073661,
+        "zero-dense": 0.3899764065120685,
+        "stella-query": 0.46033448681660694,
+        "bge-small-en-v1.5": 0.4002522909472384,
+        "leaf-ir-asym": 0.4519706871481198,
+        "bm25": 0.3044769680760439,
+        "zero+bm25 dbsf@100": 0.40304984389688725,
+        "nano+bm25 dbsf@100": 0.4295857594362685
+      },
+      "per_member": {
+        "nano-dense": {
+          "dbpedia-entity": 0.4189765409073661
+        },
+        "zero-dense": {
+          "dbpedia-entity": 0.3899764065120685
+        },
+        "stella-query": {
+          "dbpedia-entity": 0.46033448681660694
+        },
+        "bge-small-en-v1.5": {
+          "dbpedia-entity": 0.4002522909472384
+        },
+        "leaf-ir-asym": {
+          "dbpedia-entity": 0.4519706871481198
+        },
+        "bm25": {
+          "dbpedia-entity": 0.3044769680760439
+        },
+        "zero+bm25 dbsf@100": {
+          "dbpedia-entity": 0.40304984389688725
+        },
+        "nano+bm25 dbsf@100": {
+          "dbpedia-entity": 0.4295857594362685
+        }
+      }
+    },
+    "cqadupstack": {
+      "contact": [
+        "reserved",
+        "M7-dev",
+        "clean"
+      ],
+      "aggregation": "mean of the twelve per-forum nDCG@10 dataset scores (BEIR convention), NOT a query-pooled mean",
+      "licence_role": null,
+      "members": [
+        "cqadup-android",
+        "cqadup-english",
+        "cqadup-gaming",
+        "cqadup-gis",
+        "cqadup-mathematica",
+        "cqadup-physics",
+        "cqadup-programmers",
+        "cqadup-stats",
+        "cqadup-tex",
+        "cqadup-unix",
+        "cqadup-webmasters",
+        "cqadup-wordpress"
+      ],
+      "systems": {
+        "nano-dense": 0.38586925849545134,
+        "zero-dense": 0.34155845740174123,
+        "stella-query": 0.4448251678147945,
+        "bge-small-en-v1.5": 0.390537487902989,
+        "leaf-ir-asym": 0.4268865053948898,
+        "bm25": 0.3183548831414529,
+        "zero+bm25 dbsf@100": 0.37562612155529784,
+        "nano+bm25 dbsf@100": 0.39329200554869287
+      },
+      "per_member": {
+        "nano-dense": {
+          "cqadup-android": 0.4774029565644179,
+          "cqadup-english": 0.42980206351971395,
+          "cqadup-gaming": 0.553856014932061,
+          "cqadup-gis": 0.36745715267035367,
+          "cqadup-mathematica": 0.2753205951818876,
+          "cqadup-physics": 0.443400629009945,
+          "cqadup-programmers": 0.40604346020422416,
+          "cqadup-stats": 0.350268452902054,
+          "cqadup-tex": 0.2649253053288457,
+          "cqadup-unix": 0.3728151182737976,
+          "cqadup-webmasters": 0.37803940518362844,
+          "cqadup-wordpress": 0.31109994817448716
+        },
+        "zero-dense": {
+          "cqadup-android": 0.4430688077958405,
+          "cqadup-english": 0.36901099465336656,
+          "cqadup-gaming": 0.49428652391782085,
+          "cqadup-gis": 0.340900614455524,
+          "cqadup-mathematica": 0.23750278270171074,
+          "cqadup-physics": 0.39563472630417323,
+          "cqadup-programmers": 0.338973262061671,
+          "cqadup-stats": 0.3117602637880707,
+          "cqadup-tex": 0.23711997913001293,
+          "cqadup-unix": 0.3058126650997947,
+          "cqadup-webmasters": 0.33821518589516786,
+          "cqadup-wordpress": 0.28641568301774145
+        },
+        "stella-query": {
+          "cqadup-android": 0.5275105681586092,
+          "cqadup-english": 0.5182541578780542,
+          "cqadup-gaming": 0.6226272141909052,
+          "cqadup-gis": 0.4215531220991816,
+          "cqadup-mathematica": 0.32077512775299255,
+          "cqadup-physics": 0.4931876544285036,
+          "cqadup-programmers": 0.46811983152804787,
+          "cqadup-stats": 0.38798259480934744,
+          "cqadup-tex": 0.32696749704196365,
+          "cqadup-unix": 0.43507513242370105,
+          "cqadup-webmasters": 0.4486110316541294,
+          "cqadup-wordpress": 0.36723808181209755
+        },
+        "bge-small-en-v1.5": {
+          "cqadup-android": 0.4760606309296488,
+          "cqadup-english": 0.4558009680767162,
+          "cqadup-gaming": 0.5638930575113791,
+          "cqadup-gis": 0.3840834581223845,
+          "cqadup-mathematica": 0.297096886308189,
+          "cqadup-physics": 0.4392856617673486,
+          "cqadup-programmers": 0.382073702551149,
+          "cqadup-stats": 0.3448279430490038,
+          "cqadup-tex": 0.27394877271043905,
+          "cqadup-unix": 0.38767498381451926,
+          "cqadup-webmasters": 0.37494976333568675,
+          "cqadup-wordpress": 0.30675402665940366
+        },
+        "leaf-ir-asym": {
+          "cqadup-android": 0.5259640860384368,
+          "cqadup-english": 0.47068709410892634,
+          "cqadup-gaming": 0.6087057935227548,
+          "cqadup-gis": 0.41602698382669234,
+          "cqadup-mathematica": 0.3120320620535491,
+          "cqadup-physics": 0.4891304489356643,
+          "cqadup-programmers": 0.4263952148085239,
+          "cqadup-stats": 0.37604575711892624,
+          "cqadup-tex": 0.30128569037561004,
+          "cqadup-unix": 0.43356764790153224,
+          "cqadup-webmasters": 0.4158430151132451,
+          "cqadup-wordpress": 0.34695427093481573
+        },
+        "bm25": {
+          "cqadup-android": 0.3951521308749954,
+          "cqadup-english": 0.34813231176460674,
+          "cqadup-gaming": 0.4893253253773645,
+          "cqadup-gis": 0.30836340049801925,
+          "cqadup-mathematica": 0.22028416510187743,
+          "cqadup-physics": 0.3470609497542545,
+          "cqadup-programmers": 0.2975128020661889,
+          "cqadup-stats": 0.2900765038185024,
+          "cqadup-tex": 0.24515311449466534,
+          "cqadup-unix": 0.28914119970607133,
+          "cqadup-webmasters": 0.31171173793872514,
+          "cqadup-wordpress": 0.27834495630216355
+        },
+        "zero+bm25 dbsf@100": {
+          "cqadup-android": 0.46291720725099467,
+          "cqadup-english": 0.4016239134712472,
+          "cqadup-gaming": 0.542455689051151,
+          "cqadup-gis": 0.36764319721186156,
+          "cqadup-mathematica": 0.2698022752052563,
+          "cqadup-physics": 0.4122381920126103,
+          "cqadup-programmers": 0.3600467397601599,
+          "cqadup-stats": 0.3447579081743676,
+          "cqadup-tex": 0.2865128467945519,
+          "cqadup-unix": 0.3495380087999081,
+          "cqadup-webmasters": 0.36900411125720717,
+          "cqadup-wordpress": 0.34097336967425834
+        },
+        "nano+bm25 dbsf@100": {
+          "cqadup-android": 0.47496200012743395,
+          "cqadup-english": 0.4323492200160012,
+          "cqadup-gaming": 0.5693920478939543,
+          "cqadup-gis": 0.3794127774216615,
+          "cqadup-mathematica": 0.28355843632018846,
+          "cqadup-physics": 0.4375974305428868,
+          "cqadup-programmers": 0.38437090047311917,
+          "cqadup-stats": 0.35185654869839605,
+          "cqadup-tex": 0.29700116623223405,
+          "cqadup-unix": 0.3722525010239243,
+          "cqadup-webmasters": 0.38815025097185013,
+          "cqadup-wordpress": 0.34860078686266494
+        }
+      }
+    },
+    "msmarco": {
+      "contact": [
+        "comparator-training"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": "validation only",
+      "members": [
+        "msmarco"
+      ],
+      "systems": {
+        "nano-dense": 0.406315995711997,
+        "zero-dense": 0.3370738502210946,
+        "stella-query": 0.43729249741826515,
+        "bge-small-en-v1.5": 0.4082018446586933,
+        "leaf-ir-asym": 0.4136026732618724,
+        "bm25": 0.22561278180397953,
+        "zero+bm25 dbsf@100": 0.3409723509166459,
+        "nano+bm25 dbsf@100": 0.3698942666456895
+      },
+      "per_member": {
+        "nano-dense": {
+          "msmarco": 0.406315995711997
+        },
+        "zero-dense": {
+          "msmarco": 0.3370738502210946
+        },
+        "stella-query": {
+          "msmarco": 0.43729249741826515
+        },
+        "bge-small-en-v1.5": {
+          "msmarco": 0.4082018446586933
+        },
+        "leaf-ir-asym": {
+          "msmarco": 0.4136026732618724
+        },
+        "bm25": {
+          "msmarco": 0.22561278180397953
+        },
+        "zero+bm25 dbsf@100": {
+          "msmarco": 0.3409723509166459
+        },
+        "nano+bm25 dbsf@100": {
+          "msmarco": 0.3698942666456895
+        }
+      }
+    },
+    "nq": {
+      "contact": [
+        "M7-dev",
+        "comparator-training"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "nq"
+      ],
+      "systems": {
+        "nano-dense": 0.5837996691547803,
+        "zero-dense": 0.5173195524528932,
+        "stella-query": 0.6371452588188129,
+        "bge-small-en-v1.5": 0.5017994487490051,
+        "leaf-ir-asym": 0.6164083091555075,
+        "bm25": 0.2915903407038447,
+        "zero+bm25 dbsf@100": 0.4594150840054323,
+        "nano+bm25 dbsf@100": 0.49991438322242054
+      },
+      "per_member": {
+        "nano-dense": {
+          "nq": 0.5837996691547803
+        },
+        "zero-dense": {
+          "nq": 0.5173195524528932
+        },
+        "stella-query": {
+          "nq": 0.6371452588188129
+        },
+        "bge-small-en-v1.5": {
+          "nq": 0.5017994487490051
+        },
+        "leaf-ir-asym": {
+          "nq": 0.6164083091555075
+        },
+        "bm25": {
+          "nq": 0.2915903407038447
+        },
+        "zero+bm25 dbsf@100": {
+          "nq": 0.4594150840054323
+        },
+        "nano+bm25 dbsf@100": {
+          "nq": 0.49991438322242054
+        }
+      }
+    },
+    "hotpotqa": {
+      "contact": [
+        "M7-dev",
+        "comparator-training"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "hotpotqa"
+      ],
+      "systems": {
+        "nano-dense": 0.6102394600672578,
+        "zero-dense": 0.6127340424570197,
+        "stella-query": 0.6949718801973416,
+        "bge-small-en-v1.5": 0.6993255767715476,
+        "leaf-ir-asym": 0.6930588528521173,
+        "bm25": 0.5851235309069822,
+        "zero+bm25 dbsf@100": 0.7015111802883253,
+        "nano+bm25 dbsf@100": 0.6968133398628613
+      },
+      "per_member": {
+        "nano-dense": {
+          "hotpotqa": 0.6102394600672578
+        },
+        "zero-dense": {
+          "hotpotqa": 0.6127340424570197
+        },
+        "stella-query": {
+          "hotpotqa": 0.6949718801973416
+        },
+        "bge-small-en-v1.5": {
+          "hotpotqa": 0.6993255767715476
+        },
+        "leaf-ir-asym": {
+          "hotpotqa": 0.6930588528521173
+        },
+        "bm25": {
+          "hotpotqa": 0.5851235309069822
+        },
+        "zero+bm25 dbsf@100": {
+          "hotpotqa": 0.7015111802883253
+        },
+        "nano+bm25 dbsf@100": {
+          "hotpotqa": 0.6968133398628613
+        }
+      }
+    },
+    "webis-touche2020": {
+      "contact": [
+        "source-family-contact-with-arguana"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": null,
+      "members": [
+        "webis-touche2020"
+      ],
+      "systems": {
+        "nano-dense": 0.2755473545218306,
+        "zero-dense": 0.2288132725216718,
+        "stella-query": 0.2979773285718631,
+        "bge-small-en-v1.5": 0.26025313796887445,
+        "leaf-ir-asym": 0.3024425683013946,
+        "bm25": 0.332445260308797,
+        "zero+bm25 dbsf@100": 0.3101749412349198,
+        "nano+bm25 dbsf@100": 0.33981401768768266
+      },
+      "per_member": {
+        "nano-dense": {
+          "webis-touche2020": 0.2755473545218306
+        },
+        "zero-dense": {
+          "webis-touche2020": 0.2288132725216718
+        },
+        "stella-query": {
+          "webis-touche2020": 0.2979773285718631
+        },
+        "bge-small-en-v1.5": {
+          "webis-touche2020": 0.26025313796887445
+        },
+        "leaf-ir-asym": {
+          "webis-touche2020": 0.3024425683013946
+        },
+        "bm25": {
+          "webis-touche2020": 0.332445260308797
+        },
+        "zero+bm25 dbsf@100": {
+          "webis-touche2020": 0.3101749412349198
+        },
+        "nano+bm25 dbsf@100": {
+          "webis-touche2020": 0.33981401768768266
+        }
+      }
+    },
+    "quora": {
+      "contact": [
+        "comparator-training",
+        "licence-unverified"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": "evaluation only (R22)",
+      "members": [
+        "quora"
+      ],
+      "systems": {
+        "nano-dense": 0.8805018489305346,
+        "zero-dense": 0.850436387949787,
+        "stella-query": 0.8911610780215353,
+        "bge-small-en-v1.5": 0.8863228335548603,
+        "leaf-ir-asym": 0.8615262559666685,
+        "bm25": 0.8055339083004871,
+        "zero+bm25 dbsf@100": 0.868765994421552,
+        "nano+bm25 dbsf@100": 0.8838485431945483
+      },
+      "per_member": {
+        "nano-dense": {
+          "quora": 0.8805018489305346
+        },
+        "zero-dense": {
+          "quora": 0.850436387949787
+        },
+        "stella-query": {
+          "quora": 0.8911610780215353
+        },
+        "bge-small-en-v1.5": {
+          "quora": 0.8863228335548603
+        },
+        "leaf-ir-asym": {
+          "quora": 0.8615262559666685
+        },
+        "bm25": {
+          "quora": 0.8055339083004871
+        },
+        "zero+bm25 dbsf@100": {
+          "quora": 0.868765994421552
+        },
+        "nano+bm25 dbsf@100": {
+          "quora": 0.8838485431945483
+        }
+      }
+    },
+    "climate-fever": {
+      "contact": [
+        "teacher-disclosed",
+        "licence-unverified"
+      ],
+      "aggregation": "mean of the per-query nDCG@10 values",
+      "licence_role": "evaluation only (R22)",
+      "members": [
+        "climate-fever"
+      ],
+      "systems": {
+        "nano-dense": 0.24731260786241843,
+        "zero-dense": 0.27849183225935414,
+        "stella-query": 0.29069706686241675,
+        "bge-small-en-v1.5": 0.3183392488315934,
+        "leaf-ir-asym": 0.37768185290558093,
+        "bm25": 0.13722973470882613,
+        "zero+bm25 dbsf@100": 0.25213994345493007,
+        "nano+bm25 dbsf@100": 0.23149226804085152
+      },
+      "per_member": {
+        "nano-dense": {
+          "climate-fever": 0.24731260786241843
+        },
+        "zero-dense": {
+          "climate-fever": 0.27849183225935414
+        },
+        "stella-query": {
+          "climate-fever": 0.29069706686241675
+        },
+        "bge-small-en-v1.5": {
+          "climate-fever": 0.3183392488315934
+        },
+        "leaf-ir-asym": {
+          "climate-fever": 0.37768185290558093
+        },
+        "bm25": {
+          "climate-fever": 0.13722973470882613
+        },
+        "zero+bm25 dbsf@100": {
+          "climate-fever": 0.25213994345493007
+        },
+        "nano+bm25 dbsf@100": {
+          "climate-fever": 0.23149226804085152
+        }
+      }
+    }
+  },
+  "missing": [],
+  "per_query_rows": "results/m20_beir15_scores",
+  "written_utc": "2026-09-23T06:36:36Z"
+}

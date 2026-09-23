@@ -1,0 +1,32 @@
+{
+  "status": "COMPLETE",
+  "mode": "local",
+  "stage": "C",
+  "authority": "m13/RULINGS.md R24; m20/REGISTRATION.md stage C",
+  "stage_caps_hours": {
+    "C": 120.0
+  },
+  "started_utc": "2026-09-23T03:02:08.952975+00:00",
+  "problems": [],
+  "facts": {
+    "head": "eececdc52f9bddd126c92730baa23210465c7caf",
+    "six_end_status": "COMPLETE",
+    "reserved_access_unspent": false,
+    "free_bytes": 419174842368,
+    "disk_floor_bytes": 225337395712,
+    "gpu": {
+      "available": true,
+      "name": "NVIDIA GeForce RTX 3080",
+      "vram": 10736893952
+    },
+    "reserved_support_tests": "24 passed in 1.91s",
+    "roster_identity": "True {'bm25s': '0.3.11', 'PyStemmer': '3.1.0'}",
+    "corpus_preflight": "PASSED"
+  },
+  "stage_c_deadline_epoch": 1790291204.4492238,
+  "stage_c_deadline_inherited": true,
+  "stage_c_scorer_reserve_hours": 17.05723995930842,
+  "stage_c_preencode_hours": 0.9669936572843127,
+  "stage_c_score_hours": 2.6085111225975885,
+  "finished_utc": "2026-09-23T06:36:40.783920+00:00"
+}

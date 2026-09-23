@@ -29,7 +29,7 @@
       "scifact": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/scifact/manifest.json",
-        "manifest_sha256": "1e8cf09434db1543015cbc30beec4a8848995c5c53551c4a899fda05e2667226",
+        "manifest_sha256": "10606afd6ce599fdd09577ba19bc76c938f966b70668ff3b3e18eba94ea9e1f3",
         "n_docs": 5183,
         "n_shards": 1,
         "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
@@ -38,7 +38,7 @@
       "nfcorpus": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/nfcorpus/manifest.json",
-        "manifest_sha256": "4253cf0d6c3118bbcf420e73ea62ff167ef375db5874235b3a7647854529c36c",
+        "manifest_sha256": "82029762f77acb5cf04b0cc73b159bdbd421a6acde727861f94d37b23c46eaca",
         "n_docs": 3633,
         "n_shards": 1,
         "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
@@ -47,7 +47,7 @@
       "scidocs": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/scidocs/manifest.json",
-        "manifest_sha256": "0513442a39d29a1c4da6960436538f227e9bea8d4ecc99c04e70f0a2097524e4",
+        "manifest_sha256": "c5ec337c29bb3136fa0b34f7864fc60c42da0be294fa61889df06674d5cb7891",
         "n_docs": 25657,
         "n_shards": 1,
         "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
@@ -56,7 +56,7 @@
       "trec-covid": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/trec-covid/manifest.json",
-        "manifest_sha256": "321c1968a1e569fd7a84a51144351e7dc35d4809b362bb54991a23867fab7649",
+        "manifest_sha256": "7e78a63033745ff9273948300b4e020bc87a9c0db3ca40858044b152938c18e1",
         "n_docs": 171332,
         "n_shards": 4,
         "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
@@ -65,7 +65,7 @@
       "fiqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/fiqa/manifest.json",
-        "manifest_sha256": "fd4ffab3d9f80d7e3ff3e0559dffd541f691301342efb80458183918df7f490b",
+        "manifest_sha256": "aa0194c256f29a8641996f0d8220d0a3996521eec4c2c16049efcb97a6592f56",
         "n_docs": 57638,
         "n_shards": 2,
         "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
@@ -74,7 +74,7 @@
       "arguana": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/arguana/manifest.json",
-        "manifest_sha256": "aad202dea6348e3261aa2d1cc8bfe06b447818fe832c281a98c8faeb721f53c7",
+        "manifest_sha256": "b9ab9faee811fa3c113d4c005805b6c04467ca9ffbabf4b0b2e573c7928318a2",
         "n_docs": 8674,
         "n_shards": 1,
         "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
@@ -83,7 +83,7 @@
       "msmarco": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/msmarco/manifest.json",
-        "manifest_sha256": "1b9d522556017705b61a468ffe3b01fc69a1c3959b3fc96f8b9d13d7ea2b21a5",
+        "manifest_sha256": "6654914c153cb89bf181513eb5ad7940dec279fec1d9d8b1740ff6d937124a50",
         "n_docs": 8841823,
         "n_shards": 177,
         "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
@@ -92,7 +92,7 @@
       "nq": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/nq/manifest.json",
-        "manifest_sha256": "99cb74a4d78a67f62b8f51bd18c0627f5671650536bbc547285de4b22f43a06f",
+        "manifest_sha256": "2d0b08ffb5a41cfd743ba3325e94e382289f2a93e05bc0c30d5d3295ed0d9820",
         "n_docs": 2681468,
         "n_shards": 54,
         "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
@@ -101,7 +101,7 @@
       "hotpotqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/hotpotqa/manifest.json",
-        "manifest_sha256": "530f0d55a47521e9c7ce1288fe383a6844726a9dcd04a7de45951ceb9d686075",
+        "manifest_sha256": "de1711b40849caa888d28dfd469cf72a678cfcb841b1ce752d7fbbdb331c4b9c",
         "n_docs": 5233329,
         "n_shards": 105,
         "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
@@ -110,7 +110,7 @@
       "webis-touche2020": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/webis-touche2020/manifest.json",
-        "manifest_sha256": "6a410816ae6246831515d4c58a7de5d96a6747e48b49324fba62aa20f78f6178",
+        "manifest_sha256": "0a74a4b77dc12c08819e2659e9c1ab4beeebb141cc752b418da45e514156dfe8",
         "n_docs": 382545,
         "n_shards": 8,
         "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
@@ -119,7 +119,7 @@
       "quora": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/quora/manifest.json",
-        "manifest_sha256": "93f530e2542a72f1f7d7d0b3c5bc7ccad3cd3cd71148d9acac1e314da0ef39b0",
+        "manifest_sha256": "6362c73ac662d99472d2245cd4b0c26100192bf1857c5e69f3dc009cbe00cd52",
         "n_docs": 522931,
         "n_shards": 11,
         "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
@@ -128,7 +128,7 @@
       "climate-fever": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/climate-fever/manifest.json",
-        "manifest_sha256": "9a939f422a182a38d5964885dcb676a69812ddf73f987a76b4db7fa7e96b744e",
+        "manifest_sha256": "79feb6b597916ad9324b9442ac0408cd69b01d8a0cf648a7ace08b44ad29ece7",
         "n_docs": 5416593,
         "n_shards": 109,
         "source_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
@@ -137,7 +137,7 @@
       "cqadup-gaming": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-gaming/manifest.json",
-        "manifest_sha256": "ce473a33785c2c43a91f99ae2bbedb4c8d683318d8e93c06e5b2f16e8ab0b043",
+        "manifest_sha256": "004e4392c5d324cab53357ac0a88794dc89e820b574a5dcda64cdd00473481dc",
         "n_docs": 45301,
         "n_shards": 1,
         "source_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
@@ -146,7 +146,7 @@
       "cqadup-gis": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-gis/manifest.json",
-        "manifest_sha256": "d8520e995977a3389a7e1414e2537fc37230536b7403fda769929ef4994d69ff",
+        "manifest_sha256": "c2e2e4cb9bbfcc1c79cd1d80e8c8a860b05a3dd88f69b065600d47bcc53221bd",
         "n_docs": 37637,
         "n_shards": 1,
         "source_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
@@ -155,7 +155,7 @@
       "cqadup-mathematica": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-mathematica/manifest.json",
-        "manifest_sha256": "cad0e3f4a671ac2abd6901ed13f63958f74605647320ed23791c5b8fb67609a0",
+        "manifest_sha256": "c40af55029264969e9376f7ee15c2a1f39cb558ebd50ca1932c9c46cd0d21e90",
         "n_docs": 16705,
         "n_shards": 1,
         "source_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
@@ -164,7 +164,7 @@
       "cqadup-physics": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-physics/manifest.json",
-        "manifest_sha256": "854f9dd10f427907729879f1763cd764742a010bdc62e22c9d9f2a906feb3044",
+        "manifest_sha256": "a660b5d83147c2801a972eed9e65ea837500a6812af50605483253d01ea74504",
         "n_docs": 38316,
         "n_shards": 1,
         "source_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
@@ -173,7 +173,7 @@
       "cqadup-programmers": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-programmers/manifest.json",
-        "manifest_sha256": "0bc607af9626277d9abb202b31bb91db873c2e24477cdf3cd33428ab96573e76",
+        "manifest_sha256": "4b67ad4defe3dc4598d171c8aa929649203e0f44223aa8de34d78683e4c85b50",
         "n_docs": 32176,
         "n_shards": 1,
         "source_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
@@ -182,7 +182,7 @@
       "cqadup-stats": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-stats/manifest.json",
-        "manifest_sha256": "ed5da6b1a22360989e104ae669d8fce1d5f1b3b45a814d73ff832e7a7420b4ce",
+        "manifest_sha256": "2167e2ecf276a47be4fb89cb731dab6f22b046782dc8af5bcccf1010d9a55c2d",
         "n_docs": 42269,
         "n_shards": 1,
         "source_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
@@ -191,7 +191,7 @@
       "cqadup-tex": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-tex/manifest.json",
-        "manifest_sha256": "0b30e395b475ae0abd4b1af7f0f053523a2cb01068b2cd7a3c59562e5ac8471f",
+        "manifest_sha256": "00cfbbc842e3ee49e73d4fe13135f09742b319f039ec05842f53540c0ffba98d",
         "n_docs": 68184,
         "n_shards": 2,
         "source_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
@@ -200,7 +200,7 @@
       "cqadup-unix": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-unix/manifest.json",
-        "manifest_sha256": "3696155fd01dc09ea47da098d5a1bba4d08f4e065b4e2b8aa74731345a14d05b",
+        "manifest_sha256": "adfbbef03bac810f08634d0de786a752316f9aeabadf1e30d5c1066ed5bf18d1",
         "n_docs": 47382,
         "n_shards": 1,
         "source_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
@@ -209,7 +209,7 @@
       "cqadup-webmasters": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-webmasters/manifest.json",
-        "manifest_sha256": "40847f3b45591c2abf25356826a085126bf69809fa243e3bc94606e79e284c1d",
+        "manifest_sha256": "e3becb7edaa7041f759d150b0581b851bce36be6cc9874554d884105504f54ca",
         "n_docs": 17405,
         "n_shards": 1,
         "source_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
@@ -218,7 +218,7 @@
       "cqadup-wordpress": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/nano-dense/cqadup-wordpress/manifest.json",
-        "manifest_sha256": "93889864f6da145ae26c0d2d488c74d3ef2fcbfbc86646fcbdad82aef811880c",
+        "manifest_sha256": "b99b69ca3481cc951f1442a68a53472b0c91576de89d0178b890ac52545e9c31",
         "n_docs": 48605,
         "n_shards": 1,
         "source_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
@@ -229,7 +229,7 @@
       "scifact": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/scifact/manifest.json",
-        "manifest_sha256": "245a6e0c359534bd994f8207f361be83550a6de56b0bc3ccf5e56bc19874bbe2",
+        "manifest_sha256": "696356941a99647e3a3b4c61072c40149ab27427a61edf124dd458a4ac6d07f4",
         "n_docs": 5183,
         "n_shards": 1,
         "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
@@ -238,7 +238,7 @@
       "nfcorpus": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/nfcorpus/manifest.json",
-        "manifest_sha256": "4b51864e10d7ba73e627d25dca353bd13f989aa633b53edb9ee10244b5700a29",
+        "manifest_sha256": "1b371b3cf8e7bea7ad67ad65b9493b09e7babb57bd8c2e9007dcc1cbb070c1c3",
         "n_docs": 3633,
         "n_shards": 1,
         "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
@@ -247,7 +247,7 @@
       "scidocs": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/scidocs/manifest.json",
-        "manifest_sha256": "8ada879bed97fbeef62244056c375bd69bee8a8d30f5e69c2d9caaae5cc13206",
+        "manifest_sha256": "412c2ed2d37d4960ed39c0eeb3e8d0268262faf37c6180dae7226418d85044db",
         "n_docs": 25657,
         "n_shards": 1,
         "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
@@ -256,7 +256,7 @@
       "trec-covid": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/trec-covid/manifest.json",
-        "manifest_sha256": "aaedf81d98f2e0b21be28ec6d0a0b1681d8eb825125a67c9847dd0543eef258f",
+        "manifest_sha256": "30356ef2efe9f40553cd2edc81c1b13fc690341a72557aafc13c79c4ed1987df",
         "n_docs": 171332,
         "n_shards": 4,
         "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
@@ -265,7 +265,7 @@
       "fiqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/fiqa/manifest.json",
-        "manifest_sha256": "b1c257a9fc7a7af3a5279e82dc1d99f645cc5309874bfc789a3fd618f0aed085",
+        "manifest_sha256": "6d307cac1b31dbd9af4424df2fc368b141e1efe70494645026e95924dbfca157",
         "n_docs": 57638,
         "n_shards": 2,
         "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
@@ -274,7 +274,7 @@
       "arguana": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/arguana/manifest.json",
-        "manifest_sha256": "ff09efb810115193cd178d43562d3acc63076bc2f43f39f4eb00cfe4a47d99df",
+        "manifest_sha256": "d28d0c8bd2599f1349ea656a7dcb6edc9c694916bb69ee2b9f1ed38f8185b014",
         "n_docs": 8674,
         "n_shards": 1,
         "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
@@ -283,7 +283,7 @@
       "msmarco": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/msmarco/manifest.json",
-        "manifest_sha256": "78513888681f49482cc7146ed36bb8b4ff687e0662fd5a5f0d1d21f6832f792f",
+        "manifest_sha256": "8a459e1feea191ba4c634d79fa285e0f5287290014f47a3264c61fff88a59fb6",
         "n_docs": 8841823,
         "n_shards": 177,
         "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
@@ -292,7 +292,7 @@
       "nq": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/nq/manifest.json",
-        "manifest_sha256": "8b89eab5dfa86cd7fec22149219dfcec33800767fb874115e614ff12cc4c7cb7",
+        "manifest_sha256": "e4b98a6953e6aa5107c66fe54eb7c4568b55b525f17dced329dd48be87258b48",
         "n_docs": 2681468,
         "n_shards": 54,
         "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
@@ -301,7 +301,7 @@
       "hotpotqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/hotpotqa/manifest.json",
-        "manifest_sha256": "ee4774ee3768d5268192855375298914a71cc04e5a5ade6f046f00ac34b519fa",
+        "manifest_sha256": "35eff7daa8969623a90643d2fdeb21e913535d3b1a5ea8003ef8067a60831255",
         "n_docs": 5233329,
         "n_shards": 105,
         "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
@@ -310,7 +310,7 @@
       "webis-touche2020": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/webis-touche2020/manifest.json",
-        "manifest_sha256": "d7ccbd3579210cf2f87db43f72df5f6bab70032b99020fdef6a9a8c9fcf491f9",
+        "manifest_sha256": "df87ee8f56e7d91feaf9a85f43c2111dc8ea272f51eb7f84f2fac7ff326c0b70",
         "n_docs": 382545,
         "n_shards": 8,
         "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
@@ -319,7 +319,7 @@
       "quora": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/quora/manifest.json",
-        "manifest_sha256": "10d53145d0f9229853b945b0656aca3d7bed631f4e0d1fba26b98d7d619625eb",
+        "manifest_sha256": "967a392f1d79812bf89f2918ced4a4f25698f018ca0db443c355c5fb2a5f37cd",
         "n_docs": 522931,
         "n_shards": 11,
         "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
@@ -328,7 +328,7 @@
       "climate-fever": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/climate-fever/manifest.json",
-        "manifest_sha256": "dcff9a2a556ec0dfbb1e53b9910978d4b95e1da334d7314ec96244396cffb6b4",
+        "manifest_sha256": "79ffa3fa1000691dd730ee0f6365c71271a993c11d757693a2dcb2b58493508e",
         "n_docs": 5416593,
         "n_shards": 109,
         "source_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
@@ -337,7 +337,7 @@
       "cqadup-gaming": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-gaming/manifest.json",
-        "manifest_sha256": "559ccf67ef3552926d94b79f00f50af537900d411da44728595667d3baf76139",
+        "manifest_sha256": "a2334a3d55b093023ed51e63beb21c43aa2c8896b107fec6678f6ef84c07ec4f",
         "n_docs": 45301,
         "n_shards": 1,
         "source_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
@@ -346,7 +346,7 @@
       "cqadup-gis": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-gis/manifest.json",
-        "manifest_sha256": "c3a3231fecc624cd33811fdf7c7eb74b65725f57247ec2904fc29a5572e323f4",
+        "manifest_sha256": "2c8211eb4a61618b49f375bd00800e4b213cad862f1c086d4454e4857370ba64",
         "n_docs": 37637,
         "n_shards": 1,
         "source_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
@@ -355,7 +355,7 @@
       "cqadup-mathematica": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-mathematica/manifest.json",
-        "manifest_sha256": "695197e781dd66b0de310051095b3637d84d3d16250fca575599ecc9ce1eb11f",
+        "manifest_sha256": "5ad0d74a36ab58eef2391ed463e63ebb61b3264777e3ec83735a16be1c81a5f8",
         "n_docs": 16705,
         "n_shards": 1,
         "source_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
@@ -364,7 +364,7 @@
       "cqadup-physics": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-physics/manifest.json",
-        "manifest_sha256": "d259f8a185a33511c1e3221386048d20d101f18f57b4b692a887f4085adc5f85",
+        "manifest_sha256": "813889db5d79ddaf4504a3d059d229fb798303526058fc060b7f1e1f206e6766",
         "n_docs": 38316,
         "n_shards": 1,
         "source_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
@@ -373,7 +373,7 @@
       "cqadup-programmers": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-programmers/manifest.json",
-        "manifest_sha256": "4f7b540172f42f8f1189ac26c730241bafd8b31062e43f768afa9d254cb78c5a",
+        "manifest_sha256": "f53f3a1f619b2658448496598f6c7dbf255b98bffa20d4303d067c45472f9229",
         "n_docs": 32176,
         "n_shards": 1,
         "source_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
@@ -382,7 +382,7 @@
       "cqadup-stats": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-stats/manifest.json",
-        "manifest_sha256": "8ff65fc0f55b9cd81060e78ba98fedd34bc00317f6866e31b035a0fd9e7ee297",
+        "manifest_sha256": "8cdc4c460f573958a48609ae030f1820e8777cfe55a4af223c902e8ba272c9d0",
         "n_docs": 42269,
         "n_shards": 1,
         "source_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
@@ -391,7 +391,7 @@
       "cqadup-tex": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-tex/manifest.json",
-        "manifest_sha256": "f256cc135719fa9221eb7e5c805f1004b9e21c98b88fb38935546a67dd644c4b",
+        "manifest_sha256": "47cbc30a8db504942b2cad8643358cb04d4f606c2abd6449a9599f0517cae51d",
         "n_docs": 68184,
         "n_shards": 2,
         "source_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
@@ -400,7 +400,7 @@
       "cqadup-unix": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-unix/manifest.json",
-        "manifest_sha256": "2710317c66f93a08fe4daf756443abf665426671f9e5c132c3e1c1c20cc4cd2d",
+        "manifest_sha256": "fa8bec9def622e14956c0d6926f9c5bcc1680b7eb0711354dcd1836610dc0128",
         "n_docs": 47382,
         "n_shards": 1,
         "source_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
@@ -409,7 +409,7 @@
       "cqadup-webmasters": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-webmasters/manifest.json",
-        "manifest_sha256": "c0154a982ced2bd6223368bc3e19ea8f96f4b9903ce14e3a807d97f0bd7f393b",
+        "manifest_sha256": "19a41c6a3d0586723944faea1ba911b61d90de237f6d845ddcb30c7cb89b7089",
         "n_docs": 17405,
         "n_shards": 1,
         "source_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
@@ -418,7 +418,7 @@
       "cqadup-wordpress": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/bge-small-en-v1.5/cqadup-wordpress/manifest.json",
-        "manifest_sha256": "dfd1f7e1d28e366c9932894b02d0836b2e97cd485038886127c1b55f3bd8346d",
+        "manifest_sha256": "685efe060ab7b4ed58e8de8a37fd55a11e5e276ddc67f937a02ef9982f39632a",
         "n_docs": 48605,
         "n_shards": 1,
         "source_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
@@ -429,7 +429,7 @@
       "scifact": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/scifact/manifest.json",
-        "manifest_sha256": "9d03304db8a8a5ca044872398aa9cbb86a096d963a6b7c9e4a8f3e61bf8507ca",
+        "manifest_sha256": "1680ecf833302f4b5cc4217ea676f161623ec1c1f485c3ee371d22c8b0f5ba7e",
         "n_docs": 5183,
         "n_shards": 1,
         "source_revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
@@ -438,7 +438,7 @@
       "nfcorpus": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/nfcorpus/manifest.json",
-        "manifest_sha256": "e615f000f0b2c18d353a0312f35b87665057672e57f9a963ba272f2e09995e73",
+        "manifest_sha256": "e36f8338c3610f50edff59c2dbde25aa5c9747a55d460f17d90271d3dfd89c9d",
         "n_docs": 3633,
         "n_shards": 1,
         "source_revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
@@ -447,7 +447,7 @@
       "scidocs": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/scidocs/manifest.json",
-        "manifest_sha256": "ac79b15af27ed1f2d3245a66f745d7453349a4981e066baaf4480fda5268231a",
+        "manifest_sha256": "d9b6cb4492b6dcd8ab2860ef93e2907a8af65127221d92b0240cf3ced3c93946",
         "n_docs": 25657,
         "n_shards": 1,
         "source_revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
@@ -456,7 +456,7 @@
       "trec-covid": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/trec-covid/manifest.json",
-        "manifest_sha256": "6db7f26e9a08950331f8b563bd977fb12be7ad42df2041453e6b6b216e532551",
+        "manifest_sha256": "4238264328feaf63bac5eabf4b9e7519fc933753fdd88fcd608064047e15311e",
         "n_docs": 171332,
         "n_shards": 4,
         "source_revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
@@ -465,7 +465,7 @@
       "fiqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/fiqa/manifest.json",
-        "manifest_sha256": "7d76a31f85e36a0e9442ca97bf77cd812b27a4a67649dc8acfdf62b4dc876ea0",
+        "manifest_sha256": "125cbda58a5d628775b66e659496b80d83eb54262e7fff2133d393ca5e3fd1c1",
         "n_docs": 57638,
         "n_shards": 2,
         "source_revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
@@ -474,7 +474,7 @@
       "arguana": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/arguana/manifest.json",
-        "manifest_sha256": "2c95ba08aaeb519ef9f419cf51d6f42d49bafb54191686bf8b0c19fed0a42fb9",
+        "manifest_sha256": "ae4d249a50d823a4720bfdbf177b83e73b8f769b53620ab807fba1cd22aa1b02",
         "n_docs": 8674,
         "n_shards": 1,
         "source_revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
@@ -483,7 +483,7 @@
       "msmarco": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/msmarco/manifest.json",
-        "manifest_sha256": "27ef8224d9d24efed6166b72b43d0920a36dae964835d5ad79dac618637f6492",
+        "manifest_sha256": "7f166d1cd39a9c6e847ed6f889dcf0ed7d46e5da91545274f348e9adb7318282",
         "n_docs": 8841823,
         "n_shards": 177,
         "source_revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
@@ -492,7 +492,7 @@
       "nq": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/nq/manifest.json",
-        "manifest_sha256": "e86838d95bc063955f574f4b73791dcf4fc95e6b6c450054a907a71c25437e59",
+        "manifest_sha256": "217e48e4a4d6c55b323006bdfc267d127151a945987bf05aaf117c8daa2a5787",
         "n_docs": 2681468,
         "n_shards": 54,
         "source_revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
@@ -501,7 +501,7 @@
       "hotpotqa": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/hotpotqa/manifest.json",
-        "manifest_sha256": "c0f1450cf94b817a86eef7043fc23e6644ff282bea98d8d25e2a10419d2fa54a",
+        "manifest_sha256": "0380d6f9627bf74fb46f9af56b244214a57cb6b6aa03509b63bf73bc3d75437a",
         "n_docs": 5233329,
         "n_shards": 105,
         "source_revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
@@ -510,7 +510,7 @@
       "webis-touche2020": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/webis-touche2020/manifest.json",
-        "manifest_sha256": "9eb80aab20ec6e68ca6d6f0c893ee4791c8c45519869732a220cab2efed15a3c",
+        "manifest_sha256": "1caad13b433428342af3140ded0d7557866917ec36cc9ab3a417202dac21c00f",
         "n_docs": 382545,
         "n_shards": 8,
         "source_revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
@@ -519,7 +519,7 @@
       "quora": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/quora/manifest.json",
-        "manifest_sha256": "5cbd33a53ab60f8de6d1c2c8d6e5406aa3ea7cc935dec8a9235da2fb3d1b7681",
+        "manifest_sha256": "a285384f238ba028f31e13ddaa6239389b36272c3bc4f85a65867a76bff021d3",
         "n_docs": 522931,
         "n_shards": 11,
         "source_revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
@@ -528,7 +528,7 @@
       "climate-fever": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/climate-fever/manifest.json",
-        "manifest_sha256": "d75885e9b78763f595aad1a617ea8fd18b68753c4507b3ec16976d2da8acbf8a",
+        "manifest_sha256": "27b17cc608f5faa38e6120a03ece8ccbcf0bba9e7d8058fa0c43e48616f2a82a",
         "n_docs": 5416593,
         "n_shards": 109,
         "source_revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
@@ -537,7 +537,7 @@
       "cqadup-gaming": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-gaming/manifest.json",
-        "manifest_sha256": "fb19a5df413f2224b0bd162a4230c87d5bb2c18070e89e111be01cbf0592ab5c",
+        "manifest_sha256": "2acd26482eaaec44b0715540affe7af2c90ef5a9824bd4023e8471462db83213",
         "n_docs": 45301,
         "n_shards": 1,
         "source_revision": "1c9769860b1d666aae049c6ba60d76ecb244253e",
@@ -546,7 +546,7 @@
       "cqadup-gis": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-gis/manifest.json",
-        "manifest_sha256": "1bbe55bedbd3e8f2296bb145eb1fc3eb1f633716b699d61e0eeec79ffc126b8e",
+        "manifest_sha256": "fb5f7c9ac54ba645c385a63eea1d14d76239aef2af965c60204b00235887153b",
         "n_docs": 37637,
         "n_shards": 1,
         "source_revision": "080d0534a7c9fa7b856e77b752c042a6ddbd9714",
@@ -555,7 +555,7 @@
       "cqadup-mathematica": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-mathematica/manifest.json",
-        "manifest_sha256": "1eedc3260f5a599e9c76ff57bee8b9e03a5974de189d9ad21cf1c7e3eeb56b14",
+        "manifest_sha256": "af80511231dea28bb5d54b018b12dc5abf98c36242a126c10227135ed0ff4fb9",
         "n_docs": 16705,
         "n_shards": 1,
         "source_revision": "fc1af0b6c82dfd3a2aabfb4d9606ba7226268f05",
@@ -564,7 +564,7 @@
       "cqadup-physics": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-physics/manifest.json",
-        "manifest_sha256": "d1847f9d84f31e5f254ed21d64619844d4cb7710b6552fdc3006d69ff6f4fb6a",
+        "manifest_sha256": "a7379e934ac10e24d4fe799167a30ddae7d58d00882f570f07121e3a706da50d",
         "n_docs": 38316,
         "n_shards": 1,
         "source_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
@@ -573,7 +573,7 @@
       "cqadup-programmers": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-programmers/manifest.json",
-        "manifest_sha256": "b951d0146cc26110df8da8322bfb6b5fd4b1fbb403f7d7c318604ee810291dbc",
+        "manifest_sha256": "658ad43872530d202017a5a1074ac1df93332c352c0e3a52aae6516ad3de515e",
         "n_docs": 32176,
         "n_shards": 1,
         "source_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
@@ -582,7 +582,7 @@
       "cqadup-stats": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-stats/manifest.json",
-        "manifest_sha256": "468ee8fdb6443bc48cb65c61b3e5119e4a52b32d6b296723e4e0ff70d48163b4",
+        "manifest_sha256": "e7f7a241773a93eee95fac6b7b32a45cfb95c6962dc86dda321360c8e3f366fe",
         "n_docs": 42269,
         "n_shards": 1,
         "source_revision": "6b474f6f6dca1fe17f197f04500b537417692250",
@@ -591,7 +591,7 @@
       "cqadup-tex": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-tex/manifest.json",
-        "manifest_sha256": "25d4766c986b93d028a7cab3d4d0a152abb25ba64f4b74af5ea3b0d822e551c5",
+        "manifest_sha256": "8a91aebe1ba76135b8267eee4b1677eb1d5687f0187f53f5c9649a4f25656f02",
         "n_docs": 68184,
         "n_shards": 2,
         "source_revision": "2b6f1e278efc77f54ab343b200f5fc7fcd2fc934",
@@ -600,7 +600,7 @@
       "cqadup-unix": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-unix/manifest.json",
-        "manifest_sha256": "eb1deacd57ce4c4a003acba892cebfc1f1003b0603b95df853feb9b7757d7314",
+        "manifest_sha256": "1a84896444819954d7dbd900fd17630d28deba06f47089180357a5bd32f6e7eb",
         "n_docs": 47382,
         "n_shards": 1,
         "source_revision": "3197b09145642430d9db451fcdc1e1987e54d74c",
@@ -609,7 +609,7 @@
       "cqadup-webmasters": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-webmasters/manifest.json",
-        "manifest_sha256": "5a802953931e99a41caad2427ad046d5b89aca7ca66714c3d78ec887fbfbd3e3",
+        "manifest_sha256": "8d98be6d30601c975e80bd7e05e63d3fe68d25c93cf66877b2774f3155945df6",
         "n_docs": 17405,
         "n_shards": 1,
         "source_revision": "c691d4af16c19a79df7ee93bfbd12cc186a5bc92",
@@ -618,7 +618,7 @@
       "cqadup-wordpress": {
         "status": "COMPLETE",
         "manifest": "work/m13-reserved-enc/leaf-ir-asym/cqadup-wordpress/manifest.json",
-        "manifest_sha256": "b0bce8bbc0a51f7f2255a097f027c45ce00a0454012f8e9ed25efe707d570e48",
+        "manifest_sha256": "a17a95fb75368318ce8864e170a18049c61f8a2619ecb3049c24a0c0f49c1fb4",
         "n_docs": 48605,
         "n_shards": 1,
         "source_revision": "6117bc4829afb46d0af6ad6106d1f942e1048281",
@@ -632,5 +632,5 @@
     "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the access (LEDGER G2 class c). It reads no query and no qrel payload and produces no ranking; it may load the reserved CORPORA and nothing else.",
     "note": "M13 triggered reserved batch: public corpora only; no query or qrel access"
   },
-  "updated_utc": 1790131119.0825875
+  "updated_utc": 1790136009.6625607
 }
