@@ -1,4 +1,26 @@
-# M20 status — stages A, B and C COMPLETE; reserved access SPENT; stage D is next
+# M20 status — stages A, B, C COMPLETE; stage D archive BUILT; two exit conditions outstanding
+
+## Closure state
+
+`instructions-m20.md` sets five exit conditions. Four are met; one is not, and it needs an owner
+decision rather than more work.
+
+| # | Exit condition | State |
+|---|---|---|
+| 1 | Reserved four complete with receipt | **MET** — `results/m13_reserved_run.json`, tag `m8-reserved-spent` at `0350d060` |
+| 2 | BEIR-15 complete | **MET** — `results/m20_beir15_run.json` `COMPLETE`, `missing: []`, 176 rows |
+| 3 | Archive verified at **both** targets | **NOT MET** — archive `BUILT`; `D:` copy and verification in progress; object storage unavailable |
+| 4 | Pod `EXITED` | **MET BY RECORD** — three retained pods `EXITED` and STOP-only at the last live provider check; not re-verified against the provider in this session |
+| 5 | The two items M22 needs: result files and archive manifest | **MET** — result files above, `results/m20_archive_manifest.json` `BUILT`, 2,223 files, 142.6 GiB, 26 of 26 corpora |
+
+**M20 therefore cannot be declared closed by an executor.** Condition 3 requires an S3-compatible
+bucket, credentials and `rclone`, none of which exist on this box. The owner's choices are to
+supply them, or to rule M20 closed with the remote half of stage D carried into M22 — which is a
+release-policy decision and is explicitly not inferable from any handoff.
+
+Condition 3 has two parts and **both** are outstanding: the `D:` re-hash must finish and be
+recorded, and the object-storage half needs a bucket *and* the `--verify-remote` fix that
+2026-09-23's review exposed. Nothing else in M20 is outstanding.
 
 ## RESUME HERE
 
@@ -6,10 +28,10 @@
 systems x fifteen BEIR datasets, 22 corpora scored, 176 per-system rows, finished 40.5 h inside
 its deadline. Do not re-run it; the launcher will refuse anyway.
 
-**The next work is stage D, the archive, and it is blocked on object storage** — no account,
-bucket, credentials or `rclone` on the box. The `D:` half can be built and verified without it;
-the object-storage half cannot. `m20src/archive.py --verify-remote` is implemented and waiting.
-That is an owner decision, not something to start unattended. See the open items.
+**Stage D's archive is BUILT** (2026-09-23): `results/m20_archive_manifest.json`, 2,223 files,
+142.6 GiB, 26 of 26 corpora, every staged file hashed against its recorded digest during the build.
+The copy to `/mnt/d/constella-archive/beir15/` and its re-hash verification are the remaining local
+step. The object-storage half needs credentials the box does not have — an owner decision.
 
 Stage C took three attempts, none of them wasted work: a projection gate that refused a viable run
 on the wrong unit, a host crash, and a latent split bug. All three are written up below and in
@@ -305,10 +327,29 @@ Record: `research/m20-allocator-review-sol-2026-09-17.md`.
 
 ## Open items for the owner
 
-1. **Object storage.** No account, bucket, credentials or `rclone` on the box. The `D:` half of the
-   archive can be built and verified without it; the object-storage half cannot. This blocks the
-   exit criterion "archive verified at both targets", nothing earlier. `m20src/archive.py
-   --verify-remote` is implemented and waiting.
+1. **Object storage, plus an implementation gap behind it.** No account, bucket, credentials or
+   `rclone` on the box. This blocks exit condition 3.
+
+   **A bucket alone would not have been enough.** `verify_remote` called
+   `rclone hashsum sha256 <remote>` with no `--download`, which asks the backend for a checksum it
+   already holds; S3 advertises MD5, not SHA-256, so the call returns nothing to compare and the
+   check could never pass whatever was stored (Astra, 2026-09-23, P2). `--download` is now passed,
+   so rclone fetches each object and computes the digest from the bytes. **That path has still
+   never run against a real remote** — it fails closed, but treat its first real execution as a
+   smoke, not a verification.
+
+   The registration also requires the bucket name and provider to be recorded in
+   `m20/REGISTRATION.md` §4 by the executing session at creation time, before upload, with no
+   credentials in git, logs or the pod.
+
+   Either supply a bucket, or rule M20 closed with the remote half carried into M22. The second is
+   a release-policy decision; an executor may not infer it.
+
+   **What the local half does and does not give you.** `work/m20-archive` is a *staging* root: its
+   shards are hard links to `work/m13-reserved-enc`, deliberately, because copying ~147 GB beside
+   itself needs 294 GB. It shares inodes with the encode tree and is not an independent copy.
+   `/mnt/d/constella-archive/beir15/` **is** an independent copy on separate hardware. So today
+   there is exactly one durable copy of the 142.6 GiB, and it is on a drive in this machine.
 2. **Retained storage bills about $0.41/hour** across the three stopped pods, roughly double the
    $0.2174/hour the M13 allocation assumed, whether or not anything runs. Measured over a 7-hour
    window with everything stopped. Retirement is M22's to request; they stay STOP-only until then.

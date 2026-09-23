@@ -163,6 +163,24 @@ reached the repository, no finding depended on it, and the reserved four were al
 known-test. **A review brief must forbid web searches naming a reserved dataset, not only local
 loads**; the brief in force forbade `datasets.load_dataset` and did not anticipate search.
 
+## A staging root that shares inodes is not a copy
+
+`m20src/archive.py:_place` hard-links the fp16 shards into the archive rather than copying them,
+and says why: the vectors are ~147 GB, and a second copy beside them on the same volume would need
+294 GB the pod does not have. Re-hashing the destination still hashes real content, and rsync and
+rclone both read and transfer real bytes, so every downstream guarantee holds.
+
+The thing to not misread is what `work/m20-archive` therefore *is*. It reported 142.6 GiB while the
+filesystem's used space moved by about 2 GB — because it is the same bytes under a second name. It
+is a **staging** root, and it is not independent of `work/m13-reserved-enc`: lose or corrupt the
+encode tree and you lose the archive's vectors with it. The independent copies are the registered
+targets, `/mnt/d/constella-archive/beir15/` and object storage.
+
+**The lesson worth carrying.** Check whether a "copy" changed the free-space number. When it did
+not, you have a second name, not a second copy — fine for staging, worthless as a backup. Until the
+object-storage half lands there is exactly **one** durable copy of the 142.6 GiB, on a drive inside
+the machine that already crashed once during this milestone.
+
 ## Accepted debt
 
 The pre-encode projection gate is not resume-aware: a relaunched tower counts already-encoded

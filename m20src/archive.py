@@ -263,13 +263,20 @@ def verify(root, manifest_path=MANIFEST):
 def verify_remote(remote, manifest_path=MANIFEST):
     """Re-hash the OBJECT-STORAGE copy against the manifest, which `rclone copy` does not do.
 
-    The registration promises re-hash verification at BOTH targets. `rclone hashsum sha256` asks
-    the destination for its own checksums, so this compares stored objects rather than trusting
-    the transfer.
+    The registration promises re-hash verification at BOTH targets, and `--download` is what makes
+    that true. Without it, `rclone hashsum sha256` asks the backend for a checksum it already
+    holds; S3 advertises MD5, not SHA-256, so the request returns nothing to compare and the
+    verification can never pass no matter what is stored (Astra review, 2026-09-23, P2). With
+    `--download` rclone fetches every object and computes the digest from the bytes, which is the
+    only form of this check that can distinguish a good copy from a corrupt one.
+
+    UNTESTED: there is no bucket on this box, so this path has never executed against a real
+    remote. It fails closed -- a missing or mismatched hash is a problem, never a pass -- but
+    treat its first real run as a smoke, not a verification.
     """
     manifest = json.loads(Path(manifest_path).read_text())
-    out = subprocess.run(["rclone", "hashsum", "sha256", remote], check=True, text=True,
-                         capture_output=True).stdout
+    out = subprocess.run(["rclone", "hashsum", "sha256", "--download", remote], check=True,
+                         text=True, capture_output=True).stdout
     remote_hashes = {}
     for line in out.splitlines():
         parts = line.strip().split(None, 1)
