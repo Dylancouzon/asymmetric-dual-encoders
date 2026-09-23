@@ -9,7 +9,7 @@ decision rather than more work.
 |---|---|---|
 | 1 | Reserved four complete with receipt | **MET** — `results/m13_reserved_run.json`, tag `m8-reserved-spent` at `0350d060` |
 | 2 | BEIR-15 complete | **MET** — `results/m20_beir15_run.json` `COMPLETE`, `missing: []`, 176 rows |
-| 3 | Archive verified at **both** targets | **NOT MET** — archive `BUILT`; `D:` copy and verification in progress; object storage unavailable |
+| 3 | Archive verified at **both** targets | **HALF MET** — `D:` **VERIFIED** by re-hash, 2,223 files, `problems: []`; object storage unavailable and its verifier untested |
 | 4 | Pod `EXITED` | **MET BY RECORD** — three retained pods `EXITED` and STOP-only at the last live provider check; not re-verified against the provider in this session |
 | 5 | The two items M22 needs: result files and archive manifest | **MET** — result files above, `results/m20_archive_manifest.json` `BUILT`, 2,223 files, 142.6 GiB, 26 of 26 corpora |
 
@@ -18,9 +18,9 @@ bucket, credentials and `rclone`, none of which exist on this box. The owner's c
 supply them, or to rule M20 closed with the remote half of stage D carried into M22 — which is a
 release-policy decision and is explicitly not inferable from any handoff.
 
-Condition 3 has two parts and **both** are outstanding: the `D:` re-hash must finish and be
-recorded, and the object-storage half needs a bucket *and* the `--verify-remote` fix that
-2026-09-23's review exposed. Nothing else in M20 is outstanding.
+Condition 3 has two parts. The `D:` half is **done and verified**. The object-storage half needs a
+bucket *and* a first real run of the `--verify-remote` path that 2026-09-23's review exposed as
+unable to work as written. Nothing else in M20 is outstanding.
 
 ## RESUME HERE
 
@@ -28,10 +28,13 @@ recorded, and the object-storage half needs a bucket *and* the `--verify-remote`
 systems x fifteen BEIR datasets, 22 corpora scored, 176 per-system rows, finished 40.5 h inside
 its deadline. Do not re-run it; the launcher will refuse anyway.
 
-**Stage D's archive is BUILT** (2026-09-23): `results/m20_archive_manifest.json`, 2,223 files,
-142.6 GiB, 26 of 26 corpora, every staged file hashed against its recorded digest during the build.
-The copy to `/mnt/d/constella-archive/beir15/` and its re-hash verification are the remaining local
-step. The object-storage half needs credentials the box does not have — an owner decision.
+**Stage D's local target is VERIFIED** (2026-09-23). The archive is `BUILT`
+(`results/m20_archive_manifest.json`, 2,223 files, 142.6 GiB, 26 of 26 corpora, every staged file
+hashed against its recorded digest during the build), copied to `/mnt/d/constella-archive/beir15/`,
+and **re-hashed there against the manifest: 2,223 files, `problems: []`**. Receipt
+`work/m20/logs/stageD_verify_local.log`. That is a genuinely independent copy on separate hardware,
+unlike the staging root. The object-storage half needs credentials the box does not have, and a
+verifier that has never run — an owner decision.
 
 Stage C took three attempts, none of them wasted work: a projection gate that refused a viable run
 on the wrong unit, a host crash, and a latent split bug. All three are written up below and in
