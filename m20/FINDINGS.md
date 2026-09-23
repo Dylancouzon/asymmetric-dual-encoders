@@ -128,6 +128,41 @@ front-loading makes the *initial* sample conservative, it does not make every la
 conservative, since climate-fever and touché documents come after millions of short msmarco ones.
 Record: `research/m20-stagec-gate-review-astra-2026-09-20.md`.
 
+## A smoke that covers one dataset certifies one dataset
+
+Stage C scoring ran six corpora and then died entering msmarco:
+`ValueError: Unknown split "dev". Should be one of ['train', 'validation', 'test']`.
+
+`m20/beir15_registry.json` registers msmarco's split as `dev`, BEIR's standard MS MARCO evaluation
+split, and the scorer passed that name straight to Hugging Face. `BeIR/msmarco-qrels` publishes it
+as `validation`: the upstream repo at the pinned revision carries `dev.tsv`, and Hugging Face
+normalizes `dev` filenames to the `validation` split name. Its `test` split is TREC-DL's 43
+queries, which is **not** BEIR's row.
+
+`m20/SMOKE.md` exercised "the complete stage-C path on one real BEIR-15 row, SciFact" and every
+number it produced was right. It could not have caught this, because msmarco is the only corpus of
+22 whose registered split name differs from its published one — verified across all 22 rather than
+fixed one at a time.
+
+**The lesson worth carrying.** A single-dataset smoke proves the path works for that dataset's
+shape. Per-dataset metadata — split names, config names, label locations — is exactly the class of
+thing it cannot cover, and the failure surfaces hours in, after real work. When a smoke covers one
+member of a heterogeneous set, enumerate the metadata assumption across the whole set cheaply
+(split names cost one API call each) rather than discovering it serially.
+
+Fixed by reading the scored split from the registry instead of restating it in code, and remapping
+only the physical name at the loader, so every score row still records the **registered** name.
+Astra reviewed: **GO**, no essential defect, 48 completed rows verified unaffected (means reproduce
+within `1.2e-16`, fusion input hashes match their producers).
+Record: `research/m20-split-fix-review-astra-2026-09-23.md`.
+
+**An access incident came out of that review** and is recorded there: a web search about the public
+cqadupstack *gaming* forum returned a preview of the reserved cqadup-*english* forum's qrels into
+the reviewer's tool output. Contained — `work/` is gitignored and the log is untracked, nothing
+reached the repository, no finding depended on it, and the reserved four were already spent and
+known-test. **A review brief must forbid web searches naming a reserved dataset, not only local
+loads**; the brief in force forbade `datasets.load_dataset` and did not anticipate search.
+
 ## Accepted debt
 
 The pre-encode projection gate is not resume-aware: a relaunched tower counts already-encoded
