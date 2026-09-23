@@ -74,6 +74,36 @@ def dataset_rows():
     return rows
 
 
+# The split each corpus is SCORED on is a registered fact, so read it from the registry rather
+# than restating it here. Every BEIR-15 corpus registers "test" except msmarco, which registers
+# "dev" -- BEIR's standard MS MARCO evaluation split.
+#
+# The physical name differs from the registered one in exactly one place. `BeIR/msmarco-qrels`
+# publishes the dev split as "validation" (7,437 rows over 6,980 unique queries, the published
+# BEIR figures to the row); its "test" split is TREC-DL's 43 queries, which is NOT BEIR's row.
+# Asking for "dev" raised `Unknown split "dev"` and killed the first scoring attempt on
+# 2026-09-22 after the six small corpora, because the SciFact-only smoke never reached msmarco.
+# Checked against all 22 public corpora: msmarco is the only mismatch.
+#
+# `split` in every recorded score row stays the REGISTERED name; only the loader is remapped.
+HF_SPLIT_NAME = {"dev": "validation"}
+
+
+def registered_split(corpus_name):
+    """The split this corpus is scored on, as registered in `m20/beir15_registry.json`."""
+    if corpus_name.startswith("cqadup-"):
+        # The registry carries ONE `cqadupstack` row covering all twelve forums, with no per-forum
+        # split field, so there is nothing to read; BEIR scores every forum on "test".
+        return "test"
+    row = next(r for r in registry()["datasets"] if r["key"] == corpus_name)
+    return row["split"]
+
+
+def hf_split(split):
+    """The physical split name to ask Hugging Face for, given the registered one."""
+    return HF_SPLIT_NAME.get(split, split)
+
+
 def load_public(corpus_name):
     """Corpus, queries and test qrels for one PUBLIC corpus, at its pinned revision.
 
@@ -91,17 +121,17 @@ def load_public(corpus_name):
     doc_ids = [str(value) for value in corpus["_id"]]
     doc_texts = [P._doc_text(row) for row in corpus]
     queries = load_dataset(source, "queries", revision=revision)["queries"]
-    split = "dev" if corpus_name == "msmarco" else "test"
+    split = registered_split(corpus_name)
     if corpus_name.startswith("cqadup-"):
         # CQADupStack keeps its labels in the forum's own repository, already pinned above.
         qrels_source, qrels_revision = source, revision
-        rows = load_dataset(source, "default", revision=revision, split=split)
+        rows = load_dataset(source, "default", revision=revision, split=hf_split(split))
     else:
         # BEIR publishes labels in a SEPARATE repository with its own revision. Leaving it
         # unpinned would let a republished label set move a reported number silently.
         row = next(r for r in registry()["datasets"] if r["key"] == corpus_name)
         qrels_source, qrels_revision = row["qrels_source"], row["qrels_revision"]
-        rows = load_dataset(qrels_source, revision=qrels_revision, split=split)
+        rows = load_dataset(qrels_source, revision=qrels_revision, split=hf_split(split))
     qrels = {}
     for row in rows:
         qrels.setdefault(str(row["query-id"]), {})[str(row["corpus-id"])] = int(row["score"])
