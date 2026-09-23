@@ -1,4 +1,4 @@
-# M20 status — stages A and B COMPLETE; reserved access SPENT; stage C RUNNING (attempt 2)
+# M20 status — stages A and B COMPLETE; reserved access SPENT; stage C RUNNING (attempt 3)
 
 ## RESUME HERE
 
@@ -82,11 +82,11 @@ Intervals quantify query resampling only, not training-seed variation.
 
 ## Next step
 
-**Stage C is running** (attempt 2, launched 2026-09-20). The projection gate armed at msmarco
-shard 18 and **passed**, and the **nano-dense tower is COMPLETE in 39.9 h** — all 22 BEIR-15
-corpora, 23,744,786 rows, 22 corpus pins recorded. bge-small-en-v1.5 is encoding now, then
-leaf-ir-asym (~18.6 h for the two at the registered ratios), then scoring inside its 17.06 h
-reserve. After that, stage D (archive) — blocked on object storage, see the open items.
+**Stage C is running** (attempt 3, relaunched 2026-09-22 after the host crash). The projection
+gate armed at msmarco shard 18 on attempt 2 and **passed**. **nano-dense COMPLETE in 39.9 h** and
+**bge-small-en-v1.5 COMPLETE in 6.2 h**, both at all 22 BEIR-15 corpora and 23,744,786 rows.
+leaf-ir-asym is encoding now, resumed mid-climate-fever. Then scoring inside its 17.06 h reserve.
+After that, stage D (archive) — blocked on object storage, see the open items.
 
 The row count is 20 short of the registered 23,744,806. Fully attributed: every corpus with a
 published count matches exactly, and the whole delta is in the one rounded budget line,
@@ -105,13 +105,19 @@ access is spent and the six-set result no longer reads `INCOMPLETE_RESERVED`. St
 against its 52 h cap and stage B 0.93 h against 55.2 h; receipts `results/m20_local_run.json` and
 `results/m20_local_run_attempt1_projection_stop.json`.
 
-Stage C, BEIR-15, is the next command to run:
+Stage C, BEIR-15, is the command to run — **it is running now**; this is the form to use if it
+ever needs relaunching:
 
 ```bash
 .venv/bin/python -u scripts/m20_local_run.py --stage-c             # preflight only
 setsid nohup .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute \
-  > work/m20/logs/stage_c.log 2>&1 < /dev/null &
+  >> work/m20/logs/stage_c.log 2>&1 < /dev/null &
 ```
+
+**Append (`>>`), never `>`** — see the RESUME HERE note. A truncating redirect here would destroy
+the controller log of every earlier attempt (Sol, 2026-09-22, P2). Before relaunching, preserve
+`results/m20_stage_c_run.json` under the `m20_stage_c_run_attempt*.json` pattern or the launcher
+refuses; that pattern is also what makes the original deadline bind instead of a fresh one.
 
 **Do not invoke `m20src/beir15.py` directly.** It is a scorer: its document-vector path loads
 existing shards and fails on a missing one, it never schedules an encode, and it carries no
@@ -123,6 +129,35 @@ projection gate armed against the registered volume.
 
 Stage D, the archive, is `m20src/archive.py` and is blocked on object storage; see the open items
 below.
+
+## The host crashed on 2026-09-22, and what it cost
+
+The WSL box went down at ~09:10 EDT mid-encode of leaf-ir-asym and returned at 18:02 — **~8.9 h
+off a durable wall clock**, which runs whether or not the machine does. Cause is **undetermined**:
+the reboot cleared the kernel ring buffer and journald's last write preceded the crash, so there
+is no OOM, thermal or driver evidence either way. Boot did log
+`EXT4-fs (sdd): 8 orphan inodes deleted; recovery complete`.
+
+**One shard was damaged:** `leaf-ir-asym/climate-fever/shard_00030.npy`, recorded at 76,800,128
+bytes and present on disk as 0. Every written shard on every tower was then re-hashed against its
+manifest record — **1,978 shards, 131.1 GiB, 19.2 min, exactly that one damaged**. A size check
+would not have been enough: a shard that kept its length and lost its contents would pass one and
+enter a published number invisibly. The reserved four's stage A shards are included and intact.
+
+The 0-byte file was deleted so it re-encoded, and **it reproduced byte for byte** — sha256
+`9c46302ee7f5c3fe655c1a039e468ac4fb0dd32c8b48e421e477dc7f01519f0a`, the value recorded before the
+crash. That confirms the crash destroyed the file rather than the encoder producing anything
+different, and re-demonstrates the deterministic encoding stage A established. No number was
+affected: climate-fever was mid-corpus on the third tower with no score produced.
+
+Receipt `results/m20_crash_shard_verification.json`. Crashed receipt preserved as
+`results/m20_stage_c_run_attempt2_host_crash.json`, so the original deadline still binds.
+
+Sol reviewed the recovery: **GO WITH CONDITIONS**, no P0/P1, run continues. It independently
+re-derived the repaired shard's hash and confirmed the deadline is retained in all three receipts.
+Its P2 (stale runbook, truncating `>`) and P3 (over-attributed crash mechanism, wrong
+"unrepeatable" wording) are fixed here and in the receipt.
+Record: `research/m20-crash-recovery-review-sol-2026-09-22.md`.
 
 ## The projection gate refused attempt 1 on 2026-09-19, and why attempt 2 fits
 

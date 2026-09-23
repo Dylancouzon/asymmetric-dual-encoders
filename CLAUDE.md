@@ -24,7 +24,9 @@ still sealed, so it establishes neither improvement nor equivalence and released
 selected. **M20 is the active execution milestone.** Its stages A and B are complete: the reserved access was
 spent once on 2026-09-19 (`m8-reserved-spent`), `results/m10_final_run.json` ends `COMPLETE`, and the
 reserved four are now **known-test** — never again usable to decide anything in this project. Stage C
-(BEIR-15) is next and is unprotected. Read `m20/STATUS.md` and `m20/FINDINGS.md` before touching it. Paper milestone references in older files are historical. Harness
+(BEIR-15) is **running** and is unprotected; two of its three towers are complete. Read
+`m20/STATUS.md` and `m20/FINDINGS.md` before touching it, and never relaunch it with a truncating
+`>` redirect or without preserving the existing receipt. Paper milestone references in older files are historical. Harness
 improvements remain ordinary maintenance. Do not infer execution readiness from the historical
 phrase “half A ready to push” or from a closed milestone's executable status.
 
