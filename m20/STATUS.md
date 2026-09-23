@@ -1,28 +1,24 @@
-# M20 status — stages A and B COMPLETE; reserved access SPENT; stage C RUNNING (attempt 3)
+# M20 status — stages A, B and C COMPLETE; reserved access SPENT; stage D is next
 
 ## RESUME HERE
 
-If the session begins with "resume M20", **launch stage C and do not ask first.** Dylan authorized
-this on 2026-09-19, after four review rounds closed every blocker on the stage-C invocation. It is
-about five days of the local GPU, it is unprotected, it is resumable, and it cannot touch the spent
-reserved access or the numbers already produced.
+**Stage C is done.** `results/m20_beir15_run.json` ends `COMPLETE` with `missing: []` — eight
+systems x fifteen BEIR datasets, 22 corpora scored, 176 per-system rows, finished 40.5 h inside
+its deadline. Do not re-run it; the launcher will refuse anyway.
 
-```bash
-cd /home/dylan/asymetric-dual-encoders
-.venv/bin/python -u scripts/m20_local_run.py --stage-c            # read this preflight first
-setsid nohup .venv/bin/python -u scripts/m20_local_run.py --stage-c --execute \
-  >> work/m20/logs/stage_c.log 2>&1 < /dev/null &
-```
+**The next work is stage D, the archive, and it is blocked on object storage** — no account,
+bucket, credentials or `rclone` on the box. The `D:` half can be built and verified without it;
+the object-storage half cannot. `m20src/archive.py --verify-remote` is implemented and waiting.
+That is an owner decision, not something to start unattended. See the open items.
 
-**Append (`>>`), never `>`.** The per-tower logs open in append mode already; the controller log is
-the one a truncating redirect would destroy (Astra, 2026-09-20).
+Stage C took three attempts, none of them wasted work: a projection gate that refused a viable run
+on the wrong unit, a host crash, and a latent split bug. All three are written up below and in
+`m20/FINDINGS.md`. Every attempt receipt is preserved under
+`results/m20_stage_c_run_attempt*.json`, and **the original deadline was inherited through all of
+them, never reminted**.
 
-**Attempt 1 stopped itself on 2026-09-19** — the projection gate refused a run that fits, because
-it armed on the longest 1.1% of BEIR-15. Fixed in `batch_min_projection_rows`; see "The projection
-gate refused attempt 1" below and `m20/FINDINGS.md`. Attempt 1's receipt and controller log are
-preserved as `results/m20_stage_c_run_attempt1_projection_stop.json` and
-`work/m20/logs/stage_c_attempt1_projection_stop.log`, and the launcher **inherits attempt 1's
-deadline** from that receipt, so relaunching does not mint a fresh wall clock.
+If stage C ever needs re-running, the invocation is below — and it must **append (`>>`), never
+`>`**, and must preserve `results/m20_stage_c_run.json` under the `attempt*` pattern first.
 
 Then watch it: first shard rate per tower, dataset completions, and
 `Traceback|Error|FAILED|OOM|Killed|assert`. `setsid nohup` matters — a harness interrupt kills a
@@ -80,16 +76,58 @@ Record: `research/m20-numbers-review-astra-2026-09-19.md`.
 
 Intervals quantify query resampling only, not training-seed variation.
 
+## The stage C result
+
+`results/m20_beir15_run.json`, per-system rows under `results/m20_beir15_scores/<corpus>/`.
+Eight systems, fifteen datasets, nDCG@10, exact retrieval, **descriptive, `alpha = 0`**.
+
+| dataset | nano | zero | stella | bge-s | leaf | bm25 | z+bm25 | n+bm25 |
+|---|---|---|---|---|---|---|---|---|
+| scifact | 0.7211 | 0.6101 | 0.7796 | 0.7127 | 0.6990 | 0.6791 | 0.7173 | 0.7433 |
+| nfcorpus | 0.3631 | 0.3124 | 0.4134 | 0.3430 | 0.3608 | 0.3180 | 0.3442 | 0.3683 |
+| scidocs | 0.2177 | 0.1677 | 0.2395 | 0.2052 | 0.2034 | 0.1565 | 0.1850 | 0.2031 |
+| trec-covid | 0.7871 | 0.5490 | 0.8234 | 0.7575 | 0.8301 | 0.6099 | 0.7184 | 0.8072 |
+| fiqa\* | 0.4778 | 0.3728 | 0.5536 | 0.4035 | 0.4165 | 0.2532 | 0.3872 | 0.4353 |
+| arguana\* | 0.6233 | 0.5916 | 0.6369 | 0.6034 | 0.5833 | 0.4878 | 0.5800 | 0.5759 |
+| fever\*† | 0.6231 | 0.6978 | 0.8207 | 0.8662 | 0.8671 | 0.5036 | 0.7559 | 0.6879 |
+| dbpedia-entity† | 0.4190 | 0.3900 | 0.4603 | 0.4003 | 0.4520 | 0.3045 | 0.4030 | 0.4296 |
+| cqadupstack† | 0.3859 | 0.3416 | 0.4448 | 0.3905 | 0.4269 | 0.3184 | 0.3756 | 0.3933 |
+| msmarco | 0.4063 | 0.3371 | 0.4373 | 0.4082 | 0.4136 | 0.2256 | 0.3410 | 0.3699 |
+| nq | 0.5838 | 0.5173 | 0.6371 | 0.5018 | 0.6164 | 0.2916 | 0.4594 | 0.4999 |
+| hotpotqa | 0.6102 | 0.6127 | 0.6950 | 0.6993 | 0.6931 | 0.5851 | 0.7015 | 0.6968 |
+| webis-touche2020 | 0.2755 | 0.2288 | 0.2980 | 0.2603 | 0.3024 | 0.3324 | 0.3102 | 0.3398 |
+| quora | 0.8805 | 0.8504 | 0.8912 | 0.8863 | 0.8615 | 0.8055 | 0.8688 | 0.8838 |
+| climate-fever\* | 0.2473 | 0.2785 | 0.2907 | 0.3183 | 0.3777 | 0.1372 | 0.2521 | 0.2315 |
+
+\* disclosed teacher exposure. † **copied** from the tagged reserved transaction, never rescored —
+fever and dbpedia-entity match `results/m13_reserved_run.json` to 1e-12; the cqadupstack row
+aggregates all twelve forums, two copied and ten scored here.
+
+**This is descriptive.** No gate, threshold, release rule, superiority or equivalence claim, and
+it does not enter or reweight M13's registered six-set inference.
+
+Two patterns worth carrying into the writeup:
+
+- **DBSF@100's value tracks BM25's strength on the dataset.** It lifts zero-dense +0.089 to the
+  top of hotpotqa (BM25 0.585) and costs nano-dense 0.036 on msmarco (BM25 0.226). M12's
+  recommendation is a disclosed product-policy override with no equivalence CI, so report this
+  dataset-dependence beside it.
+- **The bge-small > stella-query reversal is not unique to FEVER.** It also appears on hotpotqa
+  and climate-fever. That weakens, without refuting, reading FEVER's reversal as a contamination
+  signature — consistent with the adversarial review that found it compatible with the disclosed
+  exposure but declined to attribute it.
+
+External checks passed on the way: SciFact reproduces `m20/SMOKE.md` for all eight systems,
+NFCorpus reproduces M12's registered DBSF@100 value, and msmarco's bm25 (0.2256 vs a published
+0.228) and bge-small (0.4082 vs a published 0.408) match published BEIR figures.
+
 ## Next step
 
-**Stage C is running** (attempt 3, relaunched 2026-09-22 after the host crash). The projection
-gate armed at msmarco shard 18 on attempt 2 and **passed**. **nano-dense COMPLETE in 39.9 h** and
-**bge-small-en-v1.5 COMPLETE in 6.2 h**, both at all 22 BEIR-15 corpora and 23,744,786 rows.
-leaf-ir-asym is encoding now, resumed mid-climate-fever. Then scoring inside its 17.06 h reserve.
-After that, stage D (archive) — blocked on object storage, see the open items.
+**Stage D, the archive** — blocked on object storage; see the open items. Nothing else in M20 is
+outstanding.
 
-The row count is 20 short of the registered 23,744,806. Fully attributed: every corpus with a
-published count matches exactly, and the whole delta is in the one rounded budget line,
+The encoded row count is 20 short of the registered 23,744,806. Fully attributed: every corpus
+with a published count matches exactly, and the whole delta is in the one rounded budget line,
 `cqadupstack_ten_forums: 394,000` against an actual 393,980 (0.005%). Nothing is missing.
 
 `results/m20_climate_fever_comparison.json` records the climate-fever/FEVER corpus comparison the
@@ -129,6 +167,29 @@ projection gate armed against the registered volume.
 
 Stage D, the archive, is `m20src/archive.py` and is blocked on object storage; see the open items
 below.
+
+## A latent split bug stopped scoring on 2026-09-22, and how it was fixed
+
+Scoring completed six corpora and died entering msmarco:
+`ValueError: Unknown split "dev". Should be one of ['train', 'validation', 'test']`.
+
+The registry registers msmarco's split as `dev` — BEIR's standard MS MARCO evaluation split — and
+the scorer passed that name to Hugging Face, which publishes it as `validation`. The SciFact-only
+smoke never reached msmarco, so the path had never executed.
+
+Established, not assumed: `validation` holds 7,437 rows over 6,980 unique queries, the published
+BEIR figures to the row, while `test` is TREC-DL's 43 queries and is not BEIR's row. Astra added
+the mechanism — the upstream repo at the pinned revision carries `dev.tsv`, and Hugging Face
+normalizes `dev` filenames to `validation`. All 22 public corpora were checked: msmarco is the
+only mismatch.
+
+Fixed in `registered_split`/`hf_split`: the scored split is read from the registry rather than
+restated in code, and only the physical name is remapped at the loader, so every score row records
+the **registered** name. Astra reviewed: **GO**, no essential defect, 48 already-written rows
+verified unaffected. Record: `research/m20-split-fix-review-astra-2026-09-23.md` — which also
+records a **reviewer access incident** (a web search returned a reserved-forum qrels preview into
+its tool output; contained, nothing reached the repository, no finding depended on it). **Future
+review briefs must forbid web searches naming a reserved dataset, not only local loads.**
 
 ## The host crashed on 2026-09-22, and what it cost
 
