@@ -143,8 +143,8 @@ access is spent and the six-set result no longer reads `INCOMPLETE_RESERVED`. St
 against its 52 h cap and stage B 0.93 h against 55.2 h; receipts `results/m20_local_run.json` and
 `results/m20_local_run_attempt1_projection_stop.json`.
 
-Stage C, BEIR-15, is the command to run — **it is running now**; this is the form to use if it
-ever needs relaunching:
+Stage C, BEIR-15, is **complete** and must not be re-run. This is the form to use only if some
+future change genuinely requires re-running it:
 
 ```bash
 .venv/bin/python -u scripts/m20_local_run.py --stage-c             # preflight only
@@ -312,11 +312,11 @@ Record: `research/m20-allocator-review-sol-2026-09-17.md`.
 2. **Retained storage bills about $0.41/hour** across the three stopped pods, roughly double the
    $0.2174/hour the M13 allocation assumed, whether or not anything runs. Measured over a 7-hour
    window with everything stopped. Retirement is M22's to request; they stay STOP-only until then.
-3. **Stage C is the long pole:** 120 h cap against a 113 h expectation, of which 17.06 h is held
-   back for download and scoring. Nothing blocks it, but it is five days of the machine. Measured
-   local rates on the reserved four were 130–215 docs/s for stella against the 100.76 docs/s A100
-   figure the cap was built from, so the cap has more real margin than its 1.06x suggests — but
-   that was measured on four corpora, not on BEIR-15's eleven.
+3. **Stage C is done** — closed 2026-09-23, 40.5 h inside its 120 h cap, so it is no longer an open
+   item. Recorded because the cap's derivation was wrong in an instructive direction: it assumed
+   100.76 docs/s from an A100 benchmark on a 153-token surrogate, and the real corpora averaged
+   92.2 tokens, so the box ran far faster per document than the cap's own arithmetic expected. The
+   margin came from document length, not from the hardware the cap was priced on.
 
 ## The tightest point in the plan
 

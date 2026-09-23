@@ -2,8 +2,11 @@
 
 Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. This changes scope
 and navigation, not results, registered constants or access rules. **M20 is the active execution
-milestone** (opened 2026-09-16 under R22, evaluation-only); M22 (official release) and M23
-(upstream FastEmbed PRs) follow it in that order. M19 closed at its development-judgment boundary
+milestone** (opened 2026-09-16 under R22, evaluation-only), but its measurement work is finished:
+stages A, B and C are complete and only the archive (stage D) remains, blocked on object storage.
+**M22 (official release) may start** without waiting for stage D — object storage blocks M22's
+storage-retirement recommendation, not card preparation, staging, verification or release
+(Sol, 2026-09-23). M23 (upstream FastEmbed PRs) follows M22. M19 closed at its development-judgment boundary
 with confirmation sealed and released Zero v1 retained.
 
 | Milestone | Deliverable | State / entry point |
@@ -22,7 +25,7 @@ with confirmation sealed and released Zero v1 retained.
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
 | M19 | Deterministic short-query Zero feasibility | **Closed 2026-09-13** as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development result label-sensitive, confirmation sealed, Zero v1 retained; `m19/STATUS.md` |
-| M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active**; stages A+B complete 2026-09-19, reserved access SPENT (`m8-reserved-spent`), stage C next; `m20/STATUS.md`, `m20/FINDINGS.md`, `instructions-m20.md` |
+| M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active**; stages A+B complete 2026-09-19 (reserved access SPENT, `m8-reserved-spent`), **stage C complete 2026-09-23** (`results/m20_beir15_run.json`); only stage D remains, blocked on object storage; `m20/STATUS.md`, `m20/FINDINGS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 | M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
 | M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | After M22; `instructions-m23.md`, plan in `m21/FASTEMBED.md` |
