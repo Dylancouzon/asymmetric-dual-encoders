@@ -6,7 +6,7 @@ BEIR-15 complete. No new measurement, no training, no protected access.
 
 ## Deliverables
 
-1. **Card revision** of `DylanCouzon/constella-nano` as a later revision of the existing
+1. **Card revision** of `Qdrant/constella-nano` (moved from `DylanCouzon/` under R25, `m22/HUB_TRANSFER.md`) as a later revision of the existing
    repository: the frozen weights (`6bb167dc`) do not change. The card carries the reserved-four
    and BEIR-15 descriptive tables with their contact labels and FEVER caveat, the M13 registered
    results unchanged, and drops the "research preview" framing. Numbers come from
