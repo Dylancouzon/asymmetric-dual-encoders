@@ -30,7 +30,7 @@ its `Qdrant/` repo, and a download through an old ID succeeds. Each card commit 
 `README.md` (`DylanCouzon/` → `Qdrant/` in Hub IDs and links), and the downloaded bytes at that
 commit match the uploaded card.
 
-**Pending, owner push.** FastEmbed `constella-research-preview` registrations and canonical-vector
-test keys renamed to `Qdrant/` (three files, nine lines; tests not run in this session). Blog on
-landing_page#2787: seven Hub references renamed; the "family of models" link points at the Nano
+**Pushed 2026-09-25.** FastEmbed `constella-research-preview` at `2704c34`: registrations and
+canonical-vector test keys renamed to `Qdrant/` (three files, nine lines; tests not run in this
+session). Blog on landing_page#2787 at `3f5fc9b6b`: seven Hub references renamed; the "family of models" link points at the Nano
 card.
