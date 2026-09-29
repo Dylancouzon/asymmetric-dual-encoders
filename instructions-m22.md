@@ -17,6 +17,10 @@ BEIR-15 complete. No new measurement, no training, no protected access.
    verified bytes, documented packaging transforms only, length-stratified parity including the
    511/512/513 boundary, `m14/verify_card.py` offline against staged bytes, private-first upload of
    any changed file, LFS-oid and downloaded-byte verification, then the public revision.
+   The install line on all three cards, the README and the plain-English page switches to plain
+   `pip install fastembed` once a PyPI release contains qdrant/fastembed#751 (owner decision,
+   2026-09-30, `m22/UPSTREAM_FASTEMBED.md`); the "requires the Constella preview branch" banner
+   sentence goes with it.
 3. **Storage-retirement request.** Only after Hub download verification and after M20's archive is
    verified at both targets may M22 recommend retiring the three Runpod volumes. Deletion requires
    an explicit owner ruling; it is not inferable from any handoff.
