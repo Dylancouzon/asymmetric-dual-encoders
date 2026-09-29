@@ -7,16 +7,16 @@ bge-small by **+0.017648 nDCG@10** (one-sided 2.5% lower bound +0.003674).
 
 | model | role | public state |
 |---|---|---|
-| [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx) | frozen 1024-d document tower | shipped in M11 |
-| [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) | int8 query lookup table, no transformer | shipped in M11 |
-| [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) | 34,540,672-parameter query transformer | research preview; weights frozen at [`6bb167dc`](https://huggingface.co/DylanCouzon/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168) |
+| [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/Qdrant/stella-en-400M-v5-doc-onnx) | frozen 1024-d document tower | shipped in M11 |
+| [`constella-zero`](https://huggingface.co/Qdrant/constella-zero) | int8 query lookup table, no transformer | shipped in M11 |
+| [`constella-nano`](https://huggingface.co/Qdrant/constella-nano) | 34,540,672-parameter query transformer | research preview; weights frozen at [`6bb167dc`](https://huggingface.co/Qdrant/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168) |
 
 For the story, read [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md).
 Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md).
 
 ## Quickstart
 
-The three native registrations currently live on the preview FastEmbed branch:
+The three native registrations are merged into upstream FastEmbed ([#751](https://github.com/qdrant/fastembed/pull/751)) but not yet in a PyPI release. Until then, install the preview branch, which also returns Nano's vectors as fp32:
 
 ```bash
 pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview" qdrant-client
@@ -31,9 +31,9 @@ import numpy as np
 from fastembed import TextEmbedding
 from qdrant_client import QdrantClient, models
 
-DOC = "DylanCouzon/stella-en-400M-v5-doc-onnx"
-NANO = "DylanCouzon/constella-nano"
-ZERO = "DylanCouzon/constella-zero"
+DOC = "Qdrant/stella-en-400M-v5-doc-onnx"
+NANO = "Qdrant/constella-nano"
+ZERO = "Qdrant/constella-zero"
 
 def load(name, path_variable):
     path = os.environ.get(path_variable)

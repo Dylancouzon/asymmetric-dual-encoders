@@ -14,9 +14,9 @@ use [`m21/BENCHMARKS.md`](../m21/BENCHMARKS.md).
 
 | Model | Role | State |
 |---|---|---|
-| [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx) | Frozen Stella document encoder, 1024 dimensions | Public |
-| [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) | Int8 token-vector lookup table, no transformer at query time | Public |
-| [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) | 34,540,672-parameter query transformer | Public research preview |
+| [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/Qdrant/stella-en-400M-v5-doc-onnx) | Frozen Stella document encoder, 1024 dimensions | Public |
+| [`constella-zero`](https://huggingface.co/Qdrant/constella-zero) | Int8 token-vector lookup table, no transformer at query time | Public |
+| [`constella-nano`](https://huggingface.co/Qdrant/constella-nano) | 34,540,672-parameter query transformer | Public research preview |
 
 The main result is a shared-index family with two query-cost points:
 
@@ -215,9 +215,11 @@ The current evidence has clear boundaries:
 - Nano's clean-4 superiority over LEAF was not established.
 - Zero did not beat LightRetriever's dense table on the six.
 - The edge prototype measured Qdrant in Docker on one Apple M5 Pro. It did not measure Qdrant Edge.
-- Native support for all three models currently lives on the
+- Native support for all three models is merged into upstream FastEmbed
+  ([#751](https://github.com/qdrant/fastembed/pull/751)) but is not in a PyPI release yet. Until
+  it is, the installation uses the
   [`constella-research-preview`](https://github.com/Dylancouzon/fastembed/tree/constella-research-preview)
-  FastEmbed branch. The upstream PRs are still pending.
+  branch, which also returns Nano's vectors as fp32.
 - Specialized Zero variants have not established a retrieval improvement over released Zero v1.
 
 ## Try It and Inspect the Evidence
