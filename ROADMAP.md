@@ -25,7 +25,7 @@ with confirmation sealed and released Zero v1 retained.
 | M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active** (opened 2026-09-16, R22); `m20/STATUS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 | M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
-| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | After M22; `instructions-m23.md`, plan in `m21/FASTEMBED.md` |
+| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype PR open item; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Migration map
 

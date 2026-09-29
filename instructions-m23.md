@@ -5,7 +5,16 @@ mandate. Depends on upstream FastEmbed's state and reviewer latency, not on our 
 on its own clock. It may start once M22 has made the official Nano revision public, because the
 registrations PR points at published artifacts and canonical vectors.
 
-## Deliverables
+## State on 2026-09-30
+
+Upstream moved first; see `m22/UPSTREAM_FASTEMBED.md`. Deliverable 3 is **done**: the FastEmbed
+maintainer merged the three registrations as qdrant/fastembed#751 (`a56e1e1`), byte-identical to
+our preview-branch entries. Deliverable 1 is **superseded**: upstream #716 and #717 fixed both
+padding defects on their own. Deliverable 2, the dtype fix, is the only open item: upstream Nano
+still returns float64. The rebased patch is `m22/fastembed-dtype-fix-on-a56e1e1.patch`; opening
+the PR waits on an owner decision.
+
+## Deliverables (as registered 2026-09-16)
 
 The three-PR plan recorded in `m21/FASTEMBED.md`, each branched from current upstream `main`:
 
