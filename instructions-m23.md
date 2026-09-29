@@ -12,7 +12,8 @@ maintainer merged the three registrations as qdrant/fastembed#751 (`a56e1e1`), b
 our preview-branch entries. Deliverable 1 is **superseded**: upstream #716 and #717 fixed both
 padding defects on their own. Deliverable 2, the dtype fix, is the only open item: upstream Nano
 still returns float64. The rebased patch is `m22/fastembed-dtype-fix-on-a56e1e1.patch`; opening
-the PR waits on an owner decision.
+no PR is planned: the owner narrowed the deliverable to issue qdrant/fastembed#752 with the
+proposed fix (2026-09-30).
 
 ## Deliverables (as registered 2026-09-16)
 

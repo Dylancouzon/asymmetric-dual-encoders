@@ -1,0 +1,108 @@
+[
+  {
+    "install": "pypi 0.6.0",
+    "fastembed_version": "0.6.0",
+    "numpy": "2.5.3",
+    "dtype": {
+      "sentence-transformers/all-MiniLM-L6-v2": "float32",
+      "BAAI/bge-small-en-v1.5": "float32"
+    }
+  },
+  {
+    "install": "pypi 0.6.1",
+    "fastembed_version": "0.6.1",
+    "numpy": "2.5.3",
+    "dtype": {
+      "sentence-transformers/all-MiniLM-L6-v2": "float64",
+      "BAAI/bge-small-en-v1.5": "float32"
+    }
+  },
+  {
+    "install": "pypi 0.8.1",
+    "fastembed_version": "0.8.1",
+    "numpy": "2.5.3",
+    "dtype": {
+      "sentence-transformers/all-MiniLM-L6-v2": "float64",
+      "BAAI/bge-small-en-v1.5": "float32"
+    }
+  },
+  {
+    "install": "upstream a56e1e1 + fix bf96abc (drift vs pypi 0.8.1)",
+    "fastembed_version": "0.8.1",
+    "numpy": "2.5.3",
+    "dtype": {
+      "sentence-transformers/all-MiniLM-L6-v2": "float32",
+      "BAAI/bge-small-en-v1.5": "float32"
+    },
+    "drift_vs_other": {
+      "sentence-transformers/all-MiniLM-L6-v2": {
+        "dtype": "float32",
+        "other_dtype": "float64",
+        "maximum_absolute_difference": 6.814047687209168e-09,
+        "norms": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "other_norms": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2": {
+        "dtype": "float32",
+        "other_dtype": "float64",
+        "maximum_absolute_difference": 9.536743172944284e-08,
+        "norms": [
+          5.373124,
+          5.14287,
+          4.450506,
+          5.000708
+        ],
+        "other_norms": [
+          5.373124,
+          5.14287,
+          4.450506,
+          5.000708
+        ]
+      },
+      "nomic-ai/nomic-embed-text-v1": {
+        "dtype": "float32",
+        "other_dtype": "float64",
+        "maximum_absolute_difference": 1.3907750417985199e-07,
+        "norms": [
+          22.250666,
+          21.175958,
+          24.137467,
+          22.321318
+        ],
+        "other_norms": [
+          22.250666,
+          21.175958,
+          24.137467,
+          22.321318
+        ]
+      },
+      "thenlper/gte-base": {
+        "dtype": "float32",
+        "other_dtype": "float64",
+        "maximum_absolute_difference": 5.854657869619473e-09,
+        "norms": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "other_norms": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  }
+]

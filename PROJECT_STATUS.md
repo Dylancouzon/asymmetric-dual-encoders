@@ -20,7 +20,7 @@ FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md
 | M19 | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development results were label-sensitive, confirmation remained sealed and released Zero v1 stays selected |
 | M20 | Active: reserved four and BEIR-15 descriptive evaluation over an eight-system roster (Nano, Zero, BGE-small, LEAF, Stella-query, BM25, two DBSF@100 fusions), then archive. Release is M22, upstream PRs M23 |
 | M21 | Closed 2026-09-15: research-preview documentation, canonical benchmark tables, model-card publication and FastEmbed polish completed |
-| FastEmbed upstream | The three registrations merged as qdrant/fastembed#751 on 2026-09-29, not yet on PyPI. Verified 2026-09-30 against direct ORT: all three pass M14 parity; upstream Nano returns float64, and the dtype fix is not upstream yet. `m22/UPSTREAM_FASTEMBED.md` |
+| FastEmbed upstream | The three registrations merged as qdrant/fastembed#751 on 2026-09-29, not yet on PyPI. Verified 2026-09-30 against direct ORT: all three agree with direct ORT on the M14 fixtures and thresholds (the Torch leg was not rerun); upstream Nano returns float64, and the dtype fix is not upstream yet. `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Verification and limits
 

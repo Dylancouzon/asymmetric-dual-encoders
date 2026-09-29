@@ -1,0 +1,17 @@
+# Sol review of the 2026-09-30 FastEmbed session
+
+Reviewer: Codex `gpt-6-sol`, reasoning `xhigh`, read-only, over commits `e3bfc16..297a4b7` and the posted #752 body. Access log audited: named files only, no protected paths. Output verbatim; dispositions in `m22/UPSTREAM_FASTEMBED.md`.
+
+---
+
+1. **P2 — “M14 parity” exceeds what this verifier proves.** [verify_upstream_fastembed.py](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m22/verify_upstream_fastembed.py:89) compares FastEmbed with direct ORT using the same downloaded model files. It does not repeat M14’s frozen-checkpoint, Torch, or artifact-hash checks in [parity.py](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m14/parity.py:198). The numerical thresholds pass, but “all three pass M14 parity” in [PROJECT_STATUS.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/PROJECT_STATUS.md:23) overstates that result. **Fix:** say “all three agree with direct ORT on the M14 fixtures and thresholds,” or add independent frozen-reference and byte checks.
+
+2. **P2 — Precise public-issue measurements lack a reproducible receipt.** The four-model maximum difference in [issue-752-body.md](/private/tmp/claude-501/-Users-dylanc-Documents-GitHub-asymetric-dual-encoders/8f262e96-dcae-4b81-92c3-b2a1c3a5fc65/scratchpad/issue-752-body.md:61) and the PyPI version table at line 87 are repeated in [UPSTREAM_FASTEMBED.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m22/UPSTREAM_FASTEMBED.md:92), but the three listed JSON receipts cover only Constella checks. The #492 history supports the cause, not those exact measurements. **Fix:** commit a small repro and output receipt for the four models and three versions, or remove the precise measured bound.
+
+3. **P2 — The patch record describes an earlier state as the final patch.** [UPSTREAM_FASTEMBED.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m22/UPSTREAM_FASTEMBED.md:60) calls the stored patch only the preview fix rebased and reports a three-of-nine red/green result. The stored [patch](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m22/fastembed-dtype-fix-on-a56e1e1.patch:18) also adds the custom-model path and integer guard; the same record later reports five failures on clean main and 13/13 passing with the final patch at line 121. **Fix:** label the earlier counts as historical and describe the final patch and its final test counts together.
+
+4. **P2 — Current milestone guidance conflicts with the final owner decision.** [instructions-m23.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/instructions-m23.md:5) and [ROADMAP.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/ROADMAP.md:4) still gate M23 behind M22, while [UPSTREAM_FASTEMBED.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m22/UPSTREAM_FASTEMBED.md:125) records #752 opened ahead of M22 and the owner’s issue-only, no-PR decision. The [plain-English milestone map](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/research/constella-in-plain-english.md:256) also assigns release and upstream integration to M20. **Fix:** update the current-state guidance to record the completed early work, M20’s evaluation-only scope, and that no dtype PR is planned under the latest decision.
+
+The three registrations, 16-model list, #492/#479 history, and issue’s proposed diff match the inspected upstream code and patch.
+
+**NOT VERIFIED**

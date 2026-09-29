@@ -2,8 +2,8 @@
 
 Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. This changes scope
 and navigation, not results, registered constants or access rules. **M20 is the active execution
-milestone** (opened 2026-09-16 under R22, evaluation-only); M22 (official release) and M23
-(upstream FastEmbed PRs) follow it in that order. M19 closed at its development-judgment boundary
+milestone** (opened 2026-09-16 under R22, evaluation-only); M22 (official release) follows it. M23's
+upstream work moved first: registrations merged as #751, dtype bug filed as #752. M19 closed at its development-judgment boundary
 with confirmation sealed and released Zero v1 retained.
 
 | Milestone | Deliverable | State / entry point |
@@ -25,7 +25,7 @@ with confirmation sealed and released Zero v1 retained.
 | M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active** (opened 2026-09-16, R22); `m20/STATUS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 | M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
-| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype PR open item; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
+| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype bug filed as #752, no PR planned; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Migration map
 

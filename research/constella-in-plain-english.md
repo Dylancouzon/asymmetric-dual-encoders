@@ -253,7 +253,7 @@ what came out of it, and where to start if you want the full methodology or evid
 | M17 | Tried a Zero v1.1 with vocabulary extension, joint table/listwise training, alias consistency, and checkpoint averaging. None of the five trained arms beat the untrained added-entry baseline, so the screen stopped and Zero v1 stayed shipped. | [`m17/STATUS.md`](../m17/STATUS.md) |
 | M18 | Built a searchable Qdrant project-memory system over a pinned 79,269-document repository snapshot and trained a specialized table. The system worked, but the candidate missed the fused improvement bar and the evaluation exposed answer-key problems. | [`m18/FINDINGS.md`](../m18/FINDINGS.md) |
 | M19 | Replaced training with deterministic rows for 12 fragmented technical terms. Numeric and serving checks passed, but relevance judgment remained label-sensitive because 60 pooled items lacked enough context. The result is inconclusive and confirmation stayed sealed. | [`m19/FINDINGS.md`](../m19/FINDINGS.md) |
-| M20 | Pending: run the reserved four and descriptive BEIR-18, turn Nano's preview into the official release, and upstream the FastEmbed integration. No M20 evaluation result exists yet. | [`instructions-m20.md`](../instructions-m20.md) |
+| M20 | Pending: run the reserved four and descriptive BEIR-15. No M20 evaluation result exists yet. The official release moved to M22 and the upstream FastEmbed work to M23. | [`instructions-m20.md`](../instructions-m20.md) |
 | M21 | Consolidated the research preview: one canonical benchmark table, shorter model cards and README, one FastEmbed branch, and an fp32 fix for the pooling path that had promoted Nano output to float64. | [`m21/STATUS.md`](../m21/STATUS.md) |
 
 The canonical public numbers and discrepancy audit are in

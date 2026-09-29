@@ -57,8 +57,8 @@ cause). Rankings and values are correct; the vector is 8,192 bytes instead of 4,
 card's "normalized fp32 vector" is false for upstream users. It affects every model routed through
 `mean_pooling`, not only Nano.
 
-`m22/fastembed-dtype-fix-on-a56e1e1.patch` is the preview branch's `a4452ac` + `47a5090` net
-change rebased onto `a56e1e1`: `mean_pooling` stays byte-identical to upstream, narrowing happens
+First rebase (superseded by the final patch in the Astra section): the preview branch's
+`a4452ac` + `47a5090` net change on `a56e1e1`: `mean_pooling` stays byte-identical to upstream, narrowing happens
 after `normalize()`. The only conflict was one import line in `tests/test_common.py`. Red/green on
 upstream: the new tests fail three of nine without the patch and pass nine of nine with it.
 `test_common.py` and `test_preprocessor_utils.py` pass 40 of 40 with it.
@@ -135,3 +135,18 @@ text models return float64 instead of float32", on the bug-report template. It c
 consequences, the 16 affected built-in models plus custom `PoolingType.MEAN` models, the #492 and
 #479 cause, the v0.6.0/0.6.1/0.8.1 repro and the proposed three-path diff. The tested patch with
 tests remains `m22/fastembed-dtype-fix-on-a56e1e1.patch` for a PR if the maintainers want one.
+
+## Sol review of the session (2026-09-30)
+
+Codex `gpt-6-sol` (xhigh, read-only) reviewed commits `e3bfc16..297a4b7` and the posted #752
+body: **NOT VERIFIED**, four P2 findings on the record, none on the code. It confirmed the three
+registrations, the 16-model list, the #492/#479 history and that the issue's diff matches the
+patch. Record: `research/m22-session-review-sol-2026-09-30.md`. All four fixed; no re-review, as
+the governance budget re-reviews P0/P1 fixes only.
+
+| finding | fix |
+|---|---|
+| "Pass M14 parity" overstates a direct-ORT check | PROJECT_STATUS now says the three agree with direct ORT on the M14 fixtures and thresholds, Torch leg not rerun |
+| The issue's version table and drift numbers had no receipt | `m22/dtype_issue_measure.py` rerun under PyPI 0.6.0, 0.6.1, 0.8.1 and the fix; `results/m22_dtype_issue_measurements.json` reproduces every number in #752 |
+| The patch record described the first rebase as the final patch | The dtype-defect section labels those counts as the superseded first rebase |
+| ROADMAP, M23 and the plain-English map still ordered M23 after M22 and gave M20 the release | Updated to #751 merged, #752 filed with no PR planned, M20 evaluation-only |
