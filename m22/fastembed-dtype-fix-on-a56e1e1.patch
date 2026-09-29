@@ -1,0 +1,96 @@
+diff --git a/fastembed/text/pooled_embedding.py b/fastembed/text/pooled_embedding.py
+index 8e7b65c..4a5b06d 100644
+--- a/fastembed/text/pooled_embedding.py
++++ b/fastembed/text/pooled_embedding.py
+@@ -117,7 +117,10 @@ class PooledEmbedding(OnnxTextEmbedding):
+ 
+         embeddings = output.model_output
+         attn_mask = output.attention_mask
+-        return self.mean_pooling(embeddings, attn_mask)
++        pooled = self.mean_pooling(embeddings, attn_mask)
++        # Pooling accumulates in float64 because the integer mask promotes the product.
++        # Return the dtype the graph produced, as every non-pooled path already does.
++        return pooled.astype(embeddings.dtype, copy=False)
+ 
+ 
+ class PooledEmbeddingWorker(OnnxTextEmbeddingWorker):
+diff --git a/fastembed/text/pooled_normalized_embedding.py b/fastembed/text/pooled_normalized_embedding.py
+index 31bf433..c64221f 100644
+--- a/fastembed/text/pooled_normalized_embedding.py
++++ b/fastembed/text/pooled_normalized_embedding.py
+@@ -158,7 +158,10 @@ class PooledNormalizedEmbedding(PooledEmbedding):
+ 
+         embeddings = output.model_output
+         attn_mask = output.attention_mask
+-        return normalize(self.mean_pooling(embeddings, attn_mask))
++        # Normalize in the accumulator's precision, then return the graph's dtype: narrowing
++        # before normalize() would overflow the squared sum for float16 inputs.
++        pooled = normalize(self.mean_pooling(embeddings, attn_mask))
++        return pooled.astype(embeddings.dtype, copy=False)
+ 
+ 
+ class PooledNormalizedEmbeddingWorker(OnnxTextEmbeddingWorker):
+diff --git a/tests/test_common.py b/tests/test_common.py
+index fe9626e..0a00742 100644
+--- a/tests/test_common.py
++++ b/tests/test_common.py
+@@ -8,7 +8,10 @@ from fastembed import (
+     LateInteractionMultimodalEmbedding,
+     LateInteractionTextEmbedding,
+ )
++from fastembed.common.onnx_model import OnnxOutputContext
+ from fastembed.common.utils import iter_batch, last_token_pooling
++from fastembed.text.pooled_embedding import PooledEmbedding
++from fastembed.text.pooled_normalized_embedding import PooledNormalizedEmbedding
+ 
+ 
+ def test_text_list_supported_models():
+@@ -34,6 +37,48 @@ def test_text_list_supported_models():
+         assert "hf" in description["sources"] or "url" in description["sources"]
+ 
+ 
++@pytest.mark.parametrize("dtype", [np.float32, np.float16, np.float64])
++def test_pooled_post_processing_returns_graph_dtype(dtype):
++    """Pooling accumulates in float64 because the integer mask promotes the product.
++
++    The returned embedding must still carry the dtype the ONNX graph produced, like every
++    non-pooled path. Narrowing before normalize() would overflow float16's squared sum.
++    """
++    token_embeddings = np.array([[[1.0, 2.0], [3.0, 4.0], [9.0, 9.0]]], dtype=dtype)
++    attention_mask = np.array([[1, 1, 0]], dtype=np.int64)
++    output = OnnxOutputContext(model_output=token_embeddings, attention_mask=attention_mask)
++
++    pooled = PooledEmbedding._post_process_onnx_output(
++        PooledEmbedding.__new__(PooledEmbedding), output
++    )
++    assert pooled.dtype == dtype
++    assert np.allclose(np.asarray(pooled, dtype=np.float64), [[2.0, 3.0]])
++
++    normalized = PooledNormalizedEmbedding._post_process_onnx_output(
++        PooledNormalizedEmbedding.__new__(PooledNormalizedEmbedding), output
++    )
++    assert normalized.dtype == dtype
++    tolerance = 1e-3 if dtype is np.float16 else 1e-6
++    assert np.allclose(
++        np.linalg.norm(np.asarray(normalized, dtype=np.float64), axis=1), 1.0, atol=tolerance
++    )
++
++
++def test_pooled_normalized_does_not_overflow_float16():
++    """A float16 graph output large enough to overflow its own squared sum must still
++    normalize: the regression that motivated this was a vector of exact zeros."""
++    token_embeddings = np.full((1, 2, 1024), 10.0, dtype=np.float16)
++    attention_mask = np.ones((1, 2), dtype=np.int64)
++    output = OnnxOutputContext(model_output=token_embeddings, attention_mask=attention_mask)
++
++    normalized = PooledNormalizedEmbedding._post_process_onnx_output(
++        PooledNormalizedEmbedding.__new__(PooledNormalizedEmbedding), output
++    )
++    assert normalized.dtype == np.float16
++    assert not np.all(normalized == 0)
++    assert np.allclose(np.linalg.norm(np.asarray(normalized, dtype=np.float64), axis=1), 1.0, atol=1e-3)
++
++
+ def test_last_token_pooling():
+     token_embeddings = np.array(
+         [

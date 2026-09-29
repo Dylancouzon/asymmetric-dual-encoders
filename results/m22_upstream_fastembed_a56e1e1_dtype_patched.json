@@ -1,0 +1,136 @@
+{
+  "fastembed_commit": "a56e1e13508980441cf4f2072951c92c224e7fbe",
+  "fastembed_version": "0.8.1",
+  "numpy": "2.5.3",
+  "onnxruntime": "1.30.0",
+  "thresholds": {
+    "minimum_true_cosine": 0.9999,
+    "maximum_absolute_error": 1e-05,
+    "maximum_row_norm_deviation": 1e-05
+  },
+  "models": {
+    "Qdrant/constella-nano": {
+      "class": "PooledNormalizedEmbedding",
+      "hub_revision": "b037b20d1c220bf33dce254a7f386e401ac0703a",
+      "graph_output_dtype": "float32",
+      "fastembed_dtype": "float32",
+      "dtype_matches_graph": true,
+      "served_token_counts": [
+        31,
+        16,
+        72,
+        332,
+        435,
+        511,
+        512,
+        512,
+        512,
+        512
+      ],
+      "padding": {
+        "length": null,
+        "direction": "right",
+        "pad_token": "[PAD]"
+      },
+      "fastembed_vs_direct_ort": {
+        "minimum_true_cosine": 0.9999999999999116,
+        "maximum_absolute_error": 1.6391277313232422e-07
+      },
+      "batch2_vs_batch1": {
+        "minimum_true_cosine": 0.9999999999999465,
+        "maximum_absolute_error": 3.725290298461914e-08
+      },
+      "maximum_row_norm_deviation": 2.137528709589276e-09,
+      "canonical_vector_max_abs_error": 4.1916446688605724e-08,
+      "parity_passed": true
+    },
+    "Qdrant/constella-zero": {
+      "class": "OnnxTextEmbedding",
+      "hub_revision": "b3cc655bab21cb17fe0cc13d92bb131ae8d555ee",
+      "graph_output_dtype": "float32",
+      "fastembed_dtype": "float32",
+      "dtype_matches_graph": true,
+      "served_token_counts": [
+        31,
+        16,
+        72,
+        332,
+        435,
+        511,
+        512,
+        512,
+        512,
+        512
+      ],
+      "padding": {
+        "length": null,
+        "direction": "right",
+        "pad_token": "[PAD]"
+      },
+      "fastembed_vs_direct_ort": {
+        "minimum_true_cosine": 0.9999999999999998,
+        "maximum_absolute_error": 1.4901161193847656e-08
+      },
+      "batch2_vs_batch1": {
+        "minimum_true_cosine": 0.9999999999999984,
+        "maximum_absolute_error": 1.4901161193847656e-08
+      },
+      "maximum_row_norm_deviation": 6.176802735957665e-08,
+      "canonical_vector_max_abs_error": 4.9554634076742765e-09,
+      "parity_passed": true
+    },
+    "Qdrant/stella-en-400M-v5-doc-onnx": {
+      "class": "OnnxTextEmbedding",
+      "hub_revision": "293ec490f8e8c56ca468f84c84b8095bac954254",
+      "graph_output_dtype": "float32",
+      "fastembed_dtype": "float32",
+      "dtype_matches_graph": true,
+      "served_token_counts": [
+        31,
+        16,
+        72,
+        332,
+        435,
+        511,
+        512,
+        512,
+        512,
+        512
+      ],
+      "padding": {
+        "length": null,
+        "direction": "right",
+        "pad_token": "[PAD]"
+      },
+      "fastembed_vs_direct_ort": {
+        "minimum_true_cosine": 0.9999999999999997,
+        "maximum_absolute_error": 3.725290298461914e-08
+      },
+      "batch2_vs_batch1": {
+        "minimum_true_cosine": 0.9999999999997281,
+        "maximum_absolute_error": 1.30385160446167e-07
+      },
+      "maximum_row_norm_deviation": 7.800002510549575e-08,
+      "canonical_vector_max_abs_error": 1.5753593445022585e-07,
+      "parity_passed": true
+    }
+  },
+  "vs_other_install": {
+    "Qdrant/constella-nano": {
+      "minimum_true_cosine": 1.0,
+      "maximum_absolute_error": 0.0,
+      "other_dtype": "float32"
+    },
+    "Qdrant/constella-zero": {
+      "minimum_true_cosine": 0.9999999999999998,
+      "maximum_absolute_error": 0.0,
+      "other_dtype": "float32"
+    },
+    "Qdrant/stella-en-400M-v5-doc-onnx": {
+      "minimum_true_cosine": 0.9999999999999998,
+      "maximum_absolute_error": 0.0,
+      "other_dtype": "float32"
+    }
+  },
+  "parity_passed": true
+}
