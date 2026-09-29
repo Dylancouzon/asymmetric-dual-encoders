@@ -121,3 +121,17 @@ Astra's rewritten text was more formal than the brief asked for; the final issue
 structure with its corrections. The patch is `m22/fastembed-dtype-fix-on-a56e1e1.patch`
 (scratch commit `bf96abc` on `a56e1e1`); with it `tests/test_common.py` passes 13 of 13, and five
 of the new tests fail on `main` without it.
+
+## Issue opened (2026-09-30)
+
+Dylan narrowed the deliverable to one GitHub issue with a proposed fix, and no PR for now. The
+full-suite rerun was stopped: it only gates a PR. It had not finished, because of a stalled
+Hugging Face download and then a short local HTTPS outage. Its ten failures (ColPali multimodal,
+cross-encoder rerank, jina-v3 multitask) are in paths that do not call `mean_pooling`. They were
+not compared against clean `main`.
+
+Opened [qdrant/fastembed#752](https://github.com/qdrant/fastembed/issues/752), "[Bug]: Mean-pooling
+text models return float64 instead of float32", on the bug-report template. It carries the
+consequences, the 16 affected built-in models plus custom `PoolingType.MEAN` models, the #492 and
+#479 cause, the v0.6.0/0.6.1/0.8.1 repro and the proposed three-path diff. The tested patch with
+tests remains `m22/fastembed-dtype-fix-on-a56e1e1.patch` for a PR if the maintainers want one.
