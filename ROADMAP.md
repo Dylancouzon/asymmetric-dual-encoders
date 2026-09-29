@@ -6,7 +6,7 @@ milestone** (opened 2026-09-16 under R22, evaluation-only), but its measurement 
 stages A, B and C are complete and only the archive (stage D) remains, blocked on object storage.
 **M22 (official release) may start** without waiting for stage D — object storage blocks M22's
 storage-retirement recommendation, not card preparation, staging, verification or release
-(Sol, 2026-09-23). M23 (upstream FastEmbed PRs) follows M22. M19 closed at its development-judgment boundary
+(Sol, 2026-09-23). M23's upstream work moved first: registrations merged as #751, dtype bug filed as #752. M19 closed at its development-judgment boundary
 with confirmation sealed and released Zero v1 retained.
 
 | Milestone | Deliverable | State / entry point |
@@ -28,7 +28,7 @@ with confirmation sealed and released Zero v1 retained.
 | M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active**; stages A+B complete 2026-09-19 (reserved access SPENT, `m8-reserved-spent`), **stage C complete 2026-09-23** (`results/m20_beir15_run.json`); only stage D remains, blocked on object storage; `m20/STATUS.md`, `m20/FINDINGS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 | M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
-| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype PR open item; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
+| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype bug filed as #752, no PR planned; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Migration map
 
