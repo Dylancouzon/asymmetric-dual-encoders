@@ -62,3 +62,22 @@ change rebased onto `a56e1e1`: `mean_pooling` stays byte-identical to upstream, 
 after `normalize()`. The only conflict was one import line in `tests/test_common.py`. Red/green on
 upstream: the new tests fail three of nine without the patch and pass nine of nine with it.
 `test_common.py` and `test_preprocessor_utils.py` pass 40 of 40 with it.
+
+## README fix found during this check
+
+Since `2704c34` (2026-09-25) the preview branch registers only the `Qdrant/` names, and it
+rejects `TextEmbedding("DylanCouzon/constella-nano")` with `ValueError`. The README quickstart
+still used the `DylanCouzon/` names, so it failed on a fresh install. Commit `c907c22` renames
+the model IDs and links in `README.md` and `research/constella-in-plain-english.md`. The
+quickstart then ran end to end on both the preview branch and upstream `a56e1e1`: Nano 0.7418
+against 0.1331 and Zero 0.6423 against 0.0470, with the mRNA passage first. The install line is
+unchanged.
+
+## Owner decisions (Dylan, 2026-09-30)
+
+- **Install lines wait for PyPI.** The Hub cards, the README and the plain-English page keep the
+  preview-branch install line until a PyPI release contains #751. They then switch once to plain
+  `pip install fastembed`.
+- **Hub cards wait for PyPI.** No card commit now. The next card revision carries the install
+  line and removes the "requires the Constella preview branch" banner sentence.
+- **Dtype PR: pending.** Dylan asked for an explanation of the bug before a decision.
