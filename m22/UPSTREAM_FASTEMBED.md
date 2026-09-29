@@ -102,3 +102,22 @@ unchanged.
   norms about 5), `nomic-embed-text-v1` 1.4e-07 (unnormalized, norms about 22), `gte-base`
   5.9e-09. Norms unchanged.
 - ruff and ruff-format pass; mypy with the CI flags reports no issues in 64 files.
+
+## Astra review of the issue and PR (2026-09-30)
+
+Codex `gpt-6-astra` (xhigh, read-only) reviewed the draft issue, draft PR, diff and measured facts
+and co-wrote the text. Record: `research/m22-dtype-issue-review-astra-2026-09-30.md`. It found
+all three `mean_pooling` callers covered, parallel workers and query/passage paths safe, and the
+tests meaningful.
+
+| finding | disposition |
+|---|---|
+| P1: the custom-path cast truncates integer graph outputs (`int8` `[3, 4]` normalized became `[0, 0]`) | **Fixed.** The cast applies only to float outputs; new test `test_custom_integer_output_is_not_truncated` |
+| P2: custom MEAN models returned float64 before v0.6.1 | **Confirmed and fixed in text.** `v0.6.0` already returned the unwidened-back mean; the custom path dates from #479 |
+| P2: "search results do not change" was not measured | **Fixed.** The text now reports the measured differences (at most 1.4e-07) and says values match float32 up to rounding |
+| P2: checklist boxes overstated | **Fixed.** Pre-commit hooks installed and run on the commit; the existing-tests box follows the full-suite result |
+
+Astra's rewritten text was more formal than the brief asked for; the final issue keeps our plainer
+structure with its corrections. The patch is `m22/fastembed-dtype-fix-on-a56e1e1.patch`
+(scratch commit `bf96abc` on `a56e1e1`); with it `tests/test_common.py` passes 13 of 13, and five
+of the new tests fail on `main` without it.
