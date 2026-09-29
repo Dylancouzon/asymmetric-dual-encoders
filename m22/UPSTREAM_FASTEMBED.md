@@ -80,4 +80,25 @@ unchanged.
   `pip install fastembed`.
 - **Hub cards wait for PyPI.** No card commit now. The next card revision carries the install
   line and removes the "requires the Constella preview branch" banner sentence.
-- **Dtype PR: pending.** Dylan asked for an explanation of the bug before a decision.
+- **Dtype PR: go.** After the explanation, Dylan asked to check for an existing ticket, prepare
+  the GitHub issue with Codex Astra as adversarial reviewer and co-writer, and open the PR once
+  fully sure. This moves M23's dtype deliverable ahead of M22.
+
+## Dtype issue preparation (2026-09-30)
+
+- **No existing ticket.** Searches of qdrant/fastembed issues and PRs for float64, dtype,
+  float32, mean pooling, astype, precision and pooled found none on this bug. #308 is a Faiss
+  shape error.
+- **It is a regression from upstream #492** ("preserve embeddings in a type set by their model",
+  `1729aab`, first released in v0.6.1). #492 removed a final `.astype(np.float32)` so outputs keep
+  the model's dtype; the float64 from `mean_pooling` then reached users. Measured on PyPI builds:
+  `all-MiniLM-L6-v2` returns float32 on 0.6.0 and float64 on 0.6.1 and 0.8.1; `bge-small-en-v1.5`
+  (CLS pooling) returns float32 on all three.
+- **The M21 fix missed a third caller.** `CustomTextEmbedding` with `PoolingType.MEAN` also calls
+  `mean_pooling` and still returned float64 with the preview-branch fix. The PR patch now casts
+  there too, with a test that fails on float32 and float16 without it.
+- **Values change by float32 rounding only.** PyPI 0.8.1 against the fix, four inputs each:
+  `all-MiniLM-L6-v2` 6.8e-09, `paraphrase-multilingual-MiniLM-L12-v2` 9.5e-08 (unnormalized,
+  norms about 5), `nomic-embed-text-v1` 1.4e-07 (unnormalized, norms about 22), `gte-base`
+  5.9e-09. Norms unchanged.
+- ruff and ruff-format pass; mypy with the CI flags reports no issues in 64 files.
