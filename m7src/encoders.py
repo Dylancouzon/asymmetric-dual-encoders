@@ -186,6 +186,76 @@ REGISTRY = {
               "bge/stella/arctic, verified byte-identical by an ordered-vocab hash, with "
               "cls_token_id 101. So the shared bag matrix and table.CLS_ID hold unchanged -- do "
               "not 'fix' the table width to 30528, or 6 rows would ship that nothing can emit"),
+
+    # ---- M15 E8x (2026-09-30, exploratory): more BERT-WordPiece towers for the tower study.
+    "minilm-l6": Spec(
+        name="minilm-l6", repo="sentence-transformers/all-MiniLM-L6-v2",
+        revision="1110a243fdf4706b3f48f1d95db1a4f5529b4d41", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "minilm-l12": Spec(
+        name="minilm-l12", repo="sentence-transformers/all-MiniLM-L12-v2",
+        revision="a50ef00143b4d5391434df20ae11632588ac25be", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "multi-qa-minilm-l6": Spec(
+        name="multi-qa-minilm-l6", repo="sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+        revision="b207367332321f8e44f96e224ef15bc607f4dbf0", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "msmarco-minilm-l6": Spec(
+        name="msmarco-minilm-l6", repo="sentence-transformers/msmarco-MiniLM-L6-cos-v5",
+        revision="14ca9be4bbcf1402eac0f43a2e2ccb6e0f994ba3", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "bge-small-en-v1.5": Spec(
+        name="bge-small-en-v1.5", repo="BAAI/bge-small-en-v1.5",
+        revision="5c38ec7c405ec4b44b94cc5a9bb96e735b38267a", dim=384, pooling="cls", query_prefix='Represent this sentence for searching relevant passages: ', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "bge-base-en-v1": Spec(
+        name="bge-base-en-v1", repo="BAAI/bge-base-en",
+        revision="b737bf5dcc6ee8bdc530531266b4804a5d77b5d8", dim=768, pooling="cls", query_prefix='Represent this sentence for searching relevant passages: ', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "e5-small-v2": Spec(
+        name="e5-small-v2", repo="intfloat/e5-small-v2",
+        revision="ffb93f3bd4047442299a41ebb6fa998a38507c52", dim=384, pooling="mean", query_prefix='query: ', doc_prefix='passage: ',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "e5-base-v1": Spec(
+        name="e5-base-v1", repo="intfloat/e5-base",
+        revision="b533fe4636f4a2507c08ddab40644d20b0006d6a", dim=768, pooling="mean", query_prefix='query: ', doc_prefix='passage: ',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "gte-small": Spec(
+        name="gte-small", repo="thenlper/gte-small",
+        revision="17e1f347d17fe144873b1201da91788898c639cd", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "gte-base": Spec(
+        name="gte-base", repo="thenlper/gte-base",
+        revision="c078288308d8dee004ab72c6191778064285ec0c", dim=768, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "gte-large": Spec(
+        name="gte-large", repo="thenlper/gte-large",
+        revision="4bef63f39fcc5e2d6b0aae83089f307af4970164", dim=1024, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "arctic-embed-xs": Spec(
+        name="arctic-embed-xs", repo="Snowflake/snowflake-arctic-embed-xs",
+        revision="d8c86521100d3556476a063fc2342036d45c106f", dim=384, pooling="cls", query_prefix='Represent this sentence for searching relevant passages: ', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "arctic-embed-s": Spec(
+        name="arctic-embed-s", repo="Snowflake/snowflake-arctic-embed-s",
+        revision="e596f507467533e48a2e17c007f0e1dacc837b33", dim=384, pooling="cls", query_prefix='Represent this sentence for searching relevant passages: ', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "arctic-embed-m-v1": Spec(
+        name="arctic-embed-m-v1", repo="Snowflake/snowflake-arctic-embed-m",
+        revision="fc74610d18462d218e312aa986ec5c8a75a98152", dim=768, pooling="cls", query_prefix='Represent this sentence for searching relevant passages: ', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "contriever": Spec(
+        name="contriever", repo="facebook/contriever",
+        revision="2bd46a25019aeea091fd42d1f0fd4801675cf699", dim=768, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "contriever-msmarco": Spec(
+        name="contriever-msmarco", repo="facebook/contriever-msmarco",
+        revision="abe8c1493371369031bcb1e02acb754cf4e162fa", dim=768, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    "tas-b": Spec(
+        name="tas-b", repo="sentence-transformers/msmarco-distilbert-base-tas-b",
+        revision="b12d9352e776979147078a8975a4885042984fd1", dim=768, pooling="cls", query_prefix='', doc_prefix='',
+        notes="M15 E8x exploratory tower (published pooling and query prompt)"),
 }
 
 DEFAULT = "bge-base-en-v1.5"
