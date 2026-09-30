@@ -1,0 +1,18 @@
+#!/bin/sh
+cd /Users/dylanc/Documents/GitHub/asymetric-dual-encoders
+caffeinate -dims -w $$ &
+export PYTHONPATH=m15src
+L=work/m15/overnight.log
+echo "$(date) CHAIN2 begin (pod-encoded vectors for programmers, physics, trec-covid)" >> $L
+[ -f results/m15_e2_ann_fiqa.json ] && mv results/m15_e2_ann_fiqa.json work/m15/e2_ann_fiqa_overlapped_run.json
+rm -rf work/m15/qdrant/storage-fiqa
+for step in "encode_more.py cqadup-programmers cqadup-physics trec-covid" "e9_blend.py" "e10_router.py" "e2_ann.py fiqa" "e12_failure_modes.py"; do
+  name=$(echo $step | cut -d' ' -f1 | sed 's/.py//')
+  echo "$(date) start $step" >> $L
+  .venv-mac/bin/python -u m15src/$step > work/m15/$name.chain2.log 2>&1
+  rc=$?
+  echo "$(date) end $step rc=$rc" >> $L
+  [ $rc -eq 0 ] || { echo "CHAIN2 STOPPED" >> $L; exit $rc; }
+  if [ "$name" = "encode_more" ] && grep -q '"passed": false' work/m15/gates.json; then echo "CHAIN2 STOPPED gate failed" >> $L; exit 1; fi
+done
+echo "$(date) CHAIN2 DONE" >> $L
