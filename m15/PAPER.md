@@ -8,11 +8,7 @@ Results are labelled **registered** (method frozen before observation, `m15/MEAS
 ## Abstract
 
 If a cheap query encoder can write into the vector space of an existing document index, the expensive
-half of a retrieval system never has to move. We fit the same lookup-table query encoder, a token
-table with no neural network at query time, to ten embedding towers and ask which towers make good
-tables. The tower's own retrieval quality did not rank them: Spearman -0.09 between a tower's score
-and its table's on six public BEIR sets. A few-minute screen of the table on two development forums
-did (0.90, and between 0.87 and 0.98 when any one model family is left out). Over one frozen
+half of a retrieval system never has to move. We fit one closed-form lookup-table query encoder, a token table with no neural network at query time, to 26 embedding towers and ask which make good tables. The tower's own retrieval quality did not rank them (Spearman +0.09 on six public BEIR sets, 95% interval -0.39 to +0.52), and bigger towers distilled worse (-0.76 between embedding dimension and retention). A few-minute screen of the table on two development forums did rank them (0.88, interval 0.70 to 0.95). Over one frozen
 `stella_en_400M_v5` index, the table keeps 81.4% of the tower's nDCG@10 on 15 BEIR datasets at 0.044
 ms per query on a laptop CPU, and a 34.5M-parameter distilled transformer keeps 90.5% at 2.25 ms,
 against 31.6 ms for the tower. About 90% of the table's loss sits on the 40% of queries the tower reads differently when their words are shuffled, not on queries that are merely fragile or full of rare subwords, and routing on the table's own retrieval margin recovers a quarter of the headroom an oracle
@@ -33,18 +29,13 @@ answers neither:
 2. **Which queries actually need the expensive encoder?** If few do, a system can serve the cheap tier
    by default and escalate, all against one index.
 
-We measure both. The natural guess in question 1 is wrong in an informative way. We fit one
-closed-form lookup-table recipe to ten towers: the towers' own retrieval quality, and three scalar
-proxies for why a tower might distill well, did not rank the tables they produced, while scoring each
-table on a small development set did. We call this *screen the student*. For question 2, a per-query
+We measure both. The natural guess in question 1 is wrong in an informative way. We fit one closed-form lookup-table recipe to 26 towers: the towers' own retrieval quality, and three scalar proxies for why a tower might distill well, did not rank the tables they produced, bigger towers tended to produce worse ones, and scoring each table on a small development set ranked them well. We call this *screen the student*. For question 2, a per-query
 oracle shows the headroom is large and concentrated, the table's losses are largest on queries the tower reads differently when their words are shuffled, and the table's own retrieval margin is the cheapest
 signal we found that locates those queries.
 
 **Contributions.**
 
-- A controlled comparison of ten towers under one lookup-table recipe, with lambdas frozen on
-  development data before six public sets were scored, showing that tower quality did not rank table
-  quality and a direct development screen did (Section 4).
+- A comparison of 26 towers under one lookup-table recipe (ten registered, 16 added exploratorily), with ridge weights frozen on development data before six public sets were scored, showing that tower quality did not rank table quality, that bigger towers distilled worse, and that a direct development screen ranked them (Section 4).
 - A per-query localization of what a table loses: order-dependent queries, controlled for the tower's own score and for query fragility, with worked examples (Section 5).
 - An oracle upper bound and five frozen routers built on signals the table already has, and a test of
   blending two tiers' query vectors in one search (Section 6).
@@ -113,32 +104,50 @@ match their public numbers within half a point.
 
 A lookup table can be fit in closed form to any tower that shares its tokenizer: a ridge regression
 from each query's token counts to the tower's query vector, anchored at each token's own tower
-embedding (`m8src/teacher_screen.py`). We fit this one recipe to 11 configurations of ten checkpoints
-from six model families, all sharing one BERT WordPiece vocabulary, on 337,981 training queries
-screened against every held-out set. Each ridge weight was chosen on the two development forums and
-frozen in a committed file (`results/m15_e8_frozen_lambdas.json`) before any public set was scored
-(`results/m15_e8_towers.json`, registered).
+embedding (`m8src/teacher_screen.py`). We fit this one recipe to 10 checkpoints from six model
+families, all sharing one BERT WordPiece vocabulary, on 337,981 training queries screened against
+every held-out set. Each ridge weight was chosen on the two development forums and frozen in a
+committed file (`results/m15_e8_frozen_lambdas.json`) before any public set was scored
+(`results/m15_e8_towers.json`, registered). After seeing that result we added 17 more checkpoints
+under the same recipe, the same freeze order and the same convergence gate (exploratory,
+`results/m15_e8x_towers.json`): MiniLM, bge, e5, thenlper gte and arctic models from 384 to 1024
+dimensions, Contriever and TAS-B. One (arctic-embed-m v1) failed the convergence gate at its
+extended ridge weight and is excluded, leaving 26.
 
 ![Figure 1](figures/f3_towers.png)
 
-**Figure 1.** Left: each tower's own nDCG@10 against its table's, on six public BEIR sets. Right: the
-table's score on the two development forums against its public score. Gray lines join the base and
-large checkpoints of one family.
+**Figure 1.** Each point is one checkpoint's closed-form table; filled points are the registered ten,
+hollow points the exploratory 16, and Stella is blue. Left: the tower's own nDCG@10 against its
+table's, on six public BEIR sets. Middle: the table's score on the two development forums against its
+public score. Right: the table's retention of its tower against the tower's embedding dimension.
+Intervals are 10,000-draw bootstraps over checkpoints.
 
-**The tower's score did not rank the tables.** Across the ten checkpoints, the Spearman correlation
-between a tower's own score and its table's is -0.09 on the six public sets, and +0.14 on the four of
-them with no disclosed training exposure. Leaving any one family out moves it between -0.43 and +0.24
-(`results/m15_e13_robustness.json`). The strongest tower there, gte-large-en-v1.5 (0.5970), made the
-weakest table (0.2455, keeping 41% of its tower); Stella, second-strongest, made the best table and
-kept 69%.
+**The tower's score did not rank the tables.** Over the 26 checkpoints, the Spearman correlation
+between a tower's own six-set score and its table's is +0.09 (95% interval -0.39 to +0.52); over the
+registered ten it was -0.09. The strongest tower in the registered set, gte-large-en-v1.5 (0.5970),
+made its weakest table (0.2455, keeping 41% of its tower). Stella makes the sharpest contrast with it:
+Stella was trained from gte-large-en-v1.5 and shares its 24-layer, 1024-dimensional architecture and
+tokenizer, differing in training and in its read-out (mean pooling and a dense head against gte-large's
+CLS token), and it made the best table of all 26 (0.3974, keeping 69%). Reading arctic-embed-l with
+mean pooling instead of CLS made its table worse (0.2764 against 0.3034), so the read-out alone does
+not explain Stella.
 
-**Scoring the table itself did.** The table's development-forum score ranks the public scores with
-Spearman 0.90 (0.68 on the four exposure-free sets), and between 0.87 and 0.98 when any one family is
-left out. The screen took 4 to 7 minutes per tower on one A100, measured between successive output files; for every tower but Stella, whose training-query vectors were cached, that includes encoding the 337,981 training queries and both forums. In each of the four families where we fit two sizes,
-the smaller checkpoint scored higher: bge-base over bge-large (0.3529 against 0.2845 on the public
-sets), e5-base over e5-large (0.2930 against 0.2585), gte-base over gte-large (0.3252 against
-0.2455) and arctic-m over arctic-l (0.3279 against 0.3034); the arctic pair also differs in version,
-and within each pair size is confounded with training and dimension.
+**Bigger towers made worse tables.** Across the 26, embedding dimension, our proxy for tower size,
+correlates with the tower's own quality at +0.61 and with its table's retention at -0.76. Within
+families the pattern is nearly uniform: gte (thenlper) small, base and large keep 60%, 55% and 48% of
+their towers; e5-v2 small, base and large make tables of 0.320, 0.293 and 0.259; bge-v1.5 small, base
+and large 0.358, 0.353 and 0.285; the six-layer MiniLM beats the twelve-layer one; arctic-xs and
+arctic-s are the one exception (0.344 against 0.352). The 384-dimensional bge-small-en-v1.5 made the
+second-best table overall. Size is confounded with training data and dimension within each family,
+so this is an observation about these checkpoints, not a causal law, and Stella is its clearest
+exception.
+
+**Scoring the table itself did rank them.** The table's development-forum score ranks the public
+scores with Spearman 0.88 over the 26 (95% interval 0.70 to 0.95); over the registered ten it was
+0.90 (0.68 on the four exposure-free sets), and between 0.87 and 0.98 when any one family is left
+out (`results/m15_e13_robustness.json`). The screen took 4 to 7 minutes per tower on one A100,
+measured between successive output files; for every tower but Stella, whose training-query vectors
+were cached, that includes encoding the 337,981 training queries and both forums.
 
 **Three proxies that did not rank them either.** We measured, per tower, on the real test queries
 (exploratory; `results/m15_e11_mechanism.json`, `results/m15_e11b_margin.json`):
@@ -158,7 +167,7 @@ reorders its results; gte-base, with the widest margins (0.109), still makes a m
 the data show is narrower: across these towers, the vector fidelity a distillation loss optimizes did
 not track ranking quality, while a direct ranking screen did.
 
-**Scope.** One recipe, ten checkpoints, six public sets, no significance test. No checkpoint's
+**Scope.** One recipe, 26 checkpoints (ten registered), six public sets; intervals are bootstraps over checkpoints, not significance tests. No checkpoint's
 authors disclose training on these six test sets; most trained on their source families
 (`m15/e8_exposure.json`). An earlier screen in this project used a training list with 1.31% overlap
 with held-out queries and found a correlation of 0.000 over eight configurations; this refit uses the
@@ -358,8 +367,7 @@ on the four exposure-free sets was unresolved (-0.0011). On the one-shot held-ou
 descriptive, Nano's dataset-weighted difference from bge-small was +0.0032, with a 95% interval (-0.0069 to +0.0134) that spans zero, and Nano was below LEAF (-0.0389). Appendix B has the full table. These compare systems on
 different indexes, not query encoders alone.
 
-**Limitations.** One document tower and one family of students; Section 4 covers one closed-form
-recipe on ten checkpoints, and its correlations carry no significance test. BEIR-15 results are
+**Limitations.** One document tower and one family of students; Section 4 covers one closed-form recipe on 26 checkpoints, 16 of them added after the registered ten; we trained the full served-table recipe on Stella only, so whether the screen predicts trained tables for other towers is untested. BEIR-15 results are
 descriptive, and query-resampling intervals exclude training-seed variation. Latencies come from one
 laptop CPU and one runtime; server throughput and GPU serving are not measured. The MS MARCO subset
 removes most competing passages, so its absolute nDCG is optimistic. Several BEIR sets share source
@@ -367,9 +375,7 @@ families with the towers' training data, and Nano's bge-small backbone trained o
 
 ## 9. Conclusion
 
-A frozen index can serve queries from a lookup table that gives up about a fifth of the tower's quality for a seven-hundredth of its encode cost, or from a small transformer that gives up a tenth for a fourteenth. The practical lessons are three. Pick the tower by screening the table you will serve,
-not by the tower's own score: in our ten towers the leaderboard order did not survive distillation,
-while a few-minute development screen predicted it. Expect the table's largest losses on queries the tower reads differently when their words are shuffled, and route on the table's own retrieval margin, which recovers about a quarter of the oracle's gain over matched random routing. And measure the saving inside the search engine: a table's query costs more graph search, so on our one-million-passage collection its roughly 60-fold encode saving over Nano became 2.2- to 3.1-fold end to end within 1% to 5% of each tier's exact quality.
+A frozen index can serve queries from a lookup table that gives up about a fifth of the tower's quality for a seven-hundredth of its encode cost, or from a small transformer that gives up a tenth for a fourteenth. The practical lessons are three. Pick the tower by screening the table you will serve, not by the tower's own score: across 26 towers the leaderboard order did not survive distillation, bigger towers tended to distill worse, and a few-minute development screen predicted the result. Note that our screen uses the closed-form table, while the served Zero is a trained table; the two agree on Stella, the only tower where we have both. Expect the table's largest losses on queries the tower reads differently when their words are shuffled, and route on the table's own retrieval margin, which recovers about a quarter of the oracle's gain over matched random routing. And measure the saving inside the search engine: a table's query costs more graph search, so on our one-million-passage collection its roughly 60-fold encode saving over Nano became 2.2- to 3.1-fold end to end within 1% to 5% of each tier's exact quality.
 
 ## Appendix A. What a Mean-Pooled Table Absorbs
 

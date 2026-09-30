@@ -87,28 +87,48 @@ PAIRS = [("bge-base-en-v1.5", "bge-large-en-v1.5"), ("e5-base-v2", "e5-large-v2"
 
 
 def f3_towers():
-    e8 = R("m15_e8_towers.json")
-    cf = e8["configs"]
-    rho = e8["spearman"]["checkpoints"]
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.3))
-    panels = [("six_ceiling_macro_all6", "Tower's own nDCG@10, six public sets",
-               f"Tower quality does not predict the table\nSpearman {rho['six_ceiling_vs_six_table_all6']:+.2f}"),
-              ("dev_table", "Table nDCG@10 on two dev forums",
-               f"A cheap screen of the table does\nSpearman {rho['primary_dev_table_vs_six_table_all6']:+.2f}")]
-    for ax, (xkey, xlabel, title) in zip(axes, panels):
-        for a, b in PAIRS:
-            ax.plot([cf[a][xkey], cf[b][xkey]],
-                    [cf[a]["six_table_macro_all6"], cf[b]["six_table_macro_all6"]],
-                    color="#d9d8d3", linewidth=1.2, zorder=1)
-        for name, short in SHORT.items():
-            x, y = cf[name][xkey], cf[name]["six_table_macro_all6"]
-            color = C["stella"] if name == "stella-400M-v5" else C["muted"]
-            ax.scatter(x, y, s=34, color=color, zorder=3)
-            ax.annotate(short, (x, y), textcoords="offset points", xytext=(5, 2), fontsize=7.5,
-                        color=C["ink"])
-        ax.set_xlabel(xlabel)
-        ax.set_title(title, fontsize=9, loc="left")
-    axes[0].set_ylabel("Table nDCG@10, six public sets")
+    """E8 (registered, filled) and E8x (exploratory, hollow) checkpoints, pooled."""
+    e8 = R("m15_e8_towers.json")["configs"]
+    e8x = R("m15_e8x_towers.json")
+    rows = {n: {**c, "x": False} for n, c in e8.items() if n != "arctic-embed-l-mean"}
+    rows.update({n: {**c, "x": True} for n, c in e8x["new_configs"].items()})
+    for c in rows.values():
+        c["ret"] = c["six_table_macro_all6"] / c["six_ceiling_macro_all6"]
+    st = e8x["stats"]
+    from scipy.stats import spearmanr
+    names = list(rows)
+    rho_dim = spearmanr([rows[n]["dim"] for n in names], [rows[n]["ret"] for n in names])[0]
+    fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.4))
+    panels = [("six_ceiling_macro_all6", "six_table_macro_all6", "Tower's own nDCG@10, six sets",
+               "Table nDCG@10, six sets",
+               f"Tower quality: Spearman {st['tower']['spearman']:+.2f}\n"
+               f"95% [{st['tower']['bootstrap95_over_towers'][0]:+.2f}, "
+               f"{st['tower']['bootstrap95_over_towers'][1]:+.2f}]"),
+              ("dev_table", "six_table_macro_all6", "Table nDCG@10, two dev forums",
+               "Table nDCG@10, six sets",
+               f"Dev screen: Spearman {st['screen']['spearman']:+.2f}\n"
+               f"95% [{st['screen']['bootstrap95_over_towers'][0]:+.2f}, "
+               f"{st['screen']['bootstrap95_over_towers'][1]:+.2f}]"),
+              ("dim", "ret", "Tower embedding dimension (size proxy)", "Table retention of its tower",
+               f"Bigger towers distill worse\nSpearman {rho_dim:+.2f}")]
+    for ax, (xk, yk, xl, yl, title) in zip(axes, panels):
+        for k, (n, c) in enumerate(rows.items()):
+            color = C["stella"] if n == "stella-400M-v5" else C["muted"]
+            # Deterministic horizontal jitter on the dimension axis so equal dims do not overlap.
+            x = c[xk] * (1 + 0.03 * (k % 7 - 3) / 3) if xk == "dim" else c[xk]
+            ax.scatter(x, c[yk], s=30, zorder=3, color="white" if c["x"] else color,
+                       edgecolor=color, linewidth=1.3)
+        s_ = rows["stella-400M-v5"]
+        ax.annotate("stella", (s_[xk], s_[yk]), textcoords="offset points", xytext=(5, 2),
+                    fontsize=7.5, color=C["stella"])
+        g_ = rows["gte-large-en-v1.5"]
+        ax.annotate("gte-large-en-v1.5", (g_[xk], g_[yk]), textcoords="offset points",
+                    xytext=(5, -9), fontsize=7.5, color=C["ink"])
+        ax.set_xlabel(xl)
+        ax.set_ylabel(yl)
+        ax.set_title(title, fontsize=8.5, loc="left")
+    axes[2].set_xscale("log", base=2)
+    axes[2].set_xticks([384, 768, 1024], ["384", "768", "1024"])
     save(fig, "f3_towers")
 
 
