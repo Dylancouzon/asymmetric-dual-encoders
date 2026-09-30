@@ -226,13 +226,11 @@ as well. The arctic pair also differs in version.
 |---|---|---:|
 | The tower is "almost a bag of words" | mean cosine between the table's and the tower's query vector | -0.07 |
 | The tower reads word order, which a table cannot | mean cosine between a query's vector and its shuffled version's | -0.27 |
-| The table's error is small relative to the tower's ranking margins | vector error divided by the median gap between the tower's 1st and 10th score | -0.42 |
+| The table's error is small relative to the tower's ranking margins | RMS vector error divided by the median gap between the tower's 1st and 10th score, averaged over the six sets | -0.42 |
 
 The first two point the wrong way; the third points the right way but weakly, and against retention
 it is -0.13. The e5 checkpoints show why fidelity misleads: their tables reproduce the tower's query
-vectors best (cosine 0.90 and 0.89, against 0.78 for Stella) and still rank documents worse, because
-e5's own score margins are the narrowest (a median gap of 0.026 between its 1st and 10th document,
-against 0.084 for Stella), so a small vector error reorders its results. Margins alone do not rescue the prediction either: gte-base has the widest margins (0.109) and a middling table. With ten checkpoints these are associations, not causes, and the e5 reading is a hypothesis; what the data do show is that vector fidelity, the quantity a distillation loss optimizes, did not track ranking quality here, while a direct ranking screen did. Vector fidelity, the quantity a
+vectors best (cosine 0.90 and 0.89, against 0.78 for Stella) and still rank documents worse, because e5's own score margins are the narrowest (a median gap of 0.026 between its 1st and 10th document, averaged over the six sets, against 0.084 for Stella), so a small vector error reorders its results. Margins alone do not rescue the prediction either: gte-base has the widest margins (0.109 on the same average) and a middling table. With ten checkpoints these are associations, not causes, and the e5 reading is a hypothesis; what the data do show is that vector fidelity, the quantity a distillation loss optimizes, did not track ranking quality here, while a direct ranking screen did. Vector fidelity, the quantity a
 distillation loss optimizes, is not ranking fidelity, which is why only a ranking screen predicts.
 
 **What this does and does not show.** One recipe, ten checkpoints, six public sets, no significance

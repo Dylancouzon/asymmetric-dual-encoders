@@ -100,8 +100,8 @@ def mechanisms():
     return card("C4. Three mechanisms that do not explain C3", "exploratory (E11, E11b)",
                 "How additive a tower is, how much it reads word order, and how its table's error "
                 "compares with its ranking margins do not predict its table's quality.",
-                table(["config", "additivity", "order cosine", "median 1st-10th gap",
-                       "error / margin", "six table", "retention"], rows)
+                table(["config", "additivity", "order cosine", "mean of per-set median 1st-10th gaps",
+                       "mean of per-set RMS error / median gap", "six table", "retention"], rows)
                 + "\n\nSpearman over the 10 checkpoints: "
                 + ", ".join(f"{k} {v:+.3f}" for k, v in rho.items()),
                 "`results/m15_e11_mechanism.json`, `results/m15_e11b_margin.json`",

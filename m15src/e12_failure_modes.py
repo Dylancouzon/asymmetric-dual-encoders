@@ -38,9 +38,13 @@ def main():
         z, n, s = (np.array([rows[k][q] for q in ids]) for k in ("zero-dense", "nano-dense",
                                                                   "stella-query"))
         shuffled = conditions(data["q_texts"], np.random.default_rng(20260930))["shuffle"]
-        pq = V.ndcg10(V.exact_run(stella.encode(shuffled), dv, data["doc_ids"], ids),
-                      data["qrels"], ids)
-        order = s - np.array([pq[q] for q in ids])
+        # Full and shuffled scored by the same local encoder and vectors (Sol review): the
+        # difference is word-order sensitivity, not reproduction noise against M20.
+        full_l = V.ndcg10(V.exact_run(stella.encode(data["q_texts"]), dv, data["doc_ids"], ids),
+                          data["qrels"], ids)
+        shuf_l = V.ndcg10(V.exact_run(stella.encode(shuffled), dv, data["doc_ids"], ids),
+                          data["qrels"], ids)
+        order = np.array([full_l[q] - shuf_l[q] for q in ids])
         fert = R6.fertility(tok, data["q_texts"])
         per[ds] = {"n": len(ids), "mean_gap_stella_zero": float((s - z).mean()),
                    "mean_order_dependence": float(order.mean()), "mean_fertility": float(fert.mean()),
@@ -60,6 +64,8 @@ def main():
                        "fertility_vs_order": float(spearmanr(fert, order)[0])},
                "stella_gap_by_fertility_tercile": terciles(fert, g_s),
                "nano_gap_by_fertility_tercile": terciles(fert, g_n),
+               "stella_gap_by_order_tercile": terciles(order, g_s),
+               "nano_gap_by_order_tercile": terciles(order, g_n),
                "share_order_dependent": float((order > 0).mean()),
                "stella_gap_order_dependent": float(g_s[order > 0].mean()),
                "stella_gap_order_free": float(g_s[order <= 0].mean())}
