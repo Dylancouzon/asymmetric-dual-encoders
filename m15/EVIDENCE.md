@@ -89,6 +89,35 @@ Spearman over the 10 checkpoints: primary_dev_table_vs_six_table_all6 +0.903, de
 
 **Cannot show.** A cause; other recipes; significance (n = 10).
 
+## C3b. The tower result on 26 checkpoints
+
+**Label:** exploratory (E8x, E13). **Source:** `results/m15_e8x_towers.json`, `results/m15_e13_robustness.json`
+
+**Claim.** Pooled over 26 checkpoints: screen Spearman +0.878 (95% [0.7009938131730978, 0.9525451120957914]), tower Spearman +0.091 (95% [-0.38516554370663725, 0.5214872713003209]).
+
+| config | dim | readout | lambda | dev table | six table | six tower | retention |
+|---|---|---|---|---|---|---|---|
+| minilm-l6 | 384 | mean | 0.01 | 0.3008 | 0.3267 | 0.4142 | 0.789 |
+| minilm-l12 | 384 | mean | 0.01 | 0.2870 | 0.3138 | 0.4219 | 0.744 |
+| multi-qa-minilm-l6 | 384 | mean | 0.01 | 0.3040 | 0.3406 | 0.4008 | 0.850 |
+| msmarco-minilm-l6 | 384 | mean | 0.01 | 0.2151 | 0.2905 | 0.3281 | 0.885 |
+| bge-small-en-v1.5 | 384 | cls | 0.01 | 0.3081 | 0.3581 | 0.5042 | 0.710 |
+| bge-base-en-v1 | 768 | cls | 0.001 | 0.2688 | 0.3004 | 0.5131 | 0.585 |
+| e5-small-v2 | 384 | mean | 0.001 | 0.2953 | 0.3203 | 0.4544 | 0.705 |
+| e5-base-v1 | 768 | mean | 0.001 | 0.2699 | 0.3126 | 0.4934 | 0.634 |
+| gte-small | 384 | mean | 0.01 | 0.2821 | 0.2903 | 0.4838 | 0.600 |
+| gte-base | 768 | mean | 0.001 | 0.2770 | 0.2762 | 0.5063 | 0.545 |
+| gte-large | 1024 | mean | 0.01 | 0.2533 | 0.2481 | 0.5129 | 0.484 |
+| arctic-embed-xs | 384 | cls | 0.001 | 0.3225 | 0.3440 | 0.4662 | 0.738 |
+| arctic-embed-s | 384 | cls | 0.001 | 0.3014 | 0.3516 | 0.4993 | 0.704 |
+| contriever | 768 | mean | 0.001 | 0.1428 | 0.1864 | 0.2846 | 0.655 |
+| contriever-msmarco | 768 | mean | 0.01 | 0.3086 | 0.3270 | 0.3909 | 0.837 |
+| tas-b | 768 | cls | 0.001 | 0.2543 | 0.2115 | 0.3262 | 0.648 |
+
+Stopped at the convergence gate: ['arctic-embed-m-v1']. Leave one family out (registered ten): without arctic: screen +0.88, tower -0.10, without bge: screen +0.98, tower -0.02, without e5: screen +0.93, tower -0.43, without gte: screen +0.88, tower +0.24, without mxbai: screen +0.90, tower +0.02, without stella: screen +0.87, tower -0.35. Screen minutes per tower on one A100: {'stella-400M-v5': 7, 'arctic-embed-l': 6, 'arctic-embed-l-mean': 7, 'arctic-embed-m-v1.5': 4, 'bge-base-en-v1.5': 5, 'bge-large-en-v1.5': 7, 'e5-base-v2': 4, 'e5-large-v2': 6, 'gte-base-en-v1.5': 5, 'gte-large-en-v1.5': 7, 'mxbai-embed-large-v1': 6}.
+
+**Cannot show.** A cause; recipes other than the closed-form table.
+
 ## C4. Three mechanisms that do not explain C3
 
 **Label:** exploratory (E11, E11b). **Source:** `results/m15_e11_mechanism.json`, `results/m15_e11b_margin.json`
