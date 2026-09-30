@@ -1,0 +1,446 @@
+{
+ "retrieved_utc": "2026-09-30T02:30:00Z",
+ "method": "Model cards fetched at pinned revisions via raw README URLs; papers read as PDF text; MTEB metadata read from embeddings-benchmark/mteb main. No dataset-specific web searches for FEVER, DBpedia-entity, or CQADupStack. source_tier: author_paper > mteb_metadata_community (weaker). 'source-family' means the training mix includes a corpus family the benchmark is drawn from, without naming the benchmark. Unknown is never evidence of clean.",
+ "models": {
+  "intfloat/e5-base-v2": {
+   "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "CCPairs includes \"(question, upvoted answer) pairs from Stackexchange\". BEIR builds FiQA-2018 from \"StackExchange posts under the Investment topic\" (arXiv 2104.08663). Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/intfloat/e5-base-v2/blob/f52bf8ec8c7124536f0efb74aca902b2995e5bcd/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Disclosed. Fine-tuning \"on a combination of 3 datasets: NLI, MS-MARCO passage ranking, and NQ\" (arXiv 2212.03533 sec 4.2; card points to the paper).",
+   "beir_exclusion_statement": "None found. Paper says MS-MARCO and NQ numbers are in-domain and other BEIR sets are zero-shot transfer.",
+   "notes": "The v2 card says only 'Please refer to our paper' (the original E5 paper). The paper does not describe v2 recipe changes; treat its data list as the best available, not verified for v2."
+  },
+  "intfloat/e5-large-v2": {
+   "revision": "f169b11e22de13617baa190a028a32f3493550b6",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "CCPairs includes \"(question, upvoted answer) pairs from Stackexchange\". BEIR builds FiQA-2018 from \"StackExchange posts under the Investment topic\" (arXiv 2104.08663). Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/intfloat/e5-large-v2/blob/f169b11e22de13617baa190a028a32f3493550b6/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2212.03533",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Disclosed. Fine-tuning \"on a combination of 3 datasets: NLI, MS-MARCO passage ranking, and NQ\" (arXiv 2212.03533 sec 4.2; card points to the paper).",
+   "beir_exclusion_statement": "None found. Paper says MS-MARCO and NQ numbers are in-domain and other BEIR sets are zero-shot transfer.",
+   "notes": "The v2 card says only 'Please refer to our paper' (the original E5 paper). The paper does not describe v2 recipe changes; treat its data list as the best available, not verified for v2."
+  },
+  "Alibaba-NLP/gte-base-en-v1.5": {
+   "revision": "a829fd0e060bb84554da0dfd354d0de0f7712b7f",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "GTE pre-training uses \"StackExchange and StackOverflow\" data and fine-tuning uses MEDI and BERRI (not enumerated in the card). Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "source-family",
+     "evidence": "\"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\" (App A.3). BEIR has two debate-argument corpora (ArguAna/Idebate and Touche/args.me); the sentence does not say which. mGTE Table 9 lists \"beir_debate\" 0.38M pairs. Corpus reuse for pair mining, not necessarily qrels.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Disclosed. Card: \"Supervised contrastive fine-tuning: GTE fine-tuning data\" -> GTE paper App A.2 \"Web Search We used MS MARCO passage retrieval benchmarks\". mGTE (2407.19669) sec B.2 also lists MS MARCO for English.",
+   "beir_exclusion_statement": "None found. MTEB metadata training_datasets is None for gte-base-en-v1.5 (the file has no entry for gte-large-en-v1.5). Card 'Fine-tuning: TODO' in the large card's procedure list.",
+   "notes": "The v1.5 card cites GTE (2308.03281) for data; the mGTE paper (2407.19669) also covers the v1.5 English models, but its Table 9 lists the multilingual pre-training mix, so read it as supporting family evidence only. Fine-tuning also uses MEDI and BERRI, whose member datasets are not enumerated here."
+  },
+  "Alibaba-NLP/gte-large-en-v1.5": {
+   "revision": "104333d6af6f97649377c2afbde10a7704870c7b",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "GTE pre-training uses \"StackExchange and StackOverflow\" data and fine-tuning uses MEDI and BERRI (not enumerated in the card). Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "source-family",
+     "evidence": "\"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\" (App A.3). BEIR has two debate-argument corpora (ArguAna/Idebate and Touche/args.me); the sentence does not say which. mGTE Table 9 lists \"beir_debate\" 0.38M pairs. Corpus reuse for pair mining, not necessarily qrels.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+     "url": "https://arxiv.org/pdf/2308.03281",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Disclosed. Card: \"Supervised contrastive fine-tuning: GTE fine-tuning data\" -> GTE paper App A.2 \"Web Search We used MS MARCO passage retrieval benchmarks\". mGTE (2407.19669) sec B.2 also lists MS MARCO for English.",
+   "beir_exclusion_statement": "None found. MTEB metadata training_datasets is None for gte-base-en-v1.5 (the file has no entry for gte-large-en-v1.5). Card 'Fine-tuning: TODO' in the large card's procedure list.",
+   "notes": "The v1.5 card cites GTE (2308.03281) for data; the mGTE paper (2407.19669) also covers the v1.5 English models, but its Table 9 lists the multilingual pre-training mix, so read it as supporting family evidence only. Fine-tuning also uses MEDI and BERRI, whose member datasets are not enumerated here."
+  },
+  "Snowflake/snowflake-arctic-embed-l": {
+   "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "Fine-tuning mix (Fig 3) and pre-training both include \"StackExchange title-body\"; BEIR builds FiQA-2018 from StackExchange Investment posts. Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/Snowflake/snowflake-arctic-embed-l/blob/d8fb21ca8d905d2832ee8b96c894d3298964346b/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Not named. Fine-tuning mix (paper Fig 3): 59% \"Web Docs (query-answer)\" proprietary web search data, 18% HotpotQA, 15% NQ, 4% FEVER, 4% StackExchange. MTEB metadata (community) lists NQ/HotpotQA/FEVER, not MSMARCO. Treat as unknown.",
+   "beir_exclusion_statement": "None found. Paper evaluates on BEIR/MTEB and uses 'lite BEIR' subsets built from BEIR queries for in-training evaluation (App B.1); the data section lists no BEIR training set other than NQ, HotpotQA, FEVER.",
+   "notes": "Arctic Embed pre-trains from e5-large-unsupervised, which itself used CCPairs (S2ORC included)."
+  },
+  "Snowflake/snowflake-arctic-embed-m-v1.5": {
+   "revision": "e58a8f756156a1293d763f17e3aae643474e9b8a",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "Fine-tuning mix (Fig 3) and pre-training both include \"StackExchange title-body\"; BEIR builds FiQA-2018 from StackExchange Investment posts. Family only; FiQA itself not named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/Snowflake/snowflake-arctic-embed-m-v1.5/blob/e58a8f756156a1293d763f17e3aae643474e9b8a/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+     "url": "https://arxiv.org/pdf/2405.05374",
+     "source_tier": "author_paper"
+    }
+   },
+   "msmarco": "Not named. Fine-tuning mix (paper Fig 3): 59% \"Web Docs (query-answer)\" proprietary web search data, 18% HotpotQA, 15% NQ, 4% FEVER, 4% StackExchange. MTEB metadata (community) lists NQ/HotpotQA/FEVER, not MSMARCO. Treat as unknown.",
+   "beir_exclusion_statement": "None found. Paper evaluates on BEIR/MTEB and uses 'lite BEIR' subsets built from BEIR queries for in-training evaluation (App B.1); the data section lists no BEIR training set other than NQ, HotpotQA, FEVER.",
+   "notes": "m-v1.5 is an updated arctic-embed-m (initialised from e5-base-unsupervised, MRL in pre-training and fine-tuning per the Snowflake launch post https://www.snowflake.com/engineering-blog/arctic-embed-m-v1-5-enterprise-retrieval/). The pinned card gives no data list of its own; it inherits the v1 paper's mix. The launch post gives no dataset list."
+  },
+  "BAAI/bge-base-en-v1.5": {
+   "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment: \"# \\\"stackexchange\\\",  # (title, upvoted answer) (title+body, upvoted answer)\" (commented out, community guess). BEIR builds FiQA-2018 from StackExchange Investment posts. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/BAAI/bge-base-en-v1.5/blob/a5beb1e3e68b9ab74eb54cfd186867f64f240e1a/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    }
+   },
+   "msmarco": "Not disclosed for the English models. C-Pack paper (2309.07597) sec 3.2 lists mMARCO (Chinese) only; the English data is described as \"created and released together with C-MTP\" (sec 5) with no source list in the paper or card. MTEB metadata (community) lists NQ, AmazonReviewsClassification, MLQARetrieval, DuRetrieval; no MSMARCO.",
+   "beir_exclusion_statement": "None found. The card says BGE 'rank 1st on MTEB' and gives no decontamination statement; the bge-large-en-v1.5 card and paper give no English source list. MTEB metadata lists only NQ among BEIR sets.",
+   "notes": "BGE English training data (BAAI-MTP) is a released dataset at data.baai.ac.cn that I did not open; a file-level check of it could turn these family cells into disclosed or clean. Note mteb issue #1912 (from repo notes) about reproduction gaps is unrelated to exposure."
+  },
+  "BAAI/bge-large-en-v1.5": {
+   "revision": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "fiqa": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment: \"# \\\"stackexchange\\\",  # (title, upvoted answer) (title+body, upvoted answer)\" (commented out, community guess). BEIR builds FiQA-2018 from StackExchange Investment posts. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+     "url": "https://huggingface.co/BAAI/bge-large-en-v1.5/blob/d4aa6901d3a41ba39fb536a557fa166f842b0e09/README.md",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+     "source_tier": "mteb_metadata_community"
+    }
+   },
+   "msmarco": "Not disclosed for the English models. C-Pack paper (2309.07597) sec 3.2 lists mMARCO (Chinese) only; the English data is described as \"created and released together with C-MTP\" (sec 5) with no source list in the paper or card. MTEB metadata (community) lists NQ, AmazonReviewsClassification, MLQARetrieval, DuRetrieval; no MSMARCO.",
+   "beir_exclusion_statement": "None found. The card says BGE 'rank 1st on MTEB' and gives no decontamination statement; the bge-large-en-v1.5 card and paper give no English source list. MTEB metadata lists only NQ among BEIR sets.",
+   "notes": "BGE English training data (BAAI-MTP) is a released dataset at data.baai.ac.cn that I did not open; a file-level check of it could turn these family cells into disclosed or clean. Note mteb issue #1912 (from repo notes) about reproduction gaps is unrelated to exposure."
+  },
+  "mixedbread-ai/mxbai-embed-large-v1": {
+   "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c",
+   "cells": {
+    "scifact": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    },
+    "nfcorpus": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    },
+    "fiqa": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    },
+    "arguana": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    },
+    "scidocs": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    },
+    "trec-covid": {
+     "status": "unknown",
+     "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+     "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+     "source_tier": "none"
+    }
+   },
+   "msmarco": "Disclosed: \"any training data from the MTEB (except MS Marco)\" (blog); MTEB metadata (community, from author correspondence) lists MSMARCO.",
+   "beir_exclusion_statement": "Card: \"Our model was trained with no overlap of the MTEB data\". Blog: \"During the whole process, we ensured zero overlap with tests of MTEB. We went out of our way to not even use any training data from the MTEB (except MS Marco)\"; \"we excluded any potential overlap with the test sets by removing potential test candidates from the comparison.\" Author claim, not independently audited; mxbai data is not released and the source families are not listed ('scraped a large part of the internet').",
+   "notes": "Every cell is unknown by design: the authors give an exclusion claim and no data list. Unknown here is not evidence of clean. MTEB metadata source: https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/mixedbread_ai_models.py"
+  },
+  "NovaSearch/stella_en_400M_v5": {
+   "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+   "cells": {
+    "scifact": {
+     "status": "source-family",
+     "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+     "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+     "source_tier": "derived_from_gte_card"
+    },
+    "nfcorpus": {
+     "status": "source-family",
+     "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+     "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+     "source_tier": "derived_from_gte_card"
+    },
+    "fiqa": {
+     "status": "disclosed",
+     "evidence": "MTEB metadata (community-maintained, NOT an author disclosure): stella_en_400M_v5 uses training_datasets=nvidia_training_datasets, which lists \"FiQA2018\"; that set cites the NV-Embed paper (arXiv 2405.17428) as its source, not a Stella document. Stella card FAQ: \"The training method and datasets will be released in the future.\"",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/stella_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "arguana": {
+     "status": "disclosed",
+     "evidence": "MTEB metadata (community-maintained, NOT an author disclosure): stella_en_400M_v5 uses training_datasets=nvidia_training_datasets, which lists \"ArguAna\"; that set cites the NV-Embed paper (arXiv 2405.17428) as its source, not a Stella document. Stella card FAQ: \"The training method and datasets will be released in the future.\"",
+     "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/stella_models.py",
+     "source_tier": "mteb_metadata_community"
+    },
+    "scidocs": {
+     "status": "source-family",
+     "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+     "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+     "source_tier": "derived_from_gte_card"
+    },
+    "trec-covid": {
+     "status": "source-family",
+     "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+     "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+     "source_tier": "derived_from_gte_card"
+    }
+   },
+   "msmarco": "No author disclosure. MTEB metadata (community, via NV-Embed list) includes MSMARCO, NQ, HotpotQA, FEVER. Base gte-large-en-v1.5 disclosed MS MARCO fine-tuning.",
+   "beir_exclusion_statement": "None found.",
+   "notes": "The ArguAna/FiQA2018 flag rests on a community metadata entry whose cited source is the NV-Embed paper, so it is a proxy, not proof that Stella trained on them. Stella's card promises a data release that never came. Pinned card revision differs from the revision MTEB metadata records (1bb50bc...)."
+  }
+ }
+}
