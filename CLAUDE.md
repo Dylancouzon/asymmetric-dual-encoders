@@ -39,6 +39,12 @@ phrase “half A ready to push” or from a closed milestone's executable status
   freely; the paper labels each one "exploratory" or "registered" and never presents an exploratory
   result as a registered test. The registered contrasts, M20 rows and E1-E10 keep their
   registrations and are reported as registered. The reserved-four read ban below still stands.
+- **M15 privileges (Dylan, 2026-09-30).** M15 is the paper milestone and differs from execution
+  milestones. Exploratory analyses need no method file, review round or access-log audit before they
+  run; a cloud run under $10 inside the recorded $1,000 ceiling needs no prior review; Codex and
+  sub-agent reviews target the paper's correctness and readability. What stays: the reserved-four
+  read ban, never overwriting `results/perquery.json`, committed receipts for every number the paper
+  cites, and the exploratory/registered label on every result.
 - Reserved four: FEVER, DBpedia-entity, cqadup-android, cqadup-english. Do not read
   `results/frozen_eval/untouched-*`, reserved qrels caches or `work/m9reserve` during development
   or review. Preflight uses manifests; protected content belongs inside the executor.
