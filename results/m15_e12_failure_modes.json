@@ -1,0 +1,116 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E12 (exploratory)",
+  "scope": "exploratory; six public sets; per-query associations, not causes",
+  "summary": {
+    "n_queries": 3727,
+    "rho": {
+      "stella_gap_vs_fertility": 0.10084352441868935,
+      "stella_gap_vs_order": 0.456257720951484,
+      "nano_gap_vs_fertility": 0.08669641844333359,
+      "nano_gap_vs_order": 0.2203591715018628,
+      "fertility_vs_order": -0.019411504173028758
+    },
+    "stella_gap_by_fertility_tercile": [
+      0.07103416103387881,
+      0.07764502268798062,
+      0.13269480509577136
+    ],
+    "nano_gap_by_fertility_tercile": [
+      0.0390044484993979,
+      0.052172893870512826,
+      0.08881799197843841
+    ],
+    "stella_gap_by_order_tercile": [
+      -0.056852572619857156,
+      null,
+      0.12332472908216001
+    ],
+    "nano_gap_by_order_tercile": [
+      -0.0043691482418580846,
+      null,
+      0.07277408050641147
+    ],
+    "share_order_dependent": 0.3139254091762812,
+    "stella_gap_order_dependent": 0.21517274427153257,
+    "stella_gap_order_free": 0.03838528656823964,
+    "rho_within_stella_score_bins": {
+      "stella_gap_vs_order": 0.4644281193947371,
+      "stella_gap_vs_fertility": 0.09380212558442913,
+      "nano_gap_vs_order": 0.22443772882372515,
+      "nano_gap_vs_fertility": 0.08205737682504488
+    }
+  },
+  "per_dataset": {
+    "scifact": {
+      "n": 300,
+      "mean_gap_stella_zero": 0.16943114802146916,
+      "mean_order_dependence": 0.025600440476342256,
+      "mean_fertility": 1.7130958921983654,
+      "rho_gap_fert": 0.13901224265444062,
+      "rho_gap_order": 0.20575492860864555
+    },
+    "nfcorpus": {
+      "n": 323,
+      "mean_gap_stella_zero": 0.10103860336345293,
+      "mean_order_dependence": 0.014094162269687722,
+      "mean_fertility": 1.7498569284173,
+      "rho_gap_fert": 0.26297969493356804,
+      "rho_gap_order": 0.2524410088346693
+    },
+    "fiqa": {
+      "n": 648,
+      "mean_gap_stella_zero": 0.18083529236646992,
+      "mean_order_dependence": 0.07483856439648445,
+      "mean_fertility": 1.2677964984738377,
+      "rho_gap_fert": 0.04863187931151278,
+      "rho_gap_order": 0.5366787402509449
+    },
+    "arguana": {
+      "n": 1406,
+      "mean_gap_stella_zero": 0.045333746728890845,
+      "mean_order_dependence": 0.028975192003313038,
+      "mean_fertility": 1.244087305774579,
+      "rho_gap_fert": 0.08846476908778057,
+      "rho_gap_order": 0.49655250547632723
+    },
+    "scidocs": {
+      "n": 1000,
+      "mean_gap_stella_zero": 0.0717959743587099,
+      "mean_order_dependence": 0.019205805998374195,
+      "mean_fertility": 1.3996021143533184,
+      "rho_gap_fert": 0.06665310666409295,
+      "rho_gap_order": 0.4702850062337317
+    },
+    "trec-covid": {
+      "n": 50,
+      "mean_gap_stella_zero": 0.274439670936859,
+      "mean_order_dependence": 0.08641145884180544,
+      "mean_fertility": 1.5128571608130432,
+      "rho_gap_fert": -0.024963360171315885,
+      "rho_gap_order": 0.37533700829087613
+    }
+  },
+  "receipt": {
+    "script": "m15src/e12_failure_modes.py",
+    "script_sha256": "29826ba8910929d7807d7c9218508cc9440353c03dc075cf12d2062fde2cf50b",
+    "git_commit": "bfb381c7f87acb0605ca7558edd10fea355b83c8",
+    "m15src_dirty": true,
+    "started_utc": "2026-09-30T17:03:13Z",
+    "finished_utc": "2026-09-30T17:21:49Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "onnxruntime": "1.29.0",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

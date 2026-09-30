@@ -1,0 +1,742 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E9",
+  "scope": "descriptive; exact search; weights frozen on the M7 dev forums",
+  "weights_grid": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5
+  ],
+  "frozen": {
+    "nano": {
+      "weight": 0.3,
+      "fit_curve": {
+        "0.0": 0.42472204460708457,
+        "0.1": 0.42641552045895753,
+        "0.2": 0.42868395066387555,
+        "0.3": 0.4294904083390184,
+        "0.4": 0.4265929543477136,
+        "0.5": 0.42082909294866006
+      }
+    },
+    "stella": {
+      "weight": 0.0,
+      "fit_curve": {
+        "0.0": 0.48065374297827573,
+        "0.1": 0.48056747931255506,
+        "0.2": 0.4787320793762833,
+        "0.3": 0.47525268929432124,
+        "0.4": 0.4696220806237362,
+        "0.5": 0.459348302326971
+      }
+    }
+  },
+  "per_dataset": {
+    "scifact": {
+      "nano+bm25_dbsf@100_m20": 0.7433254028854539,
+      "nano": {
+        "alone": 0.7210974963001988,
+        "blend": 0.7177816960872073,
+        "blend_minus_alone": -0.0033158002129915457,
+        "ci95": [
+          -0.014299422509204986,
+          0.007730155064374355
+        ],
+        "posthoc_curve": {
+          "0.0": 0.7210974963001988,
+          "0.1": 0.719310566178453,
+          "0.2": 0.7163248795100916,
+          "0.3": 0.7177816960872073,
+          "0.4": 0.7102564506432489,
+          "0.5": 0.7042328131003432
+        }
+      },
+      "stella": {
+        "alone": 0.7795618826803957,
+        "blend": 0.7795618826803957,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.7795618826803957,
+          "0.1": 0.7798633433564777,
+          "0.2": 0.7760471076826188,
+          "0.3": 0.7690588672501459,
+          "0.4": 0.7626354906721718,
+          "0.5": 0.7561911645205625
+        }
+      }
+    },
+    "nfcorpus": {
+      "nano+bm25_dbsf@100_m20": 0.36827535888611584,
+      "nano": {
+        "alone": 0.36308038066321896,
+        "blend": 0.35477831060895326,
+        "blend_minus_alone": -0.008302070054265698,
+        "ci95": [
+          -0.017214128038171562,
+          -0.0011556835839473408
+        ],
+        "posthoc_curve": {
+          "0.0": 0.36308038066321896,
+          "0.1": 0.36181693036610135,
+          "0.2": 0.35799076084696246,
+          "0.3": 0.35477831060895326,
+          "0.4": 0.3552362814993161,
+          "0.5": 0.3514999634460068
+        }
+      },
+      "stella": {
+        "alone": 0.41343074244382183,
+        "blend": 0.41343074244382183,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.41343074244382183,
+          "0.1": 0.41028821911146734,
+          "0.2": 0.40682152688632234,
+          "0.3": 0.39985930082836363,
+          "0.4": 0.39162404050655236,
+          "0.5": 0.38381686901098694
+        }
+      }
+    },
+    "fiqa": {
+      "nano+bm25_dbsf@100_m20": 0.4352894642538025,
+      "nano": {
+        "alone": 0.47776539081203656,
+        "blend": 0.470329009681135,
+        "blend_minus_alone": -0.007436381130901575,
+        "ci95": [
+          -0.01362220029983368,
+          -0.0014100660888589172
+        ],
+        "posthoc_curve": {
+          "0.0": 0.47776539081203656,
+          "0.1": 0.47540728570941826,
+          "0.2": 0.4750090763073461,
+          "0.3": 0.470329009681135,
+          "0.4": 0.46447361034247114,
+          "0.5": 0.45593757026922543
+        }
+      },
+      "stella": {
+        "alone": 0.5535975932731784,
+        "blend": 0.5535975932731784,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.5535975932731784,
+          "0.1": 0.5455201650220749,
+          "0.2": 0.5399852296635487,
+          "0.3": 0.5343788672353714,
+          "0.4": 0.5254022507254646,
+          "0.5": 0.5164689802747661
+        }
+      }
+    },
+    "arguana": {
+      "nano+bm25_dbsf@100_m20": 0.5759424827515558,
+      "nano": {
+        "alone": 0.6232870169472591,
+        "blend": 0.6280937734363953,
+        "blend_minus_alone": 0.004806756489136198,
+        "ci95": [
+          -0.00033990745599639036,
+          0.010080754769737311
+        ],
+        "posthoc_curve": {
+          "0.0": 0.6232870169472591,
+          "0.1": 0.6266616986086112,
+          "0.2": 0.626581097190913,
+          "0.3": 0.6280937734363953,
+          "0.4": 0.6312137866978377,
+          "0.5": 0.6336094188855775
+        }
+      },
+      "stella": {
+        "alone": 0.6368938207164638,
+        "blend": 0.6368938207164638,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.6368938207164638,
+          "0.1": 0.6417837230054744,
+          "0.2": 0.6468577005889045,
+          "0.3": 0.6488294937364193,
+          "0.4": 0.6499392731072604,
+          "0.5": 0.6494154680394933
+        }
+      }
+    },
+    "scidocs": {
+      "nano+bm25_dbsf@100_m20": 0.20314991033048352,
+      "nano": {
+        "alone": 0.2177103334458522,
+        "blend": 0.21723742013364628,
+        "blend_minus_alone": -0.00047291331220590955,
+        "ci95": [
+          -0.0036073680536666923,
+          0.002656451768485165
+        ],
+        "posthoc_curve": {
+          "0.0": 0.2177103334458522,
+          "0.1": 0.21889295062239023,
+          "0.2": 0.2190184326362643,
+          "0.3": 0.21723742013364628,
+          "0.4": 0.21469329694373748,
+          "0.5": 0.21115284464718223
+        }
+      },
+      "stella": {
+        "alone": 0.23948933979280213,
+        "blend": 0.23948933979280213,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.23948933979280213,
+          "0.1": 0.23963209810580388,
+          "0.2": 0.2395807382908288,
+          "0.3": 0.23747656744005471,
+          "0.4": 0.23364749540727756,
+          "0.5": 0.22904523871932791
+        }
+      }
+    },
+    "trec-covid": {
+      "nano+bm25_dbsf@100_m20": 0.8071857107861511,
+      "nano": {
+        "alone": 0.7871157997648055,
+        "blend": 0.7713817162303728,
+        "blend_minus_alone": -0.015734083534432713,
+        "ci95": [
+          -0.03383826737378505,
+          0.0017781457106250224
+        ],
+        "posthoc_curve": {
+          "0.0": 0.7871157997648055,
+          "0.1": 0.7791572793612543,
+          "0.2": 0.7752808709031822,
+          "0.3": 0.7713817162303728,
+          "0.4": 0.7598354670058417,
+          "0.5": 0.7484739790438582
+        }
+      },
+      "stella": {
+        "alone": 0.8234312504293929,
+        "blend": 0.8234312504293929,
+        "blend_minus_alone": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "posthoc_curve": {
+          "0.0": 0.8234312504293929,
+          "0.1": 0.8236253220464572,
+          "0.2": 0.8195849003677093,
+          "0.3": 0.8130622659675598,
+          "0.4": 0.7959989690374908,
+          "0.5": 0.7869995202882221
+        }
+      }
+    }
+  },
+  "macro": {
+    "nano_all6": {
+      "ci95": [
+        -0.009243648513574598,
+        -0.001065863465731001
+      ],
+      "alone": 0.5316760696555619,
+      "blend": 0.5266003210296183,
+      "blend_minus_alone": -0.005075748625943541
+    },
+    "nano_clean4": {
+      "ci95": [
+        -0.012801644910804615,
+        -0.001278489903177801
+      ],
+      "alone": 0.5222510025435189,
+      "blend": 0.5152947857650448,
+      "blend_minus_alone": -0.006956216778473966
+    },
+    "stella_all6": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "alone": 0.5744007715560092,
+      "blend": 0.5744007715560092,
+      "blend_minus_alone": 0.0
+    },
+    "stella_clean4": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "alone": 0.5639783038366032,
+      "blend": 0.5639783038366032,
+      "blend_minus_alone": 0.0
+    }
+  },
+  "receipt": {
+    "script": "m15src/e9_blend.py",
+    "script_sha256": "f2ea59fd7bcac504fd2002cf8cc933bb7a5200016f01d428c1f9ed4f181570f7",
+    "git_commit": "e872f33ee5ac9cea55251962e628efa84111005e",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T16:15:52Z",
+    "finished_utc": "2026-09-30T16:38:00Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "onnxruntime": "1.29.0",
+      "torch": "2.8.0"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "cqadup-physics": {
+          "source": "work/m15/vecs/cqadup-physics",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.4931876544285036,
+              "m20": 0.4931876544285036,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/stella-query.json",
+                "sha256": "01aa1ee2c9ad91f229c75d47a447ed9d7a7072d34bd01549b07af3edc30fb235"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.39563472630417323,
+              "m20": 0.39563472630417323,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/zero-dense.json",
+                "sha256": "c7bcc5fcce40fd84622a162bbd749d9eced63c9bcc22c4b53e66d1cb986b0404"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.443400629009945,
+              "m20": 0.443400629009945,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/nano-dense.json",
+                "sha256": "a5a2d1ad7a513bda6a891e7119bfc3de4b59ce1d12a6e1e76ae88f2d0419ad2a"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.3470609497542545,
+              "m20": 0.3470609497542545,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/bm25.json",
+                "sha256": "895ee0a703fdeaf55dc95bccdc375690fdd452c7721f83d5a08500e75efc5955"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "cqadup-programmers": {
+          "source": "work/m15/vecs/cqadup-programmers",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.46811983152804787,
+              "m20": 0.46811983152804787,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/stella-query.json",
+                "sha256": "7f6c6940f730ad24a4d1e54dc1d3c108b05400116a371702d170522d6e664b53"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.338973262061671,
+              "m20": 0.338973262061671,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/zero-dense.json",
+                "sha256": "4bdb78c5e2559027d14e35af50341c64523a67e4b1eec08ce9e2ecb5016e6998"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.40604346020422416,
+              "m20": 0.40604346020422416,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/nano-dense.json",
+                "sha256": "bf47fe1b7d3ecdcf9e3c325865c127e0c79a220aa5000b973c6ae37071899754"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.2975128020661889,
+              "m20": 0.2975128020661889,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/bm25.json",
+                "sha256": "29b0a1101111401ef33289f7b67447d607870420d4b1bbf0b7a1eeeae0833bd5"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "frozen": "results/m15_e9_frozen.json",
+        "sha256": "ca82ab6e673b9a7cfbef20b24b8b915f1276fd951eab15e19c2789a8cba8086c"
+      },
+      {
+        "scifact": {
+          "source": "artifacts/demo-stella/scifact/doc_vecs.npy",
+          "sha256": "db0c3c6890eb1ebbe611f036310f3d400cdadba98d012bcfdc56833807fc037a",
+          "gate": {
+            "stella-query": {
+              "mine": 0.7795618826803957,
+              "m20": 0.7795618826803957,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scifact/stella-query.json",
+                "sha256": "c4296cacb118d641870e0b8dfab6c876e3cafbe2b9e1b73cb9cc8633021eacf5"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.6101307346589266,
+              "m20": 0.6101307346589266,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scifact/zero-dense.json",
+                "sha256": "b0b5e49ce21b8abb6f1eed4829d6489539a2657a4965d8b538ffe98ad339a654"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.7210974963001988,
+              "m20": 0.7210974963001988,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scifact/nano-dense.json",
+                "sha256": "2be141d2c327c08f30f2019af7f09af91b6ddd2e4eb3caa1a2350ba98d322799"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.6790938361008712,
+              "m20": 0.6790938361008712,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scifact/bm25.json",
+                "sha256": "b0f3bc1689168a09f2265fe7db345314d86dcc012be7758a321aa6aa86a09f88"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "nfcorpus": {
+          "source": "work/m15/vecs/nfcorpus",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.41343074244382183,
+              "m20": 0.41343074244382183,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/nfcorpus/stella-query.json",
+                "sha256": "61721e14094933c4d9ea9c62c1ffdb9a4cbb124b0b1ef7073750f54a2fe05d7a"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.3123921390803689,
+              "m20": 0.3123921390803689,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/nfcorpus/zero-dense.json",
+                "sha256": "4486899dab7d71c61aab155b32858b12795cfa199b3f16703b186dce71f60a39"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.36308038066321896,
+              "m20": 0.36308038066321896,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/nfcorpus/nano-dense.json",
+                "sha256": "0c94dcd4b3b8bc17ad0e33760e435a7dd7aee1783ba50405a2c46a55b296760e"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.3180390973666754,
+              "m20": 0.3180390973666754,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/nfcorpus/bm25.json",
+                "sha256": "63517fd358beef1824035afa806b2d0cfe607aac7c51857fdb133ca747fa7857"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "fiqa": {
+          "source": "artifacts/demo-stella/fiqa/doc_vecs.npy",
+          "sha256": "9e9cbaa0c7f8df7bf01cddea3d519289305e81ba4373de8c548d7d5dba4c7830",
+          "gate": {
+            "stella-query": {
+              "mine": 0.5535975932731784,
+              "m20": 0.5535975932731784,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/fiqa/stella-query.json",
+                "sha256": "f28b001e812bffbf553c96a23f2be07bac1e0f2200826f5632949c4a663970f6"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.3727623009067084,
+              "m20": 0.3727623009067084,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/fiqa/zero-dense.json",
+                "sha256": "e0aa5923a1e856172dab6f2382ee322f1a0a4e4718782abe9e5cfcdaad449a64"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.47776539081203656,
+              "m20": 0.47776539081203656,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/fiqa/nano-dense.json",
+                "sha256": "f6ffb4a2a58c5ffb024b7252b375005aa0a24f3a40adaffd490151d67f4435c6"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.25319188881146765,
+              "m20": 0.25319188881146765,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/fiqa/bm25.json",
+                "sha256": "ed6eba095ed56be7947e4d9d81fcdea71708a6e50af937f0580af2375ebb3ded"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "arguana": {
+          "source": "work/m15/vecs/arguana",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.6368938207164638,
+              "m20": 0.6368938207164638,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/arguana/stella-query.json",
+                "sha256": "6d0d11948c8769a9db7e5c1fdf3dfbdaab3a6792f930e4edc91abdc8d9003ef9"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.5915600739875732,
+              "m20": 0.5915600739875732,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/arguana/zero-dense.json",
+                "sha256": "0f23d3beae4a7ec5b5ffd9085c8a63c43f5a118bc40bb691904b5dea6b1f1303"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.6232870169472591,
+              "m20": 0.6232963897287046,
+              "abs_mean_diff": 9.37278144552689e-06,
+              "share_within_1e-6": 0.9985775248933144,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/arguana/nano-dense.json",
+                "sha256": "b598ac64bb35d57b38ff9c467210884774b6e384f35c56ec7f5664756db7cefd"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.48778035149013416,
+              "m20": 0.48778035149013416,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/arguana/bm25.json",
+                "sha256": "15e5a8bb4744867f8520fe5e77cd65ff234e8d4874774d0b6d9fe9ea40e2b3e5"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "scidocs": {
+          "source": "work/m15/vecs/scidocs",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.23948933979280213,
+              "m20": 0.23948933979280213,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scidocs/stella-query.json",
+                "sha256": "319523f2037c721207fae9eb5cc1f7ddd3781d3b4d75a326939baf550ae6b7b1"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.16769336543409222,
+              "m20": 0.16769336543409222,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scidocs/zero-dense.json",
+                "sha256": "db70672d96ba8c1953f945e445a13ebadad706130b5e295af54d1005c7a25c31"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.2177103334458522,
+              "m20": 0.2177103334458522,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scidocs/nano-dense.json",
+                "sha256": "743fb8c055db2794abf612d3017c7379c3c74ab81eccc649915d7df531431c3a"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.15649670985084668,
+              "m20": 0.15649670985084668,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/scidocs/bm25.json",
+                "sha256": "8a5fb348abaf1a998b3d5ce2f160af71f5f3fde579fefee5a827ded9511dc1a0"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "trec-covid": {
+          "source": "work/m15/vecs/trec-covid",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.8234312504293929,
+              "m20": 0.8234312504293929,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/trec-covid/stella-query.json",
+                "sha256": "0ef873c32d892198a9cdb37107d7751ea23e5243641e14f9e4f60edff6fc3095"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.5489915794925339,
+              "m20": 0.5489915794925339,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/trec-covid/zero-dense.json",
+                "sha256": "6aebbf791515cd87f2b0d7a56bf880751bae1b9b439b08a650d639d593521ccb"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.7871157997648055,
+              "m20": 0.7871157997648055,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/trec-covid/nano-dense.json",
+                "sha256": "93cb33d60096f6820f0c4547d7dc21b427341f79cb8b70c56b3f2a3081e8db2b"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.6098791292899,
+              "m20": 0.6098791292899,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/trec-covid/bm25.json",
+                "sha256": "5827ea8c18debcd3dc0dfb0005cb95f01713ac72ec4f881912764b6d0130f5cf"
+              },
+              "passed": true
+            }
+          }
+        }
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

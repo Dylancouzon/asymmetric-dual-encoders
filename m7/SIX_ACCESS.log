@@ -305,3 +305,33 @@
 {"ts": "2026-09-30T07:48:29+00:00", "dataset": "arguana", "argv": ["/home/dylan/m15run/m15src/e11b_margin.py", "tower", "mxbai-embed-large-v1"], "pid": 7617}
 {"ts": "2026-09-30T07:48:30+00:00", "dataset": "scidocs", "argv": ["/home/dylan/m15run/m15src/e11b_margin.py", "tower", "mxbai-embed-large-v1"], "pid": 7617}
 {"ts": "2026-09-30T07:48:31+00:00", "dataset": "trec-covid", "argv": ["/home/dylan/m15run/m15src/e11b_margin.py", "tower", "mxbai-embed-large-v1"], "pid": 7617}
+{"ts": "2026-09-30T11:16:50+03:00", "dataset": "arguana", "argv": ["m15src/encode_more.py"], "pid": 69774}
+{"ts": "2026-09-30T11:24:04+03:00", "dataset": "scifact", "argv": ["m15src/examples.py"], "pid": 76447}
+{"ts": "2026-09-30T11:29:17+03:00", "dataset": "scidocs", "argv": ["m15src/encode_more.py"], "pid": 69774}
+{"ts": "2026-09-30T15:31:45+00:00", "dataset": "trec-covid", "argv": ["/home/dylan/pod_encode.py", "cqadup-programmers", "cqadup-physics", "trec-covid"], "pid": 396}
+{"ts": "2026-09-30T19:15:28+03:00", "dataset": "trec-covid", "argv": ["m15src/encode_more.py", "cqadup-programmers", "cqadup-physics", "trec-covid"], "pid": 75559}
+{"ts": "2026-09-30T19:19:41+03:00", "dataset": "scifact", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:20:22+03:00", "dataset": "nfcorpus", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:20:53+03:00", "dataset": "fiqa", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:22:20+03:00", "dataset": "arguana", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:35:28+03:00", "dataset": "scidocs", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:37:21+03:00", "dataset": "trec-covid", "argv": ["m15src/e9_blend.py"], "pid": 78172}
+{"ts": "2026-09-30T19:38:07+03:00", "dataset": "scifact", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:38:12+03:00", "dataset": "nfcorpus", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:38:16+03:00", "dataset": "scidocs", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:38:22+03:00", "dataset": "trec-covid", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:38:26+03:00", "dataset": "fiqa", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:38:31+03:00", "dataset": "arguana", "argv": ["m15src/e10_router.py"], "pid": 610}
+{"ts": "2026-09-30T19:40:12+03:00", "dataset": "fiqa", "argv": ["m15src/e2_ann.py", "fiqa"], "pid": 3006}
+{"ts": "2026-09-30T19:46:07+03:00", "dataset": "scifact", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T19:46:53+03:00", "dataset": "nfcorpus", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T19:47:26+03:00", "dataset": "fiqa", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T19:48:43+03:00", "dataset": "arguana", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T19:59:46+03:00", "dataset": "scidocs", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T20:01:15+03:00", "dataset": "trec-covid", "argv": ["m15src/e12_failure_modes.py"], "pid": 9443}
+{"ts": "2026-09-30T20:03:16+03:00", "dataset": "scifact", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}
+{"ts": "2026-09-30T20:03:51+03:00", "dataset": "nfcorpus", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}
+{"ts": "2026-09-30T20:04:21+03:00", "dataset": "fiqa", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}
+{"ts": "2026-09-30T20:05:30+03:00", "dataset": "arguana", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}
+{"ts": "2026-09-30T20:19:16+03:00", "dataset": "scidocs", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}
+{"ts": "2026-09-30T20:21:37+03:00", "dataset": "trec-covid", "argv": ["m15src/e12_failure_modes.py"], "pid": 25687}

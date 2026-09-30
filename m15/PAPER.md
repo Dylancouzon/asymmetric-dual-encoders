@@ -1,7 +1,6 @@
 # A Strong Tower Is Not a Distillable Tower: Cheap Query Encoders for a Frozen Document Index
 
-**Draft v4, 2026-09-30. Not for circulation.** Slots marked `[E2]`, `[E9]` and `[E10]` wait on
-measurements running tonight (`m15/MEASUREMENTS.md`). Each claim links to the committed file that
+**Draft v5, 2026-09-30. Not for circulation.** All measurements are in (`m15/MEASUREMENTS.md`). Each claim links to the committed file that
 proves it; `m15/EVIDENCE.md` restates every number in plain language with its source and caveats.
 Results are labelled **registered** (method frozen before observation) or **exploratory**.
 
@@ -21,7 +20,7 @@ would yield (Spearman -0.09 on six public BEIR sets), and neither did three plau
 measured, while a few-minute screen of the table itself on two development forums predicted the public
 ranking (0.90). In each of the four families where we tried two sizes, the smaller checkpoint made the better table.
 Second, the table's loss is concentrated: averaged over datasets, the two cheap tiers score the same on 43% of queries, and an oracle that sends 15% of each dataset's queries to the transformer matches sending all of them. Routing on Zero's own retrieval margin recovers a quarter of that headroom; blending the two tiers' query vectors in one search does not help.
-Third, on truncated queries the three tiers keep similar shares of their own score, so a cheap tier loses no more to short or unfinished queries than the tower does. `[E2]`
+Third, on truncated queries the three tiers keep similar shares of their own score, so a cheap tier loses no more to short or unfinished queries than the tower does. Finally, the table's queries make approximate search work harder, so its 50- to 60-fold encode saving shrinks to a 2- to 3-fold end-to-end saving inside a vector search engine.
 
 ## 1. Introduction
 
@@ -52,8 +51,7 @@ retrievers: blend two query vectors and search once (Section 7).
 
 - A measurement of how much quality a frozen index keeps as the query encoder shrinks by three
   orders of magnitude in latency, from the tower's own path to a lookup table, on 15 datasets, with
-  the deployment cost under approximate search and quantization in a vector search engine
-  (Section 4). `[E2]`
+  the deployment cost under approximate search and quantization in a vector search engine (Section 4): a cheaper query vector costs more search effort, and the saving shrinks from 50- to 60-fold to about 2- to 3-fold.
 - Evidence that a tower's quality does not predict its distillability into a lookup table, that
   three natural mechanisms do not explain it either, and that a cheap direct screen does
   (Section 5).
@@ -185,8 +183,15 @@ times at 5%, down from 62 times for the encoders alone. Figure 4 shows the whole
 **Figure 4.** End-to-end p50 against the share of each tier's exact nDCG@10 lost to approximate
 search; each point is the cheapest setting at that loss. Left: 1M MS MARCO subset; right: FiQA.
 
-Fusion is not free inside the engine either. A fused query, Qdrant's server-side BM25 and DBSF over two prefetches of 100, takes about 4.7 ms per query on the 1M collection; on this subset it scores 0.6183 for Zero against 0.6169 for Zero's exact dense search, and 0.037 below Nano's. `[E2 FiQA rerun on an idle
-machine replaces the FiQA panel.]`
+Fusion is not free inside the engine either. A fused query, Qdrant's server-side BM25 and DBSF over two prefetches of 100, takes about 4.7 ms per query on the 1M collection; on this subset it scores 0.6183 for Zero against 0.6169 for Zero's exact dense search, and 0.037 below Nano's.
+
+FiQA, a smaller collection with longer queries, shows the same ordering: at `ef` 16 Zero loses 6.8%
+of its exact score to approximate search, Nano 3.2% and the Stella path 1.5%, and within 1% Nano's
+end-to-end cost is 3.8 times Zero's (`results/m15_e2_ann_fiqa.json`). Absolute latencies on a
+laptop move with background load: an earlier FiQA run, during which another job used the CPU,
+measured Nano's encode p50 at 1.75 ms against 2.83 ms in the rerun, while the Nano-to-Zero ratio
+stayed between 3.4 and 4.3 in both (`results/m15_e2_ann_fiqa_run1.json`). We therefore read
+absolute latencies from E1 and the MS MARCO run and treat FiQA's as ratios.
 
 ## 5. Which Towers Admit a Cheap Query Encoder?
 
@@ -382,7 +387,7 @@ families with the towers' training data, and Nano's bge-small backbone trained o
 - **Choosing the index tower when you may want cheap queries:** do not pick by leaderboard; fit the
   cheap query encoder and score it on a small development set. In our data the smaller checkpoint of a family was the better choice in all four families with two sizes.
 - **Choosing a query tier:** a 34.5M transformer keeps nine tenths of a 400M tower at one fourteenth
-  of the latency; a lookup table keeps four fifths at one seven-hundredth, and on truncated test queries keeps about the same share of its score as the tower. `[E2]`
+  of the latency; a lookup table keeps four fifths at one seven-hundredth, and on truncated test queries keeps about the same share of its score as the tower. Inside a vector search engine its 50- to 60-fold encode saving becomes a 2- to 3-fold end-to-end saving, because its queries need a wider graph search.
 - **Serving both:** most queries do not need the transformer, but a cheap router has to find the
   ones that do; the cheapest signal that helps is the table's own retrieval margin, which recovers about a quarter of the headroom.
 
