@@ -29,7 +29,7 @@ def tower(name):
         return
     import m8base  # noqa: F401
     import torch
-    from evalkit import topk_arrays
+    from evalkit import topk_ids_scores
     from teacher import QUERY_PREFIX, encode_cached
     import encoders
     spec = encoders.active()
@@ -40,8 +40,9 @@ def tower(name):
                                       prefix=spec.doc_prefix, dtype=torch.float16, verbose=False))
         qv = np.asarray(encode_cached(f"e8-six-{ds}-q", data["q_texts"], prefix=QUERY_PREFIX,
                                       dtype=torch.float16, verbose=False), dtype=np.float32)
-        _, bs = topk_arrays(qv, dv, k=11, chunk=250_000)
-        s = np.sort(bs, axis=1)[:, ::-1]
+        # Same self-hit drop as every search here (ArguAna queries are corpus documents).
+        run = topk_ids_scores(qv, dv, data["doc_ids"], k=11, chunk=250_000, qids=data["q_ids"])
+        s = np.array([sorted(run[q].values(), reverse=True)[:10] for q in data["q_ids"]])
         rows[ds] = {"median_gap_1_10": float(np.median(s[:, 0] - s[:, 9])),
                     "median_top1": float(np.median(s[:, 0]))}
         print(f"  {name} {ds}: gap {rows[ds]['median_gap_1_10']:.4f}", flush=True)
