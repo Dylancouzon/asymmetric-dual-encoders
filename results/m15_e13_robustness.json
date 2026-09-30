@@ -1,0 +1,114 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E13 (exploratory)",
+  "leave_one_family_out": {
+    "arctic": {
+      "n": 8,
+      "screen": 0.880952380952381,
+      "tower": -0.09523809523809526
+    },
+    "bge": {
+      "n": 8,
+      "screen": 0.9761904761904763,
+      "tower": -0.023809523809523815
+    },
+    "e5": {
+      "n": 8,
+      "screen": 0.9285714285714287,
+      "tower": -0.4285714285714286
+    },
+    "gte": {
+      "n": 8,
+      "screen": 0.880952380952381,
+      "tower": 0.2380952380952381
+    },
+    "mxbai": {
+      "n": 9,
+      "screen": 0.9,
+      "tower": 0.016666666666666666
+    },
+    "stella": {
+      "n": 9,
+      "screen": 0.8666666666666667,
+      "tower": -0.35
+    }
+  },
+  "screen_minutes_per_tower_a100": {
+    "stella-400M-v5": 7,
+    "arctic-embed-l": 6,
+    "arctic-embed-l-mean": 7,
+    "arctic-embed-m-v1.5": 4,
+    "bge-base-en-v1.5": 5,
+    "bge-large-en-v1.5": 7,
+    "e5-base-v2": 4,
+    "e5-large-v2": 6,
+    "gte-base-en-v1.5": 5,
+    "gte-large-en-v1.5": 7,
+    "mxbai-embed-large-v1": 6
+  },
+  "order_examples": [
+    {
+      "dataset": "arguana",
+      "qid": "test-politics-pgsimhwoia-pro01a",
+      "text": "It is just to redistribute migrants  It is an accident of geography, or history, simple bad luck that has resulted in some countries getting large numbers of immigrants while many others get none. The first developed country on migrant routes get large numbers as those wishing to seek asylum have to apply in the first safe country. Similarly those countries next to conflict zones, or places affected by natural disasters, get very large influxes of migrants who hope to return home as soon as possible; there are more than 1.1 million refugees from Syria in Lebanon [1] a country of less than 6million. It is right that there should be a mechanism to help even out the burden of migrants and that rich developed countries should be those who pay that cost.  [1] \u2018Syria Regional Refugee Response\u2019, data.unhcr.org,  , accessed 19th August 2015",
+      "stella_first_relevant_rank": 1,
+      "stella_shuffled_first_relevant_rank": 5,
+      "nano_first_relevant_rank": 3,
+      "zero_first_relevant_rank": 4,
+      "shuffled_text": "home than disasters, resulted rich in others soon countries simple refugees 19th those even million there luck to less The data.unhcr.org, country. routes are is influxes large to countries should burden August asylum pay get country is those large on Refugee more of , conflict large has It [1] natural or be none. cost. It by many 6million. accident next developed to Regional be countries while first to redistribute is there and [1] It of an return migrants first who of mechanism safe numbers of those as seek of as to migrants immigrants have a the wishing 1.1 the possible; Similarly \u2018Syria affected getting Syria from apply or who that places in just in Response\u2019, get that very that that migrants as history, country migrant right hope bad 2015 get some than zones, should accessed help developed to out a geography, Lebanon numbers"
+    },
+    {
+      "dataset": "fiqa",
+      "qid": "9332",
+      "text": "What can I do with a physical stock certificate for a now-mutual company?",
+      "stella_first_relevant_rank": 1,
+      "stella_shuffled_first_relevant_rank": 8,
+      "nano_first_relevant_rank": 13,
+      "zero_first_relevant_rank": 29,
+      "shuffled_text": "now-mutual What a I can physical company? certificate do stock with a for"
+    },
+    {
+      "dataset": "fiqa",
+      "qid": "5150",
+      "text": "What credit card information are offline US merchants allowed to collect for purposes other than the transaction?",
+      "stella_first_relevant_rank": 1,
+      "stella_shuffled_first_relevant_rank": 59,
+      "nano_first_relevant_rank": 11,
+      "zero_first_relevant_rank": null,
+      "shuffled_text": "US purposes card than What credit collect allowed transaction? information merchants other are for offline to the"
+    },
+    {
+      "dataset": "nfcorpus",
+      "qid": "PLAIN-2081",
+      "text": "shelf life",
+      "stella_first_relevant_rank": 1,
+      "stella_shuffled_first_relevant_rank": 1,
+      "nano_first_relevant_rank": 7,
+      "zero_first_relevant_rank": 3,
+      "shuffled_text": "shelf life"
+    }
+  ],
+  "note": "E12 per-query arrays follow E12's dataset order and load_public's query order; rank None = not in the top 100",
+  "receipt": {
+    "script": "m15src/e13_robustness.py",
+    "script_sha256": "6a38f82cf721197eafb984354a6853ba009b7a4391b9fe2d3aabc124eb8aa677",
+    "git_commit": "b1e4740a295b0ed940ce95bd6524153d15af1189",
+    "m15src_dirty": true,
+    "started_utc": "2026-09-30T17:52:37Z",
+    "finished_utc": "2026-09-30T17:52:56Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "onnxruntime": "1.29.0",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}
