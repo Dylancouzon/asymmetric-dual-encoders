@@ -289,6 +289,55 @@ recipe, and whether a tower's own retrieval quality predicted its table on publi
 cannot show.** Anything about a trained table (Zero is trained, not closed-form), any recipe other
 than this one, or a causal effect of tower properties.
 
+## E9, blended query vectors on one index (added 2026-09-30, before any E9 observation)
+
+**Question.** Zero and Nano write query vectors into the same Stella document space. Does adding the
+nearly free Zero vector to the Nano vector, and running one search, beat Nano alone? The same for the
+Stella query path. This is possible only because the tiers share one index; no second search, no
+score fusion.
+
+**Blends.** q(a) = normalize((1 - a) nano + a zero) and q(b) = normalize((1 - b) stella + b zero),
+with a, b in {0, 0.1, 0.2, 0.3, 0.4, 0.5}.
+
+**Fit, then freeze.** a* and b* maximize the macro nDCG@10 of the two M7 dev forums (cqadup-physics,
+cqadup-programmers); a tie goes to the smaller weight. Both are written to
+`results/m15_e9_frozen.json` before any evaluation dataset is scored.
+
+**Evaluation.** The six M7 public sets (scifact, nfcorpus, fiqa, arguana, scidocs, trec-covid), exact
+search over Stella document vectors that pass the reproduction gate. Per dataset, the macro over six
+and over clean-4: nDCG@10 of the frozen blend, of Nano (or Stella) alone, and a paired 10,000-draw
+query bootstrap interval for blend minus alone. Reference row, not a contrast: Nano + BM25 DBSF@100
+from the committed M20 rows. The full weight curve on the evaluation sets is reported as a
+post-hoc description and never selects anything. Added cost: Zero's encode (E1).
+
+**Outputs.** `results/m15_e9_blend.json`. **Can show:** whether the table vector carries signal the
+transformer lacks, recoverable in one search. **Cannot show:** ANN behavior of the blend, results
+beyond six public sets, or why.
+
+## E10, routers from signals Zero already has (added 2026-09-30, before any E10 observation)
+
+**Question.** E6's fertility router captured about 10% of the oracle headroom. Do signals that Zero
+produces anyway route better?
+
+**Features.** f1 fertility (E6's, as a reference); f2 the L2 norm of Zero's pooled vector before
+normalization (low when the token rows disagree); f3 whitespace word count; f4 Zero's retrieval
+margin, cosine of its top 1 minus its top 10 document (post-retrieval, from Zero's own search).
+
+**Fit, then freeze.** On the pooled test queries of the two dev forums, each feature's direction is
+the sign of its Spearman correlation with Nano minus Zero per-query nDCG@10, and its threshold for a
+Nano budget B in {0.10, 0.25, 0.50} is the matching quantile in that direction. Directions and
+thresholds go to `results/m15_e10_frozen.json` before any evaluation dataset is read.
+
+**Evaluation.** f1-f3 on the 12 E5 datasets from committed M20 rows; f4 on the six E9 sets, whose
+per-query Zero and Nano rows come from the gated local exact runs (identical to M20 rows at the
+gate). Statistics as E6: router, random at the same realized fraction, oracle at that fraction,
+efficiency, and the bootstrap with the fraction recomputed per draw. All four features are
+reported; none is chosen on evaluation data. System cost of an f4 router: Zero's path always, plus
+Nano's for the routed fraction, computed from E1 and E2.
+
+**Outputs.** `results/m15_e10_router.json`. **Can show:** whether a zero-cost tier can tell when it
+is wrong. **Cannot show:** that these features are the best available.
+
 ## Amendments
 
 - **2026-09-30, before E1 ran.** Nano's torch checkpoint is not on this Mac. Nano's E1 parity gate is
