@@ -45,9 +45,14 @@ def dataset_scores(ds, enc):
     # f4 for E10: Zero's 1st and 10th score on the same self-hit-filtered list the search returns.
     zrun = V.exact_run(q["zero"], dv, data["doc_ids"], ids)
     top = np.array([sorted(zrun[i].values(), reverse=True)[:10] for i in ids])
+    # f5 for E10: overlap of Zero's and BM25's top 10 (registered BM25, same self-hit drop).
+    brun = V.bm25(data)
+    top10 = lambda run, i: set(sorted(run.get(i, {}), key=run[i].get, reverse=True)[:10]) \
+        if run.get(i) else set()
+    agree = np.array([len(top10(zrun, i) & top10(brun, i)) for i in ids], dtype=float)
     CACHE.mkdir(parents=True, exist_ok=True)
     np.savez(CACHE / f"{ds}.npz", q_ids=np.array(ids), zero=score(q["zero"]),
-             nano=out["nano"]["0.0"], top1=top[:, 0], top10=top[:, 9],
+             nano=out["nano"]["0.0"], top1=top[:, 0], top10=top[:, 9], agree=agree,
              **{f"blend_{w}": v for w, v in out["nano"].items()})
     return ids, out, prov
 

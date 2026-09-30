@@ -224,3 +224,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   tower quality vs table, six-set ceiling vs six-set table, -0.091 (0.139 clean-4). Descriptive,
   n = 10. Pod `k3aee2m68765em` stopped (not deleted) at ~05:35 UTC. Total spend $6.24
   (balance $219.57 -> $213.33), cap $40.
+- **Overnight session (owner: autonomy, Codex as needed, new ideas welcome, no benchmark framing).**
+  Registered E9 (blended query vectors) and E10 (routers from Zero's own signals: pooled norm, margin,
+  Zero-BM25 agreement, plus escalation to the blend), reviewed by Astra before observation, all
+  findings applied. A SciFact smoke printed E9 curves before the freeze; disclosed in the method file.
+  Draft v3 written. Owner (mid-session): the paper must prove its statements, read well, not read as a
+  benchmark; external references are fine; the repo will be public; Codex Sol is the target reader.

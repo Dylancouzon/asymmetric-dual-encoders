@@ -44,7 +44,8 @@ def margin(ds, qids=None, blend_weight=None):
     order = np.argsort(c["q_ids"])
     if qids is not None and list(c["q_ids"][order]) != list(qids):
         raise SystemExit(f"{ds}: margin cache does not align with the M20 query ids")
-    out = (c["zero"][order], c["nano"][order], {"f4_margin": (c["top1"] - c["top10"])[order]})
+    out = (c["zero"][order], c["nano"][order], {"f4_margin": (c["top1"] - c["top10"])[order],
+                                                 "f5_agreement": c["agree"][order]})
     if blend_weight is not None:
         out += (c[f"blend_{blend_weight}"][order],)
     return out
@@ -93,14 +94,15 @@ def main():
                  ["frozen"]["nano"]["weight"])
     for ds in SIX:
         z, n, f4, bl = margin(ds, blend_weight=a_star)
+        for k in ("f4_margin", "f5_agreement"):
+            table[ds][k] = {b: R6.evaluate(frozen[k]["sign"] * f4[k], z, n, t, rng)
+                            for b, t in frozen[k]["thresholds"].items()}
         k = "f4_margin"
-        table[ds][k] = {b: R6.evaluate(frozen[k]["sign"] * f4[k], z, n, t, rng)
-                        for b, t in frozen[k]["thresholds"].items()}
         table[ds]["f4_margin_to_blend"] = {b: R6.evaluate(frozen[k]["sign"] * f4[k], z, bl, t, rng)
                                            for b, t in frozen[k]["thresholds"].items()}
     macro = {}
     for k in list(frozen) + ["f4_margin_to_blend"]:
-        keys = SIX if k.startswith("f4") else EVAL12
+        keys = SIX if k.startswith(("f4", "f5")) else EVAL12
         macro[k] = {"datasets": list(keys), **{b: {m: float(np.mean([table[d][k][b][m] for d in keys]))
                     for m in ("nano_fraction", "router", "random_same_fraction",
                               "oracle_same_fraction", "router_minus_random")}

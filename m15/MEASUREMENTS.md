@@ -356,3 +356,12 @@ is wrong. **Cannot show:** that these features are the best available.
   E2 search p50 (msmarco1m, unquantized, `hnsw_ef` 128). Added, on Astra's suggestion: an f4 router that
   escalates routed queries to the E9 blend at its frozen weight instead of to plain Nano, with the
   same thresholds and statistics.
+- **2026-09-30, before E9 or E10 ran.** E10 adds f5, the number of documents shared by Zero's and
+  BM25's top 10 (registered bm25s, same self-hit drop), a post-retrieval agreement signal; fitted,
+  frozen and evaluated on the six E9 sets exactly as f4. BM25 is part of the fused tier already, so
+  f5 costs one sparse search.
+- **2026-09-30, disclosure, before the E9 freeze.** A smoke of `e9_blend.dataset_scores` on SciFact,
+  run to check the code path, printed SciFact's blend curves (Nano alone 0.7211, weight 0.1 0.7193;
+  Stella alone 0.7796, weight 0.1 0.7799) before the weights were frozen on the dev forums. SciFact is
+  an E9 evaluation set. Nothing in the registration or the code changed after this; the weights are
+  still chosen by the code on the two dev forums only. The paper reports this peek.
