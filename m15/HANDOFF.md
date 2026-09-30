@@ -82,3 +82,17 @@ From the owner:
 
 Planned pod: one A100 80GB or RTX 4090, 200 GB container disk, no network volume. Estimated 3-5 GPU
 hours for 11 configurations over ~272k documents plus the fit-list queries.
+
+## Runpod state, checked 2026-09-30
+
+- `runpodctl` 2.14.0 is installed; the key is in `~/.runpod/config.toml` (mode 600, outside git).
+  `runpodctl me` works. Never print the config file.
+- Balance $219.57. Current spend $0.417/h: the three stopped M13 pods with 500 GB volumes each
+  (`runpodctl pod list --all`): `m13-gate-chain-20260911` (`wnzk8eeqrrkw4m`, no GPU),
+  `m13-replacement-20260911` (`exulxoxelug5um`, A100), `m13-a100-benchmark` (`k3aee2m68765em`, A100).
+  Pod billing since 2026-09-11 sums to $285.01 (`runpodctl billing pods`), so the $1,000 ceiling
+  leaves roughly $700; E8's proposed cap is $40, which still needs the owner's number.
+- **Possible E8 unblock without the WSL box:** `results/m13_build_record.json` pins
+  `m8_manifest_sha256 = da0f208e...`, the same hash as the cleaned fit list, so the file may sit on
+  one of these volumes. Checking means starting a pod, which costs money: ask the owner first, and
+  prefer the GPU-less `m13-gate-chain` pod for a look.
