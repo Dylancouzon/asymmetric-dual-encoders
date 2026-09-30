@@ -182,3 +182,16 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   torch checkpoint is not on this Mac, so Nano's E1 parity gate is its ONNX sha256 equal to the M13
   freeze (`results/m13_build_record.json`, `freeze.onnx.sha256`); E4's reproduction gate checks it end
   to end.
+- **E6, E1 ran** (`results/m15_e6_router.json`, `results/m15_e1_latency.json`); E1's three ONNX parity
+  gates passed (min cos >= 0.99999988). Reproduction gate passed on SciFact and FiQA to 1e-6 per
+  query for Stella, Zero, Nano (published ONNX) and BM25. MPS parity 0.99993 on 256 FiQA documents.
+- **E8 driver reviewed twice, independently** (`REVIEWS/2026-09-30-astra-e8-driver.md`,
+  `REVIEWS/2026-09-30-opus-e8-driver.md`, access audited). Both named the same P1: a failed solve
+  stopped the whole run. Applied, minimal: a failed solve writes a STOPPED file and is listed;
+  per-dataset resume so no set is scored twice; tokenizer check excludes against Stella's ordered
+  vocabulary; dev files refuse to rewrite after the freeze and assembly checks the three files
+  agree; the result carries repo, revision, dev per-forum ceilings, dev-data hashes and the run
+  start; exposure matrix required. Not done (owner: keep it lean): model file hashes beyond the
+  pinned revisions, an in-progress lock for the scoring step.
+- **E2 uses Qdrant's server-side BM25** (`qdrant/bm25`, IDF modifier, `avg_len` = corpus mean word
+  count) for the fused rows, and checks Qdrant `exact=true` against numpy on 200 queries per encoder.

@@ -55,5 +55,5 @@ def test_e8_convergence_gate():
           "seconds": 1.0, "preconditioner": "jacobi"}
     assert e8_towers._gate(ok, "t")["iterations"] == 3
     for bad in ({**ok, "converged": False}, {**ok, "worst_rel_residual": 2e-6}):
-        with pytest.raises(SystemExit):
+        with pytest.raises(e8_towers.GateFailure):
             e8_towers._gate(bad, "t")

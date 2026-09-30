@@ -64,8 +64,11 @@ def receipt(script, inputs, started, extra_packages=()):
     git = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True)
     dirty = subprocess.run(["git", "status", "--porcelain", "--", "m15src"], cwd=REPO,
                            capture_output=True, text=True).stdout.strip()
-    chip = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True,
-                          text=True).stdout.strip()
+    try:
+        chip = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
+                              capture_output=True, text=True).stdout.strip()
+    except OSError:          # Linux pod without sysctl
+        chip = platform.processor() or platform.machine()
     return {"script": str(Path(script).resolve().relative_to(REPO)),
             "script_sha256": sha_file(script), "git_commit": git.stdout.strip(),
             "m15src_dirty": bool(dirty), "started_utc": started,
