@@ -20,7 +20,7 @@ different embedding towers, the tower's own retrieval quality told us nothing ab
 would yield (Spearman -0.09 on six public BEIR sets), and neither did three plausible mechanisms we
 measured, while a few-minute screen of the table itself on two development forums predicted the public
 ranking (0.90). In each of the four families where we tried two sizes, the smaller checkpoint made the better table.
-Second, the table's loss is concentrated: averaged over datasets, the two cheap tiers score the same on 43% of queries, and an oracle that sends 15% of each dataset's queries to the transformer matches sending all of them. `[E10]` `[E9]`
+Second, the table's loss is concentrated: averaged over datasets, the two cheap tiers score the same on 43% of queries, and an oracle that sends 15% of each dataset's queries to the transformer matches sending all of them. Routing on Zero's own retrieval margin recovers a quarter of that headroom; blending the two tiers' query vectors in one search does not help.
 Third, on truncated queries the three tiers keep similar shares of their own score, so a cheap tier loses no more to short or unfinished queries than the tower does. `[E2]`
 
 ## 1. Introduction
@@ -44,8 +44,7 @@ reproduces its query vectors, how much it reads word order, and how far its top 
 its tenth all fail to predict the quality of the lookup table distilled from it. What does predict it
 is cheap: fit the table and score it on a small development set. We call this "screen the student".
 
-For question 2 we find large, concentrated headroom and measure how much of it a system can
-recover with signals the cheap tier already produces (Sections 6 and 7). Because every tier writes
+For question 2 we find large, concentrated headroom, and a system can recover about a quarter of it by routing on the cheap tier's own retrieval margin (Sections 6 and 7). Because every tier writes
 into one space, a system can also do something that is impossible across independently trained
 retrievers: blend two query vectors and search once (Section 7).
 
@@ -61,7 +60,7 @@ retrievers: blend two query vectors and search once (Section 7).
 - A decomposition of where the table loses to the transformer, with worked examples, and the
   observation that prefix and short-query losses are the query's, not the encoder's (Section 6).
 - Two ways to exploit a shared query space: routing on the cheap tier's own signals and blending
-  query vectors in one search (Section 7). `[E9]` `[E10]`
+  query vectors in one search (Section 7): the first recovers a quarter of the oracle's headroom, the second does not transfer.
 - A pre-registered head-to-head test of the transformer tier, reported in full (Section 8), and a
   public harness in which every number regenerates from committed files.
 
@@ -302,24 +301,49 @@ queries, not real typing sessions.
 
 ### 7.1 Routing on Signals the Cheap Tier Already Has
 
-A router that sends a query to Nano must decide before running Nano. We fitted each router's
-direction and threshold on the two development forums for Nano budgets of 10%, 25% and 50%, froze
-them, and compared each against random routing at the same realized Nano share and against the
-oracle at that share (`results/m15_e6_router.json`, `results/m15_e10_router.json`, registered).
+A router must decide before it runs Nano, so it can only use what Zero already has. For each signal
+we fitted a direction and threshold on the two development forums for Nano budgets of 10%, 25% and
+50%, froze them, and compared the router against random routing at the same realized Nano share and
+against the oracle at that share (`results/m15_e6_router.json`, `results/m15_e10_router.json`,
+registered). Efficiency is the share of the oracle's advantage over random routing that the router
+recovers.
 
-Fertility, the number of subwords per word, beats random routing by 0.003 to 0.005 macro nDCG@10 on
-12 datasets, against an oracle margin of 0.03 to 0.05: about a tenth of the headroom. `[E10]` The
-norm of Zero's pooled vector before normalization, its word count, the margin between its first and
-tenth retrieved document, and the agreement between its top 10 and BM25's.
+| Signal Zero computes anyway | When known | Router minus random, 25% budget | Efficiency | Evaluated on |
+|---|---|---:|---:|---|
+| Subwords per word (fertility) | before search | +0.0049 | 0.10 | 12 sets |
+| Norm of the pooled vector before normalization | before search | +0.0016 | 0.03 | 12 sets |
+| Word count | before search | +0.0018 | 0.04 | 12 sets |
+| Gap between Zero's 1st and 10th document score | after Zero's search | +0.0175 | 0.25 | 6 sets |
+| Documents Zero's and BM25's top 10 share | after both searches | +0.0154 | 0.31 | 6 sets |
+
+Signals known before the search carry little: the table does not know, from the query alone, when
+it will fail. Zero's own retrieval confidence does better. Routing the 28% of queries with the
+narrowest margin to Nano scores 0.4865 on the six sets against 0.4690 for random routing at that
+share and 0.5317 for always-Nano, capturing a quarter of the oracle's headroom; at the 50% budget the
+margin router reaches 0.5117. The gain is largest where Zero is weakest: +0.043 on SciFact and +0.032
+on TREC-COVID at the 25% budget. Escalating routed queries to the Section 7.2 blend instead of plain
+Nano changes nothing (+0.0164). The agreement signal is discrete, and at the 10% budget its frozen
+threshold routes no queries at all.
+
+The cost follows from Section 4: at the 25% budget the margin router pays Zero's encode and search
+on every query and Nano's on 28% of them, 2.7 ms per query against 3.8 ms for always-Nano with
+unquantized search at `ef` 128. A quarter of the headroom while skipping the transformer on 72% of queries is useful, not decisive; the oracle shows how much a better signal could still recover.
 
 ![Figure 5](figures/f5_routing.png)
 
+**Figure 5.** Macro nDCG@10 against the share of queries sent to Nano, on the 12 evaluation sets:
+the oracle frontier, random routing, and the pre-search routers.
+
 ### 7.2 Blending Two Query Vectors in One Search
 
-`[E9]` Because Zero and Nano write into one space, a system can search once with
-normalize((1 - a) Nano + a Zero), paying Zero's 0.044 ms on top of Nano. The weight is fitted on the
-development forums and evaluated on six public sets, against Nano alone and against Nano + BM25
-fusion; the same for the Stella path.
+Because Zero and Nano write into one space, a system can search once with
+normalize((1 - a) Nano + a Zero), paying Zero's 0.044 ms on top of Nano and no second search. On
+the two development forums the blend helped: a = 0.3 raised Nano from 0.4247 to 0.4295. On the six
+public sets the frozen blend lowered Nano by 0.0051 (95% interval -0.0092 to -0.0011), and by 0.0070
+on the four sets without disclosed exposure (`results/m15_e9_blend.json`, registered). It gained only on ArguAna (+0.005) and lost most on TREC-COVID (-0.016). For the Stella path the forums chose a = 0, no blend.
+
+So the table carries no signal the transformer lacks on these sets, and the same two development
+forums that predicted the tower ranking in Section 5 did not predict a blend weight. One reading, which we did not test: CQADupStack's duplicate questions reward lexical overlap, so a screen on it transfers when it measures the property the decision depends on (how well a table ranks), and not when the decision itself trades on lexical overlap.
 
 ## 8. The Pre-Registered Test
 
@@ -360,7 +384,7 @@ families with the towers' training data, and Nano's bge-small backbone trained o
 - **Choosing a query tier:** a 34.5M transformer keeps nine tenths of a 400M tower at one fourteenth
   of the latency; a lookup table keeps four fifths at one seven-hundredth, and on truncated test queries keeps about the same share of its score as the tower. `[E2]`
 - **Serving both:** most queries do not need the transformer, but a cheap router has to find the
-  ones that do. `[E10]` `[E9]`
+  ones that do; the cheapest signal that helps is the table's own retrieval margin, which recovers about a quarter of the headroom.
 
 ## Appendix A. What a Mean-Pooled Table Absorbs
 
