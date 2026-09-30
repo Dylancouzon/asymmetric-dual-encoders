@@ -37,3 +37,13 @@
 {"ts": "2026-09-30T05:11:20+03:00", "dataset": "trec-covid", "argv": ["m15src/e1_latency.py", "--prepare"], "pid": 36655}
 {"ts": "2026-09-30T05:11:23+03:00", "dataset": "fiqa", "argv": ["m15src/e1_latency.py", "--prepare"], "pid": 36655}
 {"ts": "2026-09-30T05:11:27+03:00", "dataset": "arguana", "argv": ["m15src/e1_latency.py", "--prepare"], "pid": 36655}
+{"ts": "2026-09-30T05:14:28+03:00", "dataset": "scifact", "argv": ["work/m15/gate_check.py", "scifact", "fiqa"], "pid": 40258}
+{"ts": "2026-09-30T05:14:51+03:00", "dataset": "fiqa", "argv": ["work/m15/gate_check.py", "scifact", "fiqa"], "pid": 40258}
+{"ts": "2026-09-30T05:16:00+03:00", "dataset": "fiqa", "argv": ["m15src/e2_encode.py"], "pid": 42235}
+{"ts": "2026-09-30T05:16:31+03:00", "dataset": "nfcorpus", "argv": ["m15src/e2_encode.py"], "pid": 42235}
+{"ts": "2026-09-30T05:22:44+03:00", "dataset": "fiqa", "argv": ["m15src/e2_ann.py", "fiqa", "--smoke"], "pid": 51023}
+{"ts": "2026-09-30T05:48:31+03:00", "dataset": "fiqa", "argv": ["m15src/e2_ann.py", "fiqa", "--smoke"], "pid": 99543}
+{"ts": "2026-09-30T05:51:33+03:00", "dataset": "fiqa", "argv": ["m15src/e2_ann.py", "fiqa", "--smoke"], "pid": 5045}
+{"ts": "2026-09-30T05:55:32+03:00", "dataset": "scifact", "argv": ["m15src/e4_prefix.py"], "pid": 10784}
+{"ts": "2026-09-30T06:00:54+03:00", "dataset": "nfcorpus", "argv": ["m15src/e4_prefix.py"], "pid": 10784}
+{"ts": "2026-09-30T06:06:51+03:00", "dataset": "fiqa", "argv": ["m15src/e4_prefix.py"], "pid": 10784}
