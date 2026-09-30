@@ -4,6 +4,14 @@ Previously M14; moved 2026-09-10. One paper is the default. Runs after M13's mea
 normally M14's release; runs on the zero-only frontier if nano does not land. Release is optional,
 credible evidence is not. Working files belong under `m15/` when writing starts.
 
+**Amended 2026-09-30 (Dylan).** The whitepaper is a research paper, not a benchmark report or a
+competitor overview. It leads with the findings, their implications and what the design makes
+possible. The project's comparator bars were release gates and are not the paper's goals: the
+registered contrasts and the reserved-four result appear in full as the pre-registered test in the
+evaluation section, and bge-small, LEAF and BM25 appear as reference points. A failed approach
+enters only where it carries significant value; the repository keeps the full trail. The evidence
+list below is the evidence base the paper may draw on, not required paper content.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
@@ -12,7 +20,7 @@ negative results, limitations and the comparator table intentionally kept off mo
 
 ## Evidence and claims
 
-- Headline = pre-registered clean-4 (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) for both zero
+- Registered test (formerly the headline; see the 2026-09-30 amendment) = pre-registered clean-4 (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) for both zero
   and nano; always show all six. No re-picking after results. Disclose stella's ArguAna/FiQA/FEVER
   exposure. Clean-4 means no disclosed overlap; all-six minus clean-four is partition sensitivity.
 - Teacher choice is an empirical counterexample to selecting on tower quality, not a universal

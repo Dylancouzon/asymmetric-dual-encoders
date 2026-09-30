@@ -94,3 +94,62 @@ named-file allowlists only.
     prior art in the introduction, the contribution stated as the measured frontier.
   - **One paper, both tiers.** The registered default holds, and it is the only framing that carries
     the knee result.
+
+## 2026-09-30
+
+Session on `main`, then on this branch. M20's measurements had landed (`results/m20_beir15_run.json`,
+`results/m13_reserved_run.json`).
+
+- **Merged `main` into this branch** (`75916db`, no rewrite). ROADMAP.md and the plain-English page
+  conflicted; `main`'s newer M20 text was taken for both. The branch now differs from `main` in `m15/`
+  and in this session's rule edits only.
+- Consultants, all within the access rules (Astra logs audited: named files only, no `work/`, no
+  protected paths, no reserved-dataset web searches). Verbatim returns in `REVIEWS/2026-09-30-*.md`,
+  briefs in `REVIEWS/briefs-2026-09-30/`:
+  - Sonnet: literature and published reference numbers; repository survey (build recipe, harness
+    reuse, local artifacts).
+  - Fable: shape of the v3 plan; research-paper shape; qualitative novelty review.
+  - Codex `gpt-6-astra`: adversarial review of v3; evidence rating of the seven findings; qualitative
+    novelty review.
+- **v3 plan (comparator framing) rejected by the owner:** "You seem to write this paper like a
+  comparison, which is NOT what I want... Our goals in this project are not the goals of the
+  whitepaper."
+- **Owner decisions (Dylan, 2026-09-30, asked and answered in session):**
+  - The paper is a research paper. Changed the CLAUDE.md rule "The paper's headline is the registered
+    clean-4" (owner chose "change the rule"): the paper leads with findings; the registered test stays
+    in full in the evaluation section. `instructions-m15.md` carries a dated amendment. The frozen
+    `m20/beir15_registry.json` `reporting.headline` line is left unchanged because its hash is pinned
+    in result files; the ruling overrides it for presentation only.
+  - Lead: retention as query compute drops. The ANN question ("does a cheaper query encoder make ANN
+    search harder?") was briefly proposed as the lead after the novelty reviews; the owner asked
+    whether it deviated from the research goal, and it moved to one section of the system-cost
+    chapter.
+  - Retraining without re-ingestion and use-case-specific encoders: in the discussion section at the
+    size the evidence allows.
+  - Machines: all measurements on the Mac; no second benchmark machine (gcloud VM considered and not
+    needed once the load test was cut). E8 runs on Runpod.
+  - Approved: E8 (tower generality on public BEIR, closed-form tables, no training) and figure F1.
+    Deferred: the closed-form table tool and the browser search-as-you-type demo.
+  - Logged for M22: the Zero card's "L2 regression" training description is wrong
+    (`instructions-m22.md` item 3).
+- **Review outcomes and dispositions.** Both novelty reviews: "partly". Applied: ANN question as a
+  system-cost section; routing as a result (E5, E6); cosine-is-not-the-metric and fusion depth in the
+  body; load test, container demo and "no ML runtime" cut; coverage compressed; absorbability limited
+  to affine transforms and fixed token weights; precedent (Cho and Hariharan 2019) cited for finding 2.
+  Astra's number corrections are in `EVIDENCE_INDEX.md`, "Corrections 2026-09-30". Not adopted:
+  Fable's suggestion to drop +0.017648 from the abstract (the owner's rule change places the registered
+  test in the evaluation section instead); Fable's statement that Zero is a closed-form ridge solve
+  (Zero is trained; the ridge fit is the tower screen).
+- **Errors found in the v2 draft**, now in `EVIDENCE_INDEX.md`: the M9 system-latency "nano" was not
+  Nano and its index and table were synthetic; Nano inherits bge-small's MS MARCO exposure; Zero trained
+  on FEVER-train; KL/entropy mix-up; the 0.009 prediction belongs to Zero.
+- **State.** Plan v5.2 agreed (`PLAN.md`); owner artifact at
+  https://claude.ai/artifact/U2Ph1TXSUmLDXG7bHXRKkN. Next: `HANDOFF.md`.
+- **Adversarial plan review before handoff** (owner request): Codex `gpt-6-astra`,
+  `REVIEWS/2026-09-30-astra-plan-review.md`. Verdict "not ready": one P0, five P1, two P2, all applied
+  in PLAN.md v5.3. P0: E8's fit list must be M8's cleaned `work/m8_trainq_texts.json` (on the WSL box),
+  not M7's 349,934-query superset with 4,582 protected-query hits; E8 is blocked until it is recovered.
+  P1s: E8 narrowed to "does a dev-selected table ranking predict the six-set ranking under one
+  recipe"; E2's subset labelled a positive-preserving diagnostic; F1 keeps one workload per axis; E2
+  gets loss targets fixed in advance; E6 gets a frozen Nano budget and routing baselines. The paper's
+  new-knowledge risk Astra names: a retention table without a transferable decision rule.

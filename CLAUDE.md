@@ -51,7 +51,10 @@ phrase “half A ready to push” or from a closed milestone's executable status
   Unrun-family amendments are not permission to re-decide completed families.
 - Exact search produces quality numbers. Qdrant/Edge measurements establish deployment behavior
   and latency; ANN recall must not be silently mixed into the quality comparison.
-- The paper's headline is the registered clean-4, with all six beside it. “Clean” means no
+- The paper is a research paper: it leads with findings, implications and what the design makes
+  possible, not with comparator contrasts (Dylan, 2026-09-30). The registered clean-4 contrast,
+  with all six beside it, and the one-shot reserved-four result are reported in full as the
+  pre-registered test in the evaluation section; never re-picked or dropped. “Clean” means no
   disclosed teacher overlap. Stella discloses ArguAna/FiQA and FEVER exposure. Partition
   sensitivity is not a causal contamination estimate.
 - Unresolved superiority tests do not establish equivalence. Query-resampling intervals exclude

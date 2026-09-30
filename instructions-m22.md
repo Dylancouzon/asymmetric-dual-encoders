@@ -21,7 +21,18 @@ BEIR-15 complete. No new measurement, no training, no protected access.
    `pip install fastembed` once a PyPI release contains qdrant/fastembed#751 (owner decision,
    2026-09-30, `m22/UPSTREAM_FASTEMBED.md`); the "requires the Constella preview branch" banner
    sentence goes with it.
-3. **Storage-retirement request.** Only after Hub download verification and after M20's archive is
+3. **Zero card training description (logged 2026-09-30, found during M15).** The Zero card says the
+   table "was trained by L2 regression against Stella query embeddings"
+   (`m11/release/MODEL_CARD.md:184`, and the live `Qdrant/constella-zero` card). The recipe is
+   different: phase B uses cosine to the teacher's query vector plus a top-32 KL ranking loss plus
+   InfoNCE over a 2M-vector bank (temperature 0.02, false-negative margin 0.02), with learned
+   per-token weights seeded from IDF and folded into the rows at export; phase A continues for
+   2,500 steps (`m7/RECIPE.md:46-91`). Correct the card from the recipe. The card's 338,076 usable
+   pairs against the recipe's 340,850 pairs also needs a one-line reconciliation from
+   `m7/LEDGER.md`. `research/constella-in-plain-english.md` ("trained by regression") gets the same
+   fix, and its line 141 ("seven candidates with complete learnability rows") should say nine
+   complete pairs, per `results/m7_learnability_report.json`.
+4. **Storage-retirement request.** Only after Hub download verification and after M20's archive is
    verified at both targets may M22 recommend retiring the three Runpod volumes. Deletion requires
    an explicit owner ruling; it is not inferable from any handoff.
 

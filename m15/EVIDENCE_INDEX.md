@@ -1,5 +1,36 @@
 # M15 evidence index
 
+## Corrections 2026-09-30 (Astra and Sonnet passes; each verified against the named source)
+
+- M9 edge prototype (`m9/RESULTS.md`, 3.387/4.469 ms, 1.11x-3.28x, 1.96x-5.10x): "nano" was a
+  pretrained MiniLM-L6 with a randomly initialized head, and the 1M index and Zero table were synthetic
+  (`bench/edge_prototype_pair.py:6-11,41-42`, `m9src/edge_cost.py:88-90`). Not evidence about shipped
+  Nano or Zero system cost.
+- Objective exhaustion: 4.73e-07 nats is the teacher-target median entropy; the KL term's median is
+  1.08e-07 nats; 99.75% is over 4,000 TRAIN queries against the recipe's seeded random bank
+  (`m8/RESULTS.md:21`).
+- M8 levers: "none improved dev by more than about 0.005", not "moved it by under 0.005"; several
+  probes lost quality (`m8/FINDINGS.md:15-23`).
+- Teacher sweep: Spearman 0.000 is over eight configurations (seven checkpoints plus arctic-l's mean
+  readout); the current report has nine complete pairs (rho 0.0833) and two without a ceiling
+  (`results/m7_learnability_report.json`). The 43.15%-71.56% range is each table over its own tower on
+  two CQADupStack dev forums. `research/constella-in-plain-english.md:141` says "seven complete rows".
+- The 0.009 dev-slice agreement and the 0.16 overstatement belong to the Zero table (M7), not Nano.
+- Absorbability maximum difference is 9.31e-14 (per-token weights), not ~1e-16 throughout; the lemma
+  covers affine transforms and fixed token weights only.
+- Nano starts from pretrained `BAAI/bge-small-en-v1.5` (`m10src/nano10.py:57`), which trained on MS
+  MARCO (`research/m7-data-licensing.md:36`). "No MS MARCO" holds for our distillation inputs only.
+- Zero trained on FEVER-train (`m7/RECIPE.md:35`); Nano's M9 pool excluded FEVER ("fever out",
+  `results/m13_build_record.json`); Nano saw 415,454 claim-form rows and HotpotQA-train 81,743.
+- Stella's card reports 58.97 on BEIR-15 with per-task instructions, max_len 400 and bf16; our
+  single-prompt path reproduces 0.5614. bge-small (0.5171 vs card 51.68), LEAF-asym (0.5402 vs 54.03)
+  and BM25 (0.4006 vs MTEB bm25s 39.84) reproduce (`REVIEWS/2026-09-30-sonnet-literature.md`).
+- The reserved result's +0.0032 and -0.0389 are NDO-3 (DBpedia, two CQADupStack forums), not all four;
+  FEVER is separate.
+- M20 numbers are now available: `results/m20_beir15_run.json` (BEIR-15) and
+  `results/m13_reserved_run.json` (reserved four). Section 4 "Missing until M20 finishes" is closed.
+
+
 Built 2026-09-17 by a research sub-agent over a named-file allowlist (no protected reads, no
 recursive searches under `results/` or `work/`). **Every number here is a candidate, not a
 verified paper number.** A number enters `PAPER.md` only after a spot-check against the source file

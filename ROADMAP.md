@@ -20,7 +20,7 @@ with confirmation sealed and released Zero v1 retained.
 | M12 | Qdrant fusion audit | Closed; `m12/FINDINGS.md` |
 | M13 | Cloud E, build, final evaluation and cost frontier | Planned historical track, not current execution; `m13/STATUS.md`, `instructions-m13.md` |
 | M14 | Nano research preview (own Hub account, custom FastEmbed branch) | **Closed 2026-09-15**, published at revision `6bb167dc`; `m14/STATUS.md` |
-| M15 | Whitepaper and evidence package | After measurements, nano optional; `instructions-m15.md` |
+| M15 | Whitepaper (research paper, arXiv preprint) and evidence package | **Active on branch `m15-whitepaper`**: plan v5.2 agreed 2026-09-30, measurements E1-E8 next; `m15/HANDOFF.md`, `m15/PLAN.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |

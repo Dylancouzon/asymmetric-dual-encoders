@@ -71,3 +71,22 @@ implementation, and cites pyNIFE and LEAF as the prior art it stands on.
 
 CARE and ERA are carried from `research/m7-novelty.md` without an independent re-fetch on
 2026-09-17. Re-verify before citing either in the paper.
+
+## Literature refresh, 2026-09-30
+
+Sonnet web pass and two reviewer passes (`REVIEWS/2026-09-30-sonnet-literature.md`,
+`REVIEWS/2026-09-30-fable-novelty.md`, `REVIEWS/2026-09-30-astra-novelty.md`). No work found that puts a
+lookup table, a small student, fusion and the tower itself on one frozen third-party index and measures
+them together (about ten searches; absence, not proof). Added to the map:
+
+- Drift-Adapter, arXiv 2509.23471 (EMNLP 2025): adapter maps new-model queries into an old index.
+- KALE, arXiv 2304.01016: small query encoders for asymmetric retrieval.
+- Query-only fine-tuning for multi-tenant search, arXiv 2601.04646: the "one collection, many use
+  cases" direction.
+- Align Then Adapt, arXiv 2604.03403; CARE, arXiv 2604.10937 (ACL 2026, re-fetched).
+- Teacher quality against student quality: Cho and Hariharan 2019 (ICCV), Mirzadeh et al. 2020,
+  Dynamic KD arXiv 2109.11295. Finding 2 cites these and claims only what is new for embedding towers.
+- To verify: NanoVDR, arXiv 2603.12824, reported by Fable as finding the teacher's own nDCG the
+  strongest predictor of student retention. If confirmed, the paper addresses it directly.
+- Tiering and edge are proposed in pyNIFE; throughput gains are reported by LightRetriever. The paper
+  claims measurements, not those ideas.

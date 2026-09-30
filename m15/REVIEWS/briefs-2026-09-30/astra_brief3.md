@@ -1,0 +1,13 @@
+You are an adversarial, qualitative reviewer (read-only) of a paper PLAN for an arXiv cs.IR preprint. Read plan_v4.md in the scratchpad directory named below. The owner's main goal: the paper must create genuinely new knowledge for the IR industry. It is a research paper, not a benchmark or competitor report. You reviewed the evidence behind this plan earlier today; this pass is about value, not number-checking, though flag any number in the plan that is wrong.
+
+Repository (read-only): /Users/dylanc/Documents/GitHub/asymetric-dual-encoders.
+HARD ACCESS RULES: never read or list `results/frozen_eval/untouched-*`, anything under `work/`, reserved qrels caches, or raw queries/qrels of FEVER, DBpedia-entity, cqadupstack-android, cqadupstack-english. No recursive content search across `results/` or `work/`; you may open only these exact files: results/m20_beir15_run.json, results/m7_learnability_report.json, results/m7_absorb_check.json, results/m13_serving_costs.json. Recursive search is fine in source dirs (m7src m8src m9src m10src m13src m20src bench scripts) and the markdown of m7/ m8/ m9/ m10/ m12/ m13/ m20/ research/ (not research/archive). Web search allowed for related work, but no searches naming the four reserved datasets. No edits, no commits, no runs.
+
+Essential-only: report only what bears on the goal (new knowledge for the IR industry, defensible to a hostile reviewer). No wording or style. If nothing essential, say so.
+
+Tasks, under 1,100 words total:
+1. One-line verdict: does the plan, if executed, create new knowledge for the IR industry? Yes / partly / no.
+2. For each spine finding and each use case in the plan: is the claimed knowledge new, known-but-unquantified, or already known? Cite prior work when it overlaps (e.g., LEAF arXiv 2509.12539, pyNIFE, LightRetriever arXiv 2505.12260, Model2Vec/static embeddings, distillation literature on teacher-student capacity gaps such as Cho & Hariharan 2019 / Mirzadeh 2020, SPLADE/inference-free sparse). Where a claimed "new" finding is actually known, say so plainly.
+3. For the planned measurements E1-E5: which ones would produce new knowledge versus confirm what practitioners already assume? Is any measurement likely to be uninformative whatever its result? Which single measurement has the highest expected value of new knowledge?
+4. What latent new knowledge already sits in the committed evidence that the plan does not use? Look in m7/FINDINGS.md, m8/FINDINGS.md, m9/FINDINGS.md, m10/FINDINGS.md, m12/FINDINGS.md, research/m1-m6-findings.md.
+5. The strongest reason a hostile reviewer would say "this is not new", and the minimal fix.

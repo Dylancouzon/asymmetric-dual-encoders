@@ -1,5 +1,11 @@
 # Swapping the Query Encoder Over a Frozen Document Index
 
+> **Superseded 2026-09-30.** This v2 draft is framed as a comparator study, which the owner ruled
+> out; the next draft follows `m15/PLAN.md` v5.2. Do not reuse its sections 6.2 and 6.4: the M9
+> system-latency "nano" was a pretrained MiniLM-L6 with a random head and the index and table were
+> synthetic. Other errors are listed in `m15/EVIDENCE_INDEX.md`, "Corrections 2026-09-30".
+
+
 **Draft v2, 2026-09-17. Not for circulation.** Sections marked `[M20]` wait on the reserved four and
 BEIR-15. Sections marked `[open]` name a measurement this paper owes. Every result number traces to a committed
 file through `EVIDENCE_INDEX.md`, whose spot-check table records what a reviewer verified against

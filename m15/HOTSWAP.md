@@ -1,5 +1,11 @@
 # What is measured about the swap, and what is only asserted
 
+> **2026-09-30.** The "proposed fix" below is now measurement E2 in `m15/PLAN.md`, narrowed by Astra's
+> review: the live swap covers Zero, Nano and the Stella query path on one Stella collection, and the
+> interleaving check is a reproducibility check, not a result. The edge numbers cited here came from a
+> synthetic prototype whose "nano" was not the shipped Nano.
+
+
 Sub-agent audit 2026-09-17 over a named-file allowlist. The claim under audit: the query encoder is
 interchangeable over one frozen document index, and this is operationally real.
 
