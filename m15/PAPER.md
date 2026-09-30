@@ -19,7 +19,7 @@ different embedding towers, the tower's own retrieval quality told us nothing ab
 would yield (Spearman -0.09 on six public BEIR sets), and neither did three plausible mechanisms we
 measured, while a few-minute screen of the table itself on two development forums predicted the public
 ranking (0.90). In each of the four families where we tried two sizes, the smaller checkpoint made the better table.
-Second, the table's loss is concentrated: averaged over datasets, the two cheap tiers score the same on 43% of queries, and an oracle that sends 15% of each dataset's queries to the transformer matches sending all of them. Routing on Zero's own retrieval margin recovers a quarter of that headroom; blending the two tiers' query vectors in one search does not help.
+Second, the table's loss is concentrated: averaged over datasets, the two cheap tiers score the same on 43% of queries, and an oracle that sends 15% of each dataset's queries to the transformer matches sending all of them. Most of the table's loss sits on queries whose meaning depends on word order, not on rare fragmented words. Routing on Zero's own retrieval margin recovers a quarter of the headroom; blending the two tiers' query vectors in one search does not help.
 Third, on truncated queries the three tiers keep similar shares of their own score, so a cheap tier loses no more to short or unfinished queries than the tower does. Finally, the table's queries make approximate search work harder, so its 50- to 60-fold encode saving shrinks to a 2- to 3-fold end-to-end saving inside a vector search engine.
 
 ## 1. Introduction
@@ -55,8 +55,7 @@ retrievers: blend two query vectors and search once (Section 7).
 - Evidence that a tower's quality does not predict its distillability into a lookup table, that
   three natural mechanisms do not explain it either, and that a cheap direct screen does
   (Section 5).
-- A decomposition of where the table loses to the transformer, with worked examples, and the
-  observation that prefix and short-query losses are the query's, not the encoder's (Section 6).
+- A per-query decomposition showing that a lookup table loses mainly where the tower reads word order, controlled for query fragility, with worked examples; and the observation that truncated queries cost every tier the same share (Section 6).
 - Two ways to exploit a shared query space: routing on the cheap tier's own signals and blending
   query vectors in one search (Section 7): the first recovers a quarter of the oracle's headroom, the second does not transfer.
 - A pre-registered head-to-head test of the transformer tier, reported in full (Section 8), and a
@@ -262,27 +261,52 @@ always-Nano and 0.5580 for the Stella path. If it may send only a fraction of ea
 (`results/m15_e5_oracle.json`, registered). Most queries do not need the transformer; the ones that
 do are few.
 
-### 6.2 What the Table Cannot Read
+### 6.2 The Table Loses Where the Tower Reads Word Order
 
-Three SciFact queries show the pattern (exploratory, rank of the first relevant document; `results/m15_examples.json`):
+A table is a bag of tokens: it cannot tell "A treats B" from "B treats A". That is the obvious
+suspect for its loss, and a second suspect is fragmentation, rare words split into many subwords
+whose rows the table can only average. We measured both, per query, on the 3,727 test queries of the
+six public sets (`results/m15_e12_failure_modes.json`, `results/m15_e12b_fragility.json`,
+exploratory). A query's order dependence is how much the Stella path's own nDCG@10 drops when its
+words are shuffled; its fertility is subwords per word.
 
-| Query | Zero | Nano |
+| Per-query association with the Stella-minus-Zero gap | Spearman |
+|---|---:|
+| Order dependence | 0.46 |
+| Order dependence, within bins of the Stella path's own score | 0.46 |
+| Order dependence, controlling for fragility (below) | 0.42 |
+| Fertility | 0.10 |
+
+Word order wins. On the 31% of queries where shuffling hurts the Stella path, the Stella path beats
+Zero by 0.215 nDCG@10; on the rest, by 0.038. Fertility matters less: the gap grows from 0.071 in the
+lowest fertility tercile to 0.133 in the highest.
+
+Two confounds could fake this. Both the gap and order dependence can only be large where the Stella
+path scores well, so we repeated the correlation within bins of the Stella path's own score; it does
+not move. And a query could be merely fragile, losing under any perturbation. To test that, we moved
+each Stella query vector by exactly as much as shuffling moved it, in a random direction instead.
+That random move costs 0.009 nDCG@10 on average, against 0.047 for shuffling, and its damage does not
+predict Zero's gap (0.07). Shuffling hurts because it changes what the query means, and those are
+the queries a table gets wrong. Nano, a transformer, reads some of that order: its gap to the Stella
+path on the same queries correlates less with order dependence (0.22).
+
+Fragmentation is still visible in single queries (`results/m15_examples.json`):
+
+| SciFact query | Zero rank of first relevant | Nano rank |
 |---|---:|---:|
 | ADAR1 binds to Dicer to cleave pre-miRNA. | 1 | 1 |
 | Ivermectin is used to treat lymphatic filariasis. | not in top 100 | 2 |
 | Albendazole is used to treat lymphatic filariasis. | not in top 100 | 2 |
 
 Zero's tokenizer splits "ivermectin" into `iv ##er ##me ##ct ##in` and "filariasis" into
-`fi ##lar ##ias ##is`. A table can only average those rows, each shared with thousands of unrelated
-words; Nano composes them in context. Fragmentation is not the whole story: "ADAR1" and "Dicer" split
-almost as badly (2.29 subwords per word) and Zero still ranks the answer first, because the fragments
-it averages happen to be distinctive.
+`fi ##lar ##ias ##is`; the table can only average rows shared with thousands of unrelated words.
+"ADAR1" and "Dicer" split almost as badly (2.29 subwords per word) and Zero still ranks the answer
+first. Across all queries, this failure is the smaller one.
 
-A table also cannot read word order. Shuffling a query's words costs the Stella path 6.9% and Nano
-4.4% of their own nDCG@10 on SciFact, NFCorpus and FiQA, and Zero nothing, by construction; on FiQA
-the Stella path loses 13.7% (`results/m15_e4_prefix.json`). And a table absorbs, rather than
-benefits from, any affine map after pooling or any fixed per-token weighting such as IDF: the
-result is another table (Appendix A proves this). Such post-processing adds no representational capacity to a table; it can still help as an initialization or prior, but it cannot express a function a table could not.
+Post-processing cannot fix either. A mean-pooled table absorbs any affine map after pooling and any
+fixed per-token weighting such as IDF: the result is another table of the same shape (Appendix A
+proves this). Such operations add no representational capacity; closing the order gap needs a query
+function that is not a bag.
 
 ### 6.3 Short and Unfinished Queries
 
@@ -336,8 +360,7 @@ unquantized search at `ef` 128. A quarter of the headroom while skipping the tra
 
 ![Figure 5](figures/f5_routing.png)
 
-**Figure 5.** Macro nDCG@10 against the share of queries sent to Nano, on the 12 evaluation sets:
-the oracle frontier, random routing, and the pre-search routers.
+**Figure 5.** Left: the oracle frontier against random routing on the 12 evaluation sets. Right: the share of the oracle's gain over random routing that each frozen router recovers, at each Nano budget; orange signals are known before the search, green ones after Zero's own search (six sets).
 
 ### 7.2 Blending Two Query Vectors in One Search
 

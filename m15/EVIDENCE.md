@@ -95,7 +95,7 @@ Spearman over the 10 checkpoints: primary_dev_table_vs_six_table_all6 +0.903, de
 
 **Claim.** How additive a tower is, how much it reads word order, and how its table's error compares with its ranking margins do not predict its table's quality.
 
-| config | additivity | order cosine | median 1st-10th gap | error / margin | six table | retention |
+| config | additivity | order cosine | mean of per-set median 1st-10th gaps | mean of per-set RMS error / median gap | six table | retention |
 |---|---|---|---|---|---|---|
 | stella-400M-v5 | 0.783 | 0.944 | 0.0839 | 9.35 | 0.3974 | 0.692 |
 | arctic-embed-l | 0.717 | 0.874 | 0.0773 | 10.88 | 0.3034 | 0.574 |
@@ -211,6 +211,60 @@ Oracle frontier (Nano share: macro nDCG@10): 0.00: 0.4524, 0.05: 0.4818, 0.10: 0
 
 **Cannot show.** That fertility is the best feature.
 
+## C8. Routers on Zero's own signals
+
+**Label:** registered (E10). **Source:** `results/m15_e10_router.json`
+
+**Claim.** See the paper, Section 7.1.
+
+| feature | budget | Nano share | router | random | oracle | router - random |
+|---|---|---|---|---|---|---|
+| f1_fertility | 0.1 | 0.127 | 0.4678 | 0.4645 | 0.4973 | +0.0032 |
+| f1_fertility | 0.25 | 0.288 | 0.4853 | 0.4805 | 0.5283 | +0.0049 |
+| f1_fertility | 0.5 | 0.556 | 0.4994 | 0.4944 | 0.5445 | +0.0050 |
+| f2_pooled_norm | 0.1 | 0.241 | 0.4669 | 0.4653 | 0.5085 | +0.0016 |
+| f2_pooled_norm | 0.25 | 0.387 | 0.4777 | 0.4761 | 0.5252 | +0.0016 |
+| f2_pooled_norm | 0.5 | 0.596 | 0.4958 | 0.4912 | 0.5325 | +0.0046 |
+| f3_words | 0.1 | 0.225 | 0.4606 | 0.4590 | 0.4931 | +0.0017 |
+| f3_words | 0.25 | 0.363 | 0.4706 | 0.4688 | 0.5120 | +0.0018 |
+| f3_words | 0.5 | 0.588 | 0.4894 | 0.4889 | 0.5280 | +0.0005 |
+| f4_margin | 0.1 | 0.135 | 0.4629 | 0.4530 | 0.5044 | +0.0099 |
+| f4_margin | 0.25 | 0.282 | 0.4865 | 0.4690 | 0.5399 | +0.0175 |
+| f4_margin | 0.5 | 0.547 | 0.5117 | 0.4953 | 0.5532 | +0.0164 |
+| f5_agreement | 0.1 | 0.000 | 0.4339 | 0.4339 | 0.4339 | +0.0000 |
+| f5_agreement | 0.25 | 0.158 | 0.4733 | 0.4579 | 0.5072 | +0.0154 |
+| f5_agreement | 0.5 | 0.508 | 0.5084 | 0.4974 | 0.5483 | +0.0111 |
+| f4_margin_to_blend | 0.1 | 0.135 | 0.4619 | 0.4518 | 0.4980 | +0.0101 |
+| f4_margin_to_blend | 0.25 | 0.282 | 0.4834 | 0.4670 | 0.5294 | +0.0164 |
+| f4_margin_to_blend | 0.5 | 0.547 | 0.5065 | 0.4920 | 0.5405 | +0.0145 |
+
+**Cannot show.** Features beyond the five tested.
+
+## C9. Blending two query vectors in one search
+
+**Label:** registered (E9). **Source:** `results/m15_e9_blend.json`
+
+**Claim.** Frozen weights: 0.3 (Nano), 0.0 (Stella).
+
+| dataset | base | alone | blend | difference | 95% CI |
+|---|---|---|---|---|---|
+| scifact | nano | 0.7211 | 0.7178 | -0.0033 | [-0.0143, +0.0077] |
+| scifact | stella | 0.7796 | 0.7796 | +0.0000 | [+0.0000, +0.0000] |
+| nfcorpus | nano | 0.3631 | 0.3548 | -0.0083 | [-0.0172, -0.0012] |
+| nfcorpus | stella | 0.4134 | 0.4134 | +0.0000 | [+0.0000, +0.0000] |
+| fiqa | nano | 0.4778 | 0.4703 | -0.0074 | [-0.0136, -0.0014] |
+| fiqa | stella | 0.5536 | 0.5536 | +0.0000 | [+0.0000, +0.0000] |
+| arguana | nano | 0.6233 | 0.6281 | +0.0048 | [-0.0003, +0.0101] |
+| arguana | stella | 0.6369 | 0.6369 | +0.0000 | [+0.0000, +0.0000] |
+| scidocs | nano | 0.2177 | 0.2172 | -0.0005 | [-0.0036, +0.0027] |
+| scidocs | stella | 0.2395 | 0.2395 | +0.0000 | [+0.0000, +0.0000] |
+| trec-covid | nano | 0.7871 | 0.7714 | -0.0157 | [-0.0338, +0.0018] |
+| trec-covid | stella | 0.8234 | 0.8234 | +0.0000 | [+0.0000, +0.0000] |
+
+Macro differences: nano_all6: -0.0051 [-0.0092, -0.0011]; nano_clean4: -0.0070 [-0.0128, -0.0013]; stella_all6: +0.0000 [+0.0000, +0.0000]; stella_clean4: +0.0000 [+0.0000, +0.0000].
+
+**Cannot show.** ANN behavior of the blend.
+
 ## C10. Does the saving survive the search (fiqa)
 
 **Label:** registered (E2). **Source:** `results/m15_e2_ann_fiqa.json`
@@ -219,17 +273,39 @@ Oracle frontier (Nano share: macro nDCG@10): 0.00: 0.4524, 0.05: 0.4818, 0.10: 0
 
 | encoder | target | quant | ef | oversampling | e2e p50 (ms) | search p50 (ms) | ANN nDCG@10 |
 |---|---|---|---|---|---|---|---|
-| zero | 0.01 | turbo4 | 128 | 2.0 | 0.67 | 0.63 | 0.3699 |
-| zero | 0.02 | turbo4 | 64 | 1.0 | 0.61 | 0.58 | 0.3669 |
-| zero | 0.05 | binary1 | 64 | 2.0 | 0.57 | 0.54 | 0.3546 |
-| nano | 0.01 | binary1 | 64 | 1.0 | 2.29 | 0.53 | 0.4732 |
-| nano | 0.02 | binary1 | 64 | 1.0 | 2.29 | 0.53 | 0.4732 |
-| nano | 0.05 | binary1 | 16 | 1.0 | 2.26 | 0.50 | 0.4620 |
-| stella-query | 0.01 | int8 | 32 | 1.0 | 34.91 | 0.54 | 0.5492 |
-| stella-query | 0.02 | binary1 | 32 | 1.0 | 34.89 | 0.52 | 0.5474 |
-| stella-query | 0.05 | binary1 | 32 | 1.0 | 34.89 | 0.52 | 0.5474 |
+| zero | 0.01 | turbo4 | 128 | 2.0 | 0.96 | 0.89 | 0.3692 |
+| zero | 0.02 | turbo4 | 128 | 2.0 | 0.96 | 0.89 | 0.3692 |
+| zero | 0.05 | binary1 | 64 | 2.0 | 0.84 | 0.77 | 0.3542 |
+| nano | 0.01 | int8 | 32 | 1.0 | 3.61 | 0.78 | 0.4732 |
+| nano | 0.02 | binary1 | 64 | 1.0 | 3.60 | 0.76 | 0.4723 |
+| nano | 0.05 | binary1 | 32 | 1.0 | 3.56 | 0.74 | 0.4678 |
+| stella-query | 0.01 | binary1 | 64 | 1.0 | 59.13 | 0.76 | 0.5514 |
+| stella-query | 0.02 | binary1 | 16 | 2.0 | 59.10 | 0.74 | 0.5471 |
+| stella-query | 0.05 | binary1 | 16 | 2.0 | 59.10 | 0.74 | 0.5471 |
 
-Exact nDCG@10: {'zero': 0.3727623009067084, 'nano': 0.47776539081203656, 'stella-query': 0.5535975932731784}. Saving survives: {'0.01': {'zero_e2e_p50_ms': 0.6663959939032793, 'nano_e2e_p50_ms': 2.2893754940014333, 'nano_over_zero': 3.435458068395461, 'saving_survives': True}, '0.02': {'zero_e2e_p50_ms': 0.6090419774409384, 'nano_e2e_p50_ms': 2.2893754940014333, 'nano_over_zero': 3.7589781637398625, 'saving_survives': True}, '0.05': {'zero_e2e_p50_ms': 0.5747084942413494, 'nano_e2e_p50_ms': 2.258686989080161, 'nano_over_zero': 3.9301437367160665, 'saving_survives': True}}.
+Exact nDCG@10: {'zero': 0.3727623009067084, 'nano': 0.47776539081203656, 'stella-query': 0.5535975932731784}. Saving survives: {'0.01': {'zero_e2e_p50_ms': 0.958312492002733, 'nano_e2e_p50_ms': 3.605500009143725, 'nano_over_zero': 3.7623427005618564, 'saving_survives': True}, '0.02': {'zero_e2e_p50_ms': 0.958312492002733, 'nano_e2e_p50_ms': 3.600729498430155, 'nano_over_zero': 3.757364668079362, 'saving_survives': True}, '0.05': {'zero_e2e_p50_ms': 0.8374999888474122, 'nano_e2e_p50_ms': 3.564249520422891, 'nano_over_zero': 4.255820379565733, 'saving_survives': True}}.
+
+**Cannot show.** Full-corpus MS MARCO, multi-client throughput, memory limits.
+
+## C10. Does the saving survive the search (msmarco1m)
+
+**Label:** registered (E2). **Source:** `results/m15_e2_ann_msmarco1m.json`
+
+**Claim.** For each encoder, the cheapest setting within each loss target of its own exact nDCG@10.
+
+| encoder | target | quant | ef | oversampling | e2e p50 (ms) | search p50 (ms) | ANN nDCG@10 |
+|---|---|---|---|---|---|---|---|
+| zero | 0.01 | binary1 | 512 | 2.0 | 1.11 | 1.09 | 0.6116 |
+| zero | 0.02 | binary1 | 256 | 2.0 | 0.88 | 0.85 | 0.6056 |
+| zero | 0.05 | binary1 | 128 | 1.0 | 0.71 | 0.68 | 0.5915 |
+| nano | 0.01 | binary1 | 256 | 4.0 | 2.48 | 0.87 | 0.6893 |
+| nano | 0.02 | binary1 | 128 | 1.0 | 2.29 | 0.67 | 0.6845 |
+| nano | 0.05 | turbo4 | 32 | 1.0 | 2.22 | 0.60 | 0.6682 |
+| stella-query | 0.01 | turbo4 | 64 | 1.0 | 21.32 | 0.66 | 0.7225 |
+| stella-query | 0.02 | binary1 | 64 | 1.0 | 21.26 | 0.60 | 0.7171 |
+| stella-query | 0.05 | binary1 | 16 | 2.0 | 21.23 | 0.56 | 0.6973 |
+
+Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-query': 0.729302244648976}. Saving survives: {'0.01': {'zero_e2e_p50_ms': 1.112645521061495, 'nano_e2e_p50_ms': 2.484062992152758, 'nano_over_zero': 2.2325735781355522, 'saving_survives': True}, '0.02': {'zero_e2e_p50_ms': 0.8802509837551042, 'nano_e2e_p50_ms': 2.286146002006717, 'nano_over_zero': 2.5971524533311383, 'saving_survives': True}, '0.05': {'zero_e2e_p50_ms': 0.7101249939296395, 'nano_e2e_p50_ms': 2.215062515460886, 'nano_over_zero': 3.1192572214693217, 'saving_survives': True}}.
 
 **Cannot show.** Full-corpus MS MARCO, multi-client throughput, memory limits.
 

@@ -1,0 +1,37 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E12b (exploratory)",
+  "scope": "exploratory; queries where Stella scores above 0; associations",
+  "summary": {
+    "n_queries": 3727,
+    "n_stella_positive": 3069,
+    "rho_gap_order": 0.4203288237456961,
+    "rho_gap_fragility": 0.0664649543268075,
+    "rho_order_fragility": 0.08913698898325532,
+    "partial_rho_gap_order_given_fragility": 0.416982566840903,
+    "mean_order_drop": 0.04731224712847146,
+    "mean_noise_drop": 0.008801605122179994
+  },
+  "receipt": {
+    "script": "m15src/e12b_fragility.py",
+    "script_sha256": "7a056d85b04164786863b1f2e716c0a648d700a13f8e7e4b6dcf3f64008fcaa7",
+    "git_commit": "a8cc216b5f3c01f72cee75e4f3a7a2e437e0c2de",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T17:22:42Z",
+    "finished_utc": "2026-09-30T17:39:58Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "onnxruntime": "1.29.0",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

@@ -141,29 +141,42 @@ def f4_system():
 
 def f5_routing():
     e5 = R("m15_e5_oracle.json")["macro_over_12"]
-    e6 = R("m15_e6_router.json")["macro_over_12"]
     fr = np.array(e5["frontier"])
     b = np.linspace(0, 1, len(fr))
-    fig, ax = plt.subplots(figsize=(4.6, 3.2))
-    ax.plot(b, fr, color=C["ink"], label="Oracle (best queries first)")
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(7.4, 3.2), gridspec_kw={"width_ratios": [1, 1.1]})
+    ax.plot(b, fr, color=C["ink"], label="Oracle, largest gains first")
     ax.plot([0, 1], [e5["zero"], e5["nano"]], color=C["ref"], linestyle="--", label="Random routing")
-    ax.scatter([v["nano_fraction"] for v in e6.values()], [v["router"] for v in e6.values()],
-               color=C["nano"], s=40, zorder=3, label="Fertility router (E6)")
-    p10 = REPO / "results" / "m15_e10_router.json"
-    if p10.exists():
-        m = json.loads(p10.read_text())["macro"]
-        for k, marker in (("f2_pooled_norm", "s"), ("f3_words", "^")):
-            pts = [m[k][x] for x in m[k] if x != "datasets"]
-            ax.scatter([p["nano_fraction"] for p in pts], [p["router"] for p in pts],
-                       marker=marker, s=40, color=C["zero"], zorder=3,
-                       label={"f2_pooled_norm": "Zero pooled-norm router (E10)",
-                              "f3_words": "Word-count router (E10)"}[k])
     ax.axhline(e5["stella_query"], color=C["stella"], linewidth=1, linestyle=":")
     ax.annotate("Stella query path", (0.02, e5["stella_query"]), textcoords="offset points",
                 xytext=(0, 3), fontsize=7.5, color=C["stella"])
     ax.set_xlabel("Share of queries sent to Nano")
     ax.set_ylabel("Macro nDCG@10, 12 BEIR sets")
+    ax.set_title("Headroom: most queries do not need Nano", fontsize=9, loc="left")
     ax.legend(frameon=False, fontsize=7, loc="lower right")
+    # Right: share of the oracle's advantage over random routing each signal recovers, per budget
+    # (macro of router, random-at-same-share and oracle-at-same-share over its evaluation sets).
+    e6 = R("m15_e6_router.json")["macro_over_12"]
+    e10 = R("m15_e10_router.json")["macro"]
+    signals = [("Fertility (12 sets)", e6), ("Pooled norm (12)", e10["f2_pooled_norm"]),
+               ("Word count (12)", e10["f3_words"]), ("Zero's 1st-10th margin (6)", e10["f4_margin"]),
+               ("Zero-BM25 top-10 agreement (6)", e10["f5_agreement"])]
+    markers = {"0.1": "o", "0.25": "s", "0.5": "^"}
+    for k, (name, m) in enumerate(signals):
+        for bud, mk in markers.items():
+            v = m[bud]
+            head = v["oracle_same_fraction"] - v["random_same_fraction"]
+            if head <= 0:
+                continue
+            eff = (v["router"] - v["random_same_fraction"]) / head
+            bx.scatter(eff, k, marker=mk, s=36, color=C["zero"] if k >= 3 else C["nano"],
+                       zorder=3, label=f"Nano budget {int(float(bud) * 100)}%" if k == 0 else None)
+    bx.axvline(0, color=C["ref"], linewidth=1)
+    bx.set_yticks(range(len(signals)), [s[0] for s in signals])
+    bx.invert_yaxis()
+    bx.set_xlim(-0.05, 1.0)
+    bx.set_xlabel("Share of oracle gain recovered")
+    bx.set_title("What a router recovers", fontsize=9, loc="left")
+    bx.legend(frameon=False, fontsize=7, loc="lower right")
     save(fig, "f5_routing")
 
 
