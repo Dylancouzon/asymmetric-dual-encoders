@@ -344,3 +344,9 @@
 {"ts": "2026-09-30T20:52:42+03:00", "dataset": "arguana", "argv": ["m15src/e13_robustness.py"], "pid": 76838}
 {"ts": "2026-09-30T20:52:48+03:00", "dataset": "fiqa", "argv": ["m15src/e13_robustness.py"], "pid": 76838}
 {"ts": "2026-09-30T20:52:52+03:00", "dataset": "nfcorpus", "argv": ["m15src/e13_robustness.py"], "pid": 76838}
+{"ts": "2026-09-30T21:12:12+03:00", "dataset": "scifact", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}
+{"ts": "2026-09-30T21:13:19+03:00", "dataset": "nfcorpus", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}
+{"ts": "2026-09-30T21:14:04+03:00", "dataset": "fiqa", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}
+{"ts": "2026-09-30T21:16:06+03:00", "dataset": "arguana", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}
+{"ts": "2026-09-30T21:40:03+03:00", "dataset": "scidocs", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}
+{"ts": "2026-09-30T21:43:26+03:00", "dataset": "trec-covid", "argv": ["m15src/e12_failure_modes.py"], "pid": 95428}

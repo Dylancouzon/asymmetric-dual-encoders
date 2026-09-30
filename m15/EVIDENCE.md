@@ -318,18 +318,18 @@ Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-qu
 | association (Spearman) | value |
 |---|---|
 | stella_gap_vs_fertility | +0.101 |
-| stella_gap_vs_order | +0.456 |
+| stella_gap_vs_order | +0.523 |
 | nano_gap_vs_fertility | +0.087 |
-| nano_gap_vs_order | +0.220 |
-| fertility_vs_order | -0.019 |
-| stella_gap_vs_order (within Stella-score bins) | +0.464 |
+| nano_gap_vs_order | +0.257 |
+| fertility_vs_order | -0.027 |
+| stella_gap_vs_order (within Stella-score bins) | +0.528 |
 | stella_gap_vs_fertility (within Stella-score bins) | +0.094 |
-| nano_gap_vs_order (within Stella-score bins) | +0.224 |
+| nano_gap_vs_order (within Stella-score bins) | +0.249 |
 | nano_gap_vs_fertility (within Stella-score bins) | +0.082 |
 | gap vs fragility | +0.066 |
 | gap vs order, controlling for fragility | +0.417 |
 
-Order-dependent share 0.314; gap there 0.215 against 0.038. Mean drop from shuffling 0.0473, from a random move of equal cosine 0.0088. Gap by fertility tercile: [0.071, 0.078, 0.133].
+Order-dependent share 0.405; gap there 0.210 against 0.015. Mean drop from shuffling 0.0473, from a random move of equal cosine 0.0088. Gap by fertility tercile: [0.071, 0.078, 0.133].
 
 **Cannot show.** A cause; that shuffling isolates word order from other query properties.
 

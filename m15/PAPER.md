@@ -15,9 +15,7 @@ and its table's on six public BEIR sets. A few-minute screen of the table on two
 did (0.90, and between 0.87 and 0.98 when any one model family is left out). Over one frozen
 `stella_en_400M_v5` index, the table keeps 81.4% of the tower's nDCG@10 on 15 BEIR datasets at 0.044
 ms per query on a laptop CPU, and a 34.5M-parameter distilled transformer keeps 90.5% at 2.25 ms,
-against 31.6 ms for the tower. The table's loss is concentrated on queries the tower reads
-differently when their words are shuffled, not on queries that are merely fragile or full of rare
-subwords, and routing on the table's own retrieval margin recovers a quarter of the headroom an oracle
+against 31.6 ms for the tower. About 90% of the table's loss sits on the 40% of queries the tower reads differently when their words are shuffled, not on queries that are merely fragile or full of rare subwords, and routing on the table's own retrieval margin recovers a quarter of the headroom an oracle
 router would. Inside a vector search engine the table's queries need a wider graph search, so its
 encode-time saving over the transformer shrinks from about 60-fold to 2- to 3-fold end to end on a
 one-million-passage collection.
@@ -188,14 +186,17 @@ nDCG@10 drops when its words are shuffled; its *fertility* is subwords per word.
 
 | Per-query association with the Stella-minus-Zero gap | Spearman |
 |---|---:|
-| Order dependence, all 3,727 queries | 0.46 |
-| Order dependence, within bins of the Stella path's own score | 0.46 |
-| Order dependence, controlling for fragility, 3,069 queries Stella scores above 0 | 0.42 |
+| Order dependence (five shuffles averaged), all 3,727 queries | 0.52 |
+| Order dependence, within bins of the Stella path's own score | 0.53 |
+| Order dependence (one shuffle), controlling for fragility, 3,069 queries Stella scores above 0 | 0.42 |
 | Fertility, all queries | 0.10 |
 
-On the 31% of queries where shuffling hurts the Stella path, it beats Zero by 0.215 nDCG@10; on the
-rest, by 0.038. The gap grows less with fertility, from 0.071 in the lowest tercile to 0.133 in the
-highest.
+On the 40% of queries where shuffling hurts the Stella path, it beats Zero by 0.210 nDCG@10; on the
+rest, by 0.015. Those queries carry about 90% of the table's total loss. Word order explains only
+part of that loss directly: shuffling costs the Stella path 0.035 per query on average, 37% of its
+mean gap to Zero (0.094). The rest of what the table loses, it loses on the same queries. The gap
+grows far less with fertility, from 0.071 in the lowest tercile to 0.133 in the highest, against
+-0.055 to 0.235 across terciles of order dependence.
 
 Two confounds could produce this. Both quantities can only be large where the Stella path scores well,
 so we repeated the correlation within bins of that score; it does not move. And some queries might
