@@ -39,8 +39,7 @@ We measure both. The natural guess in question 1 is wrong in an informative way.
 closed-form lookup-table recipe to ten towers: the towers' own retrieval quality, and three scalar
 proxies for why a tower might distill well, did not rank the tables they produced, while scoring each
 table on a small development set did. We call this *screen the student*. For question 2, a per-query
-oracle shows the headroom is large and concentrated, the table's loss sits mostly on queries whose
-meaning the tower reads through word order, and the table's own retrieval margin is the cheapest
+oracle shows the headroom is large and concentrated, the table's losses are largest on queries the tower reads differently when their words are shuffled, and the table's own retrieval margin is the cheapest
 signal we found that locates those queries.
 
 **Contributions.**
@@ -139,8 +138,7 @@ kept 69%.
 
 **Scoring the table itself did.** The table's development-forum score ranks the public scores with
 Spearman 0.90 (0.68 on the four exposure-free sets), and between 0.87 and 0.98 when any one family is
-left out. The screen took 4 to 7 minutes per tower on one A100, including encoding the 337,981
-training queries and both forums with the tower. In each of the four families where we fit two sizes,
+left out. The screen took 4 to 7 minutes per tower on one A100, measured between successive output files; for every tower but Stella, whose training-query vectors were cached, that includes encoding the 337,981 training queries and both forums. In each of the four families where we fit two sizes,
 the smaller checkpoint scored higher: bge-base over bge-large (0.3529 against 0.2845 on the public
 sets), e5-base over e5-large (0.2930 against 0.2585), gte-base over gte-large (0.3252 against
 0.2455) and arctic-m over arctic-l (0.3279 against 0.3034); the arctic pair also differs in version,
@@ -204,8 +202,7 @@ highest.
 Two confounds could produce this. Both quantities can only be large where the Stella path scores well,
 so we repeated the correlation within bins of that score; it does not move. And some queries might
 lose under any perturbation. To test that, we moved each Stella query vector by exactly as much as
-shuffling moved it, but in a random direction. That move costs 0.009 nDCG@10 on average against
-0.047 for shuffling, and its damage correlates with Zero's gap at only 0.07. Shuffle sensitivity, not
+shuffling moved it, but in a random direction. Among the 3,069 queries the Stella path scores above zero, that move costs 0.009 nDCG@10 on average against 0.047 for shuffling, and its damage correlates with Zero's gap at only 0.07. Shuffle sensitivity, not
 general fragility, is what goes with the table's loss. This is an association: shuffling changes a
 query in more ways than word order alone. Nano's advantage over Zero also concentrates on
 order-dependent queries, less strongly (0.22), which fits a transformer that reads part of the order
@@ -220,9 +217,7 @@ relevant answer):
 | What credit card information are offline US merchants allowed to collect for purposes other than the transaction? | 1 | 59 | 11 | not in top 100 |
 | What can I do with a physical stock certificate for a now-mutual company? | 1 | 8 | 13 | 29 |
 
-Both ask about a relation between their parts ("allowed to collect ... for purposes other than", "do
-with ... for a now-mutual company"), which the tower reads from the word sequence and a bag of tokens
-cannot. Fragmentation shows up too, in rarer, sharper cases (`results/m15_examples.json`): on SciFact,
+Both ask about a relation between their parts ("allowed to collect ... for purposes other than", "do with ... for a now-mutual company"), and in both the tower's ranking collapses when the words are shuffled; a bag of tokens sees the shuffled and unshuffled versions as the same query. Fragmentation shows up too, in rarer, sharper cases (`results/m15_examples.json`): on SciFact,
 "Ivermectin is used to treat lymphatic filariasis" splits into `iv ##er ##me ##ct ##in` and
 `fi ##lar ##ias ##is`, and Zero misses the relevant document entirely while Nano ranks it second. Yet
 "ADAR1 binds to Dicer to cleave pre-miRNA" splits almost as badly (2.29 subwords per word) and Zero
@@ -281,8 +276,7 @@ Because Zero and Nano write into one space, a system can search once with
 normalize((1 - a) Nano + a Zero), paying Zero's 0.044 ms on top of Nano and no second search. On the
 two development forums the blend helped: a = 0.3 raised Nano from 0.4247 to 0.4295. On the six public
 sets the frozen blend lowered Nano by 0.0051 (95% interval -0.0092 to -0.0011), and by 0.0070 on the
-four exposure-free sets; it gained only on ArguAna (+0.005) and lost most on TREC-COVID (-0.016). For
-the Stella path the forums chose a = 0 (`results/m15_e9_blend.json`, registered; a code check printed
+four exposure-free sets; it gained only on ArguAna (+0.005) and lost most on TREC-COVID (-0.016). For the Stella path the forums chose a = 0 (`results/m15_e9_blend.json`, registered descriptive; a code check printed
 SciFact's curve before the weights were frozen, which changed nothing in the procedure and is recorded
 in `m15/MEASUREMENTS.md`).
 
@@ -381,10 +375,7 @@ families with the towers' training data, and Nano's bge-small backbone trained o
 
 A frozen index can serve queries from a lookup table that gives up about a fifth of the tower's quality for a seven-hundredth of its encode cost, or from a small transformer that gives up a tenth for a fourteenth. The practical lessons are three. Pick the tower by screening the table you will serve,
 not by the tower's own score: in our ten towers the leaderboard order did not survive distillation,
-while a few-minute development screen predicted it. Expect the table to fail on queries whose meaning
-lives in their word order, and route on its own retrieval margin to catch a quarter of them. And
-measure the saving inside the search engine: a table's query costs more graph search, so a 60-fold
-encode saving becomes 2- to 3-fold end to end.
+while a few-minute development screen predicted it. Expect the table's largest losses on queries the tower reads differently when their words are shuffled, and route on the table's own retrieval margin, which recovers about a quarter of the oracle's gain over matched random routing. And measure the saving inside the search engine: a table's query costs more graph search, so on our one-million-passage collection its roughly 60-fold encode saving over Nano became 2.2- to 3.1-fold end to end within 1% to 5% of each tier's exact quality.
 
 ## Appendix A. What a Mean-Pooled Table Absorbs
 
@@ -444,8 +435,7 @@ inventory are in `m15/EVIDENCE.md`.
 ## Appendix E. Reproducibility
 
 Every figure regenerates from committed JSON (`python m15/figures/make_figures.py`) and every number in
-`m15/EVIDENCE.md` from `python m15/make_evidence.py`. M15 result files (`results/m15_*.json`) carry the
-script hash, git commit, seed and machine; model and dataset revisions are recorded in the result, in
+`m15/EVIDENCE.md` from `python m15/make_evidence.py`. M15 result files (`results/m15_*.json`), except the frozen configuration files (E6, E9 and E10 thresholds and weights, E8 lambdas, which are bound by hash into the results that use them), carry the script hash, git commit, seed and machine; model and dataset revisions are recorded in the result, in
 the scripts it names, or in the result it was derived from (E8's frozen lambdas are bound by hash
 into E8's result; E12 and E12b take their pins from the committed M20 rows). Earlier results carry the
 provenance records of the milestone that produced them. Methods and reviews: `m15/MEASUREMENTS.md`,
