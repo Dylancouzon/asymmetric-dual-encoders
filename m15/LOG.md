@@ -201,3 +201,18 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   the partial file's freeze hash; standalone `dev` enforces the tokenizer roster. Recorded P2 debt,
   not done: model-file hashes beyond pinned revisions, a lock for the seconds between scoring a set
   and its checkpoint, a completeness check of the committed exposure matrix.
+- **E8 running on `k3aee2m68765em`** (started 2026-09-30 02:36 UTC). The pod accepted only the
+  WSL box's key, so this Mac's public key was added to the pod's `PUBLIC_KEY` (old key kept). The
+  M13 venv lived on container disk and was gone; rebuilt at `/opt/m15-venv` from
+  `m13/cloud_requirements.txt` (the network volume gives stale file handles on venv installs).
+  Code is commit `ce11e27` in a worktree `/home/dylan/m15run`, with the fit list, `enc` and `dev`
+  linked in from the M13 checkout. Fit-list sha256 verified on the pod. All 11 tokenizers share one
+  ordered vocabulary. Smoke: Stella's dev curve reproduces M8 T1 (0.3437 vs 0.3438 at 1e-2).
+  A100 fp16 encodes run at 800-10,000 texts/s, so E8 should cost well under the estimate.
+- **Mac incident.** A duplicate E2 encode ran for 20 minutes: `ps` truncated the command line, so
+  a live job looked dead and was relaunched; swap reached 24.8 of 25.6 GB. The newer copy was
+  stopped; the original kept its shards. Lesson: identify Mac jobs by pid and start time, not by
+  `ps | grep`.
+- **E2 smoke** (FiQA, 150 queries) found and fixed two bugs before the real run: small segments
+  stayed unindexed under Qdrant's default indexing threshold (now 1 KB, so every segment has HNSW),
+  and the fused collection's quantization was read from its name.

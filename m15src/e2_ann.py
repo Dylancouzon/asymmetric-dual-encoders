@@ -90,7 +90,7 @@ def quant_config(name):
                 bits=m.TurboQuantBitSize.BITS4, memory=m.Memory.PINNED))}[name]
 
 
-def build(client, name, dv, texts=None, avg_len=None, batch=1024):
+def build(client, name, dv, quant="none", texts=None, avg_len=None, batch=1024):
     """One collection; with `texts`, also a server-side BM25 sparse vector (IDF modifier)."""
     from qdrant_client import models as m
     if client.collection_exists(name):
@@ -101,7 +101,9 @@ def build(client, name, dv, texts=None, avg_len=None, batch=1024):
         sparse_vectors_config={"bm25": m.SparseVectorParams(modifier=m.Modifier.IDF)}
         if texts else None,
         hnsw_config=m.HnswConfigDiff(m=16, ef_construct=100),
-        quantization_config=quant_config(name.split("-")[-1]))
+        # Index every segment, so no vector is served by a plain full scan (default 10,000 KB).
+        optimizers_config=m.OptimizersConfigDiff(indexing_threshold=1),
+        quantization_config=quant_config(quant))
     t0 = time.time()
     for lo in range(0, len(dv), batch):
         hi = min(lo + batch, len(dv))
@@ -211,7 +213,7 @@ def main(dataset, smoke=False):
         rows, builds, exact_check = [], {}, {}
         for qname in QUANT:
             name = f"{dataset}-{qname}"
-            builds[qname] = build(client, name, dv)
+            builds[qname] = build(client, name, dv, quant=qname)
             print(f"built {name}: {builds[qname]}", flush=True)
             if qname == "none":
                 for n in ENCODERS:          # the collection agrees with numpy exact search
