@@ -174,11 +174,31 @@ quantizations (int8 scalar, 1-bit binary, 4-bit TurboQuant, each with rescoring 
 oversampling) and asked for the cheapest end-to-end setting within 1%, 2% and 5% of the tier's own
 exact nDCG@10. Exploratory in the sense that it answers a deployment question, registered in method.
 
-`[E2]` Preliminary FiQA reading, to be replaced by the clean run: Zero's queries need more search
-effort for the same fidelity (TurboQuant at `ef` 128 with 2x oversampling within 1%, against binary
-at `ef` 64 for Nano), yet the saving survives: Nano's end-to-end p50 is 3.4x to 3.9x Zero's, because
-encoding dominates Nano's cost. On the 1M subset at the cheapest setting (int8, `ef` 16), Zero's
-top-10 agrees with its exact search on 82% of neighbors against 91% for Nano.
+**A cheaper query vector makes approximate search harder.** On the one-million-passage collection,
+at the same unquantized HNSW setting (`ef` 16), Zero loses 16.3% of its own exact nDCG@10 to
+approximate search, Nano 7.0% and the Stella path 4.4%; their top-10 lists agree with exact search
+on 82%, 91% and 93% of neighbors (`results/m15_e2_ann_msmarco1m.json`). The geometry says why:
+the median cosine between a query and its nearest document is 0.60 for Zero, 0.74 for Nano and 0.78
+for the Stella path. A table's query vector is an average of token rows, so it lands farther from the
+document manifold that the graph was built on, and the graph search needs a wider beam to find its
+true neighbors.
+
+**The saving survives, but shrinks.** Within 1% of each tier's exact score, Zero needs `ef` 512 with
+binary quantization and 2x oversampling (search p50 1.09 ms), Nano `ef` 256 with 4x oversampling
+(0.87 ms), and the Stella path `ef` 64 with TurboQuant (0.66 ms). End to end, encode plus search,
+that is 1.11 ms for Zero, 2.48 ms for Nano and 21.3 ms for the Stella path (MS MARCO queries are
+short: encode p50 0.026, 1.61 and 20.7 ms). Nano's cost is 2.2 times Zero's at the 1% target and 3.1
+times at 5%, down from 62 times for the encoders alone. Figure 4 shows the whole frontier.
+
+![Figure 4](figures/f4_system.png)
+
+**Figure 4.** End-to-end p50 against the share of each tier's exact nDCG@10 lost to approximate
+search; each point is the cheapest setting at that loss. Left: 1M MS MARCO subset; right: FiQA.
+
+Fusion is not free inside the engine either. Adding Qdrant's server-side BM25 and DBSF over two
+prefetches of 100 costs about 4.7 ms per query on the 1M collection, and on this subset it adds
+nothing to Zero (0.6183 against 0.6169 exact) and costs Nano 0.037. `[E2 FiQA rerun on an idle
+machine replaces the FiQA panel.]`
 
 ## 5. Which Towers Admit a Cheap Query Encoder?
 
