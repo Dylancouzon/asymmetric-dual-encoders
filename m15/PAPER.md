@@ -1,4 +1,4 @@
-# A Strong Tower Is Not a Distillable Tower: Cheap Query Encoders for a Frozen Document Index
+# Screen the Student: Cheap Query Encoders for a Frozen Document Index
 
 **Draft v6, 2026-09-30. Not for circulation.** Each claim names the committed file that holds its
 numbers; `m15/EVIDENCE.md` restates every number in plain language with its source and caveats.
@@ -47,9 +47,7 @@ signal we found that locates those queries.
 - A controlled comparison of ten towers under one lookup-table recipe, with lambdas frozen on
   development data before six public sets were scored, showing that tower quality did not rank table
   quality and a direct development screen did (Section 4).
-- A per-query localization of what a table loses: order-dependent queries, controlled for the tower's
-  own score and for query fragility, with worked examples and a proof of what post-processing a table
-  absorbs (Section 5).
+- A per-query localization of what a table loses: order-dependent queries, controlled for the tower's own score and for query fragility, with worked examples (Section 5).
 - An oracle upper bound and five frozen routers built on signals the table already has, and a test of
   blending two tiers' query vectors in one search (Section 6).
 - The deployment cost in a vector search engine: approximate search and quantization cost the table
@@ -108,7 +106,7 @@ appears only in Section 7. Four datasets (FEVER, DBpedia-entity and two CQADupSt
 out for a registered one-shot test; their frozen results enter the BEIR-15 aggregates and they play no
 fitting or diagnostic role here. Every choice fitted for this paper (ridge weights, router thresholds,
 blend weights) is made on two other CQADupStack forums, physics and programmers, and evaluated
-elsewhere; the tiers themselves were built earlier on the project's development suite. Our
+elsewhere; the tiers themselves were built earlier on the project's development suite. The two tiers did not see the same training data: Zero's included FEVER-train and HotpotQA, and Nano's pool excluded FEVER, so Zero-versus-Nano comparisons on claim-style sets (FEVER, Climate-FEVER) mix architecture with data. Our
 single-prompt Stella path scores 0.5614 on BEIR-15 (the model card reports 58.97 with task-specific
 instructions, a 400-token limit and bf16); our bge-small (0.5171), LEAF (0.5402) and BM25 (0.4006)
 match their public numbers within half a point.
@@ -233,7 +231,7 @@ queries gives 56% ties, because Quora is large and tied on 72% of its queries). 
 that knows the relevance labels and picks the better tier reaches 0.5473 macro nDCG@10, against 0.5161
 for always-Nano and 0.5580 for the Stella path. Allowed to send only 15% of each dataset's queries to
 Nano, largest gains first, it already matches always-Nano; at 25% it reaches 0.5334
-(`results/m15_e5_oracle.json`, registered). The oracle is an upper bound, not a router: it shows the
+(`results/m15_e5_oracle.json`, registered). Without Climate-FEVER, the one FEVER-family set among the 12, always-Nano scores 0.5406 and the oracle needs 20% of queries to match it (0.5453). The oracle is an upper bound, not a router: it shows the
 gain is concentrated, not that a system can find it.
 
 ### 6.2 Routers Built on What the Table Already Knows
@@ -267,8 +265,7 @@ routes no queries.
 
 As a cost estimate, combining E1's encode medians with the MS MARCO search medians of Section 7 at
 unquantized `ef` 128, this margin router spends about 2.7 ms per query against 3.8 ms for always-Nano.
-A quarter of the oracle's gain while skipping the transformer on three quarters of queries is useful,
-not decisive; the oracle shows how much a better signal could still recover.
+Put plainly, this router saves about 1.1 ms per query and gives up 0.045 nDCG@10 against always-Nano on these sets, and because Section 7 finds Nano only 2 to 4 times as expensive as Zero end to end, no router between these two tiers can save more than roughly half of Nano's cost. Routing is worth it where the transformer is expensive relative to search, as on a device; the oracle shows how much a better signal could still recover.
 
 ### 6.3 Blending Two Query Vectors in One Search
 
@@ -299,8 +296,7 @@ NumPy, Apple M5 Pro; `results/m15_e1_latency.json`). Retention is a ratio of mac
 | Zero + BM25 (DBSF@100) | 0.4933 | 0.879 | 0.044 ms + BM25 |
 | BM25 alone | 0.4006 | 0.713 | |
 
-Nano keeps nine tenths of the tower at one fourteenth of its encode latency; Zero keeps four fifths at
-one seven-hundredth and beats BM25 on 11 of 15 datasets. Retention varies more across datasets than
+Nano keeps nine tenths of the tower at one fourteenth of its encode latency; Zero keeps four fifths at one seven-hundredth and beats BM25 on 11 of 15 datasets. Nano is not the strongest small query encoder: on BEIR-15 it scores below bge-small on bge-small's own index (0.5171) and below LEAF on its arctic-embed-m index (0.5402, at 1.39 ms), and its 90.5% retention is below the 92.5% to 97.7% reported for other distilled query encoders against their own teachers. Its reason to exist is that it shares the Stella index with Zero and the Stella path, which is what makes the routing and blending of Section 6 possible; its distance to a 400M tower is larger than the teacher-student gaps in that prior work. Retention varies more across datasets than
 across tiers, from 0.667 (Zero on TREC-COVID) to 0.988 (Nano on Quora); Figures 4 and 5 in Appendix D
 show the frontier and the per-dataset spread.
 
@@ -319,9 +315,7 @@ not a test of, a harder graph search.
 
 ![Figure 3](figures/f4_system.png)
 
-**Figure 3.** End-to-end p50 (encode plus search) against the share of each tier's exact nDCG@10 lost
-to approximate search; each point is the cheapest setting at that loss. Left: 1M MS MARCO subset;
-right: FiQA.
+**Figure 3.** nDCG@10 under approximate search against end-to-end p50 (encode plus search); each point is the fastest setting reaching that quality, and dotted lines mark each tier's exact score. Left: 1M MS MARCO subset; right: FiQA.
 
 **The saving survives, and shrinks.** Within 1% of its exact score on the 1M collection, Zero needs
 `ef` 512 with binary quantization and 2x oversampling (search p50 1.09 ms), Nano `ef` 256 with 4x

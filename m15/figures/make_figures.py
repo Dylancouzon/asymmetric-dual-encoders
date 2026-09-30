@@ -115,27 +115,25 @@ def f3_towers():
 def f4_system():
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.1), sharey=False)
     for ax, ds in zip(axes, ("msmarco1m", "fiqa")):
-        p = REPO / "results" / f"m15_e2_ann_{ds}.json"
-        if not p.exists():
-            ax.set_title(f"{ds}: pending")
-            continue
-        e2 = json.loads(p.read_text())
+        e2 = json.loads((REPO / "results" / f"m15_e2_ann_{ds}.json").read_text())
         for enc, key in (("zero", "zero"), ("nano", "nano"), ("stella-query", "stella")):
-            rows = [r for r in e2["rows"] if r["encoder"] == enc]
-            # Pareto front: lowest end-to-end p50 at each quality loss.
-            rows = sorted(rows, key=lambda r: r["e2e_p50_ms"])
-            front, best = [], 1.0
+            rows = sorted([r for r in e2["rows"] if r["encoder"] == enc],
+                          key=lambda r: r["e2e_p50_ms"])
+            # Pareto front: each point is the fastest setting reaching at least that nDCG@10.
+            front, best = [], -1.0
             for r in rows:
-                if r["ann_ndcg_loss_rel"] < best:
+                if r["ann_ndcg10"] > best:
                     front.append(r)
-                    best = r["ann_ndcg_loss_rel"]
-            ax.plot([r["e2e_p50_ms"] for r in front], [100 * r["ann_ndcg_loss_rel"] for r in front],
-                    marker="o", markersize=4, color=C[key], label=enc)
+                    best = r["ann_ndcg10"]
+            ax.plot([r["e2e_p50_ms"] for r in front], [r["ann_ndcg10"] for r in front],
+                    marker="o", markersize=3.5, color=C[key],
+                    label={"zero": "Zero", "nano": "Nano", "stella-query": "Stella query"}[enc])
+            ax.axhline(e2["exact"][enc], color=C[key], linewidth=0.8, linestyle=":")
         ax.set_xscale("log")
         ax.set_xlabel("End-to-end p50 (ms): encode + search")
-        ax.set_ylabel("nDCG@10 lost to ANN (% of own exact)")
-        ax.set_title(ds, fontsize=9, loc="left")
-        ax.legend(frameon=False)
+        ax.set_ylabel("nDCG@10 under approximate search")
+        ax.set_title({"msmarco1m": "1M MS MARCO subset", "fiqa": "FiQA"}[ds], fontsize=9, loc="left")
+        ax.legend(frameon=False, fontsize=7.5)
     save(fig, "f4_system")
 
 
