@@ -201,10 +201,9 @@ grows far less with fertility, from 0.071 in the lowest tercile to 0.133 in the 
 Two confounds could produce this. Both quantities can only be large where the Stella path scores well,
 so we repeated the correlation within bins of that score; it does not move. And some queries might
 lose under any perturbation. To test that, we moved each Stella query vector by exactly as much as
-shuffling moved it, but in a random direction. Among the 3,069 queries the Stella path scores above zero, that move costs 0.009 nDCG@10 on average against 0.047 for shuffling, and its damage correlates with Zero's gap at only 0.07. Shuffle sensitivity, not
+shuffling moved it, but in a random direction. Among the 3,069 queries the Stella path scores above zero, that move costs 0.009 nDCG@10 on average against 0.047 for one shuffle, and its damage correlates with Zero's gap at only 0.07. Shuffle sensitivity, not
 general fragility, is what goes with the table's loss. This is an association: shuffling changes a
-query in more ways than word order alone. Nano's advantage over Zero also concentrates on
-order-dependent queries, less strongly (0.22), which fits a transformer that reads part of the order
+query in more ways than word order alone. Nano's advantage over Zero also concentrates on order-dependent queries, less strongly (0.26), which fits a transformer that reads part of the order
 the tower reads (shuffling costs Nano 4.4% of its score, and the Stella path 6.9%, on SciFact, NFCorpus
 and FiQA; `results/m15_e4_prefix.json`).
 
