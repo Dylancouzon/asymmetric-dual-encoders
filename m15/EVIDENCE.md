@@ -309,6 +309,30 @@ Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-qu
 
 **Cannot show.** Full-corpus MS MARCO, multi-client throughput, memory limits.
 
+## C12. The table loses where the tower reads word order
+
+**Label:** exploratory (E12, E12b). **Source:** `results/m15_e12_failure_modes.json`, `results/m15_e12b_fragility.json`
+
+**Claim.** On 3727 queries of six sets, the Stella-minus-Zero gap tracks order dependence (Stella's drop when words are shuffled), not fertility or fragility.
+
+| association (Spearman) | value |
+|---|---|
+| stella_gap_vs_fertility | +0.101 |
+| stella_gap_vs_order | +0.456 |
+| nano_gap_vs_fertility | +0.087 |
+| nano_gap_vs_order | +0.220 |
+| fertility_vs_order | -0.019 |
+| stella_gap_vs_order (within Stella-score bins) | +0.464 |
+| stella_gap_vs_fertility (within Stella-score bins) | +0.094 |
+| nano_gap_vs_order (within Stella-score bins) | +0.224 |
+| nano_gap_vs_fertility (within Stella-score bins) | +0.082 |
+| gap vs fragility | +0.066 |
+| gap vs order, controlling for fragility | +0.417 |
+
+Order-dependent share 0.314; gap there 0.215 against 0.038. Mean drop from shuffling 0.0473, from a random move of equal cosine 0.0088. Gap by fertility tercile: [0.071, 0.078, 0.133].
+
+**Cannot show.** A cause; that shuffling isolates word order from other query properties.
+
 ## C11. The one-shot held-out test
 
 **Label:** registered (spent 2026-09-19). **Source:** `results/m13_reserved_run.json`

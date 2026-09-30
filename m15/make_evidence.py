@@ -209,6 +209,25 @@ def system():
     return "\n".join(out)
 
 
+def failure_modes():
+    a, b = R("m15_e12_failure_modes.json")["summary"], R("m15_e12b_fragility.json")["summary"]
+    rows = [[k, f"{v:+.3f}"] for k, v in {**a["rho"], **{f"{k} (within Stella-score bins)": v
+            for k, v in a["rho_within_stella_score_bins"].items()},
+            "gap vs fragility": b["rho_gap_fragility"],
+            "gap vs order, controlling for fragility": b["partial_rho_gap_order_given_fragility"]}.items()]
+    return card("C12. The table loses where the tower reads word order", "exploratory (E12, E12b)",
+                f"On {a['n_queries']} queries of six sets, the Stella-minus-Zero gap tracks order "
+                f"dependence (Stella's drop when words are shuffled), not fertility or fragility.",
+                table(["association (Spearman)", "value"], rows)
+                + f"\n\nOrder-dependent share {a['share_order_dependent']:.3f}; gap there "
+                  f"{a['stella_gap_order_dependent']:.3f} against {a['stella_gap_order_free']:.3f}. "
+                  f"Mean drop from shuffling {b['mean_order_drop']:.4f}, from a random move of equal "
+                  f"cosine {b['mean_noise_drop']:.4f}. Gap by fertility tercile: "
+                  f"{[round(x, 3) for x in a['stella_gap_by_fertility_tercile']]}.",
+                "`results/m15_e12_failure_modes.json`, `results/m15_e12b_fragility.json`",
+                "A cause; that shuffling isolates word order from other query properties.")
+
+
 def heldout():
     d = R("m13_reserved_run.json")
     s = d["systems"]
@@ -226,6 +245,6 @@ if __name__ == "__main__":
              "states one claim of the paper, whether it was registered before observation or is "
              "exploratory, the numbers, the file that holds them, and what the result cannot show.\n",
              beir(), latency(), towers(), mechanisms(), oracle(), prefixes(), routers(), blend(),
-             system(), heldout()]
+             system(), failure_modes(), heldout()]
     OUT.write_text("\n".join(p for p in parts if p))
     print("wrote", OUT.relative_to(REPO))

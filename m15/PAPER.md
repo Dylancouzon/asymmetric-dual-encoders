@@ -287,8 +287,7 @@ not move. And a query could be merely fragile, losing under any perturbation. To
 each Stella query vector by exactly as much as shuffling moved it, in a random direction instead.
 That random move costs 0.009 nDCG@10 on average, against 0.047 for shuffling, and its damage does not
 predict Zero's gap (0.07). Shuffling hurts because it changes what the query means, and those are
-the queries a table gets wrong. Nano, a transformer, reads some of that order: its gap to the Stella
-path on the same queries correlates less with order dependence (0.22).
+the queries a table gets wrong. Nano's advantage over Zero also concentrates on order-dependent queries, but less strongly (0.22), which fits a transformer that reads some of the order the tower reads (shuffling costs Nano 4.4% of its score and the Stella path 6.9%, Section 6.3's data).
 
 Fragmentation is still visible in single queries (`results/m15_examples.json`):
 
