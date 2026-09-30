@@ -230,3 +230,11 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   findings applied. A SciFact smoke printed E9 curves before the freeze; disclosed in the method file.
   Draft v3 written. Owner (mid-session): the paper must prove its statements, read well, not read as a
   benchmark; external references are fine; the repo will be public; Codex Sol is the target reader.
+- **E11 and E11b (exploratory, Runpod, after E8; Sol's suggestion).** Four candidate mechanisms for
+  which towers distill into a table, over 10 checkpoints: the tower's own quality (E8, -0.09),
+  additivity (mean cosine of table to tower query vector on real test queries, -0.07 against table
+  quality), order sensitivity (cosine of shuffled to original, -0.27), and error relative to the
+  tower's own top-1 minus top-10 margin (-0.42 against table quality, -0.13 against retention). None
+  explains it; the dev-forum table screen does (0.90). `results/m15_e11_mechanism.json`,
+  `results/m15_e11b_margin.json`. A first E11b run forgot the self-hit drop (ArguAna); it was
+  discarded and rerun. Pod stopped; balance $211.55 (E8 + E11 + E11b total $8.02).
