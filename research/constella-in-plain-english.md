@@ -33,9 +33,9 @@ The main result is a shared-index family with two query-cost points:
 - Zero plus BM25 with Qdrant DBSF at prefetch 100 scored 0.4887 across all six and 0.4912 on
   clean-4. This is the recommended Qdrant configuration for Zero.
 
-Full BEIR evaluation is still pending. The current results are encouraging, but they do not support
-a broad state-of-the-art claim. Nano may prove competitive with the strongest models around its
-size; BEIR-18 is the test that will show whether the six-set result generalizes.
+The broader evaluation has now run: the reserved four and BEIR-15 finished in M20, and their
+results will appear on the model cards with the official release (M22). Until then, the six-set
+results are the published evidence, and they do not support a broad state-of-the-art claim.
 
 Nano's full training cost was about $150 after substantial local precomputation. That is the
 observed project cost, not an estimate for reproducing the entire pipeline in the cloud.
@@ -211,7 +211,7 @@ benchmark access can turn a test set into a development set.
 
 The current evidence has clear boundaries:
 
-- The reserved four and BEIR-18 have not been opened. Full BEIR remains pending.
+- The reserved four and BEIR-15 results are not published yet; M22 adds them to the cards.
 - Nano's clean-4 superiority over LEAF was not established.
 - Zero did not beat LightRetriever's dense table on the six.
 - The edge prototype measured Qdrant in Docker on one Apple M5 Pro. It did not measure Qdrant Edge.
@@ -253,7 +253,7 @@ what came out of it, and where to start if you want the full methodology or evid
 | M17 | Tried a Zero v1.1 with vocabulary extension, joint table/listwise training, alias consistency, and checkpoint averaging. None of the five trained arms beat the untrained added-entry baseline, so the screen stopped and Zero v1 stayed shipped. | [`m17/STATUS.md`](../m17/STATUS.md) |
 | M18 | Built a searchable Qdrant project-memory system over a pinned 79,269-document repository snapshot and trained a specialized table. The system worked, but the candidate missed the fused improvement bar and the evaluation exposed answer-key problems. | [`m18/FINDINGS.md`](../m18/FINDINGS.md) |
 | M19 | Replaced training with deterministic rows for 12 fragmented technical terms. Numeric and serving checks passed, but relevance judgment remained label-sensitive because 60 pooled items lacked enough context. The result is inconclusive and confirmation stayed sealed. | [`m19/FINDINGS.md`](../m19/FINDINGS.md) |
-| M20 | Pending: run the reserved four and descriptive BEIR-15. No M20 evaluation result exists yet. The official release moved to M22 and the upstream FastEmbed work to M23. | [`instructions-m20.md`](../instructions-m20.md) |
+| M20 | Ran the reserved four once (2026-09-19) and the descriptive BEIR-15 (complete 2026-09-23), and built the dataset and vector archive. The official release moved to M22 and the upstream FastEmbed work to M23. | [`m20/STATUS.md`](../m20/STATUS.md) |
 | M21 | Consolidated the research preview: one canonical benchmark table, shorter model cards and README, one FastEmbed branch, and an fp32 fix for the pooling path that had promoted Nano output to float64. | [`m21/STATUS.md`](../m21/STATUS.md) |
 
 The canonical public numbers and discrepancy audit are in

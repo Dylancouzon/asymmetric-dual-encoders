@@ -77,7 +77,13 @@ def _status_lines(cfg):
 def _clean_pushed(cfg):
     problems = []
     dirty = _status_lines(cfg)
-    allowed = {"?? results/m13_reserved_preencode.json"}
+    # Stage A rewrites this receipt every run, including its timestamp, and the receipt is tracked
+    # in git -- so at handoff it is a MODIFIED tracked file, not an untracked one, and allowing
+    # only the `??` form refused the run it was written for (Astra review, 2026-09-18, P2). Both
+    # forms are accepted: `_preencode(verify_shards=True)` validates the receipt's content before
+    # `_begin` runs, `_begin` pins its sha256 into the manifest, and `_begin`'s commit includes it.
+    allowed = {"?? results/m13_reserved_preencode.json",
+               " M results/m13_reserved_preencode.json"}
     unexpected = [line for line in dirty if line not in allowed]
     if unexpected:
         problems.append(f"working tree has unexpected changes: {unexpected}")
@@ -260,6 +266,12 @@ def publish(cfg):
     because `RESULT.exists()`. That refusal is right -- nothing may be re-scored -- but it left no
     way to publish what was already paid for. This path opens no payload, scores nothing, changes
     no number, and refuses unless the result is already present and already COMPLETE.
+
+    It deliberately does NOT try to finish a finalization that crashed between writing RESULT and
+    updating the six-set result. That window leaves the scores durable and the numbers intact; only
+    the bookkeeping is unfinished, and completing it automatically would mean a second, weaker
+    authentication path running after the access is spent. A human decides there instead
+    (Sol re-review, 2026-09-18: the automatic version authenticated pointers, not content).
     """
     if not RESULT.exists():
         raise ValueError("there is no computed reserved result to publish")
@@ -311,9 +323,12 @@ def run(cfg=None, preflight_only=False, publish_only=False):
     summary = S.reserved_batch(cfg, conf, None)
     if summary.get("status") != "complete" or "contrasts" not in summary:
         raise RuntimeError("reserved batch did not return a complete descriptive report")
-    # R22's archive needs the reserved queries and qrels. They are exported HERE, from payloads
-    # this transaction has already opened and authenticated, so the archiving pass never has to
-    # reopen protected data. No additional protected read happens.
+    # R22's archive needs the reserved queries and qrels. They are exported HERE, from the payload
+    # objects this transaction already holds in memory, so the archiving pass never has to reopen
+    # protected data. The exporter enforces that rather than assuming it: it reads only from the
+    # process cache, reuses and re-hashes an archive an earlier attempt wrote when nothing is
+    # cached, and refuses outright otherwise. Until 2026-09-18 this line claimed "no additional
+    # protected read" while the exporter reopened all four payloads (Astra review, P1).
     archived = R.export_reserved_payload_archive(cfg, ARCHIVE_ROOT)
     record = {
         **summary,

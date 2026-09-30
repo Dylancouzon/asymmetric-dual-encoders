@@ -207,10 +207,23 @@ def corpus_for(dataset, repo=REPO):
     return doc_ids, doc_texts, {"source": source, "revision": revision, **identity}
 
 
+_PAYLOAD_CACHE = {}
+
+
 def load_payload(cfg, dataset):
-    """Open and authenticate one frozen reserved query/qrel payload."""
+    """Open and authenticate one frozen reserved query/qrel payload.
+
+    Memoized for the life of the process. The payload is immutable and is hash-authenticated on
+    first load, so a second read buys no assurance and costs another protected open. The archive
+    exporter below consumes these cached objects instead of reopening the files, which is what
+    makes the registered "no additional protected read" archive contract true rather than merely
+    claimed (Astra review, 2026-09-18, P1).
+    """
     import access13 as A
 
+    key = (str(cfg.frozen_eval_dir), dataset)
+    if key in _PAYLOAD_CACHE:
+        return _PAYLOAD_CACHE[key]
     payload = json.loads((Path(cfg.frozen_eval_dir) / f"untouched-{dataset}.json").read_text())
     expected = json.loads(Path(cfg.manifest_path).read_text())["m7_untouched_final"][dataset]
     qids = sorted(str(q) for q in payload["queries"])
@@ -225,7 +238,8 @@ def load_payload(cfg, dataset):
         raise ValueError(f"{dataset}: protected payload hash mismatch: {bad}")
     if set(qids) != set(payload["qrels"]):
         raise ValueError(f"{dataset}: query/qrel id sets differ")
-    return qids, qtexts, payload["qrels"], got
+    _PAYLOAD_CACHE[key] = (qids, qtexts, payload["qrels"], got)
+    return _PAYLOAD_CACHE[key]
 
 
 class QueryEncoder(R20.QueryEncoder):
@@ -481,13 +495,28 @@ def export_reserved_payload_archive(cfg, root):
 
     The format matches `m20src/archive.py`: gzipped JSON lines, mtime zeroed so the bytes and the
     manifest hash are reproducible.
+
+    It exports ONLY from payloads this process already holds. If a dataset's payload is not in the
+    cache it refuses, rather than reopening protected data to build an archive. Before the
+    memoization the exporter reopened all four payloads on every run, which contradicted the
+    contract the call site claimed (Astra review, 2026-09-18, P1).
+
+    There is deliberately no resume or reuse path here. The archive is R22's deliverable, not an
+    input to any benchmark number, so a refusal costs only the archive and a human decides what to
+    do; a reuse path is machinery that has to be authenticated against the registered payload to be
+    worth anything, and the first version of it was not (Sol re-review, 2026-09-18).
     """
     import gzip
 
     root = Path(root)
     written = {}
     for dataset in DATASETS:
-        qids, qtexts, qrels, payload_hashes = load_payload(cfg, dataset)
+        key = (str(cfg.frozen_eval_dir), dataset)
+        if key not in _PAYLOAD_CACHE:
+            raise ValueError(
+                f"{dataset}: its payload is not open in this process; refusing to reopen protected "
+                "data to build the archive")
+        qids, qtexts, qrels, payload_hashes = _PAYLOAD_CACHE[key]
         out = root / "datasets" / dataset
         out.mkdir(parents=True, exist_ok=True)
         rows = {

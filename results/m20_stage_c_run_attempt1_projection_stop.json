@@ -1,0 +1,31 @@
+{
+  "status": "FAILED",
+  "mode": "local",
+  "stage": "C",
+  "authority": "m13/RULINGS.md R24; m20/REGISTRATION.md stage C",
+  "stage_caps_hours": {
+    "C": 120.0
+  },
+  "started_utc": "2026-09-19T23:06:55.754133+00:00",
+  "problems": [],
+  "facts": {
+    "head": "6036f266422fcd8426a3f15114ae0e0a248a64f9",
+    "six_end_status": "COMPLETE",
+    "reserved_access_unspent": false,
+    "free_bytes": 522698764288,
+    "disk_floor_bytes": 225337395712,
+    "gpu": {
+      "available": true,
+      "name": "NVIDIA GeForce RTX 3080",
+      "vram": 10736893952
+    },
+    "reserved_support_tests": "24 passed in 1.03s",
+    "roster_identity": "True {'bm25s': '0.3.11', 'PyStemmer': '3.1.0'}",
+    "corpus_preflight": "PASSED"
+  },
+  "stage_c_deadline_epoch": 1790291204.4492238,
+  "stage_c_deadline_inherited": false,
+  "stage_c_scorer_reserve_hours": 17.05723995930842,
+  "error": "RuntimeError: stageC-preencode-nano-dense exited 1 after 0.6 h; see /home/dylan/asymetric-dual-encoders/work/m20/logs/stageC-preencode-nano-dense.log",
+  "finished_utc": "2026-09-19T23:44:55.963085+00:00"
+}

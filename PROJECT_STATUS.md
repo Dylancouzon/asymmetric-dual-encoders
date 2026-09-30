@@ -1,9 +1,11 @@
-# Project status: 2026-09-16
+# Project status: 2026-09-30
 
 **Constella Zero, the Stella document tower and Constella Nano are public; Nano is a research
-preview.** M13 and M14 are closed. M20 (opened 2026-09-16, R22) owns the still-unspent reserved
-evaluation and the BEIR-15 descriptive run; M22 owns the official release and M23 the upstream
-FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md`.
+preview.** M13 and M14 are closed. M20's measurements are complete: the reserved four were spent
+once on 2026-09-19 and BEIR-15 finished on 2026-09-23. Only the object-storage half of its archive
+remains, which needs an owner decision. M22 (official release) may start. M23's upstream work moved
+first: registrations merged as qdrant/fastembed#751, the dtype bug filed as #752. Current plan:
+`ROADMAP.md`; published numbers: `m21/BENCHMARKS.md`; M20 results: `m20/STATUS.md`.
 
 ## Research and product
 
@@ -18,7 +20,7 @@ FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md
 | Zero v1.1 (M17) | Closed 2026-09-12, negative result: no screen arm met eligibility; released Zero v1 remains shipped |
 | Project memory (M18) | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`; the system is usable with released Zero v1 |
 | M19 | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development results were label-sensitive, confirmation remained sealed and released Zero v1 stays selected |
-| M20 | Active: reserved four and BEIR-15 descriptive evaluation over an eight-system roster (Nano, Zero, BGE-small, LEAF, Stella-query, BM25, two DBSF@100 fusions), then archive. Release is M22, upstream PRs M23 |
+| M20 | Active, measurements complete. Reserved four spent once (tag `m8-reserved-spent`, `results/m13_reserved_run.json`); BEIR-15 `COMPLETE` over the eight-system roster (`results/m20_beir15_run.json`); archive built and verified on `D:`, object-storage copy outstanding. `m20/STATUS.md` |
 | M21 | Closed 2026-09-15: research-preview documentation, canonical benchmark tables, model-card publication and FastEmbed polish completed |
 | FastEmbed upstream | The three registrations merged as qdrant/fastembed#751 on 2026-09-29, not yet on PyPI. Verified 2026-09-30 against direct ORT: all three agree with direct ORT on the M14 fixtures and thresholds (the Torch leg was not rerun); upstream Nano returns float64, and the dtype fix is not upstream yet. `m22/UPSTREAM_FASTEMBED.md` |
 
@@ -33,10 +35,10 @@ FastEmbed PRs. Current plan: `ROADMAP.md`; canonical numbers: `m21/BENCHMARKS.md
   immutable and remains the research-preview artifact.
 - Absolute per-dataset bge-small and LEAF rows are not published. The committed evidence supports
   Nano's absolute row and the registered comparator deltas without re-deriving aggregates.
-- The reserved four and BEIR-15 remain **UNSPENT**. They have no result and belong to M20; this
-  preview does not imply one. "BEIR-18" in older files means this BEIR-15 (R22).
-- M20 must run those evaluations under their registered access rules; M22 then completes the
-  official release and M23 opens the upstream FastEmbed PRs. M19 closed without opening
+- The reserved four are **spent** and now known-test: they can never again decide anything in
+  this project. Their results and the BEIR-15 descriptive table are not on the public cards yet;
+  M22 adds them. "BEIR-18" in older files means this BEIR-15 (R22).
+- M19 closed without opening
   confirmation; its development evidence does not establish improvement, non-improvement or
   equivalence.
 

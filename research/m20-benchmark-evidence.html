@@ -1,0 +1,697 @@
+<title>M20 Benchmark Evidence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root{
+    --paper:#F4F4F0; --surface:#FFFFFF; --surface-2:#FAFAF7;
+    --ink:#171A18; --ink-2:#3C423E; --muted:#5B615C; --faint:#868C87;
+    --rule:#DEDFD8; --rule-2:#EAEBE4;
+    --accent:#008A66; --accent-soft:rgba(0,138,102,.10);
+    --disclosed:#9A6000; --reserved:#3B55B8;
+    --tint:0,138,102;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#121513; --surface:#191D1B; --surface-2:#1E2320;
+      --ink:#E7EAE7; --ink-2:#C3C9C4; --muted:#959C97; --faint:#767D78;
+      --rule:#2A302D; --rule-2:#232826;
+      --accent:#2AA382; --accent-soft:rgba(42,163,130,.14);
+      --disclosed:#B27C1C; --reserved:#6E89D8;
+      --tint:42,163,130;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#121513; --surface:#191D1B; --surface-2:#1E2320;
+    --ink:#E7EAE7; --ink-2:#C3C9C4; --muted:#959C97; --faint:#767D78;
+    --rule:#2A302D; --rule-2:#232826;
+    --accent:#2AA382; --accent-soft:rgba(42,163,130,.14);
+    --disclosed:#B27C1C; --reserved:#6E89D8;
+    --tint:42,163,130;
+    color-scheme:dark;
+  }
+
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding-inline:20px; padding-block:40px 64px;}
+  h1,h2,h3{font-family:"IBM Plex Serif",Georgia,"Times New Roman",serif; text-wrap:balance; margin:0;}
+  h1{font-size:clamp(28px,4.6vw,42px); font-weight:600; letter-spacing:-.015em; line-height:1.12;}
+  h2{font-size:22px; font-weight:600; letter-spacing:-.01em;}
+  h3{font-size:16px; font-weight:600;}
+  p{margin:0;}
+  a{color:var(--accent);}
+
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11.5px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--muted); font-weight:500;
+  }
+  .standfirst{color:var(--ink-2); font-size:17px; max-width:66ch; margin-top:14px;}
+
+  header.top{display:flex; flex-direction:column; gap:6px;}
+  .provenance{
+    display:flex; flex-wrap:wrap; gap:0; margin-top:26px;
+    border:1px solid var(--rule); border-radius:3px; background:var(--surface);
+    overflow:hidden;
+  }
+  .provenance div{
+    flex:1 1 170px; padding:12px 16px; border-right:1px solid var(--rule-2);
+  }
+  .provenance div:last-child{border-right:none;}
+  .provenance dt{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--faint); margin:0 0 3px;
+  }
+  .provenance dd{
+    margin:0; font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:14px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums;
+  }
+
+  section{margin-top:52px;}
+  .sec-head{display:flex; flex-direction:column; gap:7px; margin-bottom:18px;}
+  .sec-head p{color:var(--muted); max-width:72ch; font-size:14.5px;}
+
+  .note{
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:14px 18px; border-radius:0 3px 3px 0; max-width:78ch;
+  }
+  .note p + p{margin-top:9px;}
+  .note strong{color:var(--ink);}
+
+  .scroller{overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--surface);}
+  table{border-collapse:collapse; width:100%; font-size:13.5px;}
+  caption{
+    caption-side:bottom; text-align:left; color:var(--faint); font-size:12.5px;
+    padding:11px 14px; line-height:1.5; border-top:1px solid var(--rule-2);
+  }
+  th,td{padding:8px 11px; text-align:right; white-space:nowrap;}
+  thead th{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; font-weight:500;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--muted);
+    border-bottom:1px solid var(--rule); vertical-align:bottom; background:var(--surface-2);
+    position:sticky; top:0;
+  }
+  tbody td{border-bottom:1px solid var(--rule-2); font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-variant-numeric:tabular-nums; font-size:13px;}
+  tbody tr:last-child td{border-bottom:none;}
+  th.rowhead, td.rowhead{
+    text-align:left; position:sticky; left:0; background:var(--surface);
+    border-right:1px solid var(--rule); font-family:"IBM Plex Sans",system-ui,sans-serif;
+    white-space:normal; min-width:178px;
+  }
+  thead th.rowhead{background:var(--surface-2); z-index:2;}
+  .ds-name{font-weight:500; color:var(--ink);}
+  .ds-meta{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px;
+    color:var(--faint); display:block; margin-top:2px; font-variant-numeric:tabular-nums;
+  }
+  .chips{display:flex; gap:4px; flex-wrap:wrap; margin-top:5px;}
+  .chip{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; font-weight:500;
+    letter-spacing:.05em; text-transform:uppercase; padding:1.5px 5px; border-radius:2px;
+    border:1px solid currentColor; line-height:1.5;
+  }
+  .chip.disclosed{color:var(--disclosed);}
+  .chip.reserved{color:var(--reserved);}
+  .chip.clean{color:var(--muted);}
+  .chip.other{color:var(--faint);}
+
+  .sysgroup{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--faint); font-weight:500; display:block; margin-bottom:3px;
+  }
+  td.sep, th.sep{border-left:1px solid var(--rule);}
+
+  /* interval plot */
+  .chartwrap{border:1px solid var(--rule); border-radius:3px; background:var(--surface); padding:18px 14px 8px;}
+  svg.ci{display:block; width:100%; height:auto;}
+  .ci-grid{stroke:var(--rule-2); stroke-width:1;}
+  .ci-zero{stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3;}
+  .ci-bar{stroke:var(--accent); stroke-width:2; stroke-linecap:round; opacity:.55;}
+  .ci-dot{fill:var(--accent); stroke:var(--surface); stroke-width:2;}
+  .ci-label{fill:var(--ink-2); font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:12px;}
+  .ci-sub{fill:var(--faint); font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; letter-spacing:.05em;}
+  .ci-val{fill:var(--ink); font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-variant-numeric:tabular-nums;}
+  .ci-tick{fill:var(--faint); font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; font-variant-numeric:tabular-nums;}
+  .ci-group{fill:var(--ink); font-family:"IBM Plex Serif",Georgia,serif; font-size:13px; font-weight:600;}
+  .ci-flag{fill:var(--accent); font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:9.5px; letter-spacing:.05em;}
+  .tot-bar{fill:var(--accent); opacity:.82;}
+  .tot-mark{fill:var(--surface); stroke:var(--ink-2); stroke-width:1.5;}
+
+  ul.caveats{list-style:none; padding:0; margin:0; display:grid; gap:12px;}
+  ul.caveats li{
+    padding-left:18px; position:relative; color:var(--ink-2); max-width:80ch; font-size:14.5px;
+  }
+  ul.caveats li::before{
+    content:""; position:absolute; left:0; top:.62em; width:7px; height:1.5px; background:var(--accent);
+  }
+  ul.caveats strong{color:var(--ink); font-weight:600;}
+  code{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.9em;
+    background:var(--surface-2); border:1px solid var(--rule-2); border-radius:2px; padding:.5px 4px;
+  }
+  footer{
+    margin-top:56px; padding-top:20px; border-top:1px solid var(--rule);
+    color:var(--faint); font-size:12.5px; font-family:"IBM Plex Mono",ui-monospace,monospace;
+    display:flex; flex-wrap:wrap; gap:6px 22px;
+  }
+  @media (max-width:560px){
+    .provenance div{flex:1 1 50%; border-bottom:1px solid var(--rule-2);}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important;}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Milestone 20 · stage C · 2026-09-23</span>
+    <h1>M20 Benchmark Evidence</h1>
+    <p class="standfirst">
+      Every number M20 produced: the descriptive BEIR-15 table across eight systems and fifteen
+      datasets, beside the registered reserved-four contrasts that actually carry inference.
+      Document tower frozen <code>stella_en_400M_v5</code>, 1024d, one shared index, exact retrieval,
+      nDCG@10.
+    </p>
+
+    <dl class="provenance">
+      <div><dt>Systems × datasets</dt><dd>8 × 15</dd></div>
+      <div><dt>Score rows</dt><dd>176</dd></div>
+      <div><dt>Documents encoded</dt><dd>23,744,786</dd></div>
+      <div><dt>Bootstrap</dt><dd>B=10,000 · seed 902</dd></div>
+      <div><dt>Registry SHA-256</dt><dd>6d881d8d</dd></div>
+    </dl>
+  </header>
+
+  <section>
+    <div class="note">
+      <p><strong>Two kinds of number live on this page, and they are not interchangeable.</strong></p>
+      <p>
+        The BEIR-15 table is <strong>descriptive</strong>: <code>alpha = 0</code>, no gate, no threshold,
+        no superiority or equivalence claim. It does not enter or reweight the registered six-set
+        inference. The reserved-four contrasts below it <strong>are</strong> the registered inference —
+        R1 and R2, their weightings fixed in advance, their intervals from a paired within-dataset
+        bootstrap.
+      </p>
+      <p>
+        Intervals quantify <strong>query resampling only</strong>. They exclude training-seed variation.
+        An interval that straddles zero is an unresolved superiority test, never a finding of equivalence.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Descriptive</span>
+      <h2>BEIR-15, eight systems</h2>
+      <p>
+        nDCG@10, exact retrieval. Cell shading scales within each row, from that row's lowest value to
+        its highest — a scanning aid for a wide table, not a ranking claim. No cell is marked as a winner,
+        because a descriptive table does not declare one.
+      </p>
+    </div>
+    <div class="scroller">
+      <table id="beir">
+        <caption>
+          Every row carries its full registered contact set and licence role, not only the labels that
+          bear on the clean subset. <span class="chip reserved">reserved</span> rows are
+          <strong>copied</strong> from the tagged reserved transaction and were never rescored here;
+          FEVER and DBpedia-entity reproduce <code>results/m13_reserved_run.json</code> exactly. The
+          cqadupstack row aggregates twelve forums — two copied, ten scored in this run — each carrying
+          one twelfth of that row's weight.
+          <span class="chip disclosed">teacher-disclosed</span> marks disclosed <code>stella</code>
+          exposure; <span class="chip other">comparator-training</span> marks corpora the
+          <strong>comparators</strong> were trained on, which is a separate concern from teacher
+          overlap and is <strong>not</strong> excluded from the clean subset. Query counts are the
+          split actually scored. Values here are shown to 4dp; the page holds them at full precision.
+        </caption>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Descriptive · aggregate</span>
+      <h2>Totals across the benchmark</h2>
+      <p>
+        Unweighted mean nDCG@10 per system — the BEIR convention — taken two ways: across all fifteen
+        datasets, and across the eleven with no disclosed teacher exposure. Both are shown because
+        <strong>they do not agree on the ordering</strong>.
+      </p>
+    </div>
+    <div class="chartwrap">
+      <svg class="ci" id="totchart" viewBox="0 0 780 320" role="img"
+           aria-label="Mean nDCG@10 by system across all fifteen datasets, with the clean-eleven mean marked on each bar."></svg>
+      <div id="totlegend" style="display:flex;gap:20px;flex-wrap:wrap;padding:6px 4px 4px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--muted);">
+        <span style="display:flex;align-items:center;gap:7px;">
+          <span style="width:22px;height:9px;border-radius:2px;background:var(--accent);display:inline-block;"></span>
+          mean of all 15
+        </span>
+        <span style="display:flex;align-items:center;gap:7px;">
+          <span style="width:11px;height:11px;transform:rotate(45deg);border:1.5px solid var(--ink-2);display:inline-block;"></span>
+          mean of the 11 clean
+        </span>
+      </div>
+    </div>
+    <div class="scroller" style="margin-top:14px;">
+      <table id="totals">
+        <caption>
+          &ldquo;Clean&rdquo; means <strong>no disclosed teacher overlap</strong>, the registered
+          sense of the word; the four excluded are <code>fiqa</code>, <code>arguana</code>,
+          <code>fever</code> and <code>climate-fever</code>. It does <strong>not</strong> mean clean of
+          comparator exposure: <code>msmarco</code>, <code>nq</code>, <code>hotpotqa</code> and
+          <code>quora</code> are labelled <span class="chip other">comparator-training</span> and stay
+          in the clean eleven, so a comparison against bge-small or leaf-ir-asym over this subset still
+          includes datasets those comparators were trained on. Each mean weights every dataset equally,
+          so a dataset with 49 queries counts as much as one with 10,000 — the BEIR convention, and a
+          weighting choice like any other.
+        </caption>
+      </table>
+    </div>
+    <div class="note" style="margin-top:18px;">
+      <p>
+        <strong>The two totals disagree, and the disagreement is the point.</strong>
+        nano-dense sits <strong>behind</strong> bge-small on all fifteen (0.5081 against 0.5171) and
+        <strong>ahead</strong> on the clean eleven (0.5137 against 0.5059). bge-small averages 0.5479
+        across the four disclosed-exposure datasets against nano's 0.4929 — a gap of
+        <code>+0.0550</code>. FEVER is where that gap lives: its per-dataset gap is
+        <code>+0.2431</code>, contributing <code>+0.0608</code> to the four-row mean, while the other
+        three disclosed datasets contribute <code>−0.0058</code> between them.
+      </p>
+      <p>
+        <strong>This does not resolve R1.</strong> R1 is the registered contrast, computed on the
+        reserved four with weights fixed in advance, and it remains unresolved. A mean over a different
+        set of datasets under a different weighting is a separate descriptive quantity — it is not a
+        second opinion on the registered test, and reading it as one would be exactly the
+        re-weighting-after-the-fact the registration exists to prevent.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Registered inference</span>
+      <h2>The reserved-four contrasts</h2>
+      <p>
+        Spent once, on 2026-09-19, under tag <code>m8-reserved-spent</code>. The reserved four are now
+        known-test and cannot decide anything further in this project. NDO-3 is the headline because it
+        was registered in advance — the other weightings are reported beside it, not instead of it.
+      </p>
+    </div>
+    <div class="chartwrap">
+      <svg class="ci" id="cichart" viewBox="0 0 780 330" role="img"
+           aria-label="Interval plot of the R1 and R2 contrasts under three weightings, against a zero reference line."></svg>
+    </div>
+    <div class="scroller" style="margin-top:14px;">
+      <table id="contrasts">
+        <caption>
+          Paired within-dataset bootstrap, B=10,000, seed 902, <code>inverted_cdf</code>. Deltas are
+          nano-dense minus the comparator, so a negative delta means nano is behind. FEVER is excluded
+          from both contrasts as the disclosed double-contamination row.
+        </caption>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Reserved four · per dataset</span>
+      <h2>What the registered contrasts were computed from</h2>
+      <p>
+        The four datasets behind R1 and R2. FEVER sits outside NDO-3 and outside both contrasts, and is
+        shown for completeness rather than as evidence.
+      </p>
+    </div>
+    <div class="scroller">
+      <table id="reserved">
+        <caption>
+          FEVER carries disclosed exposure for both <code>stella</code> and the comparators, which is why
+          it is quarantined. Adversarial review examined its reversals — nano roughly 0.24 below both
+          comparators, bge-small above stella-query there — and found them <strong>compatible</strong>
+          with the disclosed exposure but <strong>declined to attribute them to it</strong>. A pattern
+          consistent with contamination is not a measurement of contamination.
+        </caption>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Reading notes</span>
+      <h2>What these numbers do and do not support</h2>
+    </div>
+    <ul class="caveats">
+      <li>
+        <strong>R1 is unresolved, not equal.</strong> NDO-3 gives <code>+0.0032</code> with an interval
+        straddling zero, but the per-dataset deltas disagree in sign — <code>+0.0187</code> on DBpedia,
+        <code>+0.0013</code> on android, <code>−0.0260</code> on english — and the query-pooled weighting
+        turns it <code>−0.0121</code> with an interval that excludes zero. Report the weightings together.
+      </li>
+      <li>
+        <strong>R2 is consistent.</strong> Nano is behind leaf-ir-asym by <code>−0.0389</code> on NDO-3,
+        and behind under every reweighting, across all three clean datasets.
+      </li>
+      <li>
+        <strong>Fusion's value tracks BM25's strength on the dataset.</strong> DBSF@100 lifts zero-dense
+        <code>+0.089</code> to the top of hotpotqa, where BM25 scores 0.585; it costs nano-dense
+        <code>0.036</code> on MS MARCO, where BM25 scores 0.226. M12's DBSF@100 recommendation is a
+        disclosed product-policy override with no equivalence interval, so this dependence belongs
+        reported beside it.
+      </li>
+      <li>
+        <strong>The bge-small &gt; stella-query reversal is not unique to FEVER.</strong> It also appears
+        on hotpotqa and climate-fever, neither of which carries FEVER's disclosed double exposure. That
+        weakens — without refuting — reading the FEVER reversal as a contamination signature.
+      </li>
+      <li>
+        <strong>Only quality numbers are here.</strong> These come from exact search. Qdrant and Edge
+        measurements establish deployment behaviour and latency; ANN recall is never mixed into this
+        comparison.
+      </li>
+      <li>
+        <strong>This page carries comparator per-dataset absolutes.</strong> Those remain unpublished on
+        model cards unless the owner rules otherwise (2026-09-15); the whitepaper carries the full
+        comparator table. Treat this as internal evidence, not card content.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Provenance</span>
+      <h2>How the run got here</h2>
+    </div>
+    <ul class="caveats">
+      <li>
+        <strong>Three attempts, no wasted work.</strong> A projection gate refused a viable run by
+        extrapolating documents-per-second from the longest 1.1% of the corpus; a host crash cost ~9 h
+        and one shard; a latent split bug pointed MS MARCO at a split name its qrels repository does not
+        publish. Each is written up in <code>m20/FINDINGS.md</code>, every attempt receipt preserved, and
+        the original deadline inherited throughout rather than reminted.
+      </li>
+      <li>
+        <strong>Verified against prior references.</strong> SciFact reproduces the recorded smoke values
+        for all eight systems (bm25 <code>0.6790938361</code> against a recorded <code>0.679093836</code>);
+        NFCorpus reproduces M12's registered DBSF@100 value <code>0.344206137000484</code>. On MS MARCO,
+        bge-small's <code>0.4082</code> <strong>matches</strong> the official model card's 0.40833 — both
+        render as 0.408 — while bm25's <code>0.2256</code> is <strong>close to</strong> the published
+        0.228 without matching it, a 0.0024 difference consistent with <code>bm25s</code> tokenising and
+        stemming differently from Anserini.
+      </li>
+      <li>
+        <strong>Every shard re-hashed after the crash.</strong> 1,978 shards, 131.1 GiB — one damaged,
+        and its re-encode reproduced the pre-crash hash byte for byte.
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>results/m20_beir15_run.json</span>
+    <span>results/m13_reserved_run.json</span>
+    <span>written 2026-09-23T06:36:36Z</span>
+    <span>descriptive · alpha = 0</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var SYS = ["nano-dense","zero-dense","stella-query","bge-small-en-v1.5","leaf-ir-asym","bm25","zero+bm25 dbsf@100","nano+bm25 dbsf@100"];
+  var SHORT = {"nano-dense":"nano","zero-dense":"zero","stella-query":"stella","bge-small-en-v1.5":"bge-small","leaf-ir-asym":"leaf-ir","bm25":"bm25","zero+bm25 dbsf@100":"zero+bm25","nano+bm25 dbsf@100":"nano+bm25"};
+  var GROUP = {"nano-dense":"student","zero-dense":"student","stella-query":"teacher","bge-small-en-v1.5":"comparator","leaf-ir-asym":"comparator","bm25":"lexical","zero+bm25 dbsf@100":"dbsf@100","nano+bm25 dbsf@100":"dbsf@100"};
+
+  var BEIR = [
+    ["scifact",[0.7210974963001988,0.6101307346589266,0.7795618826803957,0.7127069247605036,0.6990132467047363,0.6790938361008712,0.7173006320494344,0.7433254028854539],5183,300,["clean"],null],
+    ["nfcorpus",[0.36308038066321896,0.3123921390803689,0.41343074244382183,0.3429509056757635,0.36078725098200964,0.3180390973666754,0.3442061370004841,0.36827535888611584],3633,323,["clean"],null],
+    ["scidocs",[0.2177103334458522,0.16769336543409222,0.23948933979280213,0.20521241453025765,0.20337166273946947,0.15649670985084668,0.18499017495559555,0.20314991033048352],25657,1000,["clean"],null],
+    ["trec-covid",[0.7871157997648055,0.5489915794925339,0.8234312504293929,0.7575428373845964,0.830098182134971,0.6098791292899,0.7184455316573488,0.8071857107861511],171332,50,["clean"],null],
+    ["fiqa",[0.47776539081203656,0.3727623009067084,0.5535975932731784,0.4034958036456207,0.4164692020953279,0.25319188881146765,0.3872148306227883,0.4352894642538025],57638,648,["teacher-disclosed"],null],
+    ["arguana",[0.6232963897287046,0.5915600739875732,0.6368938207164638,0.6034479952463456,0.5832537184814233,0.48778035149013416,0.5800271277113531,0.5759424827515558],8674,1406,["teacher-disclosed"],null],
+    ["fever",[0.6230984560722036,0.69782584641904,0.8206733933857581,0.8662048443835864,0.8671164927623974,0.5036395292461568,0.7558548987977167,0.6878500808247031],null,null,["reserved", "teacher-disclosed", "comparator-training"],null],
+    ["dbpedia-entity",[0.4189765409073661,0.3899764065120685,0.46033448681660694,0.4002522909472384,0.4519706871481198,0.3044769680760439,0.40304984389688725,0.4295857594362685],null,null,["reserved"],null],
+    ["cqadupstack",[0.38586925849545134,0.34155845740174123,0.4448251678147945,0.390537487902989,0.4268865053948898,0.3183548831414529,0.37562612155529784,0.39329200554869287],null,null,["reserved", "M7-dev", "clean"],null],
+    ["msmarco",[0.406315995711997,0.3370738502210946,0.43729249741826515,0.4082018446586933,0.4136026732618724,0.22561278180397953,0.3409723509166459,0.3698942666456895],8841823,6980,["comparator-training"],"validation only"],
+    ["nq",[0.5837996691547803,0.5173195524528932,0.6371452588188129,0.5017994487490051,0.6164083091555075,0.2915903407038447,0.4594150840054323,0.49991438322242054],2681468,3452,["M7-dev", "comparator-training"],null],
+    ["hotpotqa",[0.6102394600672578,0.6127340424570197,0.6949718801973416,0.6993255767715476,0.6930588528521173,0.5851235309069822,0.7015111802883253,0.6968133398628613],5233329,7405,["M7-dev", "comparator-training"],null],
+    ["webis-touche2020",[0.2755473545218306,0.2288132725216718,0.2979773285718631,0.26025313796887445,0.3024425683013946,0.332445260308797,0.3101749412349198,0.33981401768768266],382545,49,["source-family-contact-with-arguana"],null],
+    ["quora",[0.8805018489305346,0.850436387949787,0.8911610780215353,0.8863228335548603,0.8615262559666685,0.8055339083004871,0.868765994421552,0.8838485431945483],522931,10000,["comparator-training", "licence-unverified"],"evaluation only (R22)"],
+    ["climate-fever",[0.24731260786241843,0.27849183225935414,0.29069706686241675,0.3183392488315934,0.37768185290558093,0.13722973470882613,0.25213994345493007,0.23149226804085152],5416593,1535,["teacher-disclosed", "licence-unverified"],"evaluation only (R22)"]
+  ];
+
+  var RESERVED = [
+    ["fever",[0.6230984560722036,0.69782584641904,0.8206733933857581,0.8662048443835864,0.8671164927623974,0.5036395292461568,0.7558548987977167,0.6878500808247031],"outside NDO-3 and both contrasts"],
+    ["dbpedia-entity",[0.4189765409073661,0.3899764065120685,0.46033448681660694,0.4002522909472384,0.4519706871481198,0.3044769680760439,0.40304984389688725,0.4295857594362685],"NDO-3 weight 0.50"],
+    ["cqadup-android",[0.4774029565644179,0.4430688077958405,0.5275105681586092,0.4760606309296488,0.5259640860384368,0.3951521308749954,0.46291720725099467,0.47496200012743395],"NDO-3 weight 0.25"],
+    ["cqadup-english",[0.42980206351971395,0.36901099465336656,0.5182541578780542,0.4558009680767162,0.47068709410892634,0.34813231176460674,0.4016239134712472,0.4323492200160012],"NDO-3 weight 0.25"]
+  ];
+
+  var CONTRASTS = [
+    {k:"R1", pair:"nano-dense vs bge-small-en-v1.5", rows:[
+      {w:"NDO-3", note:"registered", d:0.003197980249505574, lo:-0.006945181195617759, hi:0.01341682614077144},
+      {w:"Equal-weight macro", note:"reported beside", d:-0.001977442987368466, lo:-0.011461903803702161, hi:0.007477994403639233},
+      {w:"Query-pooled", note:"reported beside", d:-0.012135741682929501, lo:-0.02187378258965844, hi:-0.002360980059019484}
+    ]},
+    {k:"R2", pair:"nano-dense vs leaf-ir-asym", rows:[
+      {w:"NDO-3", note:"registered", d:-0.038858613136184696, lo:-0.048782720760096016, hi:-0.029004588644224318},
+      {w:"Equal-weight macro", note:"reported beside", d:-0.04081343543466168, lo:-0.04994498583664339, hi:-0.0317806244075553},
+      {w:"Query-pooled", note:"reported beside", d:-0.0417127710841904, lo:-0.051629330360120906, hi:-0.03189818582031617}
+    ]}
+  ];
+
+  function fmt(x,n){ return x.toFixed(n===undefined?4:n); }
+  function signed(x,n){ var s=x.toFixed(n===undefined?4:n); return (x>0?"+":"")+s; }
+  function el(tag,cls,txt){ var e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
+
+  function headRow(firstLabel){
+    var thead=el("thead"), tr=el("tr");
+    var th0=el("th","rowhead"); th0.scope="col"; th0.textContent=firstLabel; tr.appendChild(th0);
+    SYS.forEach(function(s,i){
+      var th=el("th"); th.scope="col";
+      if(i===5) th.className="sep";
+      var g=el("span","sysgroup",GROUP[s]); th.appendChild(g);
+      th.appendChild(document.createTextNode(SHORT[s]));
+      tr.appendChild(th);
+    });
+    thead.appendChild(tr); return thead;
+  }
+
+  function valueCells(tr,vals,tint){
+    var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals), span=(hi-lo)||1;
+    vals.forEach(function(v,i){
+      var td=el("td",i===5?"sep":null,fmt(v));
+      if(tint){
+        var t=(v-lo)/span;
+        td.style.background="rgba(var(--tint),"+(0.045+0.17*t).toFixed(3)+")";
+      }
+      tr.appendChild(td);
+    });
+  }
+
+  /* BEIR-15 */
+  (function(){
+    var t=document.getElementById("beir");
+    t.appendChild(headRow("Dataset"));
+    var tb=el("tbody");
+    BEIR.forEach(function(r){
+      var tr=el("tr");
+      var th=el("th","rowhead"); th.scope="row";
+      th.appendChild(el("span","ds-name",r[0]));
+      var meta=el("span","ds-meta");
+      meta.textContent = r[2]!=null
+        ? r[2].toLocaleString()+" docs · "+r[3].toLocaleString()+" q"
+        : "copied from the reserved transaction";
+      th.appendChild(meta);
+      // The registration requires EVERY contact label and any licence role on every row, not just
+      // the two that bear on the clean subset (Sol review, 2026-09-23, P1).
+      var labels = r[4].slice();
+      if(r[5]) labels.push("licence: "+r[5]);
+      if(labels.length){
+        var chips=el("div","chips");
+        labels.forEach(function(c){
+          var cls = c==="teacher-disclosed" ? "disclosed"
+                  : c==="reserved" ? "reserved"
+                  : c==="clean" ? "clean" : "other";
+          chips.appendChild(el("span","chip "+cls, c));
+        });
+        th.appendChild(chips);
+      }
+      tr.appendChild(th);
+      valueCells(tr,r[1],true);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  })();
+
+  /* reserved four */
+  (function(){
+    var t=document.getElementById("reserved");
+    t.appendChild(headRow("Dataset"));
+    var tb=el("tbody");
+    RESERVED.forEach(function(r){
+      var tr=el("tr");
+      var th=el("th","rowhead"); th.scope="row";
+      th.appendChild(el("span","ds-name",r[0]));
+      th.appendChild(el("span","ds-meta",r[2]));
+      tr.appendChild(th);
+      valueCells(tr,r[1],true);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  })();
+
+  /* contrast table */
+  (function(){
+    var t=document.getElementById("contrasts");
+    var thead=el("thead"), tr=el("tr");
+    ["Contrast","Weighting","Delta (nDCG@10)","95% interval","Excludes zero"].forEach(function(h,i){
+      var th=el("th",i===0?"rowhead":null,h); th.scope="col";
+      if(i===0) th.style.minWidth="210px";
+      tr.appendChild(th);
+    });
+    thead.appendChild(tr); t.appendChild(thead);
+    var tb=el("tbody");
+    CONTRASTS.forEach(function(c){
+      c.rows.forEach(function(r,i){
+        var row=el("tr");
+        var th=el("th","rowhead"); th.scope="row";
+        if(i===0){
+          th.appendChild(el("span","ds-name",c.k+" · "+c.pair));
+        } else {
+          th.appendChild(el("span","ds-meta",c.k));
+        }
+        row.appendChild(th);
+        var w=el("td"); w.style.textAlign="left";
+        w.appendChild(document.createTextNode(r.w));
+        if(r.note==="registered"){
+          var b=el("span","chip clean","registered"); b.style.marginLeft="7px"; b.style.color="var(--accent)";
+          w.appendChild(b);
+        }
+        row.appendChild(w);
+        row.appendChild(el("td",null,signed(r.d)));
+        row.appendChild(el("td",null,"["+signed(r.lo)+", "+signed(r.hi)+"]"));
+        var ex = (r.lo>0 || r.hi<0);
+        row.appendChild(el("td",null,ex?"yes":"no — unresolved"));
+        tb.appendChild(row);
+      });
+    });
+    t.appendChild(tb);
+  })();
+
+  /* totals: computed from the table above, never retyped */
+  var DISCLOSED = {"fiqa":1,"arguana":1,"fever":1,"climate-fever":1};
+  var TOTALS = (function(){
+    var clean = BEIR.filter(function(r){ return !DISCLOSED[r[0]]; });
+    return SYS.map(function(s,i){
+      var a=0, c=0;
+      BEIR.forEach(function(r){ a += r[1][i]; });
+      clean.forEach(function(r){ c += r[1][i]; });
+      return {s:s, all:a/BEIR.length, clean:c/clean.length, nAll:BEIR.length, nClean:clean.length};
+    }).sort(function(p,q){ return q.all - p.all; });
+  })();
+
+  (function(){
+    var t=document.getElementById("totals");
+    var thead=el("thead"), tr=el("tr");
+    ["System","Mean of 15","Rank","Mean of 11 clean","Rank","Shift"].forEach(function(h,i){
+      var th=el("th",i===0?"rowhead":null,h); th.scope="col"; tr.appendChild(th);
+    });
+    thead.appendChild(tr); t.appendChild(thead);
+
+    var byClean = TOTALS.slice().sort(function(p,q){ return q.clean - p.clean; });
+    var cleanRank = {}; byClean.forEach(function(r,i){ cleanRank[r.s]=i+1; });
+
+    var tb=el("tbody");
+    TOTALS.forEach(function(r,i){
+      var row=el("tr");
+      var th=el("th","rowhead"); th.scope="row";
+      th.appendChild(el("span","ds-name",r.s));
+      th.appendChild(el("span","ds-meta",GROUP[r.s]));
+      row.appendChild(th);
+      row.appendChild(el("td",null,fmt(r.all)));
+      row.appendChild(el("td",null,String(i+1)));
+      row.appendChild(el("td",null,fmt(r.clean)));
+      row.appendChild(el("td",null,String(cleanRank[r.s])));
+      var shift = (i+1) - cleanRank[r.s];
+      row.appendChild(el("td",null, shift===0 ? "—" : (shift>0? "up "+shift : "down "+(-shift))));
+      tb.appendChild(row);
+    });
+    t.appendChild(tb);
+  })();
+
+  (function(){
+    var svg=document.getElementById("totchart");
+    if(!svg) return;
+    var PL=176, PR=612, XMAX=0.62;
+    var TOP=26, ROW_H=30;
+    function x(v){ return PL + (v/XMAX)*(PR-PL); }
+    var parts=[], ticks=[0,0.1,0.2,0.3,0.4,0.5,0.6];
+    var bottom = TOP + TOTALS.length*ROW_H;
+    var tickY = bottom + 18, capY = tickY + 17, H = capY + 12;
+    svg.setAttribute("viewBox","0 0 780 "+H);
+
+    ticks.forEach(function(tv){
+      var xx=x(tv).toFixed(1);
+      parts.push('<line class="ci-grid" x1="'+xx+'" y1="'+(TOP-14)+'" x2="'+xx+'" y2="'+bottom+'"/>');
+      parts.push('<text class="ci-tick" x="'+xx+'" y="'+tickY+'" text-anchor="middle">'+tv.toFixed(1)+'</text>');
+    });
+    parts.push('<text class="ci-tick" x="'+((PL+PR)/2).toFixed(1)+'" y="'+capY+'" text-anchor="middle">mean nDCG@10</text>');
+
+    TOTALS.forEach(function(r,i){
+      var yy = TOP + i*ROW_H, bh = 13;
+      parts.push('<text class="ci-label" x="0" y="'+(yy+4)+'">'+SHORT[r.s]+'</text>');
+      parts.push('<rect class="tot-bar" x="'+PL+'" y="'+(yy-bh/2)+'" width="'+(x(r.all)-PL).toFixed(1)+
+                 '" height="'+bh+'" rx="2.5"/>');
+      var cx=x(r.clean).toFixed(1);
+      parts.push('<rect class="tot-mark" x="'+(cx-5)+'" y="'+(yy-5)+'" width="10" height="10" rx="1.5" '+
+                 'transform="rotate(45 '+cx+' '+yy+')"/>');
+      parts.push('<text class="ci-val" x="'+(PR+16)+'" y="'+(yy+4)+'">'+fmt(r.all)+'</text>');
+    });
+    svg.innerHTML = parts.join("");
+  })();
+
+  /* interval plot */
+  (function(){
+    var svg=document.getElementById("cichart");
+    if(!svg) return;
+    var PL=224, PR=636, DMIN=-0.058, DMAX=0.018;
+    var TOP=30, GROUP_H=26, ROW_H=34, GAP_H=16;
+    function x(v){ return PL + (v-DMIN)/(DMAX-DMIN)*(PR-PL); }
+
+    // lay the rows out first, so the axis and viewBox are sized to what is actually drawn
+    var lay=[], y=TOP;
+    CONTRASTS.forEach(function(c,ci){
+      lay.push({type:"group", y:y, c:c}); y += GROUP_H;
+      c.rows.forEach(function(r){ lay.push({type:"row", y:y, r:r}); y += ROW_H; });
+      if(ci < CONTRASTS.length-1) y += GAP_H;
+    });
+    var lastRow = lay[lay.length-1].y;
+    var axisTop = 18, axisBottom = lastRow + 26;      // clears the last "excludes 0" at +16
+    var tickY = axisBottom + 16, capY = tickY + 17, H = capY + 13;
+    svg.setAttribute("viewBox","0 0 780 "+H);
+
+    var parts=[], ticks=[-0.05,-0.04,-0.03,-0.02,-0.01,0,0.01];
+    ticks.forEach(function(tv){
+      var xx=x(tv).toFixed(1);
+      parts.push('<line class="'+(tv===0?"ci-zero":"ci-grid")+'" x1="'+xx+'" y1="'+axisTop+'" x2="'+xx+'" y2="'+axisBottom+'"/>');
+      parts.push('<text class="ci-tick" x="'+xx+'" y="'+tickY+'" text-anchor="middle">'+(tv===0?"0":(tv>0?"+":"")+tv.toFixed(2))+'</text>');
+    });
+    parts.push('<text class="ci-tick" x="'+((PL+PR)/2).toFixed(1)+'" y="'+capY+'" text-anchor="middle">delta in nDCG@10 — nano-dense minus comparator</text>');
+
+    lay.forEach(function(item){
+      if(item.type==="group"){
+        parts.push('<text class="ci-group" x="0" y="'+(item.y+4)+'">'+item.c.k+'</text>');
+        parts.push('<text class="ci-sub" x="26" y="'+(item.y+4)+'">'+item.c.pair+'</text>');
+        return;
+      }
+      var r=item.r, yy=item.y, ex=(r.lo>0 || r.hi<0);
+      parts.push('<text class="ci-label" x="14" y="'+(yy+4)+'">'+r.w+'</text>');
+      parts.push('<line class="ci-bar" x1="'+x(r.lo).toFixed(1)+'" y1="'+yy+'" x2="'+x(r.hi).toFixed(1)+'" y2="'+yy+'"/>');
+      parts.push('<circle class="ci-dot" cx="'+x(r.d).toFixed(1)+'" cy="'+yy+'" r="5"/>');
+      parts.push('<text class="ci-val" x="'+(PR+14)+'" y="'+(yy+4)+'">'+signed(r.d)+'</text>');
+      if(ex) parts.push('<text class="ci-flag" x="'+(PR+14)+'" y="'+(yy+16)+'">excludes 0</text>');
+    });
+    svg.innerHTML = parts.join("");
+  })();
+})();
+</script>
