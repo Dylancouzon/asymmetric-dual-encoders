@@ -1,92 +1,28 @@
-# M15 novelty and related work
+# M15 contribution and prior-art boundaries
 
-Sub-agent pass 2026-09-17: internal novelty files re-read, then an external check against the
-literature as of today. Findings below are the sub-agent's; the verdict line at the end is mine.
+Updated 2026-10-01 after the owner-directed review. The earlier novelty map remains in git history; the primary-source audit is `REVIEWS/2026-10-01-owner-literature.md`.
 
-## The headline, stated plainly
+## The research question
 
-**Index-preserving query-encoder swap is prior art, under two established names.** The paper must
-not claim it as a new capability.
+When is it worth building a cheap query encoder for a document index that will remain fixed? The paper examines teacher choice under a particular table recipe, the preparation and fitting costs of served encoders, and their quality and latency after approximate search.
 
-- MongoDB **LEAF** (arXiv 2509.12539, ACL 2026) ships this as a first-class released mode and calls
-  it *asymmetric inference* or *mixed-checkpoint inference*: encode documents with the teacher,
-  queries with the distilled student, one index. Released `-asym` checkpoints exist.
-  https://huggingface.co/MongoDB/mdbr-leaf-ir-asym
-- **pyNIFE** (Stephan Tulkens, 2025-11-03) trains a dense per-token lookup table by cosine
-  distillation against a frozen off-the-shelf teacher and reuses the teacher's index unchanged.
-  This is the same construction as `zero` and predates it. `research/m7-novelty.md` already
-  withdrew that novelty claim on 2026-09-03; the external check confirms the withdrawal still holds.
-  https://github.com/stephantul/pynife
-- **Backward-compatible training** (Shen et al., CVPR 2020) and **forward-compatible training**
-  (Apple, arXiv 2112.02805) name the general goal of changing the model without re-embedding the
-  corpus. The setting there is version migration rather than a standing choice between compute tiers.
+## What is established prior work
 
-No academic work uses the word "hot-swap" for this. The word appears in developer writing about the
-re-indexing pain point, so it carries no citation weight and no literature gap.
+Query-side distillation against teacher document vectors is established by QED, EmbedDistill, LEAF, and NanoVDR. pyNIFE aligns a static table with a frozen teacher, reuses its index, and proposes static/contextual switching. LightRetriever trains a lookup-and-average query path with a document LLM and reports full-BEIR and end-to-end measurements. Cho and Hariharan and PROD already show that teacher strength need not translate to a stronger student. Approachability, lookup queries, index reuse, switching, and the general teacher/student caution are not architectural priority claims for this paper.
 
-## Related work map
+## What the evidence adds
 
-| Work | What it does | How our setup differs |
-|---|---|---|
-| LightRetriever (arXiv 2505.12260) | Token lookup table trained end to end, no query-side forward pass | Its document tower is co-trained, so it cannot move onto an index someone else built |
-| pyNIFE | Per-token lookup table distilled against a frozen off-the-shelf teacher | Same construction as `zero`, published first. NanoBEIR numbers only, one query-side option |
-| LEAF (arXiv 2509.12539) | 23M transformer student aligned to a frozen teacher, shipped for mixed-checkpoint inference | One student per teacher. No lookup-table tier beside it, no frontier between tiers |
-| Query Encoder Distillation via Embedding Alignment (arXiv 2306.11550) | Frozen document encoder, transformer student, MSE alignment | Older, smaller scale, transformer student only |
-| BCT / FCT | Change the model without re-embedding the gallery | Version migration, not a standing multi-tier deployment choice |
-| Model2Vec, potion-retrieval-32M | Static lookup-table embeddings | Used symmetrically for both sides, so it never tests the swap |
-| CARE, Li-LSR, KAHM, ERA | Reviewed and ruled out in `research/m7-novelty.md` | Co-trained towers, scalar rows, prototype mixtures, or a full query transformer |
+- One controlled closed-form recipe over 26 text-embedding checkpoints, ten registered and 16 exploratory. Teacher retrieval rank poorly tracks table rank; a development table screen tracks it much better. The gte-large/Stella reversal makes the choice consequential. This is limited to the measured recipe and workloads.
+- Workload sensitivity made explicit: the development winner is not the best table on every dataset or clean-four objective. Absolute quality and relative retention are reported separately, avoiding a causal size interpretation.
+- Query encoders measured over the same frozen index expose a larger ANN penalty for the table and a much smaller end-to-end speedup than encoding alone suggests. This is a measured interaction, not a claim that Qdrant uniquely enables the architecture.
+- Component build-cost accounting makes the work easier to assess and reproduce. It is useful supporting evidence, not a novel training method or a complete cheap-build guarantee.
 
-## What is defensible
+## Evidence gaps that stay visible
 
-The open ground is the **measurement**, not the mechanism. Every published asymmetric pair trains
-its cheap query tower against the document encoder it will retire alongside. None of them asks
-which of several already-existing cheap query encoders should be plugged into a document index that
-was not built for that purpose, and none measures a controlled two-tier quality-against-compute
-frontier on one held-fixed index under a protocol registered before the numbers existed.
+The 26-teacher screen predicts the closed-form tables, not the separately trained Zero or Nano recipes. Those served recipes were trained on Stella only. A contrasting-teacher trained-table experiment would test that bridge; until then the paper makes no general trained-student selection claim.
 
-That is an evaluation-design contribution. The paper claims the frontier and the deployable
-implementation, and cites pyNIFE and LEAF as the prior art it stands on.
+NanoVDR reports teacher quality predictive of student retention across datasets for one teacher. Our cross-teacher comparison addresses a different question and does not refute that result. Shuffle sensitivity remains a diagnostic association, routing is bounded by a label-aware oracle, and query-vector blending is a negative measured result without a priority claim.
 
-## The three attacks and what answers each
+## Sources
 
-1. *"pyNIFE published this construction already."* Answer with what pyNIFE does not have: full BEIR
-   breadth rather than NanoBEIR's 50-query samples, a different and larger teacher
-   (`stella_en_400M_v5`, 1024-d), the second tier, and the frontier between the two.
-2. *"LEAF already ships mixed-checkpoint inference."* Answer by stating the claim as measurement
-   under a registered protocol, and by citing LEAF as prior art in the same paragraph.
-3. *"Swapping the query encoder is just the bi-encoder inference contract; this is an engineering
-   demo."* Answer with the frontier: where each tier is usable and where it is not, in numbers,
-   plus the places the swap is not free (prompt strings, tokenization, dtype, fusion depth).
-
-## Bibliography
-
-- LightRetriever, arXiv 2505.12260 (v5, 2026-01-30). https://arxiv.org/abs/2505.12260
-- pyNIFE, Stephan Tulkens, 2025-11-03. https://github.com/stephantul/pynife
-- LEAF, arXiv 2509.12539, ACL 2026. https://arxiv.org/html/2509.12539v2 ; https://huggingface.co/MongoDB/mdbr-leaf-ir-asym
-- MongoDB LEAF engineering blog. https://www.mongodb.com/company/blog/engineering/leaf-distillation-state-of-the-art-text-embedding-models
-- Query Encoder Distillation via Embedding Alignment, arXiv 2306.11550. https://arxiv.org/abs/2306.11550
-- Shen et al., Towards Backward-Compatible Representation Learning, CVPR 2020. https://openaccess.thecvf.com/content_CVPR_2020/papers/Shen_Towards_Backward-Compatible_Representation_Learning_CVPR_2020_paper.pdf
-- Forward Compatible Training, Apple, arXiv 2112.02805. https://arxiv.org/pdf/2112.02805
-- Model2Vec. https://github.com/MinishLab/model2vec
-
-CARE and ERA are carried from `research/m7-novelty.md` without an independent re-fetch on
-2026-09-17. Re-verify before citing either in the paper.
-
-## Literature refresh, 2026-09-30
-
-Sonnet web pass and two reviewer passes (`REVIEWS/2026-09-30-sonnet-literature.md`,
-`REVIEWS/2026-09-30-fable-novelty.md`, `REVIEWS/2026-09-30-astra-novelty.md`). No work found that puts a
-lookup table, a small student, fusion and the tower itself on one frozen third-party index and measures
-them together (about ten searches; absence, not proof). Added to the map:
-
-- Drift-Adapter, arXiv 2509.23471 (EMNLP 2025): adapter maps new-model queries into an old index.
-- KALE, arXiv 2304.01016: small query encoders for asymmetric retrieval.
-- Query-only fine-tuning for multi-tenant search, arXiv 2601.04646: the "one collection, many use
-  cases" direction.
-- Align Then Adapt, arXiv 2604.03403; CARE, arXiv 2604.10937 (ACL 2026, re-fetched).
-- Teacher quality against student quality: Cho and Hariharan 2019 (ICCV), Mirzadeh et al. 2020,
-  Dynamic KD arXiv 2109.11295. Finding 2 cites these and claims only what is new for embedding towers.
-- To verify: NanoVDR, arXiv 2603.12824, reported by Fable as finding the teacher's own nDCG the
-  strongest predictor of student retention. If confirmed, the paper addresses it directly.
-- Tiering and edge are proposed in pyNIFE; throughput gains are reported by LightRetriever. The paper
-  claims measurements, not those ideas.
+The paper bibliography and `RELATED_WORK.md` give direct primary links for QED (2306.11550), EmbedDistill (2301.12005), LEAF (2509.12539), NanoVDR (2603.12824), LightRetriever (2505.12260), pyNIFE, Cho and Hariharan (ICCV 2019), PROD (2209.13335), retrieval strategy selection (2109.10739), and query performance prediction (2302.09947). This is a bounded source check, not a systematic demonstration of absence from the literature.

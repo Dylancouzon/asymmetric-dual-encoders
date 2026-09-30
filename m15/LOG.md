@@ -8,31 +8,6 @@ Access discipline for all M15 work, including sub-agents: no reads of `results/f
 reserved qrels caches or `work/m9reserve`; no repo-wide content searches across `results/` or `work/`;
 named-file allowlists only.
 
-## 2026-10-01 owner-directed research review
-
-- **Owner mandate:** review draft v10 against the handoff's goals; challenge assumptions and make
-  concrete improvements. Existing content may be removed. Reputation in the search engineering
-  community, earned through useful research, takes precedence over product promotion. Commit and
-  push coherent batches often for full auditability.
-- **Review scope:** independent scientific review (Astra), target-reader and contribution review
-  (Sol), and primary-source literature/reference verification (Sol). Each brief limits local
-  reads to named files and preserves all protected-read exclusions. Reviews will be saved in
-  `m15/REVIEWS/2026-10-01-owner-*.md`; dispositions and paper changes will be recorded here.
-- **Starting state:** branch `m15-whitepaper`, clean working tree at `c96fe60`; draft v10 and its
-  generated LaTeX/PDF. No evaluation, training, cloud rental, or release has been initiated.
-- **Owner read-through reaction:** the paper's goal was unclear and the draft unimpressive.
-  Training cost, approachability, and teacher differences are candidate angles to examine, not
-  a prescribed conclusion. This directs a substantive restructuring around a clear research
-  question rather than another copy-editing pass.
-- **E15, exploratory:** derived teacher-selection consequences, clean-four sensitivity, direct
-  size/absolute-quality associations, and build-cost accounting from published receipts only
-  (`m15src/e15_decision_audit.py`, `results/m15_e15_decision_audit.json`). The development screen's
-  all-six winner improves over choosing the strongest public teacher by 0.151885 nDCG@10 under
-  the closed-form recipe; its clean-four regret grows to 0.027775 with the exploratory roster.
-  Nano's measured training loop costs $95.27 at the recorded historical rental rate, excluding
-  upstream preparation and research. Zero's 20-minute / 8-12-hour figures are ledger estimates,
-  not complete measured rebuild costs. No new training or evaluation data access.
-
 ## 2026-09-17
 
 - Created branch `m15-whitepaper` and `m15/`.
@@ -285,3 +260,48 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   gpt-5.5 writing pass, /humanizer (v8). All verbatim under `m15/REVIEWS/`.
 - **State:** `m15/PAPER.md` draft v8 is complete in Markdown with five figures and
   `m15/EVIDENCE.md`. Next: LaTeX for arXiv, owner read-through.
+
+## 2026-10-01 owner-directed research review
+
+- **Owner mandate:** review draft v10 against the handoff's goals; challenge assumptions and make
+  concrete improvements. Existing content may be removed. Reputation in the search engineering
+  community, earned through useful research, takes precedence over product promotion. Commit and
+  push coherent batches often for full auditability.
+- **Review scope:** independent scientific review (Astra), target-reader and contribution review
+  (Sol), and primary-source literature/reference verification (Sol). Each brief limits local
+  reads to named files and preserves all protected-read exclusions. Reviews will be saved in
+  `m15/REVIEWS/2026-10-01-owner-*.md`; dispositions and paper changes will be recorded here.
+- **Starting state:** branch `m15-whitepaper`, clean working tree at `c96fe60`; draft v10 and its
+  generated LaTeX/PDF. No evaluation, training, cloud rental, or release has been initiated.
+- **Owner read-through reaction:** the paper's goal was unclear and the draft unimpressive.
+  Training cost, approachability, and teacher differences are candidate angles to examine, not
+  a prescribed conclusion. This directs a substantive restructuring around a clear research
+  question rather than another copy-editing pass.
+- **E15, exploratory:** derived teacher-selection consequences, clean-four sensitivity, direct
+  size/absolute-quality associations, and build-cost accounting from published receipts only
+  (`m15src/e15_decision_audit.py`, `results/m15_e15_decision_audit.json`). The development screen's
+  all-six winner improves over choosing the strongest public teacher by 0.151885 nDCG@10 under
+  the closed-form recipe; its clean-four regret grows to 0.027775 with the exploratory roster.
+  Nano's measured training loop costs $95.27 at the recorded historical rental rate, excluding
+  upstream preparation and research. Zero's 20-minute / 8-12-hour figures are ledger estimates,
+  not complete measured rebuild costs. No new training or evaluation data access.
+
+### Review findings and dispositions
+
+- Independent reviews are committed under `REVIEWS/2026-10-01-owner-*.md`. Their path lists
+  were inspected: named-file reads only, no protected content. The synthesis records the goal
+  assessment, challenged assumptions, strongest contribution, and each disposition.
+- Draft v11 is substantially rewritten around whether a cheap query encoder is worth building
+  for an index that stays fixed. Teacher choice applies before indexing; feasibility and serving
+  cost apply to an existing index. Cost is supporting practical evidence, not a novelty claim.
+- Astra's four findings are addressed: closed-form scope, absolute versus ratio size evidence,
+  bounded shuffle diagnosis, and partial build accounting. Its focused v11 review finds no
+  essential scientific issue. Sol's focused review finds the goal clear and flags one abstract
+  ambiguity; the abstract now explicitly separates planned-index teacher choice from fixed-index
+  serving, and labels the table comparison retrospective.
+- Main text is approximately 25% shorter. Routing, blending, prefixes, and shuffle diagnostics
+  are supporting appendices. The size panel is removed from the teacher figure. All four held-out
+  aggregates appear in the registered-evaluation appendix, copied from the published receipt only.
+- All 14 printed references have primary-source verification; QPP and LightRetriever placeholders
+  are filled. NanoVDR's across-dataset result is distinguished from our across-teacher result.
+  `NOVELTY.md` and `RELATED_WORK.md` use the same boundaries as the paper.
