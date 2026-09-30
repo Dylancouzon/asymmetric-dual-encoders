@@ -25,7 +25,7 @@ Start here in a fresh session on branch `m15-whitepaper`. Read, in order: this f
    score on the pod; bring back only the result JSON and a receipt.
 4. **Figures F1-F4** from committed JSON (`m15/figures/`), then **draft v3** of `m15/PAPER.md` in the
    `PLAN.md` outline. Gates on the draft, in order: Astra correctness, Fable hostile read,
-   `/andrey-review`, the Codex writing pass (`gpt-5.5`), `/humanizer` last. Then LaTeX for arXiv.
+   `/andrey-review`, the Codex writing pass (`gpt-6-sol`), `/humanizer` last. Then LaTeX for arXiv.
 
 ## Rules that bind every step
 
