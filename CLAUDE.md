@@ -34,9 +34,11 @@ phrase “half A ready to push” or from a closed milestone's executable status
 
 - **Never overwrite `results/perquery.json`.** Its frozen comparator vectors cannot be rebuilt
   from the remaining caches. Preserve registered partitions, comparators and statistics.
-- No six-set, reserved or LoTTE evaluation outside its registered transaction. M13 must implement
-  and rehearse the executor and finish the decision lock before spending access. A recipe-lock
-  push alone does not authorize M9's close-out.
+- **Paper phase (Dylan, 2026-09-30).** The registered evaluations are done; the six public sets and
+  BEIR-15 are known-test. New analyses for the paper may be exploratory and may look at those sets
+  freely; the paper labels each one "exploratory" or "registered" and never presents an exploratory
+  result as a registered test. The registered contrasts, M20 rows and E1-E10 keep their
+  registrations and are reported as registered. The reserved-four read ban below still stands.
 - Reserved four: FEVER, DBpedia-entity, cqadup-android, cqadup-english. Do not read
   `results/frozen_eval/untouched-*`, reserved qrels caches or `work/m9reserve` during development
   or review. Preflight uses manifests; protected content belongs inside the executor.
@@ -46,9 +48,9 @@ phrase “half A ready to push” or from a closed milestone's executable status
 - Do not run repo-wide content searches across `results/` or `work/`. Search an explicit allowlist
   of files/directories, or provide the protected-path exclusions before the command runs; filtering
   output afterward is too late. This applies to review and documentation cleanup as well as code.
-- A decision's protocol changes must precede the observations it governs, be dated, and preserve
-  the original registration in git. Never change a computed contrast to improve a result.
-  Unrun-family amendments are not permission to re-decide completed families.
+- For registered measurements, a protocol change must precede the observations it governs, be
+  dated, and preserve the original registration in git. Never change a computed contrast to improve
+  a result. Exploratory paper analyses need no prior registration but must be labelled as such.
 - Exact search produces quality numbers. Qdrant/Edge measurements establish deployment behavior
   and latency; ANN recall must not be silently mixed into the quality comparison.
 - The paper is a research paper: it leads with findings, implications and what the design makes
