@@ -37,3 +37,12 @@ def test_router_bounds():
     assert abs(oracle_route["efficiency"] - 1.0) < 1e-9
     everyone = e6_router.evaluate(np.ones(200), zero, nano, 0.0, rng)
     assert everyone["nano_fraction"] == 1.0 and abs(everyone["router_minus_random"]) < 1e-12
+
+
+def test_router_interval_zero_width_for_constant_gain():
+    # Nano better by a constant: routing advantage at equal share is identically zero.
+    rng = np.random.default_rng(1)
+    zero = rng.random(300)
+    out = e6_router.evaluate(rng.random(300), zero, zero + 0.1, 0.5, rng, draws=500)
+    lo, hi = out["router_minus_random_ci95"]
+    assert abs(lo) < 1e-12 and abs(hi) < 1e-12

@@ -2,7 +2,8 @@
 
 Frozen 2026-09-30, before any M15 run. Scope and questions come from `m15/PLAN.md` v5.3. A change to
 an estimand, a decision rule or a data role after a run starts is a dated amendment at the end of
-this file, and the original text stays in git.
+this file, and the original text stays in git. Revised the same day, before any run, for Astra's three
+P1 findings (`REVIEWS/2026-09-30-astra-measurements-review.md`).
 
 ## Rules for every measurement
 
@@ -78,14 +79,16 @@ Nano when its fertility is above the threshold.
 
 **Fit.** On the pooled test queries of cqadup-physics and cqadup-programmers (the two M7 dev forums,
 outside the 12 evaluation datasets), the threshold t_B for each Nano budget B in {0.10, 0.25, 0.50}
-is the (1 - B) quantile of fertility. The three thresholds are written to the result before any
-evaluation dataset is read. Neither E5 nor the 12 evaluation datasets selects anything.
+is the (1 - B) quantile of fertility. The three thresholds are written to
+`results/m15_e6_thresholds.json` before any evaluation dataset is read, and the final result binds
+that file's sha256. Neither E5 nor the 12 evaluation datasets selects anything.
 
 **Evaluation.** On each of the 12 datasets, and as the macro, for each B: the router's mean nDCG@10,
 its realized Nano fraction f, always-Zero, always-Nano, the expected mean of random routing at the
 same f (computed exactly as (1 - f) Zero + f Nano, no sampling), the E5 oracle at the same f, and the
 efficiency (router - random) / (oracle - random). A 10,000-draw query bootstrap gives an interval for
-router minus random per dataset. Feature cost comes from E1.
+router minus random per dataset: each draw resamples aligned (route, Zero, Nano) rows with the
+threshold fixed and recomputes f, the router mean and the random mean. Feature cost comes from E1.
 
 **Outputs.** `results/m15_e6_router.json`, with the thresholds, the fit-forum in-sample numbers and
 the evaluation table.
@@ -232,7 +235,12 @@ the row-normalized token-count bag of each fit query under the tower's tokenizer
 own fp16 query vector with its registered prefix and readout, W0 is the teacher-init rows, and W
 solves min ||XW - Y||^2 + lambda ||W - W0||^2 by block CG (identical to the direct solve, `m8/RESULTS.md`
 B7). Lambda grid {1e-4, 1e-3, 1e-2, 1e-1}; when the best value sits at a grid edge, the grid extends
-by one decade on that side once, and the edge flag is reported. `m8base`'s path guard is imported.
+by one decade on that side once, and the edge flag is reported. **Convergence gate:** a solve counts
+only when block CG reports `converged` with every column's relative residual at or below the
+solver's own tolerance (`m8src/blockcg.py:83`, 1e-6 in fp32, 1e-8 in fp64), at every lambda and at the
+final re-solve. A failed solve is never scored or selected; it stops that configuration, and the
+result lists it with its diagnostics. Every solve's iterations, worst residual and seconds go in the
+result. `m8base`'s path guard is imported.
 
 **Document path.** Every E8 score, dev and BEIR, table and ceiling, uses each tower's registered
 document path (`spec.doc_prefix`, fp16 storage). M7 scored tables with an empty document prefix but

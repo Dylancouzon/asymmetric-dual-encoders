@@ -169,3 +169,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   fit-list and six-set encodes on the pod; 10 towers need encodes, about 8-10 A100 hours.
 - **`m15/MEASUREMENTS.md` written** (E1-E8, E7 folded into E4), before any run. Scripts started in
   `m15src/` (common, E5, E6, tests). Next: Astra review of the method file, then runs.
+- **Astra review of the method** (`REVIEWS/2026-09-30-astra-measurements-review.md`, access log
+  audited clean): three P1, no P0; E5, E1, E2, E4 and E8's design otherwise sound. All three applied
+  before any run: E6's bootstrap now recomputes the Nano fraction in each draw; E6 writes
+  `results/m15_e6_thresholds.json` before it reads an evaluation dataset and logs six-set query
+  loads; E8 gets a convergence gate (block CG `converged`, residual at the solver tolerance, else the
+  configuration stops unscored). A focused re-review of the three fixes follows.

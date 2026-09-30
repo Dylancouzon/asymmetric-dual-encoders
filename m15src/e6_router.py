@@ -3,14 +3,13 @@
 Method: `m15/MEASUREMENTS.md`, E6. Thresholds are fixed from the fit forums before any
 evaluation dataset is read; the evaluation reads committed M20 per-query rows and query texts.
 """
-import json
-
 import numpy as np
 
-from common import (EVAL12, FIT_FORUMS, M20_SCORES, REPO, SEED, m20_rows, receipt,
-                    refuse_reserved, utc_now, write_result)
+from common import (EVAL12, FIT_FORUMS, REPO, SEED, load_public, m20_rows, receipt,
+                    refuse_reserved, sha_file, utc_now, write_result)
 
 OUT = REPO / "results" / "m15_e6_router.json"
+FROZEN = REPO / "results" / "m15_e6_thresholds.json"
 BUDGETS = (0.10, 0.25, 0.50)
 
 
@@ -33,42 +32,45 @@ def fertility(tok, texts):
 
 
 def per_query(dataset):
-    """(fertility-ready texts, zero, nano) aligned on the committed M20 query ids."""
-    from datasets import load_dataset
+    """(query texts, zero, nano) aligned on the committed M20 query ids."""
     refuse_reserved(dataset)
     zero, zmeta = m20_rows(dataset, "zero-dense")
     nano, nmeta = m20_rows(dataset, "nano-dense")
     if set(zero) != set(nano):
         raise RuntimeError(f"{dataset}: query sets differ")
-    row = json.loads((M20_SCORES / dataset / "zero-dense.json").read_text())
-    queries = load_dataset(row["source"], "queries", revision=row["revision"])["queries"]
-    text = {str(q): t for q, t in zip(queries["_id"], queries["text"]) if str(q) in zero}
+    data = load_public(dataset, with_corpus=False)   # pinned revisions, six-set access trail
+    text = dict(zip(data["q_ids"], data["q_texts"]))
     qids = sorted(zero)
-    if len(text) != len(qids):
-        raise RuntimeError(f"{dataset}: {len(qids) - len(text)} scored queries have no text")
-    meta = [zmeta, nmeta, {"queries": row["source"], "revision": row["revision"]}]
     return ([text[q] for q in qids], np.array([zero[q] for q in qids]),
-            np.array([nano[q] for q in qids]), meta)
+            np.array([nano[q] for q in qids]), [zmeta, nmeta, data["pins"]])
 
 
-def evaluate(fert, zero, nano, t, rng):
-    route = fert > t
-    f = float(route.mean())
-    routed = np.where(route, nano, zero)
-    random_mean = float((1 - f) * zero.mean() + f * nano.mean())
+def _contrasts(route, zero, nano):
+    """Router mean, random-at-same-fraction mean and oracle-at-same-fraction mean."""
+    f = route.mean()
+    router = np.where(route, nano, zero).mean()
+    random_mean = (1 - f) * zero.mean() + f * nano.mean()
     k = int(round(f * len(zero)))
-    oracle = float((zero.sum() + np.sort(nano - zero)[::-1][:k].sum()) / len(zero))
+    oracle = (zero.sum() + np.sort(nano - zero)[::-1][:k].sum()) / len(zero)
+    return float(f), float(router), float(random_mean), float(oracle)
+
+
+def evaluate(fert, zero, nano, t, rng, draws=10_000):
+    route = fert > t
+    f, router, random_mean, oracle = _contrasts(route, zero, nano)
     headroom = oracle - random_mean
-    # Router minus random at the same f, as a per-query paired quantity: random routing's expected
-    # per-query score is (1 - f) zero + f nano.
-    diff = routed - ((1 - f) * zero + f * nano)
-    idx = rng.integers(0, len(diff), size=(10_000, len(diff)))
-    boot = diff[idx].mean(axis=1)
-    return {"nano_fraction": f, "router": float(routed.mean()), "always_zero": float(zero.mean()),
+    # Resample aligned (route, zero, nano) rows with t fixed, recomputing f in every draw, so the
+    # interval is for routing advantage at equal traffic share (Astra 2026-09-30, finding 1).
+    boot = np.empty(draws)
+    for b in range(draws):
+        i = rng.integers(0, len(zero), len(zero))
+        _, r, m, _ = _contrasts(route[i], zero[i], nano[i])
+        boot[b] = r - m
+    return {"nano_fraction": f, "router": router, "always_zero": float(zero.mean()),
             "always_nano": float(nano.mean()), "random_same_fraction": random_mean,
             "oracle_same_fraction": oracle,
-            "efficiency": float((routed.mean() - random_mean) / headroom) if headroom > 0 else None,
-            "router_minus_random": float(diff.mean()),
+            "efficiency": float((router - random_mean) / headroom) if headroom > 0 else None,
+            "router_minus_random": router - random_mean,
             "router_minus_random_ci95": [float(np.quantile(boot, .025)),
                                          float(np.quantile(boot, .975))]}
 
@@ -83,7 +85,14 @@ def main():
         inputs += m
     fit_fert = np.concatenate([fertility(tok, texts) for texts, _, _, _ in fit])
     thresholds = {str(b): float(np.quantile(fit_fert, 1 - b)) for b in BUDGETS}
-    print("frozen thresholds", thresholds, flush=True)
+    # Persist the thresholds before any evaluation dataset is read (Astra 2026-09-30, finding 3).
+    write_result(FROZEN, {"status": "FROZEN", "measurement": "E6 thresholds",
+                          "budgets": list(BUDGETS), "thresholds": thresholds,
+                          "fit_forums": list(FIT_FORUMS), "n_fit_queries": int(len(fit_fert)),
+                          "receipt": receipt(__file__, list(inputs), started,
+                                             ("tokenizers", "datasets"))})
+    inputs.append({"frozen_thresholds": str(FROZEN.relative_to(REPO)),
+                   "sha256": sha_file(FROZEN)})
     rng = np.random.default_rng(SEED)
     fit_zero = np.concatenate([z for _, z, _, _ in fit])
     fit_nano = np.concatenate([n for _, _, n, _ in fit])
