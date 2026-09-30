@@ -360,13 +360,14 @@ interval 0.70 to 0.95). Across the registered ten it was 0.90 (0.68 on
 clean-4), and it ranged from 0.87 to 0.98 when any one family was left
 out (\texttt{results/m15\_e13\_robustness.json}). Either forum alone
 ranks the registered ten nearly as well (0.87 for physics, 0.92 for
-programmers), and resampling whole model families rather than
-checkpoints gives an interval of 0.74 to 0.95, against -0.36 to +0.53
-for tower quality (\texttt{results/m15\_e14\_screen\_checks.json}). For
-the registered ten, the screen took 4 to 7 minutes per tower on one
-A100, measured between successive output files. For every tower but
-Stella, whose training-query vectors were cached, that time includes
-encoding the 337,981 training queries and both forums.
+programmers), and, over all 26 (exploratory), resampling whole model
+families rather than checkpoints gives an interval of 0.74 to 0.95,
+against -0.36 to +0.53 for tower quality
+(\texttt{results/m15\_e14\_screen\_checks.json}). For the registered
+ten, the screen took 4 to 7 minutes per tower on one A100, measured
+between successive output files. For every tower but Stella, whose
+training-query vectors were cached, that time includes encoding the
+337,981 training queries and both forums.
 
 \textbf{Three proxies did not rank them either.} We measured each proxy
 on the real test queries (exploratory;
@@ -412,14 +413,15 @@ these towers, vector fidelity did not track ranking quality; a direct
 ranking screen did.
 
 \textbf{Scope.} This is one recipe on 26 checkpoints (ten registered)
-and six public sets. Intervals are bootstraps over checkpoints, not
-significance tests. For the registered ten, no checkpoint's authors
-disclose training on these six test sets and most trained on their
-source families, partly per community metadata
-(\texttt{m15/e8\_exposure.json}); the 16 exploratory checkpoints were
-not audited for exposure. An earlier project screen used a training list
-with 1.31\% overlap with held-out queries and found a correlation of
-0.000 over eight configurations; this refit uses the cleaned list.
+and six public sets. Intervals are bootstraps over checkpoints unless
+stated as family resamples; none is a significance test. For the
+registered ten, no checkpoint's authors disclose training on these six
+test sets and most trained on their source families, partly per
+community metadata (\texttt{m15/e8\_exposure.json}); the 16 exploratory
+checkpoints were not audited for exposure. An earlier project screen
+used a training list with 1.31\% overlap with held-out queries and found
+a correlation of 0.000 over eight configurations; this refit uses the
+cleaned list.
 
 \subsection{5. What the Table Cannot
 Represent}\label{what-the-table-cannot-represent}
