@@ -349,3 +349,10 @@ is wrong. **Cannot show:** that these features are the best available.
   the exact top 100 with self-hits dropped before nDCG@10 (M7's ceiling probe retrieved 10). The
   Stella fit targets reuse the pod's `trainq-337981-fp16-7423fa42cd3e` cache, whose key binds the
   text hash of the cleaned list.
+- **2026-09-30, before E9 or E10 ran (Astra review `REVIEWS/2026-09-30-astra-e9e10.md`).** E9 runs
+  the reproduction gate on every dataset it scores and stops on a failure; f4 uses Zero's 1st and 10th
+  score after the same self-hit drop the search applies; E9 adds macro intervals (datasets resampled
+  independently, equal weight); E10 reports the f4 router's cost from E1 encode p50 (medium bucket) and
+  E2 search p50 (msmarco1m, unquantized, `hnsw_ef` 128). Added, on Astra's suggestion: an f4 router that
+  escalates routed queries to the E9 blend at its frozen weight instead of to plain Nano, with the
+  same thresholds and statistics.

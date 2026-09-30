@@ -29,6 +29,10 @@ def dataset_scores(ds, enc):
     """Per-query nDCG@10 for every blend weight, plus Zero's top-k cosines, for one dataset."""
     data = load_public(ds)
     dv, prov = V.doc_vectors(ds, data)
+    ok, gate = V.gate(ds, data, dv, enc)          # registered: only gated vectors are scored
+    if not ok:
+        raise SystemExit(f"E9 STOP: reproduction gate failed on {ds}")
+    prov = {**prov, "gate": gate}
     q = {n: enc[n].encode(data["q_texts"]) for n in ("nano", "zero", "stella-query")}
     ids, qrels = data["q_ids"], data["qrels"]
 
@@ -38,11 +42,13 @@ def dataset_scores(ds, enc):
 
     out = {"nano": {str(w): score(blend(q["nano"], q["zero"], w)) for w in WEIGHTS},
            "stella": {str(w): score(blend(q["stella-query"], q["zero"], w)) for w in WEIGHTS}}
-    from evalkit import topk_arrays
-    _, bs = topk_arrays(q["zero"], dv, k=10, chunk=250_000, device="cpu")
+    # f4 for E10: Zero's 1st and 10th score on the same self-hit-filtered list the search returns.
+    zrun = V.exact_run(q["zero"], dv, data["doc_ids"], ids)
+    top = np.array([sorted(zrun[i].values(), reverse=True)[:10] for i in ids])
     CACHE.mkdir(parents=True, exist_ok=True)
     np.savez(CACHE / f"{ds}.npz", q_ids=np.array(ids), zero=score(q["zero"]),
-             nano=out["nano"]["0.0"], top1=bs[:, 0], top10=bs[:, 9])
+             nano=out["nano"]["0.0"], top1=top[:, 0], top10=top[:, 9],
+             **{f"blend_{w}": v for w, v in out["nano"].items()})
     return ids, out, prov
 
 
@@ -88,9 +94,14 @@ def main():
                              "ci95": paired_ci(d),
                              "posthoc_curve": {k: float(v.mean()) for k, v in sc[base].items()}}
     macro = {}
+    rng = np.random.default_rng(SEED)
     for base in ("nano", "stella"):
         for name, keys in (("all6", EVAL), ("clean4", CLEAN4)):
+            # Equal-weight macro of per-dataset paired means, datasets resampled independently.
+            draws = np.mean([diffs[base][d][rng.integers(0, len(diffs[base][d]),
+                             size=(10_000, len(diffs[base][d])))].mean(1) for d in keys], axis=0)
             macro[f"{base}_{name}"] = {
+                "ci95": [float(np.quantile(draws, .025)), float(np.quantile(draws, .975))],
                 "alone": float(np.mean([per[d][base]["alone"] for d in keys])),
                 "blend": float(np.mean([per[d][base]["blend"] for d in keys])),
                 "blend_minus_alone": float(np.mean([per[d][base]["blend_minus_alone"]
