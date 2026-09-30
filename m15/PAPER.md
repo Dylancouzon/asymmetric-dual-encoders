@@ -382,8 +382,7 @@ A swap is legal when the replacement emits vectors aligned with the index's docu
 our served paths match their references to 4.5e-08 (Zero), 1.2e-07 (Nano) and a minimum cosine of
 1.00000000 (Stella through the published document graph). Three things fail silently: Stella without
 its prompt scores at cosine 0.80 against the correct vector; Stella's tokenizer pads to 512 by
-default, which drops cosine to 0.35; and one serving library pooled Nano in float64 until we fixed it
-upstream.
+default, which drops cosine to 0.35; and FastEmbed's mean pooling returns float64 for mean-pooled models, Nano among them, which doubles memory and changes the raw bytes (qdrant/fastembed issue #752, open upstream; our measurements pool in float32 with ONNX Runtime directly).
 
 ## Appendix C. Full Tables
 
