@@ -87,8 +87,7 @@ def preflight():
     import encoders
     import hashlib
     report = {"started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-              "gpu": torch.cuda.get_device_name(0), "tokenizers": {},
-              "dev_data_sha256": {c: sha(REPO / "work" / "dev" / f"{c}.json") for c in DEV}}
+              "gpu": torch.cuda.get_device_name(0), "tokenizers": {}}
     for name in CONFIGS:
         spec = encoders.get(name)
         kw = {"trust_remote_code": True} if spec.trust_remote_code else {}
@@ -198,9 +197,12 @@ def dev(name):
         return
     if FROZEN.exists():
         raise SystemExit("E8 STOP: lambdas are frozen; dev files are never rewritten")
+    if name not in eligible():
+        raise SystemExit(f"E8 STOP: {name} failed the tokenizer check")
     t = Tower(name)
     import devsuite
     comps = {c: devsuite.load(c) for c in DEV}
+    dev_sha = {c: sha(REPO / "work" / "dev" / f"{c}.json") for c in DEV}
     dvecs = {c: t.docs(f"e8-dev-{c}-docs", comps[c][1]) for c in DEV}
     lambdas, grid = {}, list(GRID)
 
@@ -229,7 +231,7 @@ def dev(name):
         return
     ceiling = {c: t.score(t.ceiling_queries(f"e8-dev-{c}-q", comps[c][3]), comps[c][2], dvecs[c],
                           comps[c][0], comps[c][4]) for c in DEV}
-    blob = {"name": name, "status": "COMPLETE", "repo": t.spec.repo, "revision": t.spec.revision, "dim": t.spec.dim,
+    blob = {"name": name, "status": "COMPLETE", "dev_data_sha256": dev_sha, "repo": t.spec.repo, "revision": t.spec.revision, "dim": t.spec.dim,
             "pooling": t.spec.pooling, "doc_prefix": t.spec.doc_prefix,
             "query_prefix": t.qprefix, "lambdas": lambdas, "extended_with": extended,
             "best_lambda": float(best), "best_dev_macro_2": lambdas[best]["dev_macro_2"],
@@ -280,6 +282,8 @@ def six(name):
         return
     partial = OUT_DIR / f"six-{name}.partial.json"
     done = json.loads(partial.read_text()) if partial.exists() else {}
+    if done and done["frozen_sha256"] != sha(FROZEN):
+        raise SystemExit(f"E8 STOP: {partial} was written under a different freeze")
     table, ceiling, pins = done.get("table", {}), done.get("ceiling", {}), done.get("pins", {})
     for ds in SIX:
         if ds in table:                   # scored once; a resume never re-scores a set
@@ -335,6 +339,7 @@ def assemble():
         mac = lambda v, keys: float(np.mean([v[k] for k in keys]))
         rows[name] = {
             "repo": d["repo"], "revision": d["revision"], "dim": d["dim"],
+            "dev_data_sha256": d["dev_data_sha256"],
             "pooling": d["pooling"], "query_prefix": d["query_prefix"],
             "doc_prefix": d["doc_prefix"],
             "lambda": s["lambda"], "dev_table": d["best_dev_macro_2"],

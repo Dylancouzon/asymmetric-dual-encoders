@@ -1,0 +1,5 @@
+Focused re-review (read-only) of the fixes to the E8 driver after two reviews (m15/REVIEWS/2026-09-30-astra-e8-driver.md and m15/REVIEWS/2026-09-30-opus-e8-driver.md). Repository /Users/dylanc/Documents/GitHub/asymetric-dual-encoders, commit 2df12e1. Diff: `git diff 878d475 2df12e1 -- m15src/e8_towers.py m15src/common.py m15src/test_m15.py`.
+
+Access: read only that diff, the two review files, m15/MEASUREMENTS.md (E8 section and Amendments), m8src/blockcg.py, m7src/devsuite.py. Nothing under work/ or results/, no recursive searches, no web searches, no runs.
+
+Goal and rule: confirm each P1 is resolved and report any NEW defect the fixes introduce that would crash the paid run, change a number, or break the freeze order. Essential-only (Dylan, 2026-09-15); the owner also asked not to over-engineer, so do not ask for new machinery beyond what a P1 needs. If correct, say so plainly. Output: one line per P1 (resolved / not, file:line), any new defect with severity, files opened, one-line verdict. Under 400 words.

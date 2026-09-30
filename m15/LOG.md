@@ -195,3 +195,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   pinned revisions, an in-progress lock for the scoring step.
 - **E2 uses Qdrant's server-side BM25** (`qdrant/bm25`, IDF modifier, `avg_len` = corpus mean word
   count) for the fused rows, and checks Qdrant `exact=true` against numpy on 200 queries per encoder.
+- **E8 re-review** (`REVIEWS/2026-09-30-astra-e8-rereview.md`, access clean): gate and import fixes
+  resolved; one new P1 (preflight hashed dev files before they could exist). Per the governance rule,
+  simplified rather than a further round: the dev-data hash moved into the dev step; resume checks
+  the partial file's freeze hash; standalone `dev` enforces the tokenizer roster. Recorded P2 debt,
+  not done: model-file hashes beyond pinned revisions, a lock for the seconds between scoring a set
+  and its checkpoint, a completeness check of the committed exposure matrix.
