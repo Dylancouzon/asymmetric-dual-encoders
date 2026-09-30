@@ -435,7 +435,7 @@ inventory are in `m15/EVIDENCE.md`.
 ## Appendix E. Reproducibility
 
 Every figure regenerates from committed JSON (`python m15/figures/make_figures.py`) and every number in
-`m15/EVIDENCE.md` from `python m15/make_evidence.py`. M15 result files (`results/m15_*.json`), except the frozen configuration files (E6, E9 and E10 thresholds and weights, E8 lambdas, which are bound by hash into the results that use them), carry the script hash, git commit, seed and machine; model and dataset revisions are recorded in the result, in
+`m15/EVIDENCE.md` from `python m15/make_evidence.py`. M15 result files (`results/m15_*.json`), except E8's frozen-lambda file (written on the pod and bound by hash into E8's result), carry the script hash, git commit, seed and machine; model and dataset revisions are recorded in the result, in
 the scripts it names, or in the result it was derived from (E8's frozen lambdas are bound by hash
 into E8's result; E12 and E12b take their pins from the committed M20 rows). Earlier results carry the
 provenance records of the milestone that produced them. Methods and reviews: `m15/MEASUREMENTS.md`,
