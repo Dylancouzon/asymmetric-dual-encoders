@@ -1,0 +1,36 @@
+# Codex review (sol_reader_v9) of PAPER.md draft v9 (664811b)
+
+Date 2026-10-01. Model: gpt-6-astra for correctness, gpt-6-sol for the reader review. Access: named files only. Verbatim below; all Astra findings and Sol's scope points applied in v10 (E14 added; served-recipe test on a second tower not run, stated as a limitation).
+
+---
+
+## Reader review
+
+**1. Would I keep reading?** Yes. I would remember **“screen the student before choosing the document tower.”** The title and introduction now lead with that idea. The abstract still makes me work through five additional results before I reach its consequence: the best tower in this roster was a poor choice for the cheap table. Lead with that decision and its counterexample; use latency, routing, and ANN as consequences.
+
+**2. Where does it go dry?** Section 4’s family table, Section 6’s five-signal table, and Section 7’s settings sweep feel like a benchmark report. Keep the tower scatter as the central figure. Replace the family table in the main text with a short account of the Stella–gte-large reversal. For Section 5, the two FiQA questions are an improvement over v5, but ranks alone do not show *what* was retrieved: add the judged answer and each tier’s top result. Frame Section 6 around the sharper question, “Can we identify the losses before paying for Nano?” The answer is mostly no; the margin helps only after a search.
+
+**3. Claims I would challenge.**
+
+- The central recommendation outruns its validation. The 26-tower screen ranks **closed-form tables**. The served Zero uses a different, trained recipe, tested on Stella alone. The paper admits this in Section 8, but the introduction asks which tower to build an index on. Show that the screen predicts the *served* recipe on at least a contrasting pair of towers, or narrow the decision rule.
+- “Bigger towers distilled worse” in the abstract and Figure 1 sounds causal. Dimension is a proxy, families share training choices, and retention has tower score in its denominator. The within-family absolute table scores help, but the claim is observational. Checkpoint bootstrap intervals also treat related models as independent.
+- “A few-minute screen of each table” is supported by 4–7 minute timings for the original configurations, measured between output files; the evidence card does not give equivalent timings for the exploratory 16. State the timed scope.
+- Section 5 calls the 40% “queries the tower reads differently when their words are shuffled.” The group is actually defined by a **qrel-measured nDCG drop** after shuffling. Its 90% share is a useful loss localization, not proof that word order causes 90% of the loss. The random vector move does not isolate grammatical or semantic effects of a shuffle.
+- Section 3’s “match their public numbers within half a point” needs a compact protocol-to-source comparison. Scores in this repository alone cannot establish that match. The worked examples likewise need readable query, shuffle, judged document, and retrieved-document records, beyond ranks in a JSON receipt.
+
+**4. What is new?** The defensible contribution is a **cross-tower comparison under one fixed static-student recipe**, with a development score that transfers to six public sets, plus evidence about where that table loses and what ANN does to its saving. The architecture and frozen-index premise exist in [QED](https://arxiv.org/abs/2306.11550) and [pyNIFE](https://github.com/stephantul/pynife); embedding lookup is central to [LightRetriever](https://arxiv.org/abs/2505.12260). [PROD](https://arxiv.org/abs/2209.13335) already says a better retrieval teacher can yield a worse student, and [Arabzadeh et al.](https://arxiv.org/abs/2109.10739) study per-query retrieval routing. A hostile reviewer will call “select on student development performance” obvious, note that 16 towers were added after the first result, and ask whether this screen selects a better *trained* system. I would not foreground a first-of-its-kind claim for vector blending when the reported blend loses.
+
+**5. Best structure.**
+
+1. **Introduction** — The frozen-index choice and the surprising tower reversal.
+2. **Prior work** — Set the novelty boundary against pyNIFE, QED, LightRetriever, and PROD.
+3. **Experimental contract** — Recipes, data roles, and what the screen can select.
+4. **Which tower yields a useful table?** — Central scatter, family controls, uncertainty.
+5. **Where does the table fail?** — Absorbability proof, loss localization, readable cases.
+6. **Can we route those failures?** — Oracle, attainable signals, and actual cost.
+7. **Does the saving survive search?** — One compact ANN quality–latency figure.
+8. **Limits and conclusion** — Separate the established selection result from the untested served-recipe extrapolation; move inventories to appendices.
+
+**6. Cheap overnight work.** First, split the two development forums: choose ridge weight on one, rank tables on the other, then swap. That tests whether the screen’s strong correlation survives independent screening data. Recompute uncertainty by model family rather than checkpoint. For a more memorable result, build a small, manually checked set of relation reversals with judged documents and display the actual top results. If one extra training run fits overnight, train the served Zero recipe on the strongest-tower/weak-table contrast; that directly tests the paper’s main practical leap.
+
+**Files opened:** [PAPER.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/PAPER.md), [v3 review](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/REVIEWS/2026-09-30-sol-reader-v3.md), [v5 review](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/REVIEWS/2026-09-30-sol_reader_v5.md), [EVIDENCE.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/EVIDENCE.md), [MEASUREMENTS.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/MEASUREMENTS.md), [RELATED_WORK.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/RELATED_WORK.md), [PROOF_ABSORB.md](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/PROOF_ABSORB.md), [e8_exposure.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/e8_exposure.json), [m15_e8_towers.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_e8_towers.json), [m15_e12_failure_modes.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_e12_failure_modes.json), [m15_e12b_fragility.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_e12b_fragility.json), [m15_e10_router.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_e10_router.json), [m15_e2_ann_msmarco1m.json](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_e2_ann_msmarco1m.json), and figures [f3_towers.png](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/figures/f3_towers.png), [f5_routing.png](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/figures/f5_routing.png), [f4_system.png](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/figures/f4_system.png). The 26-tower additions were assessed through the draft and its evidence table; I did not open `results/m15_e8x_towers.json`.

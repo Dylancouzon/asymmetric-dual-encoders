@@ -1,0 +1,88 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E14 (exploratory)",
+  "single_forum_screen_registered_ten": {
+    "cqadup-physics": 0.8666666666666665,
+    "cqadup-programmers": 0.9151515151515152
+  },
+  "family_cluster_bootstrap95": {
+    "screen": [
+      0.7381434903791262,
+      0.9513995223945235
+    ],
+    "tower": [
+      -0.3578928118544806,
+      0.5309533917742569
+    ]
+  },
+  "n_families": 10,
+  "families": {
+    "arctic": [
+      "arctic-embed-l",
+      "arctic-embed-m-v1.5",
+      "arctic-embed-xs",
+      "arctic-embed-s"
+    ],
+    "bge": [
+      "bge-base-en-v1.5",
+      "bge-large-en-v1.5",
+      "bge-small-en-v1.5",
+      "bge-base-en-v1"
+    ],
+    "contriever": [
+      "contriever",
+      "contriever-msmarco"
+    ],
+    "e5": [
+      "e5-base-v2",
+      "e5-large-v2",
+      "e5-small-v2",
+      "e5-base-v1"
+    ],
+    "gte": [
+      "gte-small",
+      "gte-base",
+      "gte-large"
+    ],
+    "gte-v1.5": [
+      "gte-base-en-v1.5",
+      "gte-large-en-v1.5"
+    ],
+    "minilm": [
+      "minilm-l6",
+      "minilm-l12",
+      "multi-qa-minilm-l6",
+      "msmarco-minilm-l6"
+    ],
+    "mxbai": [
+      "mxbai-embed-large-v1"
+    ],
+    "stella": [
+      "stella-400M-v5"
+    ],
+    "tas-b": [
+      "tas-b"
+    ]
+  },
+  "receipt": {
+    "script": "m15src/e14_screen_checks.py",
+    "script_sha256": "a97cd498641f19e1ce76085a4045ecf8759119ad29cdbaddf25b8d5edca259fa",
+    "git_commit": "664811b6e0e6b0c47224775942fb2fc1308d3565",
+    "m15src_dirty": true,
+    "started_utc": "2026-09-30T23:11:42Z",
+    "finished_utc": "2026-09-30T23:11:44Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}
