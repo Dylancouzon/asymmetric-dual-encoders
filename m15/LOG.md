@@ -175,3 +175,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   `results/m15_e6_thresholds.json` before it reads an evaluation dataset and logs six-set query
   loads; E8 gets a convergence gate (block CG `converged`, residual at the solver tolerance, else the
   configuration stops unscored). A focused re-review of the three fixes follows.
+- **Focused re-review** (`REVIEWS/2026-09-30-astra-measurements-rereview.md`, access clean): all three
+  fixes resolved, no new defect. E8's convergence gate is correct as specified; its enforcement is
+  checked in the review of the E8 driver, which comes before the pod starts.
+- **E5 ran** (`results/m15_e5_oracle.json`). Amendment for E1 (2026-09-30, before E1 ran): Nano's
+  torch checkpoint is not on this Mac, so Nano's E1 parity gate is its ONNX sha256 equal to the M13
+  freeze (`results/m13_build_record.json`, `freeze.onnx.sha256`); E4's reproduction gate checks it end
+  to end.

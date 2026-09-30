@@ -81,3 +81,59 @@ def nano():
     from huggingface_hub import snapshot_download
     d = snapshot_download(NANO_REPO, revision=NANO_REVISION)
     return OnnxEncoder("nano", d, "mean", expect_sha=NANO_ONNX_SHA)
+
+
+STELLA_ONNX_REPO = "Qdrant/stella-en-400M-v5-doc-onnx"
+STELLA_ONNX_REVISION = "293ec490f8e8c56ca468f84c84b8095bac954254"
+EXPORTS = REPO / "work" / "m15" / "onnx"
+
+
+def stella_query():
+    from huggingface_hub import snapshot_download
+    d = snapshot_download(STELLA_ONNX_REPO, revision=STELLA_ONNX_REVISION)
+    return OnnxEncoder("stella-query", d, "mean", prefix=I.STELLA_QUERY_PROMPT)
+
+
+def export_sentence_transformer(name, repo, revision):
+    """Export the whole SentenceTransformer pipeline (pooling, Dense, Normalize) to one graph."""
+    import torch
+    from sentence_transformers import SentenceTransformer
+    out = EXPORTS / name
+    out.mkdir(parents=True, exist_ok=True)
+    st = SentenceTransformer(repo, revision=revision, device="cpu",
+                             model_kwargs={"dtype": torch.float32}).eval()
+
+    class Wrap(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.st = st
+
+        def forward(self, input_ids, attention_mask):
+            return self.st({"input_ids": input_ids,
+                            "attention_mask": attention_mask})["sentence_embedding"]
+
+    batch = st.tokenizer(["a short query", "a somewhat longer query text"], padding=True,
+                         return_tensors="pt")
+    with torch.inference_mode():
+        torch.onnx.export(Wrap().eval(), (batch["input_ids"], batch["attention_mask"]),
+                          str(out / "model.onnx"), opset_version=17, dynamo=False,
+                          input_names=["input_ids", "attention_mask"], output_names=["embedding"],
+                          dynamic_axes={"input_ids": {0: "b", 1: "s"},
+                                        "attention_mask": {0: "b", 1: "s"},
+                                        "embedding": {0: "b"}})
+    st.tokenizer.save_pretrained(str(out))
+    return st
+
+
+def bge():
+    return OnnxEncoder("bge-small", EXPORTS / "bge-small", "cls", prefix=I.BGE_PREFIX)
+
+
+def leaf():
+    return OnnxEncoder("leaf-query", EXPORTS / "leaf-query", "mean",
+                       prefix="Represent this sentence for searching relevant passages: ")
+
+
+def make(name):
+    return {"zero": ZeroEncoder, "nano": nano, "stella-query": stella_query, "bge-small": bge,
+            "leaf-query": leaf}[name]()

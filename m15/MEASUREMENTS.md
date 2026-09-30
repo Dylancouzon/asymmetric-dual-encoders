@@ -288,3 +288,9 @@ exposure matrix and the tokenizer check, plus the standard receipt.
 recipe, and whether a tower's own retrieval quality predicted its table on public BEIR. **What it
 cannot show.** Anything about a trained table (Zero is trained, not closed-form), any recipe other
 than this one, or a causal effect of tower properties.
+
+## Amendments
+
+- **2026-09-30, before E1 ran.** Nano's torch checkpoint is not on this Mac. Nano's E1 parity gate is
+  its ONNX sha256 equal to the M13 freeze (`results/m13_build_record.json`, `freeze.onnx.sha256`,
+  `9ba0acf5...`); E4's reproduction gate checks the Nano query path end to end.
