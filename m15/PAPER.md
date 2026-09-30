@@ -265,7 +265,7 @@ routes no queries.
 
 As a cost estimate, combining E1's encode medians with the MS MARCO search medians of Section 7 at
 unquantized `ef` 128, this margin router spends about 2.7 ms per query against 3.8 ms for always-Nano.
-Put plainly, this router saves about 1.1 ms per query and gives up 0.045 nDCG@10 against always-Nano on these sets, and because Section 7 finds Nano only 2 to 4 times as expensive as Zero end to end, no router between these two tiers can save more than roughly half of Nano's cost. Routing is worth it where the transformer is expensive relative to search, as on a device; the oracle shows how much a better signal could still recover.
+Put plainly, this router saves about 1.1 ms per query and gives up 0.045 nDCG@10 against always-Nano on these sets, and because Section 7 finds Nano only 2 to 4 times as expensive as Zero end to end, no router between these two tiers can save more than Nano's cost minus Zero's, between a half and three quarters of Nano's end-to-end cost, and a real router saves less because it also runs Zero's search on every escalated query. Routing is worth it where the transformer is expensive relative to search, as on a device; the oracle shows how much a better signal could still recover.
 
 ### 6.3 Blending Two Query Vectors in One Search
 
