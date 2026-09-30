@@ -1,0 +1,2455 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E8",
+  "scope": "descriptive; one closed-form recipe; n = 10 checkpoints, no p-values",
+  "rosters": {
+    "checkpoints": {
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ],
+      "n": 10
+    },
+    "configurations": {
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-l-mean",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ],
+      "n": 11
+    }
+  },
+  "excluded_by_tokenizer_check": [],
+  "stopped": {},
+  "spearman": {
+    "checkpoints": {
+      "primary_dev_table_vs_six_table_all6": 0.9030303030303028,
+      "dev_table_vs_six_table_clean4": 0.6848484848484848,
+      "six_ceiling_vs_six_table_all6": -0.09090909090909088,
+      "six_ceiling_vs_six_table_clean4": 0.13939393939393938,
+      "dev_ceiling_vs_dev_table": 0.4545454545454545
+    },
+    "configurations": {
+      "primary_dev_table_vs_six_table_all6": 0.9090909090909091,
+      "dev_table_vs_six_table_clean4": 0.6727272727272727,
+      "six_ceiling_vs_six_table_all6": 0.0,
+      "six_ceiling_vs_six_table_clean4": 0.14545454545454548,
+      "dev_ceiling_vs_dev_table": 0.3545454545454546
+    }
+  },
+  "configs": {
+    "stella-400M-v5": {
+      "repo": "NovaSearch/stella_en_400M_v5",
+      "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "mean",
+      "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+      "doc_prefix": "",
+      "lambda": 0.01,
+      "dev_table": 0.34372112121876397,
+      "dev_ceiling": 0.48064436128316335,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.46794073900765665,
+        "cqadup-physics": 0.49334798355867004
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.3398857819517349,
+          "per_forum": {
+            "cqadup-programmers": 0.31047985539074097,
+            "cqadup-physics": 0.3692917085127289
+          },
+          "solve": {
+            "iterations": 670,
+            "worst_rel_residual": 8.973096896625066e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 77.8,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.34262515326965026,
+          "per_forum": {
+            "cqadup-programmers": 0.3133660101099018,
+            "cqadup-physics": 0.3718842964293988
+          },
+          "solve": {
+            "iterations": 274,
+            "worst_rel_residual": 9.348721050628228e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 31.96,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.34372112121876397,
+          "per_forum": {
+            "cqadup-programmers": 0.3117057089441741,
+            "cqadup-physics": 0.3757365334933538
+          },
+          "solve": {
+            "iterations": 145,
+            "worst_rel_residual": 9.215882528224029e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 16.97,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.3239214253785885,
+          "per_forum": {
+            "cqadup-programmers": 0.28664330399745735,
+            "cqadup-physics": 0.36119954675971955
+          },
+          "solve": {
+            "iterations": 95,
+            "worst_rel_residual": 8.472736112707935e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.16,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5672973104095543,
+        "nfcorpus": 0.3024688530685281,
+        "fiqa": 0.3119366990524161,
+        "arguana": 0.5817115622113607,
+        "scidocs": 0.1584846556125267,
+        "trec-covid": 0.46238822900639476
+      },
+      "six_ceiling": {
+        "scifact": 0.7795618826803957,
+        "nfcorpus": 0.41343074244382183,
+        "fiqa": 0.5533654261502114,
+        "arguana": 0.6376286955635772,
+        "scidocs": 0.2395497333782773,
+        "trec-covid": 0.8234049160768386
+      },
+      "six_table_macro_all6": 0.39738121822679684,
+      "six_ceiling_macro_all6": 0.5744902327155205,
+      "six_table_macro_clean4": 0.37265976202425094,
+      "six_ceiling_macro_clean4": 0.5639868186448334,
+      "final_solve": {
+        "iterations": 147,
+        "worst_rel_residual": 9.355811698696925e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 17.11,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6917110084682231,
+      "retention_clean4": 0.6607597016534721,
+      "retention_dev": 0.7151256706749684
+    },
+    "arctic-embed-l": {
+      "repo": "Snowflake/snowflake-arctic-embed-l",
+      "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.001,
+      "dev_table": 0.25855093912104476,
+      "dev_ceiling": 0.49318813191211364,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.4709324402889102,
+        "cqadup-physics": 0.515443823535317
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.25666384072375553,
+          "per_forum": {
+            "cqadup-programmers": 0.19263243014358516,
+            "cqadup-physics": 0.3206952513039259
+          },
+          "solve": {
+            "iterations": 667,
+            "worst_rel_residual": 7.100289280970173e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 77.46,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.25855093912104476,
+          "per_forum": {
+            "cqadup-programmers": 0.19311714697787746,
+            "cqadup-physics": 0.323984731264212
+          },
+          "solve": {
+            "iterations": 268,
+            "worst_rel_residual": 9.878822311293334e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 31.27,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.25025954079171087,
+          "per_forum": {
+            "cqadup-programmers": 0.18451171666586058,
+            "cqadup-physics": 0.31600736491756115
+          },
+          "solve": {
+            "iterations": 147,
+            "worst_rel_residual": 8.186334525817074e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 17.21,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.17712442348879898,
+          "per_forum": {
+            "cqadup-programmers": 0.12133389066786782,
+            "cqadup-physics": 0.23291495630973014
+          },
+          "solve": {
+            "iterations": 94,
+            "worst_rel_residual": 7.454788146787905e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.05,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5049730879304717,
+        "nfcorpus": 0.3104054457906201,
+        "fiqa": 0.18884149880301243,
+        "arguana": 0.2713276713548622,
+        "scidocs": 0.12662164846988927,
+        "trec-covid": 0.4181161279519135
+      },
+      "six_ceiling": {
+        "scifact": 0.7382177322090852,
+        "nfcorpus": 0.3766664483512845,
+        "fiqa": 0.44772429723975166,
+        "arguana": 0.590499530668533,
+        "scidocs": 0.21382736498020843,
+        "trec-covid": 0.8063991080298569
+      },
+      "six_table_macro_all6": 0.3033809133834615,
+      "six_ceiling_macro_all6": 0.5288890802464533,
+      "six_table_macro_clean4": 0.34002907753572365,
+      "six_ceiling_macro_clean4": 0.5337776633926088,
+      "final_solve": {
+        "iterations": 270,
+        "worst_rel_residual": 7.669083856853831e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 31.41,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5736191665029106,
+      "retention_clean4": 0.6370238038335121,
+      "retention_dev": 0.5242440407449194
+    },
+    "arctic-embed-l-mean": {
+      "repo": "Snowflake/snowflake-arctic-embed-l",
+      "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "mean",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.001,
+      "dev_table": 0.2216920770773902,
+      "dev_ceiling": 0.46856657058217677,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.44912086395341516,
+        "cqadup-physics": 0.4880122772109384
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2210139976962676,
+          "per_forum": {
+            "cqadup-programmers": 0.15807588883145518,
+            "cqadup-physics": 0.28395210656108
+          },
+          "solve": {
+            "iterations": 688,
+            "worst_rel_residual": 8.839518272907299e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 79.96,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2216920770773902,
+          "per_forum": {
+            "cqadup-programmers": 0.1581515407755849,
+            "cqadup-physics": 0.2852326133791955
+          },
+          "solve": {
+            "iterations": 278,
+            "worst_rel_residual": 7.56854490191472e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 32.44,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.21401536654149983,
+          "per_forum": {
+            "cqadup-programmers": 0.1539373172500276,
+            "cqadup-physics": 0.2740934158329721
+          },
+          "solve": {
+            "iterations": 150,
+            "worst_rel_residual": 8.393921007154859e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 17.56,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.13978794536963587,
+          "per_forum": {
+            "cqadup-programmers": 0.08842118739011734,
+            "cqadup-physics": 0.1911547033491544
+          },
+          "solve": {
+            "iterations": 96,
+            "worst_rel_residual": 5.722466767110745e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.29,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5115461879828249,
+        "nfcorpus": 0.2964832614081581,
+        "fiqa": 0.1452980998228726,
+        "arguana": 0.21488966647857913,
+        "scidocs": 0.11335898122933818,
+        "trec-covid": 0.3767135165199806
+      },
+      "six_ceiling": {
+        "scifact": 0.722320821755819,
+        "nfcorpus": 0.35656724377621746,
+        "fiqa": 0.4192141700095555,
+        "arguana": 0.5820180197465946,
+        "scidocs": 0.19252079294110688,
+        "trec-covid": 0.770951878889583
+      },
+      "six_table_macro_all6": 0.27638161890695895,
+      "six_ceiling_macro_all6": 0.5072654878531461,
+      "six_table_macro_clean4": 0.3245254867850755,
+      "six_ceiling_macro_clean4": 0.5105901843406816,
+      "final_solve": {
+        "iterations": 275,
+        "worst_rel_residual": 8.909839834814193e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 31.98,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5448460924804167,
+      "retention_clean4": 0.6355889649624404,
+      "retention_dev": 0.4731282404588657
+    },
+    "arctic-embed-m-v1.5": {
+      "repo": "Snowflake/snowflake-arctic-embed-m-v1.5",
+      "revision": "e58a8f756156a1293d763f17e3aae643474e9b8a",
+      "dim": 768,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.001,
+      "dev_table": 0.3018599112685916,
+      "dev_ceiling": 0.4733555261739402,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.4499360176095538,
+        "cqadup-physics": 0.4967750347383266
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.30024027464024416,
+          "per_forum": {
+            "cqadup-programmers": 0.2286388105796887,
+            "cqadup-physics": 0.3718417387007996
+          },
+          "solve": {
+            "iterations": 669,
+            "worst_rel_residual": 9.155573366115277e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 58.53,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.3018599112685916,
+          "per_forum": {
+            "cqadup-programmers": 0.2291448065559329,
+            "cqadup-physics": 0.3745750159812503
+          },
+          "solve": {
+            "iterations": 259,
+            "worst_rel_residual": 8.357841920769715e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 22.76,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2980731183906631,
+          "per_forum": {
+            "cqadup-programmers": 0.2222178225615174,
+            "cqadup-physics": 0.37392841421980877
+          },
+          "solve": {
+            "iterations": 147,
+            "worst_rel_residual": 7.94041284279956e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 12.96,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.24011037287679393,
+          "per_forum": {
+            "cqadup-programmers": 0.15840100944373073,
+            "cqadup-physics": 0.3218197363098571
+          },
+          "solve": {
+            "iterations": 95,
+            "worst_rel_residual": 8.959898991633963e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 8.41,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5700372692520002,
+        "nfcorpus": 0.3096212753988046,
+        "fiqa": 0.21218493777008415,
+        "arguana": 0.2451578377598354,
+        "scidocs": 0.11943376770736173,
+        "trec-covid": 0.5107706066226324
+      },
+      "six_ceiling": {
+        "scifact": 0.7160045833358046,
+        "nfcorpus": 0.3621522025917603,
+        "fiqa": 0.4240789644930835,
+        "arguana": 0.5954003544748234,
+        "scidocs": 0.21484939128562497,
+        "trec-covid": 0.8453769278448461
+      },
+      "six_table_macro_all6": 0.3278676157517864,
+      "six_ceiling_macro_all6": 0.5263104040043238,
+      "six_table_macro_clean4": 0.37746572974519976,
+      "six_ceiling_macro_clean4": 0.534595776264509,
+      "final_solve": {
+        "iterations": 269,
+        "worst_rel_residual": 8.279595817839436e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 23.54,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6229548442464247,
+      "retention_clean4": 0.7060769024079159,
+      "retention_dev": 0.6377023074146376
+    },
+    "bge-base-en-v1.5": {
+      "repo": "BAAI/bge-base-en-v1.5",
+      "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+      "dim": 768,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.01,
+      "dev_table": 0.30733441092744274,
+      "dev_ceiling": 0.44814049572281045,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.42401079621586213,
+        "cqadup-physics": 0.4722701952297587
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.30133005467484353,
+          "per_forum": {
+            "cqadup-programmers": 0.25837267496694055,
+            "cqadup-physics": 0.3442874343827465
+          },
+          "solve": {
+            "iterations": 660,
+            "worst_rel_residual": 9.916204817272956e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 57.75,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.30337523680830814,
+          "per_forum": {
+            "cqadup-programmers": 0.2594472617217202,
+            "cqadup-physics": 0.34730321189489605
+          },
+          "solve": {
+            "iterations": 274,
+            "worst_rel_residual": 7.830944923625793e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 24.08,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.30733441092744274,
+          "per_forum": {
+            "cqadup-programmers": 0.26472991889986836,
+            "cqadup-physics": 0.34993890295501706
+          },
+          "solve": {
+            "iterations": 145,
+            "worst_rel_residual": 9.295068821302266e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 12.78,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.28404561576928467,
+          "per_forum": {
+            "cqadup-programmers": 0.2380904114167321,
+            "cqadup-physics": 0.3300008201218372
+          },
+          "solve": {
+            "iterations": 94,
+            "worst_rel_residual": 9.63793581831851e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 8.32,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5083715775006374,
+        "nfcorpus": 0.2909998447650286,
+        "fiqa": 0.23410500449508467,
+        "arguana": 0.4320769309517494,
+        "scidocs": 0.13211836178682138,
+        "trec-covid": 0.5197930815810559
+      },
+      "six_ceiling": {
+        "scifact": 0.740391287918679,
+        "nfcorpus": 0.37297363510229997,
+        "fiqa": 0.4063198209764269,
+        "arguana": 0.6377180271425403,
+        "scidocs": 0.2171286459551237,
+        "trec-covid": 0.7806639795558206
+      },
+      "six_table_macro_all6": 0.3529108001800629,
+      "six_ceiling_macro_all6": 0.5258658994418152,
+      "six_table_macro_clean4": 0.3628207164083858,
+      "six_ceiling_macro_clean4": 0.5277893871329808,
+      "final_solve": {
+        "iterations": 147,
+        "worst_rel_residual": 8.40471386709396e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 12.86,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6711041741909165,
+      "retention_clean4": 0.68743465718262,
+      "retention_dev": 0.6857992389903079
+    },
+    "bge-large-en-v1.5": {
+      "repo": "BAAI/bge-large-en-v1.5",
+      "revision": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.01,
+      "dev_table": 0.27593451876742003,
+      "dev_ceiling": 0.448838305588826,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.4268505165951236,
+        "cqadup-physics": 0.47082609458252833
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2722732794893411,
+          "per_forum": {
+            "cqadup-programmers": 0.22049206116779932,
+            "cqadup-physics": 0.32405449781088286
+          },
+          "solve": {
+            "iterations": 651,
+            "worst_rel_residual": 7.757815296827175e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 75.6,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2751048917339062,
+          "per_forum": {
+            "cqadup-programmers": 0.22208271980391628,
+            "cqadup-physics": 0.3281270636638961
+          },
+          "solve": {
+            "iterations": 276,
+            "worst_rel_residual": 8.780734788160771e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 32.18,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.27593451876742003,
+          "per_forum": {
+            "cqadup-programmers": 0.22153492460507934,
+            "cqadup-physics": 0.3303341129297608
+          },
+          "solve": {
+            "iterations": 146,
+            "worst_rel_residual": 7.047892722766846e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 17.08,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.24939388235096005,
+          "per_forum": {
+            "cqadup-programmers": 0.19146569845228786,
+            "cqadup-physics": 0.3073220662496322
+          },
+          "solve": {
+            "iterations": 95,
+            "worst_rel_residual": 7.428615731441823e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.17,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.4902113781343197,
+        "nfcorpus": 0.26739705897883925,
+        "fiqa": 0.19557131648441092,
+        "arguana": 0.3021479088358864,
+        "scidocs": 0.12198124472419178,
+        "trec-covid": 0.32991534646578907
+      },
+      "six_ceiling": {
+        "scifact": 0.7461136985788956,
+        "nfcorpus": 0.38127214994170533,
+        "fiqa": 0.4502960629467735,
+        "arguana": 0.6452976072933411,
+        "scidocs": 0.22605990385180194,
+        "trec-covid": 0.7482324175934726
+      },
+      "six_table_macro_all6": 0.2845373756039062,
+      "six_ceiling_macro_all6": 0.5328786400343317,
+      "six_table_macro_clean4": 0.30237625707578497,
+      "six_ceiling_macro_clean4": 0.5254195424914688,
+      "final_solve": {
+        "iterations": 147,
+        "worst_rel_residual": 7.846999210414651e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 17.11,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.533962809215949,
+      "retention_clean4": 0.5754948809896895,
+      "retention_dev": 0.6147748873738051
+    },
+    "e5-base-v2": {
+      "repo": "intfloat/e5-base-v2",
+      "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+      "dim": 768,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "mean",
+      "query_prefix": "query: ",
+      "doc_prefix": "passage: ",
+      "lambda": 0.001,
+      "dev_table": 0.23410574975396362,
+      "dev_ceiling": 0.3927141369849875,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.37429994683977064,
+        "cqadup-physics": 0.4111283271302044
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2315130054319509,
+          "per_forum": {
+            "cqadup-programmers": 0.19472794729835208,
+            "cqadup-physics": 0.26829806356554975
+          },
+          "solve": {
+            "iterations": 636,
+            "worst_rel_residual": 8.91383081125241e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 55.65,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.23410574975396362,
+          "per_forum": {
+            "cqadup-programmers": 0.19488414043076857,
+            "cqadup-physics": 0.27332735907715866
+          },
+          "solve": {
+            "iterations": 239,
+            "worst_rel_residual": 9.276051855522383e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 21.01,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.23347365076649124,
+          "per_forum": {
+            "cqadup-programmers": 0.19085641740289658,
+            "cqadup-physics": 0.27609088413008587
+          },
+          "solve": {
+            "iterations": 143,
+            "worst_rel_residual": 4.887029945166432e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 12.6,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.20377225694297577,
+          "per_forum": {
+            "cqadup-programmers": 0.15611441768363848,
+            "cqadup-physics": 0.25143009620231305
+          },
+          "solve": {
+            "iterations": 91,
+            "worst_rel_residual": 9.811483323574066e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 8.06,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5295617995039598,
+        "nfcorpus": 0.281651516792851,
+        "fiqa": 0.1667694264200229,
+        "arguana": 0.18745907851669538,
+        "scidocs": 0.12408935824895244,
+        "trec-covid": 0.4683045734515982
+      },
+      "six_ceiling": {
+        "scifact": 0.7198060413373204,
+        "nfcorpus": 0.354200295408353,
+        "fiqa": 0.39847554124848816,
+        "arguana": 0.445854787417759,
+        "scidocs": 0.1867324384779638,
+        "trec-covid": 0.6963633766298881
+      },
+      "six_table_macro_all6": 0.29297262548901326,
+      "six_ceiling_macro_all6": 0.466905413419962,
+      "six_table_macro_clean4": 0.35090181199934034,
+      "six_ceiling_macro_clean4": 0.4892755379633813,
+      "final_solve": {
+        "iterations": 241,
+        "worst_rel_residual": 9.004542675938865e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 21.1,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6274774656028599,
+      "retention_clean4": 0.717186502844544,
+      "retention_dev": 0.5961225423441094
+    },
+    "e5-large-v2": {
+      "repo": "intfloat/e5-large-v2",
+      "revision": "f169b11e22de13617baa190a028a32f3493550b6",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "mean",
+      "query_prefix": "query: ",
+      "doc_prefix": "passage: ",
+      "lambda": 0.001,
+      "dev_table": 0.21924431667775074,
+      "dev_ceiling": 0.3888065531291668,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.38378425719412174,
+        "cqadup-physics": 0.3938288490642119
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.21820176335405628,
+          "per_forum": {
+            "cqadup-programmers": 0.18372387153913752,
+            "cqadup-physics": 0.252679655168975
+          },
+          "solve": {
+            "iterations": 629,
+            "worst_rel_residual": 8.052589919316233e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 73.05,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.21924431667775074,
+          "per_forum": {
+            "cqadup-programmers": 0.18338750621021124,
+            "cqadup-physics": 0.25510112714529026
+          },
+          "solve": {
+            "iterations": 244,
+            "worst_rel_residual": 7.071112122503109e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 28.5,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.21762243936946574,
+          "per_forum": {
+            "cqadup-programmers": 0.17889629074446858,
+            "cqadup-physics": 0.2563485879944629
+          },
+          "solve": {
+            "iterations": 144,
+            "worst_rel_residual": 9.752775440574624e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 16.85,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.18624870824864614,
+          "per_forum": {
+            "cqadup-programmers": 0.14859829675708444,
+            "cqadup-physics": 0.22389911974020785
+          },
+          "solve": {
+            "iterations": 94,
+            "worst_rel_residual": 6.410900255104934e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.04,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5414502488265781,
+        "nfcorpus": 0.28804195686595474,
+        "fiqa": 0.13022268347931676,
+        "arguana": 0.1513833227883131,
+        "scidocs": 0.1232146579456006,
+        "trec-covid": 0.3167796096111489
+      },
+      "six_ceiling": {
+        "scifact": 0.7221519907613544,
+        "nfcorpus": 0.37187696416591753,
+        "fiqa": 0.4111073412319005,
+        "arguana": 0.46438489852075404,
+        "scidocs": 0.20501902782604292,
+        "trec-covid": 0.6666973637990853
+      },
+      "six_table_macro_all6": 0.2585154132528187,
+      "six_ceiling_macro_all6": 0.47353959771750914,
+      "six_table_macro_clean4": 0.31737161831232064,
+      "six_ceiling_macro_clean4": 0.49143633663810005,
+      "final_solve": {
+        "iterations": 240,
+        "worst_rel_residual": 9.893070682664984e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 27.93,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5459214276881582,
+      "retention_clean4": 0.6458041350451403,
+      "retention_dev": 0.5638904872184981
+    },
+    "gte-base-en-v1.5": {
+      "repo": "Alibaba-NLP/gte-base-en-v1.5",
+      "revision": "a829fd0e060bb84554da0dfd354d0de0f7712b7f",
+      "dim": 768,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "",
+      "doc_prefix": "",
+      "lambda": 0.01,
+      "dev_table": 0.27482516203597845,
+      "dev_ceiling": 0.4393876716624394,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.4030509029026546,
+        "cqadup-physics": 0.47572444042222417
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2691773673815657,
+          "per_forum": {
+            "cqadup-programmers": 0.21314982731728144,
+            "cqadup-physics": 0.32520490744584996
+          },
+          "solve": {
+            "iterations": 686,
+            "worst_rel_residual": 7.342029562096286e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 60.05,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.27147122383798317,
+          "per_forum": {
+            "cqadup-programmers": 0.21342515925720962,
+            "cqadup-physics": 0.3295172884187567
+          },
+          "solve": {
+            "iterations": 281,
+            "worst_rel_residual": 9.787106591829797e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 24.69,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.27482516203597845,
+          "per_forum": {
+            "cqadup-programmers": 0.2121975424904691,
+            "cqadup-physics": 0.3374527815814878
+          },
+          "solve": {
+            "iterations": 148,
+            "worst_rel_residual": 6.553515845553193e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 13.05,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.25067164748259346,
+          "per_forum": {
+            "cqadup-programmers": 0.18478744479904233,
+            "cqadup-physics": 0.31655585016614457
+          },
+          "solve": {
+            "iterations": 96,
+            "worst_rel_residual": 7.475462098227581e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 8.5,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.5609000318057329,
+        "nfcorpus": 0.2822707530552289,
+        "fiqa": 0.21368411152738911,
+        "arguana": 0.35068800502601477,
+        "scidocs": 0.1332195914310143,
+        "trec-covid": 0.4102232343748593
+      },
+      "six_ceiling": {
+        "scifact": 0.7682716102636212,
+        "nfcorpus": 0.35862211729623633,
+        "fiqa": 0.4868862274554165,
+        "arguana": 0.6364598290741323,
+        "scidocs": 0.21905197959725314,
+        "trec-covid": 0.729591056961329
+      },
+      "six_table_macro_all6": 0.32516428787003987,
+      "six_ceiling_macro_all6": 0.5331471367746647,
+      "six_table_macro_clean4": 0.34665340266670885,
+      "six_ceiling_macro_clean4": 0.5188841910296099,
+      "final_solve": {
+        "iterations": 147,
+        "worst_rel_residual": 7.639877708243148e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 12.87,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6098959657500157,
+      "retention_clean4": 0.668074704644311,
+      "retention_dev": 0.6254730839310246
+    },
+    "gte-large-en-v1.5": {
+      "repo": "Alibaba-NLP/gte-large-en-v1.5",
+      "revision": "104333d6af6f97649377c2afbde10a7704870c7b",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "",
+      "doc_prefix": "",
+      "lambda": 0.001,
+      "dev_table": 0.2038898996083526,
+      "dev_ceiling": 0.4709190960884849,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.43210591370252827,
+        "cqadup-physics": 0.5097322784744416
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.20183529337829748,
+          "per_forum": {
+            "cqadup-programmers": 0.1264834931182692,
+            "cqadup-physics": 0.2771870936383257
+          },
+          "solve": {
+            "iterations": 649,
+            "worst_rel_residual": 9.882044196274364e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 75.29,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2038898996083526,
+          "per_forum": {
+            "cqadup-programmers": 0.1254486931356108,
+            "cqadup-physics": 0.2823311060810944
+          },
+          "solve": {
+            "iterations": 276,
+            "worst_rel_residual": 8.112347700262035e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 32.16,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.20326695657959237,
+          "per_forum": {
+            "cqadup-programmers": 0.11887858805349372,
+            "cqadup-physics": 0.28765532510569103
+          },
+          "solve": {
+            "iterations": 145,
+            "worst_rel_residual": 9.919278909364948e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 16.96,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.17871784907992577,
+          "per_forum": {
+            "cqadup-programmers": 0.09404505231366708,
+            "cqadup-physics": 0.26339064584618443
+          },
+          "solve": {
+            "iterations": 95,
+            "worst_rel_residual": 9.119619335251627e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.16,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.43864354413713563,
+        "nfcorpus": 0.259235685481582,
+        "fiqa": 0.09888708113015073,
+        "arguana": 0.31820592221764055,
+        "scidocs": 0.11880574175398634,
+        "trec-covid": 0.23920001078829592
+      },
+      "six_ceiling": {
+        "scifact": 0.8270566612451428,
+        "nfcorpus": 0.3702819029130111,
+        "fiqa": 0.6284314581571129,
+        "arguana": 0.7204670818020249,
+        "scidocs": 0.2633897072963423,
+        "trec-covid": 0.7723194931999179
+      },
+      "six_table_macro_all6": 0.24549633091813186,
+      "six_ceiling_macro_all6": 0.5969910507689252,
+      "six_table_macro_clean4": 0.26397124554025,
+      "six_ceiling_macro_clean4": 0.5582619411636035,
+      "final_solve": {
+        "iterations": 271,
+        "worst_rel_residual": 9.826716222960385e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 31.53,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.41122279907199993,
+      "retention_clean4": 0.4728447814121918,
+      "retention_dev": 0.4329616303562301
+    },
+    "mxbai-embed-large-v1": {
+      "repo": "mixedbread-ai/mxbai-embed-large-v1",
+      "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c",
+      "dim": 1024,
+      "dev_data_sha256": {
+        "cqadup-programmers": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f",
+        "cqadup-physics": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+      },
+      "pooling": "cls",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "doc_prefix": "",
+      "lambda": 0.01,
+      "dev_table": 0.2504654384013658,
+      "dev_ceiling": 0.44355924410480324,
+      "dev_ceiling_per_forum": {
+        "cqadup-programmers": 0.4133804334533941,
+        "cqadup-physics": 0.4737380547562124
+      },
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.24729144361378536,
+          "per_forum": {
+            "cqadup-programmers": 0.1895147332987079,
+            "cqadup-physics": 0.30506815392886283
+          },
+          "solve": {
+            "iterations": 654,
+            "worst_rel_residual": 9.152130928669067e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 76.04,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.24913367557082444,
+          "per_forum": {
+            "cqadup-programmers": 0.188634566660126,
+            "cqadup-physics": 0.30963278448152287
+          },
+          "solve": {
+            "iterations": 267,
+            "worst_rel_residual": 9.851743243416422e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 31.16,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2504654384013658,
+          "per_forum": {
+            "cqadup-programmers": 0.18907739829146264,
+            "cqadup-physics": 0.31185347851126904
+          },
+          "solve": {
+            "iterations": 145,
+            "worst_rel_residual": 9.02157808013726e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 16.98,
+            "preconditioner": "jacobi"
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.22762435295437977,
+          "per_forum": {
+            "cqadup-programmers": 0.16524353287622917,
+            "cqadup-physics": 0.2900051730325304
+          },
+          "solve": {
+            "iterations": 96,
+            "worst_rel_residual": 4.900999783785664e-07,
+            "converged": true,
+            "tol": 1e-06,
+            "seconds": 11.29,
+            "preconditioner": "jacobi"
+          }
+        }
+      },
+      "extended_with": null,
+      "best_at_grid_edge_after_extension": false,
+      "six_table": {
+        "scifact": 0.4385029883579483,
+        "nfcorpus": 0.2612574244436114,
+        "fiqa": 0.16900720458321028,
+        "arguana": 0.36151134523258727,
+        "scidocs": 0.10436074520069784,
+        "trec-covid": 0.22846806921812873
+      },
+      "six_ceiling": {
+        "scifact": 0.7389318593634807,
+        "nfcorpus": 0.3864815774848601,
+        "fiqa": 0.4530821954231571,
+        "arguana": 0.6545253225828637,
+        "scidocs": 0.2307758362417741,
+        "trec-covid": 0.7570378361053512
+      },
+      "six_table_macro_all6": 0.26051796283936396,
+      "six_ceiling_macro_all6": 0.5368057712002477,
+      "six_table_macro_clean4": 0.25814730680509657,
+      "six_ceiling_macro_clean4": 0.5283067772988665,
+      "final_solve": {
+        "iterations": 146,
+        "worst_rel_residual": 9.686862085800385e-07,
+        "converged": true,
+        "tol": 1e-06,
+        "seconds": 17.01,
+        "preconditioner": "jacobi"
+      },
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4853114046387207,
+      "retention_clean4": 0.48863145031936805,
+      "retention_dev": 0.5646718938455635
+    }
+  },
+  "frozen_lambdas": {
+    "frozen_utc": "2026-09-30T03:50:44Z",
+    "configs": {
+      "stella-400M-v5": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.34372112121876397,
+        "dev_ceiling_macro_2": 0.48064436128316335
+      },
+      "arctic-embed-l": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.25855093912104476,
+        "dev_ceiling_macro_2": 0.49318813191211364
+      },
+      "arctic-embed-l-mean": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.2216920770773902,
+        "dev_ceiling_macro_2": 0.46856657058217677
+      },
+      "arctic-embed-m-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.3018599112685916,
+        "dev_ceiling_macro_2": 0.4733555261739402
+      },
+      "bge-base-en-v1.5": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.30733441092744274,
+        "dev_ceiling_macro_2": 0.44814049572281045
+      },
+      "bge-large-en-v1.5": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.27593451876742003,
+        "dev_ceiling_macro_2": 0.448838305588826
+      },
+      "e5-base-v2": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.23410574975396362,
+        "dev_ceiling_macro_2": 0.3927141369849875
+      },
+      "e5-large-v2": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.21924431667775074,
+        "dev_ceiling_macro_2": 0.3888065531291668
+      },
+      "gte-base-en-v1.5": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.27482516203597845,
+        "dev_ceiling_macro_2": 0.4393876716624394
+      },
+      "gte-large-en-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.2038898996083526,
+        "dev_ceiling_macro_2": 0.4709190960884849
+      },
+      "mxbai-embed-large-v1": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.2504654384013658,
+        "dev_ceiling_macro_2": 0.44355924410480324
+      }
+    },
+    "stopped_at_dev": []
+  },
+  "exposure": {
+    "retrieved_utc": "2026-09-30T02:30:00Z",
+    "method": "Model cards fetched at pinned revisions via raw README URLs; papers read as PDF text; MTEB metadata read from embeddings-benchmark/mteb main. No dataset-specific web searches for FEVER, DBpedia-entity, or CQADupStack. source_tier: author_paper > mteb_metadata_community (weaker). 'source-family' means the training mix includes a corpus family the benchmark is drawn from, without naming the benchmark. Unknown is never evidence of clean.",
+    "models": {
+      "intfloat/e5-base-v2": {
+        "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "CCPairs includes \"(question, upvoted answer) pairs from Stackexchange\". BEIR builds FiQA-2018 from \"StackExchange posts under the Investment topic\" (arXiv 2104.08663). Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/intfloat/e5-base-v2/blob/f52bf8ec8c7124536f0efb74aca902b2995e5bcd/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Disclosed. Fine-tuning \"on a combination of 3 datasets: NLI, MS-MARCO passage ranking, and NQ\" (arXiv 2212.03533 sec 4.2; card points to the paper).",
+        "beir_exclusion_statement": "None found. Paper says MS-MARCO and NQ numbers are in-domain and other BEIR sets are zero-shot transfer.",
+        "notes": "The v2 card says only 'Please refer to our paper' (the original E5 paper). The paper does not describe v2 recipe changes; treat its data list as the best available, not verified for v2."
+      },
+      "intfloat/e5-large-v2": {
+        "revision": "f169b11e22de13617baa190a028a32f3493550b6",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "CCPairs includes \"(question, upvoted answer) pairs from Stackexchange\". BEIR builds FiQA-2018 from \"StackExchange posts under the Investment topic\" (arXiv 2104.08663). Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/intfloat/e5-large-v2/blob/f169b11e22de13617baa190a028a32f3493550b6/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "CCPairs pre-training data: \"(title, abstract) and citation pairs from Scientific papers [36]\" ([36] = S2ORC, Lo et al. 2020). Sec 3. Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2212.03533",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Disclosed. Fine-tuning \"on a combination of 3 datasets: NLI, MS-MARCO passage ranking, and NQ\" (arXiv 2212.03533 sec 4.2; card points to the paper).",
+        "beir_exclusion_statement": "None found. Paper says MS-MARCO and NQ numbers are in-domain and other BEIR sets are zero-shot transfer.",
+        "notes": "The v2 card says only 'Please refer to our paper' (the original E5 paper). The paper does not describe v2 recipe changes; treat its data list as the best available, not verified for v2."
+      },
+      "Alibaba-NLP/gte-base-en-v1.5": {
+        "revision": "a829fd0e060bb84554da0dfd354d0de0f7712b7f",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "GTE pre-training uses \"StackExchange and StackOverflow\" data and fine-tuning uses MEDI and BERRI (not enumerated in the card). Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "source-family",
+            "evidence": "\"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\" (App A.3). BEIR has two debate-argument corpora (ArguAna/Idebate and Touche/args.me); the sentence does not say which. mGTE Table 9 lists \"beir_debate\" 0.38M pairs. Corpus reuse for pair mining, not necessarily qrels.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Disclosed. Card: \"Supervised contrastive fine-tuning: GTE fine-tuning data\" -> GTE paper App A.2 \"Web Search We used MS MARCO passage retrieval benchmarks\". mGTE (2407.19669) sec B.2 also lists MS MARCO for English.",
+        "beir_exclusion_statement": "None found. MTEB metadata training_datasets is None for gte-base-en-v1.5 (the file has no entry for gte-large-en-v1.5). Card 'Fine-tuning: TODO' in the large card's procedure list.",
+        "notes": "The v1.5 card cites GTE (2308.03281) for data; the mGTE paper (2407.19669) also covers the v1.5 English models, but its Table 9 lists the multilingual pre-training mix, so read it as supporting family evidence only. Fine-tuning also uses MEDI and BERRI, whose member datasets are not enumerated here."
+      },
+      "Alibaba-NLP/gte-large-en-v1.5": {
+        "revision": "104333d6af6f97649377c2afbde10a7704870c7b",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "GTE pre-training uses \"StackExchange and StackOverflow\" data and fine-tuning uses MEDI and BERRI (not enumerated in the card). Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "source-family",
+            "evidence": "\"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\" (App A.3). BEIR has two debate-argument corpora (ArguAna/Idebate and Touche/args.me); the sentence does not say which. mGTE Table 9 lists \"beir_debate\" 0.38M pairs. Corpus reuse for pair mining, not necessarily qrels.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "GTE pre-training data (App A.1): \"Academic Paper ... title as query and its abstract as document ... mined from ... arXiv, bioRxiv, medRxiv, PubMed and Semantic Scholar\"; \"We also include citation pairs from the S2ORC dataset\"; \"We reuse DBPedia, debating arguments and PubMed corpus from BEIR\". bioRxiv/medRxiv/PubMed are CORD-19 constituents. Family only; no BEIR set named as such.",
+            "url": "https://arxiv.org/pdf/2308.03281",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Disclosed. Card: \"Supervised contrastive fine-tuning: GTE fine-tuning data\" -> GTE paper App A.2 \"Web Search We used MS MARCO passage retrieval benchmarks\". mGTE (2407.19669) sec B.2 also lists MS MARCO for English.",
+        "beir_exclusion_statement": "None found. MTEB metadata training_datasets is None for gte-base-en-v1.5 (the file has no entry for gte-large-en-v1.5). Card 'Fine-tuning: TODO' in the large card's procedure list.",
+        "notes": "The v1.5 card cites GTE (2308.03281) for data; the mGTE paper (2407.19669) also covers the v1.5 English models, but its Table 9 lists the multilingual pre-training mix, so read it as supporting family evidence only. Fine-tuning also uses MEDI and BERRI, whose member datasets are not enumerated here."
+      },
+      "Snowflake/snowflake-arctic-embed-l": {
+        "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "Fine-tuning mix (Fig 3) and pre-training both include \"StackExchange title-body\"; BEIR builds FiQA-2018 from StackExchange Investment posts. Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/Snowflake/snowflake-arctic-embed-l/blob/d8fb21ca8d905d2832ee8b96c894d3298964346b/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Not named. Fine-tuning mix (paper Fig 3): 59% \"Web Docs (query-answer)\" proprietary web search data, 18% HotpotQA, 15% NQ, 4% FEVER, 4% StackExchange. MTEB metadata (community) lists NQ/HotpotQA/FEVER, not MSMARCO. Treat as unknown.",
+        "beir_exclusion_statement": "None found. Paper evaluates on BEIR/MTEB and uses 'lite BEIR' subsets built from BEIR queries for in-training evaluation (App B.1); the data section lists no BEIR training set other than NQ, HotpotQA, FEVER.",
+        "notes": "Arctic Embed pre-trains from e5-large-unsupervised, which itself used CCPairs (S2ORC included)."
+      },
+      "Snowflake/snowflake-arctic-embed-m-v1.5": {
+        "revision": "e58a8f756156a1293d763f17e3aae643474e9b8a",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "Fine-tuning mix (Fig 3) and pre-training both include \"StackExchange title-body\"; BEIR builds FiQA-2018 from StackExchange Investment posts. Family only; FiQA itself not named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/Snowflake/snowflake-arctic-embed-m-v1.5/blob/e58a8f756156a1293d763f17e3aae643474e9b8a/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "Pre-training pairs: \"text pairs set include PAQ, StackExchange title-body and title-body web documents pairs from common crawl based sources, and S2ORC title-abstract pairs\" (arXiv 2405.05374 sec 3.4). Family only; no BEIR set named.",
+            "url": "https://arxiv.org/pdf/2405.05374",
+            "source_tier": "author_paper"
+          }
+        },
+        "msmarco": "Not named. Fine-tuning mix (paper Fig 3): 59% \"Web Docs (query-answer)\" proprietary web search data, 18% HotpotQA, 15% NQ, 4% FEVER, 4% StackExchange. MTEB metadata (community) lists NQ/HotpotQA/FEVER, not MSMARCO. Treat as unknown.",
+        "beir_exclusion_statement": "None found. Paper evaluates on BEIR/MTEB and uses 'lite BEIR' subsets built from BEIR queries for in-training evaluation (App B.1); the data section lists no BEIR training set other than NQ, HotpotQA, FEVER.",
+        "notes": "m-v1.5 is an updated arctic-embed-m (initialised from e5-base-unsupervised, MRL in pre-training and fine-tuning per the Snowflake launch post https://www.snowflake.com/engineering-blog/arctic-embed-m-v1-5-enterprise-retrieval/). The pinned card gives no data list of its own; it inherits the v1 paper's mix. The launch post gives no dataset list."
+      },
+      "BAAI/bge-base-en-v1.5": {
+        "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment: \"# \\\"stackexchange\\\",  # (title, upvoted answer) (title+body, upvoted answer)\" (commented out, community guess). BEIR builds FiQA-2018 from StackExchange Investment posts. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/BAAI/bge-base-en-v1.5/blob/a5beb1e3e68b9ab74eb54cfd186867f64f240e1a/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          }
+        },
+        "msmarco": "Not disclosed for the English models. C-Pack paper (2309.07597) sec 3.2 lists mMARCO (Chinese) only; the English data is described as \"created and released together with C-MTP\" (sec 5) with no source list in the paper or card. MTEB metadata (community) lists NQ, AmazonReviewsClassification, MLQARetrieval, DuRetrieval; no MSMARCO.",
+        "beir_exclusion_statement": "None found. The card says BGE 'rank 1st on MTEB' and gives no decontamination statement; the bge-large-en-v1.5 card and paper give no English source list. MTEB metadata lists only NQ among BEIR sets.",
+        "notes": "BGE English training data (BAAI-MTP) is a released dataset at data.baai.ac.cn that I did not open; a file-level check of it could turn these family cells into disclosed or clean. Note mteb issue #1912 (from repo notes) about reproduction gaps is unrelated to exposure."
+      },
+      "BAAI/bge-large-en-v1.5": {
+        "revision": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "fiqa": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment: \"# \\\"stackexchange\\\",  # (title, upvoted answer) (title+body, upvoted answer)\" (commented out, community guess). BEIR builds FiQA-2018 from StackExchange Investment posts. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "Nothing found in the pinned model card, the cited paper, or MTEB metadata.",
+            "url": "https://huggingface.co/BAAI/bge-large-en-v1.5/blob/d4aa6901d3a41ba39fb536a557fa166f842b0e09/README.md",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "MTEB metadata comment on bge_training_data (source cited: https://data.baai.ac.cn/details/BAAI-MTP): \"# \\\"s2orc\\\",  # (title, abstract) (title, citation title) (abstract, citation abstract)\" - commented out with a TODO, i.e. a community guess, not an author list. Family only.",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/bge_models.py",
+            "source_tier": "mteb_metadata_community"
+          }
+        },
+        "msmarco": "Not disclosed for the English models. C-Pack paper (2309.07597) sec 3.2 lists mMARCO (Chinese) only; the English data is described as \"created and released together with C-MTP\" (sec 5) with no source list in the paper or card. MTEB metadata (community) lists NQ, AmazonReviewsClassification, MLQARetrieval, DuRetrieval; no MSMARCO.",
+        "beir_exclusion_statement": "None found. The card says BGE 'rank 1st on MTEB' and gives no decontamination statement; the bge-large-en-v1.5 card and paper give no English source list. MTEB metadata lists only NQ among BEIR sets.",
+        "notes": "BGE English training data (BAAI-MTP) is a released dataset at data.baai.ac.cn that I did not open; a file-level check of it could turn these family cells into disclosed or clean. Note mteb issue #1912 (from repo notes) about reproduction gaps is unrelated to exposure."
+      },
+      "mixedbread-ai/mxbai-embed-large-v1": {
+        "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c",
+        "cells": {
+          "scifact": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          },
+          "nfcorpus": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          },
+          "fiqa": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          },
+          "arguana": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          },
+          "scidocs": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          },
+          "trec-covid": {
+            "status": "unknown",
+            "evidence": "No dataset named. Authors claim exclusion of MTEB test data (see beir_exclusion_statement); training corpus not enumerated.",
+            "url": "https://www.mixedbread.com/blog/mxbai-embed-large-v1",
+            "source_tier": "none"
+          }
+        },
+        "msmarco": "Disclosed: \"any training data from the MTEB (except MS Marco)\" (blog); MTEB metadata (community, from author correspondence) lists MSMARCO.",
+        "beir_exclusion_statement": "Card: \"Our model was trained with no overlap of the MTEB data\". Blog: \"During the whole process, we ensured zero overlap with tests of MTEB. We went out of our way to not even use any training data from the MTEB (except MS Marco)\"; \"we excluded any potential overlap with the test sets by removing potential test candidates from the comparison.\" Author claim, not independently audited; mxbai data is not released and the source families are not listed ('scraped a large part of the internet').",
+        "notes": "Every cell is unknown by design: the authors give an exclusion claim and no data list. Unknown here is not evidence of clean. MTEB metadata source: https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/mixedbread_ai_models.py"
+      },
+      "NovaSearch/stella_en_400M_v5": {
+        "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+        "cells": {
+          "scifact": {
+            "status": "source-family",
+            "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+            "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+            "source_tier": "derived_from_gte_card"
+          },
+          "nfcorpus": {
+            "status": "source-family",
+            "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+            "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+            "source_tier": "derived_from_gte_card"
+          },
+          "fiqa": {
+            "status": "disclosed",
+            "evidence": "MTEB metadata (community-maintained, NOT an author disclosure): stella_en_400M_v5 uses training_datasets=nvidia_training_datasets, which lists \"FiQA2018\"; that set cites the NV-Embed paper (arXiv 2405.17428) as its source, not a Stella document. Stella card FAQ: \"The training method and datasets will be released in the future.\"",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/stella_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "arguana": {
+            "status": "disclosed",
+            "evidence": "MTEB metadata (community-maintained, NOT an author disclosure): stella_en_400M_v5 uses training_datasets=nvidia_training_datasets, which lists \"ArguAna\"; that set cites the NV-Embed paper (arXiv 2405.17428) as its source, not a Stella document. Stella card FAQ: \"The training method and datasets will be released in the future.\"",
+            "url": "https://github.com/embeddings-benchmark/mteb/blob/main/mteb/models/model_implementations/stella_models.py",
+            "source_tier": "mteb_metadata_community"
+          },
+          "scidocs": {
+            "status": "source-family",
+            "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+            "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+            "source_tier": "derived_from_gte_card"
+          },
+          "trec-covid": {
+            "status": "source-family",
+            "evidence": "No stella disclosure for this set. The card says \"The models are trained based on Alibaba-NLP/gte-large-en-v1.5 and Alibaba-NLP/gte-Qwen2-1.5B-instruct\", so the GTE academic-paper pre-training data (arXiv, bioRxiv, medRxiv, PubMed, Semantic Scholar, S2ORC) is inherited by derivation. gte-Qwen2 data is unknown. MTEB metadata note: \"also distilled from gte-qwen (but training data is unknown)\".",
+            "url": "https://huggingface.co/NovaSearch/stella_en_400M_v5/blob/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+            "source_tier": "derived_from_gte_card"
+          }
+        },
+        "msmarco": "No author disclosure. MTEB metadata (community, via NV-Embed list) includes MSMARCO, NQ, HotpotQA, FEVER. Base gte-large-en-v1.5 disclosed MS MARCO fine-tuning.",
+        "beir_exclusion_statement": "None found.",
+        "notes": "The ArguAna/FiQA2018 flag rests on a community metadata entry whose cited source is the NV-Embed paper, so it is a proxy, not proof that Stella trained on them. Stella's card promises a data release that never came. Pinned card revision differs from the revision MTEB metadata records (1bb50bc...)."
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e8_towers.py",
+    "script_sha256": "84fe1c320fc12575308a1c55932489dba359eeb96d83f7207444bca7fdf9162f",
+    "git_commit": "ce11e27c6930e836d1226de3d001668949687c00",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T02:46:43Z",
+    "finished_utc": "2026-09-30T05:32:32Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-6.8.0-100-generic-x86_64-with-glibc2.35",
+      "python": "3.12.14"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "torch": "2.8.0+cu126",
+      "transformers": "4.57.6",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "fit_list_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2"
+      },
+      {
+        "frozen_lambdas": "work/m15/e8/frozen_lambdas.json",
+        "sha256": "3c2347000272158d62ef55888508b77e28fe964833fa852e78f47b0495e4fcac"
+      },
+      {
+        "preflight": {
+          "started_utc": "2026-09-30T02:46:43Z",
+          "gpu": "NVIDIA A100-SXM4-80GB",
+          "tokenizers": {
+            "stella-400M-v5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "arctic-embed-l": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "arctic-embed-l-mean": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "arctic-embed-m-v1.5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "bge-base-en-v1.5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "bge-large-en-v1.5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "e5-base-v2": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "e5-large-v2": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "gte-base-en-v1.5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "gte-large-en-v1.5": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            },
+            "mxbai-embed-large-v1": {
+              "vocab_size": 30522,
+              "cls_id": 101,
+              "ordered_vocab_sha256": "0f052197aac305fe42f378b5c61554b7bacb34b8be4af83fec2cfdcdffbc9973",
+              "lowercase": true,
+              "strip_accents": null,
+              "normalizer_type": "BertNormalizer",
+              "compatible": true
+            }
+          },
+          "eligible": [
+            "stella-400M-v5",
+            "arctic-embed-l",
+            "arctic-embed-l-mean",
+            "arctic-embed-m-v1.5",
+            "bge-base-en-v1.5",
+            "bge-large-en-v1.5",
+            "e5-base-v2",
+            "e5-large-v2",
+            "gte-base-en-v1.5",
+            "gte-large-en-v1.5",
+            "mxbai-embed-large-v1"
+          ],
+          "excluded": []
+        }
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "f553101d207e08132557081144953378311c9231eadb221a7c33a272eb38a033"
+  }
+}

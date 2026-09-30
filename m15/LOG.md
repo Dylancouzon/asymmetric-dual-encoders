@@ -216,3 +216,11 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - **E2 smoke** (FiQA, 150 queries) found and fixed two bugs before the real run: small segments
   stayed unindexed under Qdrant's default indexing threshold (now 1 KB, so every segment has HNSW),
   and the fused collection's quantization was read from its name.
+- **E8 complete** (`results/m15_e8_towers.json`; lambdas frozen and committed first,
+  `results/m15_e8_frozen_lambdas.json`, sha256 `3c234700...`, 03:50 UTC, before any six-set load).
+  All 11 configurations converged at interior lambdas; none stopped; all share one tokenizer.
+  `m7/SIX_ACCESS.log` gained exactly 66 pod lines (11 towers x 6 sets, each scored once). Primary:
+  dev table ranking vs six-set table ranking, Spearman 0.903 over 10 checkpoints (0.685 clean-4);
+  tower quality vs table, six-set ceiling vs six-set table, -0.091 (0.139 clean-4). Descriptive,
+  n = 10. Pod `k3aee2m68765em` stopped (not deleted) at ~05:35 UTC. Total spend $6.24
+  (balance $219.57 -> $213.33), cap $40.
