@@ -8,7 +8,7 @@ Results are labelled **registered** (method frozen before observation, `m15/MEAS
 ## Abstract
 
 If a cheap query encoder can write into the vector space of an existing document index, the expensive
-half of a retrieval system never has to move. We fit one closed-form lookup-table query encoder, a token table with no neural network at query time, to 26 embedding towers and ask which make good tables. The tower's own retrieval quality did not rank them (Spearman +0.09 on six public BEIR sets, 95% interval -0.39 to +0.52), and bigger towers distilled worse (-0.76 between embedding dimension and retention). A few-minute screen of the table on two development forums did rank them (0.88, interval 0.70 to 0.95). Over one frozen
+half of a retrieval system never has to move. We fit one closed-form lookup-table query encoder, a token table with no neural network at query time and fitted by ridge regression, to 26 embedding towers and ask which make good tables. The tower's own retrieval quality did not rank them (Spearman +0.09 on six public BEIR sets, 95% interval -0.39 to +0.52), and bigger towers distilled worse (-0.76 between embedding dimension and retention). A few-minute screen of the table on two development forums did rank them (0.88, interval 0.70 to 0.95). Over one frozen
 `stella_en_400M_v5` index, the table keeps 81.4% of the tower's nDCG@10 on 15 BEIR datasets at 0.044
 ms per query on a laptop CPU, and a 34.5M-parameter distilled transformer keeps 90.5% at 2.25 ms,
 against 31.6 ms for the tower. About 90% of the table's loss sits on the 40% of queries the tower reads differently when their words are shuffled, not on queries that are merely fragile or full of rare subwords, and routing on the table's own retrieval margin recovers a quarter of the headroom an oracle
@@ -134,13 +134,18 @@ not explain Stella.
 
 **Bigger towers made worse tables.** Across the 26, embedding dimension, our proxy for tower size,
 correlates with the tower's own quality at +0.61 and with its table's retention at -0.76. Within
-families the pattern is nearly uniform: gte (thenlper) small, base and large keep 60%, 55% and 48% of
-their towers; e5-v2 small, base and large make tables of 0.320, 0.293 and 0.259; bge-v1.5 small, base
-and large 0.358, 0.353 and 0.285; the six-layer MiniLM beats the twelve-layer one; arctic-xs and
-arctic-s are the one exception (0.344 against 0.352). The 384-dimensional bge-small-en-v1.5 made the
-second-best table overall. Size is confounded with training data and dimension within each family,
-so this is an observation about these checkpoints, not a causal law, and Stella is its clearest
-exception.
+families (six-set table nDCG@10; retention of the tower in parentheses):
+
+| Family | Small | Base | Large |
+|---|---:|---:|---:|
+| bge v1.5 | 0.358 (0.71) | 0.353 (0.67) | 0.285 (0.53) |
+| e5 v2 | 0.320 (0.70) | 0.293 (0.63) | 0.259 (0.55) |
+| gte (thenlper) | 0.290 (0.60) | 0.276 (0.55) | 0.248 (0.48) |
+| gte v1.5 | | 0.325 (0.61) | 0.246 (0.41) |
+
+The pattern holds in every family but arctic, where xs and s are close (0.344 and 0.352), and the
+six-layer MiniLM beats the twelve-layer one. Size is confounded with training data and dimension, so
+this describes these checkpoints rather than a law, and Stella is its clearest exception.
 
 **Scoring the table itself did rank them.** The table's development-forum score ranks the public
 scores with Spearman 0.88 over the 26 (95% interval 0.70 to 0.95); over the registered ten it was
@@ -279,16 +284,13 @@ Put plainly, this router saves about 1.1 ms per query and gives up 0.045 nDCG@10
 ### 6.3 Blending Two Query Vectors in One Search
 
 Because Zero and Nano write into one space, a system can search once with
-normalize((1 - a) Nano + a Zero), paying Zero's 0.044 ms on top of Nano and no second search. On the
-two development forums the blend helped: a = 0.3 raised Nano from 0.4247 to 0.4295. On the six public
-sets the frozen blend lowered Nano by 0.0051 (95% interval -0.0092 to -0.0011), and by 0.0070 on the
-four exposure-free sets; it gained only on ArguAna (+0.005) and lost most on TREC-COVID (-0.016). For the Stella path the forums chose a = 0 (`results/m15_e9_blend.json`, registered descriptive; a code check printed
-SciFact's curve before the weights were frozen, which changed nothing in the procedure and is recorded
-in `m15/MEASUREMENTS.md`).
-
-The development-selected blend did not improve the six-set result, so the same two forums that ranked
-the towers in Section 4 did not pick a useful blend weight. One untested reading: CQADupStack's
-duplicate questions reward lexical overlap, which is the property a blend with a table adds.
+normalize((1 - a) Nano + a Zero), for 0.044 ms on top of Nano. The development forums chose a = 0.3,
+which raised Nano there from 0.4247 to 0.4295; on the six public sets the frozen blend lowered it by
+0.0051 (95% interval -0.0092 to -0.0011), gaining only on ArguAna (+0.005) and losing most on
+TREC-COVID (-0.016), and for the Stella path the forums chose no blend (`results/m15_e9_blend.json`,
+registered descriptive; a pre-freeze code check printed SciFact's curve, recorded in
+`m15/MEASUREMENTS.md`). The same forums that ranked the towers in Section 4 did not pick a useful
+blend weight.
 
 ## 7. Does Cheap Encoding Survive Retrieval?
 
@@ -313,8 +315,7 @@ show the frontier and the per-dataset spread.
 macOS build) over a one-million-passage MS MARCO subset that keeps every judged positive and fills the
 rest at random (a diagnostic, not full MS MARCO; MS MARCO is used for validation only) and over FiQA
 (57,638 documents). For each tier we swept HNSW `ef` and three quantizations (int8 scalar, 1-bit
-binary and 4-bit TurboQuant, each with rescoring and 1x-4x oversampling), and found the cheapest
-end-to-end setting within 1%, 2% and 5% of the tier's own exact nDCG@10 (registered method). At the
+binary and 4-bit TurboQuant, each with rescoring and 1x-4x oversampling), and found the cheapest end-to-end setting within 1%, 2% and 5% of the tier's own exact nDCG@10 (registered method). Every segment was HNSW-indexed before timing (`indexing_threshold` set to 1 KB instead of the 10,000 KB default, so no vector was served by a plain scan); this is a benchmark setting, not a recommendation. At the
 same unquantized setting on the 1M collection (`ef` 16), approximate search costs Zero 16.3% of its
 exact score, Nano 7.0% and the Stella path 4.4%, and their top-10 lists agree with exact search on 82%,
 91% and 93% of neighbors (`results/m15_e2_ann_msmarco1m.json`). The median cosine between a query and
