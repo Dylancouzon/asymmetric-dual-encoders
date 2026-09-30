@@ -153,3 +153,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   recipe"; E2's subset labelled a positive-preserving diagnostic; F1 keeps one workload per axis; E2
   gets loss targets fixed in advance; E6 gets a frozen Nano budget and routing baselines. The paper's
   new-knowledge risk Astra names: a retention table without a transferable decision rule.
+
+## 2026-09-30, method session
+
+- **Owner rulings (Dylan, asked and answered in session).** E8 runs on the retained A100 pod
+  `k3aee2m68765em`, whose volume should hold M8's cleaned fit list (`m13/SHIP_LIST.md` shipped
+  `work/m8_trainq_texts.json`). If the host has no free GPU, the fallback is the GPU-less
+  `wnzk8eeqrrkw4m` to copy the file off. E8 spend cap: $40, including any start used only to look for
+  the file. Reviews come before spending or irreversible steps; commit everything for the paper
+  trail; push allowed on `m15-whitepaper`.
+- **E8 survey** (Opus sub-agent, read-only, access rules in its brief; its file list named no
+  protected path). The clean-list screen exists as `m8src/teacher_screen.py` (ran for Stella in T1,
+  0.3438 at lambda 1e-2); a six-set scorer for closed-form tables does not exist. Found: M7 scored
+  e5 tables with an empty document prefix but their ceilings with `passage: `. Only Stella has
+  fit-list and six-set encodes on the pod; 10 towers need encodes, about 8-10 A100 hours.
+- **`m15/MEASUREMENTS.md` written** (E1-E8, E7 folded into E4), before any run. Scripts started in
+  `m15src/` (common, E5, E6, tests). Next: Astra review of the method file, then runs.

@@ -1,0 +1,12 @@
+"""Pinned model identities for M15, copied from `m20src/roster.py` (checked equal in tests)."""
+STELLA_MODEL = "NovaSearch/stella_en_400M_v5"
+STELLA_REVISION = "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
+STELLA_QUERY_PROMPT = ("Instruct: Given a web search query, retrieve relevant passages that "
+                       "answer the query.\nQuery: ")
+BGE_MODEL = "BAAI/bge-small-en-v1.5"
+BGE_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+BGE_PREFIX = "Represent this sentence for searching relevant passages: "
+LEAF_MODEL = "MongoDB/mdbr-leaf-ir"
+LEAF_REVISION = "4262131b32c3182bd06e67e92ae69d7bd66e0c5c"
+ZERO_HUB_REPO = "DylanCouzon/constella-zero"
+ZERO_HUB_REVISION = "ebee6ea94999f26182505548ffc5df035e727351"
