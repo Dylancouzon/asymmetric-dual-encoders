@@ -25,3 +25,9 @@
 {"ts": "2026-09-04T15:49:25-04:00", "dataset": "trec-covid", "argv": ["m12src/run_six_dbsf.py"], "pid": 15470}
 {"ts": "2026-09-16T16:01:24-04:00", "dataset": "scifact", "argv": ["m20src/dbsf_reproduction.py", "--datasets", "scifact", "nfcorpus"], "pid": 589962}
 {"ts": "2026-09-16T16:01:28-04:00", "dataset": "nfcorpus", "argv": ["m20src/dbsf_reproduction.py", "--datasets", "scifact", "nfcorpus"], "pid": 589962}
+{"ts": "2026-09-30T05:09:13+03:00", "dataset": "scifact", "argv": ["m15src/e6_router.py"], "pid": 33877}
+{"ts": "2026-09-30T05:09:18+03:00", "dataset": "nfcorpus", "argv": ["m15src/e6_router.py"], "pid": 33877}
+{"ts": "2026-09-30T05:09:23+03:00", "dataset": "scidocs", "argv": ["m15src/e6_router.py"], "pid": 33877}
+{"ts": "2026-09-30T05:09:28+03:00", "dataset": "trec-covid", "argv": ["m15src/e6_router.py"], "pid": 33877}
+{"ts": "2026-09-30T05:09:33+03:00", "dataset": "fiqa", "argv": ["m15src/e6_router.py"], "pid": 33877}
+{"ts": "2026-09-30T05:09:37+03:00", "dataset": "arguana", "argv": ["m15src/e6_router.py"], "pid": 33877}
