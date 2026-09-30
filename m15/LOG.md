@@ -238,3 +238,25 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   explains it; the dev-forum table screen does (0.90). `results/m15_e11_mechanism.json`,
   `results/m15_e11b_margin.json`. A first E11b run forgot the self-hit drop (ArguAna); it was
   discarded and rerun. Pod stopped; balance $211.55 (E8 + E11 + E11b total $8.02).
+
+## 2026-09-30 to 2026-10-01, overnight session (continued)
+
+- **Owner rulings (in session):** the paper phase has its own privileges (CLAUDE.md "Paper phase"
+  and "M15 privileges"): exploratory analyses may look at the known-test sets, are labelled
+  exploratory, and need no prior registration; cloud runs under $10 need no prior review; the
+  reserved-four read ban and `results/perquery.json` protection stay. Codex reviews target only what
+  matters to the paper's correctness and readability. Commit and push often.
+- **Measurements completed:** E2 (MS MARCO 1M and FiQA, two FiQA runs kept), E9 (blend, negative),
+  E10 (routers; Zero's margin recovers about a quarter of the oracle gain), E11/E11b (three tower
+  proxies, none predictive), E12/E12b (the table's loss sits on shuffle-sensitive queries; five
+  shuffles; fragility control), E13 (leave-one-family-out, screen minutes, worked examples), E8x
+  (16 more towers; pooled n = 26: screen 0.88 [0.70, 0.95], tower +0.09 [-0.39, +0.52], dimension vs
+  retention -0.76; arctic-embed-m v1 stopped at the convergence gate).
+- **Incidents:** an MPS job hung for about six hours in a Metal wait (state UN); the remaining
+  encodes moved to the pod and passed the reproduction gate exactly. Earlier a duplicate encode ran
+  because `ps` truncated arguments. Runpod total $22.79 of the $40 cap; pod stopped.
+- **Reviews:** Astra (method, E8 driver, E9/E10, paper v4, v5, v6), Opus (E8 driver), Sol (reader v3
+  and v5, unreviewed scripts, E8x driver), Fable (hostile read of v6), /andrey-review (v7), Codex
+  gpt-5.5 writing pass, /humanizer (v8). All verbatim under `m15/REVIEWS/`.
+- **State:** `m15/PAPER.md` draft v8 is complete in Markdown with five figures and
+  `m15/EVIDENCE.md`. Next: LaTeX for arXiv, owner read-through.
