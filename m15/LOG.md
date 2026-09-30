@@ -20,6 +20,18 @@ named-file allowlists only.
   `m15/REVIEWS/2026-10-01-owner-*.md`; dispositions and paper changes will be recorded here.
 - **Starting state:** branch `m15-whitepaper`, clean working tree at `c96fe60`; draft v10 and its
   generated LaTeX/PDF. No evaluation, training, cloud rental, or release has been initiated.
+- **Owner read-through reaction:** the paper's goal was unclear and the draft unimpressive.
+  Training cost, approachability, and teacher differences are candidate angles to examine, not
+  a prescribed conclusion. This directs a substantive restructuring around a clear research
+  question rather than another copy-editing pass.
+- **E15, exploratory:** derived teacher-selection consequences, clean-four sensitivity, direct
+  size/absolute-quality associations, and build-cost accounting from published receipts only
+  (`m15src/e15_decision_audit.py`, `results/m15_e15_decision_audit.json`). The development screen's
+  all-six winner improves over choosing the strongest public teacher by 0.151885 nDCG@10 under
+  the closed-form recipe; its clean-four regret grows to 0.027775 with the exploratory roster.
+  Nano's measured training loop costs $95.27 at the recorded historical rental rate, excluding
+  upstream preparation and research. Zero's 20-minute / 8-12-hour figures are ledger estimates,
+  not complete measured rebuild costs. No new training or evaluation data access.
 
 ## 2026-09-17
 

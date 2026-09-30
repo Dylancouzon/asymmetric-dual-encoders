@@ -365,3 +365,16 @@ is wrong. **Cannot show:** that these features are the best available.
   Stella alone 0.7796, weight 0.1 0.7799) before the weights were frozen on the dev forums. SciFact is
   an E9 evaluation set. Nothing in the registration or the code changed after this; the weights are
   still chosen by the code on the two dev forums only. The paper reports this peek.
+
+## E15, exploratory decision and cost audit (2026-10-01)
+
+`m15src/e15_decision_audit.py` derives selection consequences from the published E8/E8x
+aggregates: the development-screen winner, the strongest public teacher, the best public table,
+their all-six differences, clean-four regret, and per-dataset ranks. The strongest public teacher
+is a hindsight comparator, not a prospectively tested model-card selection rule. Dimension is
+correlated with absolute table quality as well as retention to expose the latter's denominator
+coupling. Nano's measured training seconds are priced at its recorded historical rental rate;
+this is a training-loop estimate excluding upstream preparation and the broader research cost.
+Zero's ledger estimates are labelled planning estimates, not measured timings. This analysis
+was specified after seeing the original results and is exploratory throughout. It uses only
+five committed JSON receipts and `m7/LEDGER.md`, hashes those inputs, and opens no raw data.
