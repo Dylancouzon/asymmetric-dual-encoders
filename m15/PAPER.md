@@ -1,535 +1,326 @@
-# Swapping the Query Encoder Over a Frozen Document Index
+# How Much Query Encoder Does a Frozen Document Index Need?
 
-> **Superseded 2026-09-30.** This v2 draft is framed as a comparator study, which the owner ruled
-> out; the next draft follows `m15/PLAN.md` v5.2. Do not reuse its sections 6.2 and 6.4: the M9
-> system-latency "nano" was a pretrained MiniLM-L6 with a random head and the index and table were
-> synthetic. Other errors are listed in `m15/EVIDENCE_INDEX.md`, "Corrections 2026-09-30".
-
-
-**Draft v2, 2026-09-17. Not for circulation.** Sections marked `[M20]` wait on the reserved four and
-BEIR-15. Sections marked `[open]` name a measurement this paper owes. Every result number traces to a committed
-file through `EVIDENCE_INDEX.md`, whose spot-check table records what a reviewer verified against
-the source and when. The parity and engineering figures in Section 3 come from the milestone status
-files named beside them and are not yet indexed.
+**Draft v3, 2026-09-30. Not for circulation.** Written from `m15/PLAN.md` v5.3. Markers `[E2]`, `[E9]`
+and `[E10]` wait on measurements registered in `m15/MEASUREMENTS.md` and running overnight. Every
+number traces to a committed file under `results/`; the source is named where the number first
+appears. v2 (a comparator study) is in git history.
 
 ## Abstract
 
-A dual-encoder retrieval system has one expensive asset and one cheap one. Encoding a corpus costs a
-full pass over every document and produces an index that resists change. Encoding a query costs one
-forward pass and produces nothing anyone has to store. We hold `stella_en_400M_v5` frozen as the
-document tower, 1024 dimensions, and replace only the query side. Three dense query encoders emit
-into that one index: a per-token lookup table with no query-time neural network, a
-34,540,672-parameter distilled transformer, and the tower's own query path. BM25 joins them as the
-lexical half of a fused system.
-
-Running a cheap query encoder against a frozen teacher's index is not new. LEAF ships it, pyNIFE
-published the lookup-table construction, and backward-compatible training named the goal years
-earlier. What has not been done is the measurement: prior work ships one cheap query encoder per
-index, and nobody has put two tiers, the teacher's own tower, and a lexical channel on one index and
-priced retention against system cost under a pre-registered benchmark partition. Section 4 dates
-what was registered when, per family.
-
-The distilled student establishes superiority over bge-small on both the contamination-clean
-partition and the full six (+0.017648 and +0.027449 nDCG@10). The lookup table retains 0.755 of the
-teacher's quality on the same six at 0.1119 ms warm median query time.
-
-The result that changes how the frontier reads is about cost. Inside one harness, two query paths
-that differ by about five times as encoders differ by 1.96 times as whole systems at typical query
-length, because both pay the same approximate search. The gap widens to 5.10 times at 51 to 120
-words and narrows under memory pressure. Which tier ships the smaller artifact depends on how you
-package it, and the two packagings we measured disagree. At short and medium query length the index and its
-quantization decide system cost more than the choice of query encoder does. At long queries the encoder
-returns as the deciding term.
+A dense retrieval system pays for its document index once and for its query encoder on every
+request. We hold one document index fixed, 1024-dimensional vectors from `stella_en_400M_v5`, and
+change only the query side, across a 700-fold range of query compute: the tower's own 400M query
+path (31.6 ms per query on an Apple M5 Pro CPU), a 34.5M-parameter distilled transformer (2.25 ms),
+and an int8 token lookup table with no neural network at query time (0.044 ms). On 15 BEIR datasets
+under exact search the three keep 100%, 90.5% and 81.4% of the tower's own nDCG@10. The loss is not
+spread evenly. On 43% of queries the table and the transformer score the same, and an oracle that
+sends only 15% of queries to the transformer matches sending all of them. Short and unfinished
+queries cost every tier the same share of its score, so that loss belongs to the query, not the
+encoder. When choosing a tower to distill into a table, the tower's own retrieval quality predicted
+nothing (Spearman -0.09 over 10 checkpoints on six public BEIR sets), while a cheap screen of the
+table on two development forums predicted the public ranking (0.90). `[E9]` `[E10]` `[E2]` We report
+a registered head-to-head test in full and release the index vectors and the harness.
 
 ## 1. Introduction
 
-Retrieval systems are evaluated as one model and deployed as two. The document index is built once,
-costs a corpus-scale encode, and cannot be rebuilt whenever a better query model appears. The query
-encoder runs once per request and stores nothing per document. Replacing it rewrites no document
-vector, although it does change which query-side artifact the server loads, and Section 6.3 shows
-those artifacts are not small.
+Retrieval systems are trained as one model and deployed as two. The document index costs a
+corpus-scale encode, lives in a vector search engine, and is rebuilt reluctantly. The query encoder
+runs once per request and stores nothing. If a cheaper query encoder can write into the same vector
+space, the expensive half of the system never moves while the cheap half is swapped, retrained,
+specialized or routed per request.
 
-That property is established. LEAF releases `-asym` checkpoints for exactly this mode and calls it
-mixed-checkpoint inference. pyNIFE distills a per-token lookup table against a frozen off-the-shelf
-teacher and reuses that teacher's index unchanged. Query-encoder distillation onto a frozen document
-encoder appeared in 2023. Backward-compatible and forward-compatible training named the general goal
-of upgrading a model without re-embedding a corpus. We build on all of it and claim none of it.
+The setting is not new. LEAF ships asymmetric checkpoints that pair a small query model with a
+larger document model [LEAF]. Query-encoder distillation onto a frozen document encoder appeared in
+2023 [QED]. pyNIFE distills a per-token lookup table against a frozen off-the-shelf tower [pyNIFE].
+Backward- and forward-compatible training named the goal of upgrading a model without re-embedding
+a corpus [BCT, FCT]. What the literature lacks is a measurement of the whole range on one index:
+how much quality survives as query compute falls from the tower's own path, to a small transformer,
+to a lookup table, and what decides where it is lost.
 
-The gap is narrower and it is about measurement. Prior work ships one cheap query encoder per index.
-Nobody has measured several query encoders on one held-fixed index, across a near-zero-compute tier,
-a distilled transformer tier, the teacher's own tower, and a lexical channel, and priced what each
-retains against what it costs in a running system, under a benchmark partition registered in
-advance on a contamination argument. Two questions fall out of that setting and out of no single-encoder study:
+We answer with one index and three query encoders that all regress onto the tower's query output,
+so their vectors land in the space the index already holds. Because they share that space, a system
+can also mix them per query or blend their vectors in one search. The results, in order:
 
-- How much quality does each tier retain from the frozen tower it shares?
-- At what point does query-encoder compute stop deciding system cost?
+1. **Retention as query compute drops** (Section 3). 100%, 90.5% and 81.4% of the tower's BEIR-15
+   macro nDCG@10 at 31.6, 2.25 and 0.044 ms per query.
+2. **Choosing a tower for a table** (Section 4). Across 11 configurations the tower's own quality did
+   not predict the quality of its table; a development screen of the table did. In all four model
+   families we measured, the smaller checkpoint made the better table.
+3. **Where the loss sits and what routing can recover** (Section 5). Per-query headroom is large and
+   concentrated; a free lexical feature captures about a tenth of it. `[E10]` `[E9]`
+4. **Short queries** (Section 6). Prefixes cost the three tiers the same share of their score.
+5. **Does the saving survive the search** (Section 7). `[E2]`
+6. **The pre-registered test** (Section 8), reported in full.
 
-**Contributions.**
+## 2. Setup
 
-1. A retention-against-cost frontier over one frozen index, spanning a near-zero-compute tier, a
-   sub-35M transformer tier, the teacher's own query tower, and a lexical channel fused with the
-   dense results (Sections 5, 6).
-2. Registered head-to-head results for the transformer tier against bge-small and LEAF-asym, with
-   the unresolved contrast reported as unresolved and the document-tower confound disclosed (5.1).
-3. Evidence that the encoder-level cost advantage of a lookup table shrinks to under two times at
-   the system level, depends on query length, and does not settle which tier ships the smaller
-   artifact (Section 6).
-4. Three method results with reach beyond this system: an out-of-domain development subset predicted
-   held-out retention within 0.009 while the full development macro overstated it by 0.16; across
-   eight distilled teachers, a teacher's own retrieval quality carried no signal about its table; and
-   a named class of post-hoc transformations is exactly absorbable into a lookup table under mean
-   pooling (Section 7).
+**The frozen side.** One document tower, `NovaSearch/stella_en_400M_v5` at revision `ffeb2b7e`,
+1024 dimensions, fp32 compute, L2-normalized vectors stored fp16, cosine similarity. Every dense
+result searches the same document vectors.
 
-## 2. Setting
+**The query side.**
 
-**The frozen side.** One document tower, `stella_en_400M_v5`, 1024-dimensional, L2-normalized,
-cosine similarity. Every dense result in this paper searches the same document vectors. The tower's
-CUDA and CPU paths agree to a minimum cosine of 1.000000 and a maximum absolute difference of
-9.07e-05, so an index built on one device holds on the other.
+| Tier | What it is | Built by | Build cost |
+|---|---|---|---|
+| Stella query | The tower's own query path with its `s2p_query` prompt | nothing | none |
+| Nano | 34,540,672-parameter transformer: bge-small backbone, layers 12, 8 and 4 concatenated, linear head to 1024, mean pooled | squared L2 to the tower's query vectors, 199,999,721 examples | 57.3 A100 hours, about $95 |
+| Zero | 30,522 x 1024 int8 token table; a query is a normalized, count-saturated mean of its token rows | cosine and ranking loss against the tower, then int8 | about 20 minutes of training after 8-12 hours of encoding on one RTX 3080 |
 
-The choice of tower sets a standing cost the query side cannot undo. Per one million documents at
-fp16, a 1024-dimensional index is about 2.05 GB. The comparators sit at 0.77 GB for bge-small's
-384 dimensions, about 1.4 GB for OpenSearch's doc-side postings, 1.54 GB for LEAF and arctic-m at
-768 dimensions, and 3.07 GB for LightRetriever at 1536. A query encoder that is free still rides an
-index that is not.
+Build details are in `results/m13_build_record.json` and `m7/RECIPE.md`. Neither build changed the
+document tower. BM25 (bm25s, Lucene k1 = 1.2, b = 0.75) appears as a reference and as the lexical
+half of two fused systems (DBSF over two top-100 prefetches, Qdrant's operator).
 
-**The swappable side.** Three dense query encoders emit 1024-dimensional vectors into that index:
+**Data and protocol.** Quality comes from exact search on BEIR-15 (`results/m20_beir15_run.json`).
+Four datasets (FEVER, DBpedia-entity, CQADupStack android and english) were reserved for a
+registered one-shot test and are now spent; they enter no measurement in this paper beyond their
+committed aggregate result. Every new measurement follows a method file frozen before it ran
+(`m15/MEASUREMENTS.md`), fits on two CQADupStack development forums (physics and programmers), and
+evaluates elsewhere. Our single-prompt Stella path scores 0.5614 on BEIR-15; the model card reports
+58.97 with per-task instructions, a 400-token limit and bf16. Our bge-small (0.5171), LEAF (0.5402)
+and BM25 (0.4006) reproduce their published numbers.
 
-| Tier | What it is | Query-time compute |
-|---|---|---|
-| `zero` | A per-token lookup table distilled against the frozen tower, served int8 | Row lookup and a normalized weighted mean. No neural network |
-| `nano` | A 34,540,672-parameter transformer student, distilled against the same tower | One small forward pass |
-| Stella query | The tower's own query path, with its `s2p_query` prompt | One 400M forward pass |
+## 3. Retention as Query Compute Drops
 
-BM25 appears as a comparator and as the lexical half of the fused systems. It is not a fourth query
-encoder: it scores against its own inverted index and emits nothing into the dense space.
+**Table 1.** BEIR-15 macro nDCG@10, exact search. Retention is a ratio of macros against the
+Stella query path. Encode latency is the median over real test queries of 5-12 words, batch one, four
+CPU threads, ONNX Runtime (Zero on NumPy), Apple M5 Pro (`results/m15_e1_latency.json`).
 
-Neither tier we trained ever changed the document tower. Both regress onto the tower's own
-query-side output, so their vectors land in the space the index already indexes.
+| Query side | nDCG@10 | Retention | Encode p50 |
+|---|---:|---:|---:|
+| Stella query path | 0.5614 | 1.000 | 31.6 ms |
+| Nano + BM25, DBSF@100 | 0.5110 | 0.910 | |
+| Nano | 0.5081 | 0.905 | 2.25 ms |
+| Zero + BM25, DBSF@100 | 0.4933 | 0.879 | |
+| Zero | 0.4572 | 0.814 | 0.044 ms |
+| BM25 | 0.4006 | 0.713 | |
+| *Reference, own index:* LEAF (query side) | 0.5402 | | 1.39 ms |
+| *Reference, own index:* bge-small | 0.5171 | | 2.57 ms |
 
-## 3. The Swap Contract
+Figure F1 plots retention against encode latency on a log axis. Nano keeps nine tenths of the
+tower's quality at one fourteenth of its query compute; Zero keeps four fifths at one seven-hundredth.
+Zero beats BM25 on 11 of the 15 datasets while costing about as much to encode as tokenizing the query.
 
-A swap is legal when the replacement emits vectors the index can score: same dimensionality, same
-normalization, same similarity. We verify it. The table's served path agrees with
-its numpy reference to 4.470e-08. The student's served path agrees with its reference at a minimum
-cosine of 1.0 and a maximum comparison error of 1.1548399925231934e-07. The Stella query tower, run
-through the published document graph with its prompt, reproduces the torch query path at a minimum
-cosine of 1.00000000.
+Retention varies by dataset more than by tier (Figure F2). Zero keeps 0.667 of the tower on
+TREC-COVID and 0.958 on Climate-FEVER; Nano ranges from 0.759 (FEVER) to 0.988 (Quora). Zero scores
+above Nano on FEVER, HotpotQA and Climate-FEVER, three claim-style or multi-hop sets. We do not read
+that as a property of the table: Zero trained on FEVER-train, Nano's training pool excluded FEVER, and
+Nano starts from bge-small.
 
-Four things do not travel with the swap, and all four fail silently.
+Published retention numbers are not comparable to ours without care. Query-encoder distillation
+reports 92.5% as an average of per-dataset relative scores [QED]; LEAF reports 97.7% with its own
+tower and benchmark [LEAF]; ours is a ratio of macros on BEIR-15 against a single-prompt tower path.
 
-**The prompt.** Stella as a query encoder needs its `s2p_query` prefix. Without it the vector keeps
-the right shape and the right norm and scores at cosine 0.80 against the correct one. The table and
-the student need no prefix, so a serving layer that adds prompts by model family gets one of the
-three wrong. FastEmbed's own `query_embed` does not add it.
+## 4. Choosing a Tower to Distill Into a Table
 
-**Tokenization.** Stella's shipped tokenizer pads to 512 by default. Left alone it feeds roughly 500
-PAD rows into the encoder and cosine against the correct vector falls to 0.35.
+A lookup table can be fit in closed form against any tower that shares its vocabulary: a ridge
+regression from token-count bags to the tower's query vectors, anchored at each token's own tower
+embedding (`m8src/teacher_screen.py`). We refit that recipe for 11 configurations of 10 checkpoints,
+all sharing one BERT WordPiece vocabulary (one ordered-vocabulary hash across all 11), on 337,981
+training queries screened against every protected set. We chose each ridge weight on the two
+development forums, froze all of them in a committed file (`results/m15_e8_frozen_lambdas.json`),
+and only then scored six public BEIR sets once (`results/m15_e8_towers.json`).
 
-**Dtype.** FastEmbed's mean pooling promoted output to float64 for models of the student's shape,
-while the table and the document tower pool inside ONNX and stay float32. Two query paths against
-one index did not share a vector width until we fixed it upstream.
+**Table 2.** Closed-form tables. "Tower" is each checkpoint's own query path on its own documents.
+Six-set macro nDCG@10; retention is table over tower.
 
-**The operator.** Replacing a dense tier with a fused one changes the retrieval operator, and brings
-a prefetch depth along with it. Section 5.3 prices that.
-
-## 4. Protocol
-
-The headline partition is `clean-4`: nfcorpus, scidocs, scifact, and trec-covid, the four of our six
-BEIR datasets with no disclosed teacher overlap. Stella discloses exposure to ArguAna, FiQA, and
-FEVER. We report all six beside `clean-4` in every table and report the difference between the two
-partitions as its own row. No dataset entered or left either partition after a number was seen.
-
-**Registration dates differ by family and we state them.** The partition itself was pre-registered
-for both families, in `m7/LEDGER.md`, on the contamination argument alone. For the student's family
-the headline designation also predates every six-set number. For the table's family, whose six-set
-confirmatory run completed on 2026-08-28, `clean-4` was pre-registered as an exposure-restricted
-descriptive analysis and was designated the headline afterwards. It moved against the table, which
-is the direction that makes the designation credible, and we report both partitions everywhere so a
-reader can apply either rule.
-
-Two confirmatory families ran under two registered procedures. The student's family tests four
-contrasts in a fixed sequence, each at a one-sided alpha of 0.025, with the one-sided 2.5% lower
-bound as the decision statistic. The table's family tests three contrasts with sign-flip p-values
-under Holm control.
-
-**Established** means a contrast satisfied its whole registered rule, which for the table's family
-includes the Holm threshold and not only the interval. **Unresolved** means it did not, for any
-reason. Unresolved is not equivalence. We computed no equivalence interval anywhere in this paper,
-so nothing here supports a claim that two systems match.
-
-Quality numbers come from exact search. Approximate-search recall never enters a quality comparison;
-it appears only in Section 6, where the question is deployment behavior.
-
-## 5. Retrieval Quality
-
-### 5.1 The Transformer Tier
-
-| Contrast | Partition | Delta nDCG@10 | One-sided 2.5% lower bound | Sign-flip p | Verdict |
-|---|---|---:|---:|---:|---|
-| Nano minus bge-small | clean-4 | +0.017648 | +0.003674 | 0.006410 | Established |
-| Nano minus bge-small | all six | +0.027449 | +0.017271 | 9.99990000099999e-06 | Established |
-| Nano minus LEAF-asym | all six | +0.016181 | +0.006504 | 0.000540 | Established |
-| Nano minus LEAF-asym | clean-4 | -0.001063 | -0.014456 | 0.559474 | Unresolved |
-
-Per-dataset nDCG@10 for the student: nfcorpus 0.363080, scidocs 0.217710, scifact 0.721097,
-trec-covid 0.787116, ArguAna 0.623296, FiQA 0.477765. The last two carry Stella's disclosed exposure.
-
-**The LEAF rows are a system comparison, not a shared-index comparison, and that changes the
-reading.** LEAF-asym encodes its documents with `snowflake-arctic-embed-m-v1.5`, 109M parameters at
-768 dimensions, and its queries with the 23M `mdbr-leaf-ir`. Our student sits on a 400M tower at
-1024 dimensions. The two document towers are not the same and the comparison prices whole systems.
-On our six, Stella's symmetric ceiling is 0.5744 and arctic-m-v1.5's is 0.5264, a gap of 0.048. The
-established all-six delta is +0.016181, a third of the gap between the towers. Read as retention of
-its own frozen tower, LEAF-asym keeps 0.979 and our student keeps 0.9256 (derived from the six rows
-above against 0.5744). A 400M tower and a 50% larger student win on the full six and fail to separate
-on `clean-4`, and the distillation-efficiency comparison points the other way. We report the
-contrast because it was registered and we report what it does not show.
-
-The student's weakest dataset against LEAF is trec-covid, at -0.042982. A macro average hides that.
-
-### 5.2 The Lookup-Table Tier
-
-The table reaches 0.4339 average nDCG@10 over the six against the symmetric teacher's 0.5744, a
-retention of 0.755. Three registered contrasts:
-
-| Contrast | Delta | 95% CI | Sign-flip p | Verdict |
-|---|---:|---|---:|---|
-| Table against LightRetriever's 0.4583 bar | -0.0243 | [-0.0405, -0.0086] | 0.997 | Resolved below the bar |
-| Table against BM25's 0.4174 | +0.0165 | [+0.0017, +0.0311] | 0.0149 against Holm 0.0083 | Unresolved |
-| Fused system against OpenSearch's 0.4868 | +0.0043 | [-0.0063, +0.0151] | 0.219 | Unresolved |
-
-The second row is the one to dwell on. Its confidence interval excludes zero and the familywise
-correction still refuses the claim. We report it as unresolved because that is what the registered
-rule says. A paper that keeps the interval and drops the correction is choosing its rule after
-seeing the number.
-
-On `clean-4` the picture is worse and we report it: the table sits 0.0311 [-0.0517, -0.0109] below
-BM25. The system's two strongest datasets, ArguAna at 0.5916 and FiQA at 0.3728, are exactly the two
-Stella discloses.
-
-### 5.3 The Lexical Channel Is Worth Ten Times the Query-Side Levers
-
-Fusing the table with BM25 lifts the six-set average to 0.4911, which is +0.057 over the dense table
-alone, carried by trec-covid at +0.153 and scifact at +0.097. Put that beside Section 7.4 and
-Appendix A: every lever we measured on the table itself moved the development endpoint by under
-0.005. The lexical channel is worth an order of magnitude more than the query-side tuning that
-produced the table, and a zero-compute product should ship fused.
-
-The result worth stating plainly: a frozen third-party dense index, a lookup table, and term counts
-reach 0.4887 on all six and 0.4912 on `clean-4` with stock Qdrant fusion and no fitted parameters.
-That is the band of OpenSearch's inference-free sparse system at 0.4868, which needs a 133M-parameter
-document encoder and about 1.4 GB of postings per million documents, and it is above LightRetriever
-hybrid per-task at 0.4720. The query side is a table lookup and a term count.
-
-The operator that produced 0.4911 is `convex0` with a dev-fitted weight, and no shipping Qdrant
-operator reproduces it. The deployable substitute is distribution-based score fusion at prefetch
-depth 100 with zero fitted parameters:
-
-| Operator | All six | clean-4 |
-|---|---:|---:|
-| DBSF at prefetch 100, zero fitted parameters | 0.4887 | 0.4912 |
-| convex0 at depth 1000, dev-fitted, not available in Qdrant | 0.4911 | 0.4866 |
-
-Neither is established over the other, and we computed no equivalence interval, so the paper takes
-no position on which is better. Choosing the parameter-free operator is a product decision.
-
-DBSF increases monotonically with prefetch depth: 0.4660, 0.4849, 0.4887, and 0.4898 on all six, and
-0.4625, 0.4856, 0.4912, and 0.4974 on `clean-4`, at depths 10, 50, 100, and 1000. **The registered
-depth cost us the best number in the table.** Depth 1000 on `clean-4` reaches 0.4974, 0.0062 above
-the registered headline. We fixed depth 100 in advance on a realism argument, before any six-set
-access, and we report the deeper number here. On the
-development suite, where four components allow a wider sweep, the ranking between the three fusion
-operators inverts at depth 10; that inversion is a development-set observation and no six-set
-evidence supports or contradicts it.
-
-### 5.4 The Frontier
-
-Retention is each system's six-set macro divided by its own frozen document tower's symmetric
-ceiling. Cells marked *derived* are arithmetic we did over committed rows, so they carry no
-interval. **The table is incomplete until the reference row has a
-latency.** The Stella query tower is the point every other row is priced against, and no run has
-measured it under the common serving protocol. Section 9 names the experiment that fills the cell.
-
-| Query side | Frozen tower | Six-set macro | Retention | Warm p50, 20 words |
-|---|---|---:|---:|---:|
-| Stella query tower | Stella 400M | 0.5744 | 1.000 | unmeasured `[open]` |
-| `nano`, 34.5M | Stella 400M | 0.5317 *derived* | 0.9256 *derived* | 7.2511 ms |
-| bge-small | its own | 0.5042 | n/a | 6.8400 ms |
-| `mdbr-leaf-ir`, 23M | arctic-m-v1.5 109M | 0.5155 | 0.979 | unmeasured here |
-| `zero` table | Stella 400M | 0.4339 | 0.755 | 0.1119 ms |
-| `zero` + BM25, DBSF at 100 | Stella 400M | 0.4887 | n/a | 0.1119 ms plus lexical |
-| BM25 | none | 0.4174 | n/a | no neural network |
-
-The shape is the paper. Dropping from a 400M query tower to a 34.5M student costs 0.074 retention.
-Dropping from the student to a table costs another 0.171 and saves about seven milliseconds of
-encoder time, which Section 6 shows is worth about one millisecond of system time at typical query
-length. Adding a lexical channel to the table recovers most of the drop with no query-side neural network.
-Tokenizing and scoring terms is still work; the transformer forward pass is what disappears.
-
-### 5.5 Breadth `[M20]`
-
-The reserved four and the BEIR-15 descriptive validation are running. Rows and caveats go here,
-including FEVER's double-contamination disclosure. This section adds breadth and does not
-reinterpret the registered gates above.
-
-## 6. Deployment Cost
-
-### 6.1 Query Encoders in Isolation
-
-One protocol for three models: three fresh processes per model, batch size one, four CPU threads,
-five warmups, 20 synthetic 20-word queries, medians over three trials.
-
-| Model | Hydration | First query | Warm p50 | Peak RSS | Served assets |
+| Checkpoint | Dim | Dev table | Six-set tower | Six-set table | Retention |
 |---|---:|---:|---:|---:|---:|
-| `zero` | 0.2618 s | 0.3529 ms | 0.1119 ms | 275.4 MiB | 90.1 MiB |
-| bge-small | 0.6726 s | 8.2401 ms | 6.8400 ms | 291.0 MiB | 127.6 MiB |
-| `nano` | 0.6907 s | 7.6685 ms | 7.2511 ms | 280.9 MiB | 132.3 MiB |
+| stella_en_400M_v5 | 1024 | 0.3437 | 0.5745 | 0.3974 | 0.692 |
+| bge-base-en-v1.5 | 768 | 0.3073 | 0.5259 | 0.3529 | 0.671 |
+| arctic-embed-m-v1.5 | 768 | 0.3019 | 0.5263 | 0.3279 | 0.623 |
+| gte-base-en-v1.5 | 768 | 0.2748 | 0.5331 | 0.3252 | 0.610 |
+| arctic-embed-l | 1024 | 0.2586 | 0.5289 | 0.3034 | 0.574 |
+| e5-base-v2 | 768 | 0.2341 | 0.4669 | 0.2930 | 0.627 |
+| bge-large-en-v1.5 | 1024 | 0.2759 | 0.5329 | 0.2845 | 0.534 |
+| mxbai-embed-large-v1 | 1024 | 0.2505 | 0.5368 | 0.2605 | 0.485 |
+| e5-large-v2 | 1024 | 0.2192 | 0.4735 | 0.2585 | 0.546 |
+| gte-large-en-v1.5 | 1024 | 0.2039 | 0.5970 | 0.2455 | 0.411 |
+| *arctic-embed-l, mean readout (control)* | 1024 | 0.2217 | 0.5073 | 0.2764 | 0.545 |
 
-This is where a near-zero-compute claim looks strongest: 61 to 65 times faster than the two
-transformer tiers. The Stella query tower is absent because we never measured it under this protocol,
-which is the gap Section 9 names.
+Three results.
 
-### 6.2 The Same Encoders Inside a System
+**The tower's quality did not transfer.** Over the 10 checkpoints, Spearman correlation between a
+tower's own six-set score and its table's six-set score is -0.09 (0.14 on the four sets with no
+disclosed exposure). On the development forums the same correlation is 0.45, so a tower that looks
+strong where the table was screened does not stay strong where it is used. The strongest tower on these sets, gte-large (0.5970), made the weakest table
+(0.2455, retention 0.411). The pattern matches the finding that a stronger teacher does not always
+make a better student [Cho and Hariharan 2019], here for embedding towers and a table student.
 
-Add the search. On an Apple M5 Pro against a **synthetic** one-million-vector index of random
-1024-dimensional rows, four threads, default `ef`, latency and architecture only:
+**A cheap screen of the table transferred.** The development-forum score of each table predicted its
+six-set rank with Spearman 0.90 (0.68 on the four exposure-free sets). The screen costs one encode of
+the fit list and two forums per tower; the tower's leaderboard row costs nothing and told us nothing.
 
-| Query length | `zero`: encode, search, total | `nano`: encode, search, total | Ratio |
-|---|---|---|---:|
-| 6 to 10 words | 0.234, 0.845, 1.09 ms | 1.173, 0.935, 2.13 ms | 1.96x |
-| 21 to 50 words | 0.566, 0.805, 1.37 ms | 3.201, 0.942, 4.14 ms | 3.02x |
-| 51 to 120 words | 0.696, 0.775, 1.46 ms | 6.451, 1.010, 7.46 ms | 5.10x |
+**Smaller checkpoints made better tables in every family.** bge-base over bge-large, e5-base over
+e5-large, gte-base over gte-large, and arctic-m-v1.5 over arctic-l, on the development forums and on
+the six sets alike. The arctic pair also differs in version, so it is the weakest of the four.
+Reading the same arctic-l checkpoint with mean pooling instead of its CLS token lowered the table
+(0.2764 against 0.3034), so pooling alone does not explain which towers distill well.
 
-Components, totals, and ratios are each rounded independently in the committed record, so a
-displayed total can differ from the sum of its displayed parts in the last digit.
+**What this does and does not show.** One closed-form recipe, 10 checkpoints, six public sets; no
+significance claim. The towers differ in data, size, dimension and readout, so none of this isolates
+a cause. Training exposure to these sets is disclosed by no checkpoint's authors; most checkpoints
+trained on the source families of the science and finance sets, and one states it removed MTEB test
+overlap (`m15/e8_exposure.json`). An earlier screen of this kind in this project used a fit list
+with 1.31% overlap with protected queries and found a correlation of 0.000 over eight configurations;
+this refit uses the cleaned list.
 
-Inside this one harness the encoders differ by about five times, not the 61 to 65 of Section 6.1,
-because the two protocols measure different builds on different hardware. The collapse to report is
-the same-harness one: **five times as encoders becomes 1.96 times as systems** at typical query
-length, because both paths pay the same 0.85 ms of approximate search. Query length then moves it,
-because a table lookup is linear in tokens and a transformer is not.
+## 5. What a Table Cannot Do, and What Routing Can
 
-A separate sweep over index configurations and hard memory limits, at 6 to 10-word queries, puts the
-ratio between 1.11 and 3.28 times; under memory pressure the paths converge further. The 1.11 end
-comes from a 3.366 ms against 3.732 ms pair inside Docker, and the source flags sub-millisecond
-Docker differences as noise, so treat that bound as soft.
+### 5.1 The Table's Limit
 
-Two conditions therefore govern any query-side cost claim: the query length, and the index it runs
-against. The tenth-of-a-millisecond figure is the one a reader will quote, and on its own it is not
-a system claim.
+A mean-pooled lookup table absorbs any affine map applied after pooling and any fixed per-token
+weight: the transformed system is another table, so such levers cannot add capacity. We checked this
+numerically against explicitly rebuilt tables (maximum absolute difference 9.31e-14,
+`results/m7_absorb_check.json`); it fails under sum pooling, and nonlinear transforms are outside it.
+Training evidence points the same way. The shipped objective was nearly exhausted on its own data
+(median KL 1.08e-07 nats; the positive ranked first for 99.75% of 4,000 training queries against the
+training bank), and no table-side lever improved the development score by more than about 0.005.
+A table also cannot see word order. Shuffling a query's words costs the Stella path 6.9% and Nano
+4.4% of their own nDCG@10 on SciFact, NFCorpus and FiQA, and Zero nothing, by construction
+(`results/m15_e4_prefix.json`). On FiQA the Stella path loses 13.7%.
 
-### 6.3 Which Tier Is the Bigger Artifact Depends on the Packaging
+### 5.2 Where the Loss Sits
 
-The two packagings we measured disagree, so we report both.
+Averages hide how the loss is distributed. Across the 12 BEIR-15 datasets outside the reserved
+test, Zero and Nano tie on 43% of queries, Zero wins on 18% and Nano on 39%
+(`results/m15_e5_oracle.json`). A per-query oracle that picks the better of the two reaches 0.5473
+macro nDCG@10, close to the Stella path (0.5580 on the same 12), against 0.5161 for always-Nano. If the
+oracle may send only a fraction of queries to Nano, taking the largest gains first, 15% already
+matches always-Nano (0.5163) and 25% reaches 0.5334 (Figure F5).
 
-| Packaging | `zero` | Student | Ordering |
-|---|---:|---:|---|
-| Served bundle under the common protocol (Section 6.1) | 90.1 MiB | 132.3 MiB | The table is smaller |
-| Edge artifacts in the M9 prototype: int8 token table against fp16 ONNX | 270.1 MB | 46.1 MB | The table is 5.9 times larger |
+That is the case for tiering: most queries do not need the transformer, and the ones that do are
+few. The question is whether a system can find them without running the transformer first.
 
-The release also lists a 94 MB numpy reference and a roughly 31 MB int8 ONNX path for the table, so
-there is no single canonical asset size for it. The rows above measure different things and come
-from different milestones, and reconciling them under one packaging definition is open work. What
-survives both readings is the mechanism: a lookup table moves cost from compute to storage, and on
-an edge device storage is the scarce resource.
+### 5.3 Routing on Signals the Table Already Has
 
-### 6.4 Quantization Is a Precondition, and Rescoring Is a Trap
+**Fertility.** The table fell behind the tower by 0.050 nDCG@10 per extra subword per word in earlier
+work, so we routed queries with high fertility to Nano. With thresholds fixed on the two development
+forums for Nano budgets of 10%, 25% and 50%, the router beat random routing at the same Nano share by
+0.003 to 0.005 on the 12 evaluation datasets, against an oracle margin of 0.03 to 0.05: about a tenth
+of the headroom (`results/m15_e6_router.json`). Fertility locates the table's weakness against the
+tower, not its weakness against Nano.
 
-This section supports two claims, footprint and latency, and it makes no deployment
-recommendation, because the comparison that would justify one has not run.
+`[E10]` Zero's own confidence: the norm of its pooled vector before normalization and the margin
+between its first and tenth retrieved document, fitted and frozen the same way, plus an escalation
+target of the E9 blend instead of plain Nano.
 
-A one-million-document index serves inside a 256 MB container, and only under binary quantization.
-With rescoring disabled the whole system answers in 3.387 ms with the table and 4.469 ms with the
-student, using 202 MB. The uncompressed fp16 index answers at every tested limit and is unusable at
-all of them: 532 ms at 256 MB, and still 225 ms with 2 GB. Binary quantization is 16 times smaller
-than the originals and also the fastest configuration measured.
+### 5.4 Blending Two Query Vectors in One Search
 
-Rescoring against memory-mapped originals costs 8.467 ms against 0.441 ms without it, 19 times, so
-it is a trap rather than a tuning choice on this hardware.
+`[E9]` Because Zero and Nano write into the same space, their vectors can be averaged and searched
+once. Weight fixed on the development forums; six public sets; against Nano alone and against
+Nano + BM25 fusion.
 
-What none of this measures is retrieval quality. These runs record compression, feasibility, and
-latency on a synthetic index, so no quality claim follows. The comparison the section needs,
-TurboQuant against binary, int8, and fp16 on latency, footprint, and recall at up to one million
-documents, is deferred to this paper and has not yet run. `[open]`
+## 6. Short Queries and Prefixes
 
-## 7. Results That Transfer
+Search-as-you-type and short queries are where a near-free query encoder would matter most, so we
+cut each test query of SciFact, NFCorpus and FiQA and asked how much of its own full-query score each
+tier keeps (`results/m15_e4_prefix.json`, macro over the three sets):
 
-### 7.1 What a Development Macro Overstates, and What Predicts the Held-Out Number
+| Cut | Stella query | Nano | Zero | BM25 |
+|---|---:|---:|---:|---:|
+| First word | 0.293 | 0.288 | 0.297 | 0.362 |
+| First two words | 0.389 | 0.381 | 0.387 | 0.448 |
+| First three words | 0.479 | 0.468 | 0.461 | 0.528 |
+| First half of the words | 0.610 | 0.597 | 0.604 | 0.656 |
+| First half of the characters | 0.549 | 0.533 | 0.547 | 0.488 |
+| Words shuffled | 0.931 | 0.956 | 1.000 | 1.000 |
 
-Our development macro read 0.6153. The six-set result was 0.4339. The full development macro
-therefore overstated held-out retention by 0.16, reading 0.915 against an eventual 0.755. The
-out-of-domain subset of the same development suite read 0.764 and missed the held-out retention by
-0.009.
+The three dense tiers keep the same share within 0.02 at every word cut. What a prefix loses is
+information the query has not yet supplied, and a bigger query encoder cannot supply it. A table is
+as good a search-as-you-type encoder, relative to its own ceiling, as the tower is. BM25 keeps a
+larger share of its lower score on word prefixes and a smaller share when the cut lands inside a word,
+where a lexical match fails and a subword table still sees the fragment. At half the words, prefixes lose
+to random word subsets of the same length on FiQA and beat them on SciFact and NFCorpus, so where the
+informative words sit depends on the dataset.
 
-We measured and disclosed that bias before the held-out run, so this is a prediction rather than a
-postmortem. For anyone distilling a query encoder, the operational form is short: the out-of-domain
-slice of a development suite is worth more than the whole of it, and the whole of it will flatter a
-lookup table by roughly the margin above. One system, one suite, so treat 0.16 as an instance and
-0.009 as an existence proof that a cheap in-house predictor of held-out retention is available.
+## 7. System Cost
 
-### 7.2 A Teacher's Own Quality Carried No Signal About Its Distilled Table
+### 7.1 The Encoder in Isolation
 
-We measured 11 teachers across two sweeps and compared each teacher's own retrieval ceiling against
-the quality of the table distilled from it. Over the eight candidates of the first sweep the Spearman
-correlation between the two is 0.000. The table distilled from the highest-ceiling candidate ranked
-fifth on the metric that ships, landed 0.0480 [-0.0608, -0.0349] below the incumbent's table, and we
-withdrew that teacher the same day we approved it. One candidate beat the incumbent, at +0.0365
-[0.0249, 0.0481], and it became the tower this paper freezes.
+| Encoder | p50, 1-4 words | p50, 5-12 | p50, 13-64 | Peak RSS | Model files |
+|---|---:|---:|---:|---:|---:|
+| Zero (NumPy) | 0.033 ms | 0.044 ms | 0.064 ms | 360 MiB | 90.1 MiB |
+| LEAF query (ONNX) | 1.19 ms | 1.39 ms | 1.69 ms | 243 MiB | 88.2 MiB |
+| Nano (ONNX) | 2.00 ms | 2.25 ms | 2.84 ms | 317 MiB | 132.3 MiB |
+| bge-small (ONNX) | 2.28 ms | 2.57 ms | 3.22 ms | 296 MiB | 127.8 MiB |
+| Stella query (ONNX) | 22.6 ms | 31.6 ms | 49.0 ms | 2,812 MiB | 1,669.6 MiB |
 
-Two plausible mechanisms failed the same way. Pooling does not explain the ranking: the same weights
-read out as a mean move the ratio from 0.526 to 0.472. Cosine agreement with the teacher does not
-either: it rises with the distillation weight while nDCG@10 falls, so it mis-ranks candidates.
+Three fresh processes per encoder, 100 real test queries per length bucket, every ONNX graph matched
+to its torch path at minimum cosine 0.9999 before timing. Zero's model file holds both its int8 and
+fp16 tables. Computing the fertility feature of Section 5.3 costs 0.018 ms.
 
-The sweep is closed-form, flat, development-only, and scored on two components of one dataset family
-against each teacher's own documents, so it ranks candidates rather than predicting their scores.
-Eight observations in one setting cannot show that teacher quality never predicts student quality,
-and the distillation literature already doubts the link. What they do show is that in this setting it
-had none, which makes leaderboard-order teacher selection an unjustified shortcut and makes
-distilling the candidate the only signal we trust.
+### 7.2 Does the Saving Survive the Search?
 
-### 7.3 A Lookup Table Absorbs Its Own Post-Processing, Under One Condition
+`[E2]` One Qdrant collection per setting over FiQA (57,638 documents) and a 1M-passage MS MARCO
+subset that keeps every judged positive; HNSW `ef` sweep and scalar, binary and TurboQuant
+quantization; for each encoder the cheapest setting within 1%, 2% and 5% of its own exact nDCG@10,
+and the end-to-end latency it needs there.
 
-The architecture is a row lookup, a weighted mean over the query's token multiset, and an L2
-normalization. Under that pooling the standard post-processing stack is exactly absorbable into the
-rows, because the mean commutes with the transformation: `mean(W[t] - mu) = mean(W[t]) - mu` for
-every multiset. Checked numerically against an explicitly reconstructed table, on ragged multisets
-with repeats, at vocabulary 500 and 64 dimensions:
+### 7.3 Fusion Depends on Candidate Depth
 
-| Transformation applied after pooling | Table that reproduces it | Maximum absolute difference |
-|---|---|---:|
-| Centering | `W' = W - mu` | 1.67e-16 |
-| Whitening or any linear map | `W' = W A^T` | 3.33e-16 |
-| Top principal component removal after centering | `W' = (W - mu) P^T` | 3.33e-16 |
-| Per-token scalar weights, such as IDF or SIF | `W' = c_t W_t` | 9.31e-14 |
-| The whole SIF recipe at once | `W' = c_t (W - mu) P^T` | 2.82e-14 |
+DBSF normalizes each prefetch by its own score distribution, so the depth of the prefetch is part of
+the operator. Zero + BM25 on the four exposure-free sets scores 0.4625, 0.4856, 0.4912 and 0.4974 at
+prefetch depths 10, 50, 100 and 1000 (`m12/FINDINGS.md`). The registered depth of 100 was chosen for
+latency before the evaluation and costs 0.006 against depth 1000.
 
-None of these levers can raise what the architecture reaches, because a trained table could already
-have represented the result. They can still help as a prior or an initialization.
+## 8. The Pre-Registered Test
 
-**The condition matters.** Absorbing an affine transformation needs pooling whose token coefficients
-sum to one, which mean and weighted-mean pooling satisfy. Under sum pooling it fails: replacing each
-row by `A e(t) + b` yields `Aq + nb` rather than `Aq + b`, so the offset scales with query length.
-Per-token weighting also needs weights fixed by token identity alone. Pure linear maps carry
-no condition.
+Before any evaluation data was read, the project registered head-to-head contrasts for Nano against
+bge-small and LEAF on six BEIR sets, with a clean-4 partition (NFCorpus, SCIDOCS, SciFact,
+TREC-COVID) that excludes the sets Stella's authors disclose, and a one-shot test on four reserved
+sets. We report both in full.
 
-Two things sit outside the architecture's reach and one is a decoy. Count saturation, which reads
-each token once regardless of repeats, depends on a query's multiplicity vector while a row is shared
-across queries; it differs from the plain mean by 0.129 and no choice of rows fixes it. An n-gram row
-adds a feature no unigram bag can express, because two queries with the same multiset in a different
-order are identical to a unigram table. The decoy is length-dependent scaling: any positive scalar
-function of query length is removed by the final L2 normalization, so it is a no-op.
+| Contrast | Partition | Difference in nDCG@10 | Registered outcome |
+|---|---|---:|---|
+| Nano - bge-small | clean-4 | +0.017648 (lower bound +0.003674) | established |
+| Nano - bge-small | all six | +0.027449 | established |
+| Nano - LEAF | all six | +0.016181 | established |
+| Nano - LEAF | clean-4 | -0.001063 | unresolved |
+| Nano - bge-small | reserved NDO-3, dataset-weighted | +0.0032 [-0.0069, +0.0134] | unresolved |
+| Nano - bge-small | reserved NDO-3, query-pooled | -0.0121 [-0.0219, -0.0024] | descriptive |
+| Nano - LEAF | reserved NDO-3 | -0.0389 [-0.0488, -0.0290] | descriptive |
 
-### 7.4 The Distillation Objective Was Already Exhausted
+NDO-3 is DBpedia-entity weighted 0.5 and the two reserved CQADupStack forums 0.25 each; FEVER is
+reported separately. "Unresolved" is not equivalence: no equivalence interval was computed anywhere.
+The comparators search their own indexes (bge-small at 384 dimensions, LEAF against arctic-embed-m at
+768) while Nano searches Stella's, so these contrasts compare systems, not query encoders alone.
 
-The shipped objective is inert on its own training data. Median KL against a uniform bank is
-4.73e-07 nats, and the table already ranks the positive first for 99.75% of training queries. The
-loss has nothing left to teach, which is a property of the bank rather than of the KL class: the same
-objective against a teacher's top-200 bank measures 0.777 nats.
+## 9. Limitations
 
-This reframes a negative result. A lookup table that plateaus may have an exhausted objective rather
-than an exhausted architecture, and the two look identical from the outside. The diagnostic is cheap:
-measure how often the objective still separates the positive.
+One document tower and one family of query students; the Section 4 result covers one closed-form
+recipe and 10 checkpoints. BEIR-15 and E8 results are descriptive. Query-resampling intervals exclude
+training-seed variation. Latencies come from one edge-class CPU and one runtime; server throughput and
+GPU serving are not measured. The E2 subset is a diagnostic, not full MS MARCO. Several BEIR sets
+overlap the training families of the towers and of Nano's bge-small backbone, which trained on MS
+MARCO. Stella's exposure to ArguAna, FiQA and FEVER rests on community metadata.
 
-A second diagnostic in the same family warns against acting on a correlation. The table falls 0.050
-nDCG@10 behind the teacher per additional subword per word (t = 4.61), which reads like a mechanism.
-Moving fertility by 0.164 to 0.176 did not move the metric. A correlated channel is not a lever, and
-this is the cleanest instance of that we produced.
+## Appendix A. What Does Not Travel With a Swap
 
-## 8. Limitations
+A swap is legal when the replacement emits vectors of the same width, normalization and similarity;
+the served paths match their references to 4.5e-08 (Zero), 1.2e-07 (Nano) and minimum cosine
+1.00000000 (Stella through the published document graph). Three things fail silently: Stella without
+its prompt scores at cosine 0.80 against the correct vector; Stella's tokenizer pads to 512 by default,
+which drops cosine to 0.35; and one serving library pooled Nano in float64 until fixed upstream.
 
-**Contamination.** Stella discloses exposure to ArguAna, FiQA, and FEVER. `clean-4` excludes the
-first two. The difference between the partitions is a sensitivity, not a causal contamination
-estimate. The distillation targets come from Stella, so any exposure in its lineage reaches our tiers
-through the teacher even though neither tier trains on those corpora directly.
+## Appendix B. Reproducibility
 
-**Unresolved is not equivalence.** Three confirmatory contrasts fail to resolve: the student against
-LEAF-asym on `clean-4`, the table against BM25, and the fused system against OpenSearch. We computed
-no equivalence interval for any of them, and the descriptive comparison between the two fusion
-operators has no interval at all.
-
-**Interval scope.** Intervals come from query resampling. They exclude training-seed variation, so
-they understate uncertainty for any claim about a recipe rather than a specific trained artifact.
-
-**Synthetic index.** Every number in Sections 6.2 and 6.4 comes from an index of random
-1024-dimensional vectors. Approximate search on random vectors is not a proxy for a real embedding
-distribution, and no recall is reported for any configuration.
-
-**Cross-harness comparison.** Sections 6.1 and 6.2 measure different builds on different hardware.
-Ratios are only compared inside a harness.
-
-**Coverage against capacity.** An earlier student retained 93.8% on Wikipedia-style questions and
-50.1% on a programming forum at the same parameter budget. That points at training-data coverage
-rather than capacity, and our evidence does not separate the two.
-
-**Swap scale.** The runtime swap runs against one small in-process collection. The quality tables
-come from offline exact search over the same frozen vectors. No measurement covers a swap against a
-large persistent collection in one server lifetime.
-
-**One tower.** Every result holds the same document tower fixed. Whether the frontier's shape
-survives a different frozen tower is untested.
-
-## 9. Open Measurements
-
-Three gaps are named above. One experiment closes most of them, and it needs no training and no new
-benchmark access.
-
-Build one persistent Qdrant collection from committed Stella document vectors, then query it in one
-server lifetime with the Stella query tower, the student, the table, and the table fused with BM25.
-Per index configuration, fp16, int8, binary with and without rescoring, and under the 256 MB and
-512 MB container limits, record approximate-search recall@10 against exact search, p50 latency per
-query-length bucket, and returned point identifiers per encoder.
-
-That run prices the Stella query tower, which is the swap a team with a Stella index would actually
-make and the one number the frontier in Section 5.4 is missing. It replaces the synthetic index with
-real vectors. It turns the quantization section from a latency claim into a quality-and-latency
-claim, which is what the deferred TurboQuant comparison requires. And it demonstrates the swap at a
-scale the paper currently asserts.
-
-## 10. Reproducibility
-
-The student is published at `DylanCouzon/constella-nano`, weights frozen at revision
-`6bb167dc6f60d3992602235b8e8aaa374a309168`. The table and the document tower ship alongside it. The
-student saw exactly 199,999,721 training examples; this is not 200,000,000 and we do not round it.
-
-Training sources permit commercial derived weights. MS MARCO is excluded from training in every role
-and appears only as a validation diagnostic. That matters for reading Section 5: the neural
-comparators there train on MS MARCO and our two tiers do not, so those comparisons carry a
-training-exposure asymmetry in the comparators' favor. BM25 trains on nothing.
+Every table regenerates from committed JSON under `results/m15_*`, each with a receipt of script
+hash, git commit, model revisions, dataset revisions, seed and machine. The method file and its
+reviews are in `m15/MEASUREMENTS.md` and `m15/REVIEWS/`.
 
 ## References
 
-- Shen, Y., Xiong, Y., Xia, W., and Soatto, S. Towards Backward-Compatible Representation Learning.
-  CVPR 2020.
-  https://openaccess.thecvf.com/content_CVPR_2020/papers/Shen_Towards_Backward-Compatible_Representation_Learning_CVPR_2020_paper.pdf
-- Ramanujan, V., Vasu, P. K. A., Farhadi, A., Tuzel, O., and Pouransari, H. Forward Compatible
+- [BCT] Shen, Y., Xiong, Y., Xia, W., and Soatto, S. Towards Backward-Compatible Representation
+  Learning. CVPR 2020.
+- [FCT] Ramanujan, V., Vasu, P. K. A., Farhadi, A., Tuzel, O., and Pouransari, H. Forward Compatible
   Training for Large-Scale Embedding Retrieval Systems. arXiv:2112.02805.
-  https://arxiv.org/pdf/2112.02805
-- Query Encoder Distillation via Embedding Alignment is a Strong Baseline Method to Boost Dense
-  Retriever Online Efficiency. arXiv:2306.11550. https://arxiv.org/abs/2306.11550
-- LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations.
-  arXiv:2509.12539, ACL 2026. https://arxiv.org/html/2509.12539v2
-  Released checkpoints: https://huggingface.co/MongoDB/mdbr-leaf-ir-asym
-- LightRetriever. arXiv:2505.12260 (v5, 2026-01-30). https://arxiv.org/abs/2505.12260
-- Tulkens, S. pyNIFE. 2025-11-03. https://github.com/stephantul/pynife
-- Model2Vec. https://github.com/MinishLab/model2vec
-- Cho, J. H., and Hariharan, B. On the Efficacy of Knowledge Distillation. ICCV 2019.
-  https://arxiv.org/abs/1910.01348
-- Mirzadeh, S. I., Farajtabar, M., Li, A., Levine, N., Matsukawa, A., and Ghasemzadeh, H. Improved
-  Knowledge Distillation via Teacher Assistant. AAAI 2020. https://arxiv.org/abs/1902.03393
+- [QED] Query Encoder Distillation via Embedding Alignment is a Strong Baseline Method to Boost Dense
+  Retriever Online Efficiency. arXiv:2306.11550.
+- [LEAF] LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations.
+  arXiv:2509.12539.
+- [pyNIFE] Tulkens, S. pyNIFE. https://github.com/stephantul/pynife
+- [Model2Vec] https://github.com/MinishLab/model2vec
+- [LightRetriever] arXiv:2505.12260.
+- [Cho and Hariharan 2019] On the Efficacy of Knowledge Distillation. ICCV 2019. arXiv:1910.01348.
 
-Author and title lines are copied from the works' own pages except where marked. Verify each against
-the published record before submission; two entries carried from internal notes, CARE and ERA, are
-omitted here until re-fetched.
-
-## Appendix A: Avenues That Closed
-
-- Twelve probes ran against the table's quality gap and none moved the development endpoint by more
-  than about 0.005. The milestone closed on an owner decision not to spend further, so this records
-  that no lever tested at equal budget worked, and the strongest remaining lead, a hard-candidate
-  listwise objective measuring 0.777 nats where the shipped one measures 4.73e-07, was never run.
-- Extending the table's vocabulary produced five arms between 0.021 and 0.035 nDCG@10 below the
-  untrained baseline. The inversion was never diagnosed and the released table stands.
-- A domain-specialized table passed its dense gate at +0.007591 and failed its fused gate at
-  +0.002953. No specialized table shipped.
-- A deterministic short-query variant closed inconclusive under a label-sensitive metric.
+Verify every entry against the published record before submission.
