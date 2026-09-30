@@ -8,6 +8,19 @@ Access discipline for all M15 work, including sub-agents: no reads of `results/f
 reserved qrels caches or `work/m9reserve`; no repo-wide content searches across `results/` or `work/`;
 named-file allowlists only.
 
+## 2026-10-01 owner-directed research review
+
+- **Owner mandate:** review draft v10 against the handoff's goals; challenge assumptions and make
+  concrete improvements. Existing content may be removed. Reputation in the search engineering
+  community, earned through useful research, takes precedence over product promotion. Commit and
+  push coherent batches often for full auditability.
+- **Review scope:** independent scientific review (Astra), target-reader and contribution review
+  (Sol), and primary-source literature/reference verification (Sol). Each brief limits local
+  reads to named files and preserves all protected-read exclusions. Reviews will be saved in
+  `m15/REVIEWS/2026-10-01-owner-*.md`; dispositions and paper changes will be recorded here.
+- **Starting state:** branch `m15-whitepaper`, clean working tree at `c96fe60`; draft v10 and its
+  generated LaTeX/PDF. No evaluation, training, cloud rental, or release has been initiated.
+
 ## 2026-09-17
 
 - Created branch `m15-whitepaper` and `m15/`.

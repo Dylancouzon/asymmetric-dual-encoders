@@ -30,6 +30,12 @@ The paper succeeds when it meets all of these; score drafts against them.
 - **Target reader:** Codex `gpt-6-sol` reviews drafts as the IR reader; `gpt-6-astra` checks
   correctness.
 
+**Owner clarification, 2026-10-01.** Existing paper content is expendable: remove findings or
+sections that contribute little to the research question. The goal is to improve Qdrant's image
+within the search engineering community through useful, credible research, not to sell Qdrant.
+The owner authorizes independent research, challenges to assumptions, and concrete improvements;
+commit and push coherent batches often so the full review and revision remain auditable.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
