@@ -294,3 +294,9 @@ than this one, or a causal effect of tower properties.
 - **2026-09-30, before E1 ran.** Nano's torch checkpoint is not on this Mac. Nano's E1 parity gate is
   its ONNX sha256 equal to the M13 freeze (`results/m13_build_record.json`, `freeze.onnx.sha256`,
   `9ba0acf5...`); E4's reproduction gate checks the Nano query path end to end.
+- **2026-09-30, before E8 ran (driver `m15src/e8_towers.py`).** Two details the E8 section left
+  implicit, fixed now: every E8 encode (fit targets, documents, ceiling queries) is fp16 compute and
+  storage, as the M7/M8 screen did for every tower; and every E8 search, table and ceiling, retrieves
+  the exact top 100 with self-hits dropped before nDCG@10 (M7's ceiling probe retrieved 10). The
+  Stella fit targets reuse the pod's `trainq-337981-fp16-7423fa42cd3e` cache, whose key binds the
+  text hash of the cleaned list.

@@ -46,3 +46,14 @@ def test_router_interval_zero_width_for_constant_gain():
     out = e6_router.evaluate(rng.random(300), zero, zero + 0.1, 0.5, rng, draws=500)
     lo, hi = out["router_minus_random_ci95"]
     assert abs(lo) < 1e-12 and abs(hi) < 1e-12
+
+
+def test_e8_convergence_gate():
+    sys.path.insert(0, str(common.REPO / "m8src"))
+    import e8_towers
+    ok = {"converged": True, "worst_rel_residual": 5e-7, "tol": 1e-6, "iterations": 3,
+          "seconds": 1.0, "preconditioner": "jacobi"}
+    assert e8_towers._gate(ok, "t")["iterations"] == 3
+    for bad in ({**ok, "converged": False}, {**ok, "worst_rel_residual": 2e-6}):
+        with pytest.raises(SystemExit):
+            e8_towers._gate(bad, "t")
