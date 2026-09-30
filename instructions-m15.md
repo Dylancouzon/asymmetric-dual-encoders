@@ -12,6 +12,24 @@ evaluation section, and bge-small, LEAF and BM25 appear as reference points. A f
 enters only where it carries significant value; the repository keeps the full trail. The evidence
 list below is the evidence base the paper may draw on, not required paper content.
 
+## Goals and success criteria (Dylan, 2026-09-30 and 2026-10-01)
+
+The paper succeeds when it meets all of these; score drafts against them.
+
+- **New knowledge for IR.** Findings a researcher would cite, not a retention table or a frontier.
+- **Research paper, not a benchmark report.** Lead with findings, implications and decisions they
+  support; comparator contrasts go in the evaluation section or an appendix.
+- **Interesting to read.** A human reader should want to keep going: a clear question, worked
+  examples, one idea per paragraph, inventories in appendices.
+- **Every statement proven.** Each claim traces to a committed result a reader can check; the repo
+  will be public, so evidence is human-readable (`m15/EVIDENCE.md`). External references are welcome.
+- **Raises Qdrant's reputation in IR.** Careful, honest, negative results included; ideally shows
+  what the engine makes possible, not only that it was used.
+- **Lean.** No over-engineering in experiments or scaffolding; reviews report only what matters to
+  these goals.
+- **Target reader:** Codex `gpt-6-sol` reviews drafts as the IR reader; `gpt-6-astra` checks
+  correctness.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:

@@ -1,7 +1,8 @@
 # M15 handoff (2026-10-01)
 
-Start here in a fresh session on branch `m15-whitepaper`. Then read `m15/LOG.md` (last two entries)
-and `m15/PAPER.md`.
+Start here in a fresh session on branch `m15-whitepaper`. The paper's goals and success criteria are in
+`instructions-m15.md`, "Goals and success criteria". Then read `m15/LOG.md` (last two entries) and
+`m15/PAPER.md`.
 
 ## State
 
