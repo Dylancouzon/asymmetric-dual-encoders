@@ -21,7 +21,8 @@ OUT = REPO / "results" / "m15_e12_failure_modes.json"
 def terciles(x, y):
     cut = np.quantile(x, [1 / 3, 2 / 3])
     groups = np.digitize(x, cut)
-    return [float(y[groups == g].mean()) for g in range(3)]
+        # Ties (order dependence is often exactly 0) can empty a tercile; report it as None.
+    return [float(y[groups == g].mean()) if (groups == g).any() else None for g in range(3)]
 
 
 def main():
