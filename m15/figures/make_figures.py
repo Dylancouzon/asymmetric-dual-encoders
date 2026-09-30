@@ -151,7 +151,7 @@ def f5_routing():
                 xytext=(0, 3), fontsize=7.5, color=C["stella"])
     ax.set_xlabel("Share of queries sent to Nano")
     ax.set_ylabel("Macro nDCG@10, 12 BEIR sets")
-    ax.set_title("Headroom: most queries do not need Nano", fontsize=9, loc="left")
+    ax.set_title("Upper bound from label-aware routing", fontsize=9, loc="left")
     ax.legend(frameon=False, fontsize=7, loc="lower right")
     # Right: share of the oracle's advantage over random routing each signal recovers, per budget
     # (macro of router, random-at-same-share and oracle-at-same-share over its evaluation sets).
