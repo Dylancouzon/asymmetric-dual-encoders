@@ -78,9 +78,13 @@ def fetch_qdrant():
         raise SystemExit("E20 STOP: no x86_64 linux-musl asset for v1.19.1")
     tar = QDRANT_DIR / assets[0]["name"]
     urllib.request.urlretrieve(assets[0]["browser_download_url"], tar)
-    subprocess.run(["tar", "-xzf", str(tar), "-C", str(QDRANT_DIR)], check=True)
+    # tar exits 2 on the pod's network filesystem (ownership/utime warnings) after a complete
+    # extraction, so the binary's presence is the check, not tar's exit code.
+    subprocess.run(["tar", "-xzf", str(tar), "-C", str(QDRANT_DIR)])
     if not binary.exists():
-        found = list(QDRANT_DIR.rglob("qdrant"))
+        found = [p for p in QDRANT_DIR.rglob("qdrant") if p.is_file()]
+        if not found:
+            raise SystemExit("E20 STOP: qdrant binary not found after extraction")
         found[0].rename(binary)
     binary.chmod(0o755)
     print("fetched", assets[0]["name"], sha_file(binary)[:16], flush=True)
