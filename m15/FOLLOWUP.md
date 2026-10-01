@@ -184,3 +184,6 @@ The owner rejected the native scalar8 precision experiment as a knob rather than
   fit list; E22 and E23 need the E20 vectors.
 - Rejected by owner: native scalar8 query precision. Deferred: domain-fit table (future work; the
   owner's "task-specific student" idea), noted in the paper's Limitations.
+- E25 complete (owner round 7): LightRetriever's lookup path over its own index needs 4x ef by
+  recovery on both corpora (gap −3.6 pp FiQA, −1.7 pp SCIDOCS, intervals clear of zero); the search
+  penalty is not an artifact of fitting students after the fact. `results/m15_e25_lightretriever.json`.

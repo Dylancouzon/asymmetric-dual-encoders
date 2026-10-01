@@ -54,3 +54,8 @@ weaker-student effects, OOD graph difficulty, query-aware binary decoding. **Wha
 conditional structure of teacher predictability across 26 spaces with a held-out prediction, and
 the cross-space search-effort regularity. **Pending.** E24 makes RQ1 prospective; E22 and E23 decide
 whether RQ2 is predictive and whether corpus size explains its attenuation.
+
+**E25 (2026-10-01).** RQ2's penalty reproduces in a jointly trained model's own space: LightRetriever's
+lookup path needs four times the ef of its full encoder to match exact-neighbour recovery over its own
+FiQA and SCIDOCS indexes. This supports the paper's claim that query-encoding speedups measured alone
+overstate the saving, without disputing the cited paper's retention or speedup figures.

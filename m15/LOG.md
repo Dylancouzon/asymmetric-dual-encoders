@@ -760,11 +760,12 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Title changed on owner decision to "The Index Is Fine; the Query Encoder Is the Cost: Query-Side
   Distillation over Frozen Document Vectors" in PAPER.md, REVISION_PLAN_V17.md, REVIEW_GUIDE.md,
   HANDOFF.md; PDF rebuilt.
-- **E25 launched** (owner round 7, 2026-10-01): pre-registered in MEASUREMENTS.md; fresh pod
-  `8oby6v8j8x6j5p` (A100 SXM 80 GB, $1.59/h, container disk only); venv rebuilt plus peft 0.17.1;
-  model loader smoke passed (1536-d, unit norms); Astra pre-spend review
-  (`REVIEWS/2026-10-01-astra-e25-prespend.md`): two P2s applied before launch (exact references from
-  the stored fp16 vectors; build-averaged multipliers with E20's censoring rule). Owner clarified the
-  goal: not disproving joint-training methods but showing ours is more efficient end to end and
-  drop-in on an existing pipeline; the paper claims drop-in and encoding-plus-search efficiency,
-  never quality superiority.
+- **E25 complete** (`results/m15_e25_lightretriever.json`, fresh pod stopped at 18:08 UTC; about 30
+  minutes of pod time, about $1). LightRetriever qwen2.5-1.5b over its own FiQA and SCIDOCS
+  indexes: lookup path versus full query encoding, recovery multiplier 4.0 in every build on FiQA
+  and under the web-search prompt on SCIDOCS (2.0 under the task prompt); recovery gap at ef=64
+  −3.57 pp [−4.31, −2.89] (FiQA, web search), −1.73 [−2.08, −1.38] (SCIDOCS); relevance-loss
+  multiplier 3.0 and 2.0 on FiQA, uninformative on SCIDOCS; exact parity 1.0 everywhere; lookup
+  retains 85.5% / 86.0% (web search) and 86.5% / 90.1% (task) of the full path's exact nDCG@10;
+  GPU encoding 0.10 ms lookup versus 0.90 ms full. Written into the paper as §5.5 and Table E,
+  the abstract, §1, §2, §6, §7; card C19; evidence map, FOLLOWUP, NOVELTY updated.

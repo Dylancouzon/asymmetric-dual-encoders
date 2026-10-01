@@ -647,3 +647,33 @@ Selection regret, six-set nDCG@10 below the best student:
 Pooled Spearman student vs space quality: head +0.09, table +0.09; partial given width: head +0.58, table +0.45; space quality vs width +0.61.
 
 **Cannot show.** A mechanism; independence of related checkpoints; transfer to trained students; a prospective test (the hypothesis was formed after seeing all 26; E24 supplies the prospective roster).
+
+## C19. LightRetriever's own lookup path under graph search
+
+**Label:** exploratory (E25, pre-specified before encoding). **Source:** `results/m15_e25_lightretriever.json`
+
+**Claim.** Over the released LightRetriever model's own FiQA and SCIDOCS indexes, its lookup query path recovers fewer exact neighbours than its full query encoding at equal HNSW effort, and matching the full path takes four times the ef by recovery; the relevance-loss multiplier agrees on FiQA and is uninformative on SCIDOCS where both paths lose under 0.1% at ef=64.
+
+| workload | prompt | loss multiplier | builds | recovery multiplier | recovery gap at ef=64 (pp) | query bootstrap95 |
+|---|---|---|---|---|---|---|
+| fiqa | websearch | 3 | 2/4 | 4 | -3.57 | [-4.31, -2.89] |
+| fiqa | task | 2 | 2/2 | 4 | -2.31 | [-2.85, -1.81] |
+| scidocs | websearch | 2.25 | 0.5/4 | 4 | -1.73 | [-2.08, -1.38] |
+| scidocs | task | cens. | 1/cens. | 2 | -0.73 | [-0.97, -0.49] |
+
+Exact quality and query placement per path (and GPU encoding time on the pod, context only):
+
+| workload | path | exact nDCG@10 | median top-1 cosine |
+|---|---|---|---|
+| fiqa | full_websearch | 0.4752 | 0.495 |
+| fiqa | lookup_websearch | 0.4065 | 0.289 |
+| fiqa | full_task | 0.4766 | 0.516 |
+| fiqa | lookup_task | 0.4124 | 0.325 |
+| fiqa | timing | full 0.90 ms/query | lookup 0.096 ms/query |
+| scidocs | full_websearch | 0.1925 | 0.423 |
+| scidocs | lookup_websearch | 0.1655 | 0.258 |
+| scidocs | full_task | 0.2017 | 0.461 |
+| scidocs | lookup_task | 0.1818 | 0.327 |
+| scidocs | timing | full 0.83 ms/query | lookup 0.096 ms/query |
+
+**Cannot show.** The paper's retention or encoding-speedup figures; latency (shared pod GPU); generality beyond one 1.5B model and two corpora; the sparse or hybrid paths.

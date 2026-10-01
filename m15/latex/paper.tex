@@ -128,9 +128,13 @@ HNSW graph: by exact-neighbor recovery its queries fall short of the
 encoder's own at equal effort in all 25 measured spaces on two of three
 corpora, and matching the encoder's recovery takes a median four times
 the search budget; by the pre-specified relevance-loss measure the
-penalty is universal on one corpus and mixed on the other two.
-Constella, three compatible query encoders over one frozen Stella index,
-is the worked instance.
+penalty is universal on one corpus and mixed on the other two. The same
+penalty appears in a jointly trained model: over LightRetriever's own
+index, its lookup query path recovers 3.6 points fewer exact neighbors
+than its full encoder at equal effort and needs four times the search
+budget to match it. Query-encoding speedups measured alone therefore
+overstate what a cheap query path saves. Constella, three compatible
+query encoders over one frozen Stella index, is the worked instance.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -194,7 +198,10 @@ pending{]}. Against RQ2, by exact-neighbor recovery the student's
 queries fall short of the encoder's own at equal HNSW effort in all 25
 measured spaces on two of three corpora, with a median recovery
 multiplier of four; the pre-specified relevance-loss measure agrees on
-one corpus and is mixed on the other two {[}E22 and E23 pending{]}.
+one corpus and is mixed on the other two {[}E22 and E23 pending{]}. The
+penalty is not an artifact of fitting students after the fact:
+LightRetriever's jointly trained lookup path pays it over its own index
+(Section 5.5).
 
 \textbf{Constella} is the worked instance: a frozen Stella index
 {[}Stella{]} with three compatible query paths, Stella's own encoder, a
@@ -225,7 +232,8 @@ LightRetriever's lookup query side keeps about 95\% of its co-trained
 document tower's BEIR score, against 81.4\% for Zero over a frozen
 Stella. That gap is the price of the frozen index: joint training
 re-encodes every document, which is the operation this paper assumes is
-not available. None of these works compares students across many
+not available. Section 5.5 measures LightRetriever's released model
+under RQ2's protocol. None of these works compares students across many
 teachers under one recipe, which is the comparison RQ1 needs.
 
 That stronger teachers can produce weaker students is known in
@@ -625,6 +633,74 @@ size: on FiQA subsampled to SCIDOCS's size the gap should shrink toward
 SCIDOCS's value. {[}E23 pending: FiQA subsampled to 25,657 documents on
 the same queries, paired across indexes.{]}
 
+\subsubsection{5.5 The penalty in a jointly trained
+model}\label{the-penalty-in-a-jointly-trained-model}
+
+\textbf{H2d.} If the deficit comes from where lookup queries sit against
+a graph built for the encoder's own queries, it should also appear when
+the lookup side is trained jointly with the document tower rather than
+fitted afterwards. We tested the released LightRetriever model
+(Qwen2.5-1.5B with its published adapter) over its own FiQA and SCIDOCS
+document vectors, comparing its lookup query path with the same model's
+full query encoding under the Section 3.4 protocol, with the model's
+web-search instruction as the primary prompt and the task prompt as
+secondary. Predictions and quantities were fixed before encoding
+(exploratory, pre-specified).
+
+\textbf{Table E.} LightRetriever's lookup path against its full query
+path over its own index, two builds averaged.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1500}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1500}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Workload
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Prompt
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Exact nDCG@10, lookup / full
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Loss multiplier (builds)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Recovery multiplier
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Recovery gap at ef=64, query 95\% interval
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+FiQA & web search & 0.4065 / 0.4752 & 3.0 (2, 4) & 4.0 & −3.6 pp
+{[}−4.3, −2.9{]} \\
+FiQA & task & 0.4124 / 0.4766 & 2.0 (2, 2) & 4.0 & −2.3 pp {[}−2.9,
+−1.8{]} \\
+SCIDOCS & web search & 0.1655 / 0.1925 & 2.25 (0.5, 4) & 4.0 & −1.7 pp
+{[}−2.1, −1.4{]} \\
+SCIDOCS & task & 0.1818 / 0.2017 & censored (1, censored) & 2.0 & −0.7
+pp {[}−1.0, −0.5{]} \\
+\end{longtable}
+}
+
+H2d holds. The lookup path recovers fewer of its own exact neighbors at
+\texttt{ef=64} on both corpora under both prompts, with query intervals
+clear of zero, and matching the full path's recovery takes four times
+the \texttt{ef} in every build on FiQA and under the primary prompt on
+SCIDOCS. The relevance-loss multiplier agrees on FiQA (two to four) and
+is uninformative on SCIDOCS, where both paths lose under 0.1\% of nDCG
+at \texttt{ef=64}. On the pod GPU the lookup path encoded a query in
+0.10 ms against 0.90 ms for the full path, a nine-fold gap that the
+extra \texttt{ef} consumes. Neither the model's published retention nor
+its encoding-speedup figure is in dispute; the measurement shows that
+the figure is taken before the step where the cheap path pays. One
+caveat: one 1.5-billion-parameter model, our reproduction of its dense
+path, two corpora.
+
 One caveat governs Section 5: a multiplier on \texttt{ef} is a
 multiplier on graph effort, not on latency, and a recovery deficit is a
 relevance deficit only where the primary measure agrees.
@@ -733,7 +809,9 @@ Zero & 0.01 h & 0.99 h (\texttt{ef=512}) & 1.0 h & 11\% \\
 After search, Nano and Zero cost about the same per million queries on
 this collection, because Zero's encoding saving is spent on the extra
 \texttt{ef} that RQ2 measures; both are about a ninth of the full
-encoder's cost, at 90.5\% and 81.4\% of its quality.
+encoder's cost, at 90.5\% and 81.4\% of its quality. Section 5.5 shows
+the same accounting applies to a jointly trained lookup path over its
+own index.
 
 The instance also shows RQ2's cost in time. On the uncompressed
 million-passage diagnostic, search time at a fixed \texttt{ef} is the
@@ -769,7 +847,9 @@ not a latency claim. The instance's two students have different training
 pools, including different FEVER exposure, and Stella discloses training
 exposure on ArguAna, FiQA, and FEVER. Query intervals condition on the
 trained models. The native magnitude-preserving query setting was not
-tested. Three bounded attempts to specialize a student to one internal
+tested. The LightRetriever measurement covers one released
+1.5-billion-parameter model, our reproduction of its dense path, and two
+corpora. Three bounded attempts to specialize a student to one internal
 workload over the same index produced no improved encoder, so
 per-workload students remain a possibility of the design, not a result.
 
