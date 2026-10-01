@@ -142,7 +142,24 @@ H2 predicts a multiplier above one in most indexes on every workload. By the pri
 
 ### 5.3 Is the effort predictable?
 
-H2b predicts that declared features of query placement, computable before a graph is built, rank the spaces by the size of the effect. Two placement summaries, the median cosine of a query to its nearest document and the median gap between its first and tenth scores, are lower for every student path than for its encoder's, yet across the 25 spaces they do not rank the gap: Spearman 0.00 on FiQA, +0.23 on SCIDOCS, −0.34 on TREC-COVID, intervals spanning zero. [E22 pending: Table E, declared placement features (query-to-document distance ratio, hubness, top-10 overlap, effective rank) with clustered intervals and leave-family-out prediction.]
+H2b predicts that declared features of query placement, computable before a graph is built, rank the spaces by the size of the effect. We declared eight features before computing any of them (exploratory, pre-specified; Appendix C) and correlated each with the recovery gap at `ef=64` over the 75 space-by-workload points, with intervals from resampling spaces together with their three rows. Table F gives the result; the held-out test fits a ridge model on all families but one and predicts the left-out family.
+
+**Table F.** Predictors of the recovery gap over 75 points (25 spaces by three workloads). Negative Spearman means a larger feature value goes with a larger penalty.
+
+| Feature | Spearman, 75 points | 95% interval | FiQA / SCIDOCS / TREC-COVID | Leave-one-family-out Spearman, MAE (pp) |
+|---|---:|---|---|---|
+| Query-to-document distance ratio, encoder's queries | −0.64 | [−0.75, −0.48] | −0.80 / −0.32 / −0.83 | +0.64, 1.26 |
+| Query-to-document distance ratio, student's queries | −0.63 | [−0.74, −0.46] | −0.77 / −0.45 / −0.69 | +0.56, 1.79 |
+| Student minus encoder ratio | −0.23 | [−0.42, −0.03] | −0.37 / −0.44 / +0.17 | −0.15, 2.23 |
+| Hubness of the student's top-10, minus the encoder's | +0.40 | [+0.20, +0.57] | +0.12 / −0.20 / −0.15 | +0.14, 2.11 |
+| Student-encoder top-10 overlap | +0.37 | [+0.14, +0.60] | −0.01 / +0.43 / +0.28 | +0.11, 2.29 |
+| Effective rank of the encoder's fit-query cloud | −0.17 | [−0.40, +0.11] | −0.28 / −0.34 / −0.05 | −0.53, 2.38 |
+| Top-1 cosine, student minus encoder | −0.05 | [−0.30, +0.20] | 0.00 / +0.23 / −0.34 | −0.55, 2.28 |
+| Margin, student minus encoder | −0.28 | [−0.48, −0.05] | −0.19 / −0.05 / −0.37 | −0.11, 2.15 |
+| All features | | | | +0.73, 1.40 |
+| Training-fold mean (baseline) | | | | 2.22 |
+
+One feature carries the prediction: how far a space's queries sit from their nearest documents, relative to the typical distance between neighboring documents. It ranks the penalty on every workload, and alone it predicts a held-out family's gap at Spearman +0.64 with a mean error of 1.26 points against 2.22 for the fold mean. The encoder's own queries give that ratio as well as the student's do, so the penalty is a property of how the space places queries against documents, which the student inherits and worsens. The student-minus-encoder differences, including the two geometry summaries of Section 5.2, do not rank it. Magnitude does not transfer across workloads: a model fitted on two workloads ranks the third at +0.50 but predicts its gaps no better than the fold mean, so the ratio says which spaces will pay more, not how much.
 
 ### 5.4 Corpus size
 
@@ -306,6 +323,8 @@ The registered clean-four sensitivity is descriptive: −0.0443 [−0.0675, −0
 **Cross-index sweep.** The same engine and graph parameters, uncompressed, two builds per index and workload differing in a seeded insertion order, 16 to 512 `ef`, limit 11 with the self-hit drop, tie-aware exact parity on 200 queries per path. Four amendments were recorded during the run, before any index's rows were analysed: SCIDOCS added as a third workload because TREC-COVID has 50 queries; the tie-aware measure; a 0.995 sanity gate on parity with all values reported; and the exclusion rule that removed tas-b (SCIDOCS head parity 0.994). Stella's own-path rows agree with the instance sweep at every `ef`. Loss-based censoring: four indexes on FiQA, eight on SCIDOCS, eight on TREC-COVID; recovery-based censoring: one per workload.
 
 **Truncated queries (registered).** On synthetic prefixes of SciFact, NFCorpus, and FiQA queries, the three dense paths retain descriptively similar shares of their own full-query nDCG@10 at each prefix length; this is not an equivalence test and no search-as-you-type session was measured.
+
+**Gap predictors (E22).** Features per space and workload, declared before computation: the mean cosine distance from a query to its nearest document divided by the mean nearest-neighbor distance among a 5,000-document sample (for the student's and the encoder's queries, and their difference); the Gini coefficient of document occurrence counts across the student's exact top-10 lists over the full document support, minus the encoder's; the mean overlap of the student's and encoder's exact top-10; the effective rank (participation ratio) of a seeded 20,000-row sample of the encoder's fit-query vectors and the ratio of the student's to the encoder's workload-query effective rank; the two Section 5.2 geometry summaries; log2 width and log10 corpus size as covariates. Ridge with unit penalty on standardized features; the baseline is each training fold's mean.
 
 **Native binary pilot and replication.** On one fixed binary collection per workload with 192 deterministically selected queries, binary scoring with rescoring at 1x oversampling loses 11.7, 5.1, and 2.3 percentage points of exact-neighbor recovery for Zero, Nano, and Stella on FiQA at `ef=64`; the million-passage replication loses 3.9, 3.1, and 2.2, and the extra Zero-versus-Nano interval includes zero. Native rescoring also changes cross-segment candidate merging.
 

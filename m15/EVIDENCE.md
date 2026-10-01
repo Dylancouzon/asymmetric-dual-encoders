@@ -677,3 +677,34 @@ Exact quality and query placement per path (and GPU encoding time on the pod, co
 | scidocs | timing | full 0.83 ms/query | lookup 0.096 ms/query |
 
 **Cannot show.** The paper's retention or encoding-speedup figures; latency (shared pod GPU); generality beyond one 1.5B model and two corpora; the sparse or hybrid paths.
+
+## C20. Predictors of the cross-space recovery gap
+
+**Label:** exploratory (E22, features declared before computation). **Source:** `results/m15_e22_gap_predictors.json`
+
+**Claim.** The query-to-document distance ratio, for the encoder's or the student's queries, ranks the recovery gap across 75 space-by-workload points and predicts held-out families; student-minus-encoder differences and the two geometry summaries do not; magnitude does not transfer across workloads.
+
+| feature | Spearman (75) | bootstrap95 over spaces | FiQA / SCIDOCS / TREC-COVID | single-feature LOFO Spearman | LOFO MAE (pp) |
+|---|---|---|---|---|---|
+| qdoc_ratio_table | -0.63 | [-0.74, -0.46] | -0.77 / -0.45 / -0.69 | +0.56 | 1.79 |
+| qdoc_ratio_teacher | -0.64 | [-0.75, -0.48] | -0.80 / -0.32 / -0.83 | +0.64 | 1.26 |
+| qdoc_ratio_delta | -0.23 | [-0.42, -0.03] | -0.37 / -0.44 / +0.17 | -0.15 | 2.23 |
+| hubness_delta | +0.40 | [+0.20, +0.57] | +0.12 / -0.20 / -0.15 | +0.14 | 2.11 |
+| top10_overlap | +0.37 | [+0.14, +0.60] | -0.01 / +0.43 / +0.28 | +0.11 | 2.29 |
+| effrank_fitq_teacher | -0.17 | [-0.40, +0.11] | -0.28 / -0.34 / -0.05 | -0.53 | 2.38 |
+| effrank_q_table_over_teacher | +0.18 | [-0.06, +0.41] | +0.16 / -0.48 / +0.32 | -0.30 | 2.17 |
+| top1_cos_delta | -0.05 | [-0.30, +0.20] | +0.00 / +0.23 / -0.34 | -0.55 | 2.28 |
+| margin_delta | -0.28 | [-0.48, -0.05] | -0.19 / -0.05 / -0.37 | -0.11 | 2.15 |
+| log2_width | -0.33 | [-0.56, -0.07] | -0.27 / -0.85 / -0.30 | +0.07 | 2.19 |
+| log10_ndocs | -0.56 | [-0.67, -0.45] | n/a / n/a / n/a | +0.34 | 1.97 |
+
+Held-out models (leave one family out unless named):
+
+| model | Spearman | MAE (pp) | fold-mean baseline MAE |
+|---|---|---|---|
+| all_features | +0.73 | 1.40 | 2.22 |
+| all_features_leave_workload_out | +0.50 | 2.55 | 2.33 |
+| covariates_only_width_ndocs | +0.45 | 1.93 | 2.22 |
+| placement_only | +0.35 | 2.17 | 2.22 |
+
+**Cannot show.** A mechanism; independence of families; transfer of magnitude across workloads.

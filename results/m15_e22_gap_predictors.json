@@ -1,0 +1,1805 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E22 (exploratory, pre-specified before computing features)",
+  "scope": "75 space-by-workload points, 25 spaces; families and workloads are not independent; ridge lambda 1 on standardized features; declared features only",
+  "features": [
+    "qdoc_ratio_table",
+    "qdoc_ratio_teacher",
+    "qdoc_ratio_delta",
+    "hubness_delta",
+    "top10_overlap",
+    "effrank_fitq_teacher",
+    "effrank_q_table_over_teacher",
+    "top1_cos_delta",
+    "margin_delta",
+    "log2_width",
+    "log10_ndocs"
+  ],
+  "n_points": 75,
+  "univariate": {
+    "qdoc_ratio_table": {
+      "spearman_all75": -0.6269225073305457,
+      "bootstrap95_over_spaces": [
+        -0.7382196178289475,
+        -0.46272667034958076
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.7653846153846153,
+          "bootstrap95_over_spaces": [
+            -0.8778051820186067,
+            -0.5497718986180069
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.44845763834911456,
+          "bootstrap95_over_spaces": [
+            -0.7542660230698878,
+            0.023126655482346232
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.6851317687806745,
+          "bootstrap95_over_spaces": [
+            -0.8488966157547964,
+            -0.39457199978891416
+          ]
+        }
+      }
+    },
+    "qdoc_ratio_teacher": {
+      "spearman_all75": -0.6445718718378761,
+      "bootstrap95_over_spaces": [
+        -0.7510295576247489,
+        -0.48291074648630106
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.7976923076923076,
+          "bootstrap95_over_spaces": [
+            -0.888030888030888,
+            -0.5938101449927278
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.31904222571305796,
+          "bootstrap95_over_spaces": [
+            -0.6800201834092056,
+            0.1255080341824584
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.8305443508127323,
+          "bootstrap95_over_spaces": [
+            -0.9303142630608084,
+            -0.6429103827526605
+          ]
+        }
+      }
+    },
+    "qdoc_ratio_delta": {
+      "spearman_all75": -0.23356941255265523,
+      "bootstrap95_over_spaces": [
+        -0.4243861147805316,
+        -0.0330821756713605
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.36692307692307696,
+          "bootstrap95_over_spaces": [
+            -0.6701654012893873,
+            0.025511228977729825
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.43555519539748344,
+          "bootstrap95_over_spaces": [
+            -0.7604000546860068,
+            0.004275948359452614
+          ]
+        },
+        "trec-covid": {
+          "spearman": 0.16657049740709265,
+          "bootstrap95_over_spaces": [
+            -0.2392158029280024,
+            0.5170895745140563
+          ]
+        }
+      }
+    },
+    "hubness_delta": {
+      "spearman_all75": 0.3954311651150438,
+      "bootstrap95_over_spaces": [
+        0.20274127869548675,
+        0.5744163134141488
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": 0.12230769230769231,
+          "bootstrap95_over_spaces": [
+            -0.3475286939310043,
+            0.5392983249770673
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.20135630666939316,
+          "bootstrap95_over_spaces": [
+            -0.5603906595562946,
+            0.20451808133886298
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.1454125820320578,
+          "bootstrap95_over_spaces": [
+            -0.5873175400813591,
+            0.3148957706543376
+          ]
+        }
+      }
+    },
+    "top10_overlap": {
+      "spearman_all75": 0.3701954205412559,
+      "bootstrap95_over_spaces": [
+        0.13776601421334153,
+        0.6021187404725619
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.009999999999999998,
+          "bootstrap95_over_spaces": [
+            -0.4350044585691353,
+            0.41168511541873115
+          ]
+        },
+        "scidocs": {
+          "spearman": 0.42578061740382367,
+          "bootstrap95_over_spaces": [
+            0.04217545651301395,
+            0.7003540851216331
+          ]
+        },
+        "trec-covid": {
+          "spearman": 0.2773610360981843,
+          "bootstrap95_over_spaces": [
+            -0.15580428273773042,
+            0.6309910257338129
+          ]
+        }
+      }
+    },
+    "effrank_fitq_teacher": {
+      "spearman_all75": -0.1703236843390146,
+      "bootstrap95_over_spaces": [
+        -0.40296337370831375,
+        0.10503386364549408
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.27999999999999997,
+          "bootstrap95_over_spaces": [
+            -0.5927082296641539,
+            0.1265003769357377
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.33898236482012406,
+          "bootstrap95_over_spaces": [
+            -0.6664198156939624,
+            0.07471055179996518
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.05039430752962849,
+          "bootstrap95_over_spaces": [
+            -0.44085774558441637,
+            0.3753508931041411
+          ]
+        }
+      }
+    },
+    "effrank_q_table_over_teacher": {
+      "spearman_all75": 0.1804220520120328,
+      "bootstrap95_over_spaces": [
+        -0.05758448413755981,
+        0.40743504366910205
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": 0.1623076923076923,
+          "bootstrap95_over_spaces": [
+            -0.2020122973978227,
+            0.49883951440300334
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.4813002204078117,
+          "bootstrap95_over_spaces": [
+            -0.7669206149509297,
+            -0.09198361521120234
+          ]
+        },
+        "trec-covid": {
+          "spearman": 0.32352376055280585,
+          "bootstrap95_over_spaces": [
+            -0.12058849295997273,
+            0.7199583683843946
+          ]
+        }
+      }
+    },
+    "top1_cos_delta": {
+      "spearman_all75": -0.050813089750943286,
+      "bootstrap95_over_spaces": [
+        -0.29928523629177356,
+        0.19722883438321678
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": 0.0015384615384615385,
+          "bootstrap95_over_spaces": [
+            -0.3861036524105369,
+            0.38885443925722774
+          ]
+        },
+        "scidocs": {
+          "spearman": 0.2345898718478367,
+          "bootstrap95_over_spaces": [
+            -0.19509665761125308,
+            0.6014216681955143
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.33544913103691637,
+          "bootstrap95_over_spaces": [
+            -0.6803777666578468,
+            0.08106785384546888
+          ]
+        }
+      }
+    },
+    "margin_delta": {
+      "spearman_all75": -0.2847810363408608,
+      "bootstrap95_over_spaces": [
+        -0.4776157268931096,
+        -0.05368457674482484
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.19153846153846155,
+          "bootstrap95_over_spaces": [
+            -0.5443315542901732,
+            0.21641841219539135
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.0496548562077921,
+          "bootstrap95_over_spaces": [
+            -0.4444882041668128,
+            0.36926290447224897
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.3743027574528895,
+          "bootstrap95_over_spaces": [
+            -0.6936274865270201,
+            0.01743994836013692
+          ]
+        }
+      }
+    },
+    "log2_width": {
+      "spearman_all75": -0.3331802464420229,
+      "bootstrap95_over_spaces": [
+        -0.5588035705383144,
+        -0.07357703545275203
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": -0.2704768363780788,
+          "bootstrap95_over_spaces": [
+            -0.6780596809563257,
+            0.18459348137905965
+          ]
+        },
+        "scidocs": {
+          "spearman": -0.8506157043508267,
+          "bootstrap95_over_spaces": [
+            -0.952579903924115,
+            -0.6355503916167174
+          ]
+        },
+        "trec-covid": {
+          "spearman": -0.2966827142516809,
+          "bootstrap95_over_spaces": [
+            -0.6201965866305333,
+            0.10697306236290209
+          ]
+        }
+      }
+    },
+    "log10_ndocs": {
+      "spearman_all75": -0.5592851053768078,
+      "bootstrap95_over_spaces": [
+        -0.671246110903575,
+        -0.4543867690610167
+      ],
+      "per_workload": {
+        "fiqa": {
+          "spearman": null,
+          "bootstrap95_over_spaces": [
+            null,
+            null
+          ]
+        },
+        "scidocs": {
+          "spearman": null,
+          "bootstrap95_over_spaces": [
+            null,
+            null
+          ]
+        },
+        "trec-covid": {
+          "spearman": null,
+          "bootstrap95_over_spaces": [
+            null,
+            null
+          ]
+        }
+      }
+    }
+  },
+  "held_out_models": {
+    "all_features": {
+      "spearman": 0.7255312148360177,
+      "mae": 1.3983773248178537,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "all_features_leave_workload_out": {
+      "spearman": 0.49779747925756035,
+      "mae": 2.5535833203902665,
+      "baseline_fold_mean_mae": 2.3332469465020584
+    },
+    "covariates_only_width_ndocs": {
+      "spearman": 0.4520634896660375,
+      "mae": 1.9255832540358513,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "placement_only": {
+      "spearman": 0.3468669460029377,
+      "mae": 2.1667494333044544,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_qdoc_ratio_table": {
+      "spearman": 0.5571505840926958,
+      "mae": 1.7944979648419628,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_qdoc_ratio_teacher": {
+      "spearman": 0.6421237341804076,
+      "mae": 1.2640362180536826,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_qdoc_ratio_delta": {
+      "spearman": -0.15182723483846275,
+      "mae": 2.233767360037848,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_hubness_delta": {
+      "spearman": 0.13612784044202286,
+      "mae": 2.110045214048811,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_top10_overlap": {
+      "spearman": 0.11195959775375906,
+      "mae": 2.2918286311707305,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_effrank_fitq_teacher": {
+      "spearman": -0.5300715765743793,
+      "mae": 2.3804537797941405,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_effrank_q_table_over_teacher": {
+      "spearman": -0.2980322930798323,
+      "mae": 2.1720779582799894,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_top1_cos_delta": {
+      "spearman": -0.5513291404769713,
+      "mae": 2.2839141147949378,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_margin_delta": {
+      "spearman": -0.11257163216812617,
+      "mae": 2.153183429062337,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_log2_width": {
+      "spearman": 0.06652270259048737,
+      "mae": 2.1857887614904468,
+      "baseline_fold_mean_mae": 2.224523490657671
+    },
+    "single_log10_ndocs": {
+      "spearman": 0.3357894955557721,
+      "mae": 1.972410188135378,
+      "baseline_fold_mean_mae": 2.224523490657671
+    }
+  },
+  "rows": [
+    {
+      "space": "stella-400M-v5",
+      "family": "stella",
+      "workload": "fiqa",
+      "gap": -2.9629629629629397,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.9396811723709106,
+      "qdoc_ratio_teacher": 1.2030467987060547,
+      "hubness_delta": 0.01385481607427197,
+      "top10_overlap": 0.35108024691358025,
+      "effrank_fitq_teacher": 267.7161560058594,
+      "effrank_q_table_over_teacher": 1.482567062276942,
+      "top1_cos_delta": -0.17445340752601624,
+      "margin_delta": -0.03486502170562744,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.22837616503238678,
+      "qdoc_ratio_delta": 0.736634373664856
+    },
+    {
+      "space": "stella-400M-v5",
+      "family": "stella",
+      "workload": "scidocs",
+      "gap": -1.2900000000000023,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 2.3111119270324707,
+      "qdoc_ratio_teacher": 1.3325400352478027,
+      "hubness_delta": 0.031453077132946206,
+      "top10_overlap": 0.4156,
+      "effrank_fitq_teacher": 267.7161560058594,
+      "effrank_q_table_over_teacher": 1.4964341726004962,
+      "top1_cos_delta": -0.1960778534412384,
+      "margin_delta": -0.022072002291679382,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.19588541984558105,
+      "qdoc_ratio_delta": 0.978571891784668
+    },
+    {
+      "space": "stella-400M-v5",
+      "family": "stella",
+      "workload": "trec-covid",
+      "gap": -5.20000000000001,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 3.679806709289551,
+      "qdoc_ratio_teacher": 2.0084879398345947,
+      "hubness_delta": 4.4825251558355816e-05,
+      "top10_overlap": 0.296,
+      "effrank_fitq_teacher": 267.7161560058594,
+      "effrank_q_table_over_teacher": 1.0688197149403138,
+      "top1_cos_delta": -0.19908902049064636,
+      "margin_delta": -0.00278317928314209,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.11082055419683456,
+      "qdoc_ratio_delta": 1.671318769454956
+    },
+    {
+      "space": "arctic-embed-l",
+      "family": "arctic",
+      "workload": "fiqa",
+      "gap": -11.751543209876548,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 2.9553308486938477,
+      "qdoc_ratio_teacher": 2.5371193885803223,
+      "hubness_delta": 0.025435830014406635,
+      "top10_overlap": 0.25339506172839504,
+      "effrank_fitq_teacher": 137.60264587402344,
+      "effrank_q_table_over_teacher": 0.9476523741252559,
+      "top1_cos_delta": -0.07943166792392731,
+      "margin_delta": -0.031777769327163696,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.19311943650245667,
+      "qdoc_ratio_delta": 0.4182114601135254
+    },
+    {
+      "space": "arctic-embed-l",
+      "family": "arctic",
+      "workload": "scidocs",
+      "gap": -3.0600000000000014,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.8993687629699707,
+      "qdoc_ratio_teacher": 1.6483863592147827,
+      "hubness_delta": 0.06648043808707182,
+      "top10_overlap": 0.3456,
+      "effrank_fitq_teacher": 137.60264587402344,
+      "effrank_q_table_over_teacher": 0.970113162741889,
+      "top1_cos_delta": -0.07364347577095032,
+      "margin_delta": -0.029813945293426514,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.3026295304298401,
+      "qdoc_ratio_delta": 0.250982403755188
+    },
+    {
+      "space": "arctic-embed-l",
+      "family": "arctic",
+      "workload": "trec-covid",
+      "gap": -18.300000000000015,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 3.4754583835601807,
+      "qdoc_ratio_teacher": 2.719996690750122,
+      "hubness_delta": 0.00021284990544678806,
+      "top10_overlap": 0.23199999999999998,
+      "effrank_fitq_teacher": 137.60264587402344,
+      "effrank_q_table_over_teacher": 0.9088087423845591,
+      "top1_cos_delta": -0.10893556475639343,
+      "margin_delta": -0.01727224886417389,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.15305835008621216,
+      "qdoc_ratio_delta": 0.7554616928100586
+    },
+    {
+      "space": "arctic-embed-m-v1.5",
+      "family": "arctic",
+      "workload": "fiqa",
+      "gap": -4.320987654320973,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.1114823818206787,
+      "qdoc_ratio_teacher": 1.7796893119812012,
+      "hubness_delta": 0.023798000204768854,
+      "top10_overlap": 0.3018518518518518,
+      "effrank_fitq_teacher": 144.99380493164062,
+      "effrank_q_table_over_teacher": 0.8691856336106831,
+      "top1_cos_delta": -0.08497856557369232,
+      "margin_delta": -0.03335370123386383,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.25269585847854614,
+      "qdoc_ratio_delta": 0.33179306983947754
+    },
+    {
+      "space": "arctic-embed-m-v1.5",
+      "family": "arctic",
+      "workload": "scidocs",
+      "gap": -0.7999999999999785,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.5104665756225586,
+      "qdoc_ratio_teacher": 1.3415284156799316,
+      "hubness_delta": 0.12380624391004402,
+      "top10_overlap": 0.3588,
+      "effrank_fitq_teacher": 144.99380493164062,
+      "effrank_q_table_over_teacher": 0.8010561531688569,
+      "top1_cos_delta": -0.06069090962409973,
+      "margin_delta": -0.03212974965572357,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.3669024407863617,
+      "qdoc_ratio_delta": 0.16893815994262695
+    },
+    {
+      "space": "arctic-embed-m-v1.5",
+      "family": "arctic",
+      "workload": "trec-covid",
+      "gap": -6.1,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.516805410385132,
+      "qdoc_ratio_teacher": 1.9701842069625854,
+      "hubness_delta": 0.00017832045385568485,
+      "top10_overlap": 0.308,
+      "effrank_fitq_teacher": 144.99380493164062,
+      "effrank_q_table_over_teacher": 0.8903193702931275,
+      "top1_cos_delta": -0.10213986039161682,
+      "margin_delta": -0.008020997047424316,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.1966152787208557,
+      "qdoc_ratio_delta": 0.5466212034225464
+    },
+    {
+      "space": "bge-base-en-v1.5",
+      "family": "bge",
+      "workload": "fiqa",
+      "gap": -4.7376543209876445,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.9013676643371582,
+      "qdoc_ratio_teacher": 1.5380585193634033,
+      "hubness_delta": 0.0101279794836997,
+      "top10_overlap": 0.35200617283950614,
+      "effrank_fitq_teacher": 172.07179260253906,
+      "effrank_q_table_over_teacher": 0.9412544647625437,
+      "top1_cos_delta": -0.06150296330451965,
+      "margin_delta": -0.018262088298797607,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.17840304970741272,
+      "qdoc_ratio_delta": 0.3633091449737549
+    },
+    {
+      "space": "bge-base-en-v1.5",
+      "family": "bge",
+      "workload": "scidocs",
+      "gap": -1.154999999999995,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.1215155124664307,
+      "qdoc_ratio_teacher": 1.4123514890670776,
+      "hubness_delta": 0.023320731184472088,
+      "top10_overlap": 0.3496,
+      "effrank_fitq_teacher": 172.07179260253906,
+      "effrank_q_table_over_teacher": 1.501357164851654,
+      "top1_cos_delta": -0.11921355128288269,
+      "margin_delta": -0.016562581062316895,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.16422152519226074,
+      "qdoc_ratio_delta": 0.709164023399353
+    },
+    {
+      "space": "bge-base-en-v1.5",
+      "family": "bge",
+      "workload": "trec-covid",
+      "gap": -2.8000000000000025,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.497729778289795,
+      "qdoc_ratio_teacher": 1.8307377099990845,
+      "hubness_delta": 1.1229659374611956e-05,
+      "top10_overlap": 0.292,
+      "effrank_fitq_teacher": 172.07179260253906,
+      "effrank_q_table_over_teacher": 0.8954816812788919,
+      "top1_cos_delta": -0.07311627268791199,
+      "margin_delta": -0.006280183792114258,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.10834940522909164,
+      "qdoc_ratio_delta": 0.6669920682907104
+    },
+    {
+      "space": "bge-large-en-v1.5",
+      "family": "bge",
+      "workload": "fiqa",
+      "gap": -4.930555555555549,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.7708523273468018,
+      "qdoc_ratio_teacher": 1.379128336906433,
+      "hubness_delta": 0.020290926039448376,
+      "top10_overlap": 0.25092592592592594,
+      "effrank_fitq_teacher": 168.85365295410156,
+      "effrank_q_table_over_teacher": 0.9706470682690657,
+      "top1_cos_delta": -0.06606066226959229,
+      "margin_delta": -0.024043142795562744,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.18123549222946167,
+      "qdoc_ratio_delta": 0.39172399044036865
+    },
+    {
+      "space": "bge-large-en-v1.5",
+      "family": "bge",
+      "workload": "scidocs",
+      "gap": -1.6199999999999937,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.9762754440307617,
+      "qdoc_ratio_teacher": 1.3125641345977783,
+      "hubness_delta": 0.03539676501539546,
+      "top10_overlap": 0.31560000000000005,
+      "effrank_fitq_teacher": 168.85365295410156,
+      "effrank_q_table_over_teacher": 1.4240377847839776,
+      "top1_cos_delta": -0.10951939225196838,
+      "margin_delta": -0.017240583896636963,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.16387611627578735,
+      "qdoc_ratio_delta": 0.6637113094329834
+    },
+    {
+      "space": "bge-large-en-v1.5",
+      "family": "bge",
+      "workload": "trec-covid",
+      "gap": -3.699999999999992,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 2.3316614627838135,
+      "qdoc_ratio_teacher": 1.5985784530639648,
+      "hubness_delta": 2.271613008653084e-05,
+      "top10_overlap": 0.20600000000000002,
+      "effrank_fitq_teacher": 168.85365295410156,
+      "effrank_q_table_over_teacher": 0.931466569654803,
+      "top1_cos_delta": -0.07949501276016235,
+      "margin_delta": -0.010623455047607422,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.11301369965076447,
+      "qdoc_ratio_delta": 0.7330830097198486
+    },
+    {
+      "space": "e5-base-v2",
+      "family": "e5",
+      "workload": "fiqa",
+      "gap": -3.8271604938271695,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.3982633352279663,
+      "qdoc_ratio_teacher": 1.110526204109192,
+      "hubness_delta": 0.031515859521688894,
+      "top10_overlap": 0.23996913580246915,
+      "effrank_fitq_teacher": 118.72967529296875,
+      "effrank_q_table_over_teacher": 0.8885466918911686,
+      "top1_cos_delta": -0.027419298887252808,
+      "margin_delta": -0.00887751579284668,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.11786949634552002,
+      "qdoc_ratio_delta": 0.2877371311187744
+    },
+    {
+      "space": "e5-base-v2",
+      "family": "e5",
+      "workload": "scidocs",
+      "gap": -1.084999999999986,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.4615528583526611,
+      "qdoc_ratio_teacher": 1.239632487297058,
+      "hubness_delta": 0.016371875121799162,
+      "top10_overlap": 0.3965,
+      "effrank_fitq_teacher": 118.72967529296875,
+      "effrank_q_table_over_teacher": 0.9331472939202827,
+      "top1_cos_delta": -0.019993633031845093,
+      "margin_delta": -0.007260501384735107,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.11863894015550613,
+      "qdoc_ratio_delta": 0.22192037105560303
+    },
+    {
+      "space": "e5-base-v2",
+      "family": "e5",
+      "workload": "trec-covid",
+      "gap": -6.700000000000012,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.9078409671783447,
+      "qdoc_ratio_teacher": 1.5799671411514282,
+      "hubness_delta": 5.6148296873947956e-05,
+      "top10_overlap": 0.24200000000000002,
+      "effrank_fitq_teacher": 118.72967529296875,
+      "effrank_q_table_over_teacher": 0.8695565127802787,
+      "top1_cos_delta": -0.022007465362548828,
+      "margin_delta": -0.005325913429260254,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.06674334406852722,
+      "qdoc_ratio_delta": 0.3278738260269165
+    },
+    {
+      "space": "e5-large-v2",
+      "family": "e5",
+      "workload": "fiqa",
+      "gap": -3.9660493827160415,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.4333133697509766,
+      "qdoc_ratio_teacher": 1.1276848316192627,
+      "hubness_delta": 0.03831186794205976,
+      "top10_overlap": 0.18209876543209877,
+      "effrank_fitq_teacher": 150.52435302734375,
+      "effrank_q_table_over_teacher": 0.938640616547158,
+      "top1_cos_delta": -0.03254947066307068,
+      "margin_delta": -0.010072112083435059,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.12231064587831497,
+      "qdoc_ratio_delta": 0.30562853813171387
+    },
+    {
+      "space": "e5-large-v2",
+      "family": "e5",
+      "workload": "scidocs",
+      "gap": -1.0999999999999843,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.4824186563491821,
+      "qdoc_ratio_teacher": 1.2075129747390747,
+      "hubness_delta": 0.024459243091554006,
+      "top10_overlap": 0.345,
+      "effrank_fitq_teacher": 150.52435302734375,
+      "effrank_q_table_over_teacher": 1.0069644447375004,
+      "top1_cos_delta": -0.02641594409942627,
+      "margin_delta": -0.010075986385345459,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.1250629723072052,
+      "qdoc_ratio_delta": 0.2749056816101074
+    },
+    {
+      "space": "e5-large-v2",
+      "family": "e5",
+      "workload": "trec-covid",
+      "gap": -8.29999999999999,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.9943568706512451,
+      "qdoc_ratio_teacher": 1.7075881958007812,
+      "hubness_delta": 0.0005330469497817347,
+      "top10_overlap": 0.14000000000000004,
+      "effrank_fitq_teacher": 150.52435302734375,
+      "effrank_q_table_over_teacher": 0.853002762965168,
+      "top1_cos_delta": -0.01675441861152649,
+      "margin_delta": -0.0025818347930908203,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.06814824789762497,
+      "qdoc_ratio_delta": 0.28676867485046387
+    },
+    {
+      "space": "gte-base-en-v1.5",
+      "family": "gte",
+      "workload": "fiqa",
+      "gap": -1.504629629629628,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.3560631275177002,
+      "qdoc_ratio_teacher": 0.9948142170906067,
+      "hubness_delta": 0.02353449948786368,
+      "top10_overlap": 0.24845679012345678,
+      "effrank_fitq_teacher": 149.68255615234375,
+      "effrank_q_table_over_teacher": 0.9681639822576051,
+      "top1_cos_delta": -0.10733827948570251,
+      "margin_delta": -0.04298718273639679,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.29952430725097656,
+      "qdoc_ratio_delta": 0.3612489104270935
+    },
+    {
+      "space": "gte-base-en-v1.5",
+      "family": "gte",
+      "workload": "scidocs",
+      "gap": -0.6249999999999978,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.3114320039749146,
+      "qdoc_ratio_teacher": 0.9646872878074646,
+      "hubness_delta": 0.021001808473321004,
+      "top10_overlap": 0.357,
+      "effrank_fitq_teacher": 149.68255615234375,
+      "effrank_q_table_over_teacher": 1.0266914818989368,
+      "top1_cos_delta": -0.12240526080131531,
+      "margin_delta": -0.04273763298988342,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.3402569890022278,
+      "qdoc_ratio_delta": 0.34674471616744995
+    },
+    {
+      "space": "gte-base-en-v1.5",
+      "family": "gte",
+      "workload": "trec-covid",
+      "gap": -1.1999999999999955,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.6884307861328125,
+      "qdoc_ratio_teacher": 1.1845186948776245,
+      "hubness_delta": 0.00011194639647005289,
+      "top10_overlap": 0.29600000000000004,
+      "effrank_fitq_teacher": 149.68255615234375,
+      "effrank_q_table_over_teacher": 0.8727964162475562,
+      "top1_cos_delta": -0.11939138174057007,
+      "margin_delta": -0.026871711015701294,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.22680698335170746,
+      "qdoc_ratio_delta": 0.503912091255188
+    },
+    {
+      "space": "gte-large-en-v1.5",
+      "family": "gte",
+      "workload": "fiqa",
+      "gap": -0.4938271604938316,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.4227293729782104,
+      "qdoc_ratio_teacher": 1.0411145687103271,
+      "hubness_delta": 0.06694416492206146,
+      "top10_overlap": 0.0888888888888889,
+      "effrank_fitq_teacher": 127.5703125,
+      "effrank_q_table_over_teacher": 1.0551095645262334,
+      "top1_cos_delta": -0.06796318292617798,
+      "margin_delta": -0.0578865110874176,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.20750342309474945,
+      "qdoc_ratio_delta": 0.3816148042678833
+    },
+    {
+      "space": "gte-large-en-v1.5",
+      "family": "gte",
+      "workload": "scidocs",
+      "gap": -0.7950000000000013,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.4963232278823853,
+      "qdoc_ratio_teacher": 0.9733679294586182,
+      "hubness_delta": 0.051921487313403736,
+      "top10_overlap": 0.2515,
+      "effrank_fitq_teacher": 127.5703125,
+      "effrank_q_table_over_teacher": 1.0887034881279598,
+      "top1_cos_delta": -0.10887613892555237,
+      "margin_delta": -0.03215879201889038,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.2247210443019867,
+      "qdoc_ratio_delta": 0.5229552984237671
+    },
+    {
+      "space": "gte-large-en-v1.5",
+      "family": "gte",
+      "workload": "trec-covid",
+      "gap": -1.9999999999999907,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.776519536972046,
+      "qdoc_ratio_teacher": 1.333747386932373,
+      "hubness_delta": 0.0005369691592929104,
+      "top10_overlap": 0.14,
+      "effrank_fitq_teacher": 127.5703125,
+      "effrank_q_table_over_teacher": 0.9197256450170265,
+      "top1_cos_delta": -0.05190539360046387,
+      "margin_delta": -0.017581313848495483,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.14441707730293274,
+      "qdoc_ratio_delta": 0.44277215003967285
+    },
+    {
+      "space": "mxbai-embed-large-v1",
+      "family": "mxbai",
+      "workload": "fiqa",
+      "gap": -3.9814814814814694,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.6844367980957031,
+      "qdoc_ratio_teacher": 1.1983243227005005,
+      "hubness_delta": 0.023896288199785953,
+      "top10_overlap": 0.19737654320987652,
+      "effrank_fitq_teacher": 126.52715301513672,
+      "effrank_q_table_over_teacher": 1.065107519125517,
+      "top1_cos_delta": -0.08907991647720337,
+      "margin_delta": -0.024410128593444824,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.1888033002614975,
+      "qdoc_ratio_delta": 0.48611247539520264
+    },
+    {
+      "space": "mxbai-embed-large-v1",
+      "family": "mxbai",
+      "workload": "scidocs",
+      "gap": -1.2450000000000017,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.8837252855300903,
+      "qdoc_ratio_teacher": 1.1769026517868042,
+      "hubness_delta": 0.06160745995244965,
+      "top10_overlap": 0.26039999999999996,
+      "effrank_fitq_teacher": 126.52715301513672,
+      "effrank_q_table_over_teacher": 1.3484289037469195,
+      "top1_cos_delta": -0.11943235993385315,
+      "margin_delta": -0.02317032217979431,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.1686125546693802,
+      "qdoc_ratio_delta": 0.7068226337432861
+    },
+    {
+      "space": "mxbai-embed-large-v1",
+      "family": "mxbai",
+      "workload": "trec-covid",
+      "gap": -2.7000000000000024,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 2.3490192890167236,
+      "qdoc_ratio_teacher": 1.4458141326904297,
+      "hubness_delta": 3.3922442976175304e-05,
+      "top10_overlap": 0.13,
+      "effrank_fitq_teacher": 126.52715301513672,
+      "effrank_q_table_over_teacher": 0.9603365667375856,
+      "top1_cos_delta": -0.10022416710853577,
+      "margin_delta": -0.01096072793006897,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.11447122693061829,
+      "qdoc_ratio_delta": 0.903205156326294
+    },
+    {
+      "space": "minilm-l6",
+      "family": "minilm",
+      "workload": "fiqa",
+      "gap": -0.8024691358024583,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.358204960823059,
+      "qdoc_ratio_teacher": 1.018064260482788,
+      "hubness_delta": 0.019746864101572337,
+      "top10_overlap": 0.3030864197530864,
+      "effrank_fitq_teacher": 133.23963928222656,
+      "effrank_q_table_over_teacher": 0.9499575802928918,
+      "top1_cos_delta": -0.10753560066223145,
+      "margin_delta": -0.032950058579444885,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.336590975522995,
+      "qdoc_ratio_delta": 0.340140700340271
+    },
+    {
+      "space": "minilm-l6",
+      "family": "minilm",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.6667323112487793,
+      "qdoc_ratio_teacher": 1.150040626525879,
+      "hubness_delta": 0.06974791285029447,
+      "top10_overlap": 0.3359,
+      "effrank_fitq_teacher": 133.23963928222656,
+      "effrank_q_table_over_teacher": 1.0016531659392458,
+      "top1_cos_delta": -0.16277441382408142,
+      "margin_delta": -0.03114163875579834,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.31273525953292847,
+      "qdoc_ratio_delta": 0.5166916847229004
+    },
+    {
+      "space": "minilm-l6",
+      "family": "minilm",
+      "workload": "trec-covid",
+      "gap": -0.9000000000000119,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.9345859289169312,
+      "qdoc_ratio_teacher": 1.0458847284317017,
+      "hubness_delta": 9.8055237784056e-05,
+      "top10_overlap": 0.45000000000000007,
+      "effrank_fitq_teacher": 133.23963928222656,
+      "effrank_q_table_over_teacher": 1.2181640670841307,
+      "top1_cos_delta": -0.1464535892009735,
+      "margin_delta": -0.007494240999221802,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.1709555834531784,
+      "qdoc_ratio_delta": 0.8887012004852295
+    },
+    {
+      "space": "minilm-l12",
+      "family": "minilm",
+      "workload": "fiqa",
+      "gap": -1.1959876543209846,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.4042713642120361,
+      "qdoc_ratio_teacher": 1.009980320930481,
+      "hubness_delta": 0.022113888556889005,
+      "top10_overlap": 0.28950617283950614,
+      "effrank_fitq_teacher": 125.85895538330078,
+      "effrank_q_table_over_teacher": 0.9970316241507962,
+      "top1_cos_delta": -0.1282559037208557,
+      "margin_delta": -0.03421619534492493,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.33098992705345154,
+      "qdoc_ratio_delta": 0.3942910432815552
+    },
+    {
+      "space": "minilm-l12",
+      "family": "minilm",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.6769272089004517,
+      "qdoc_ratio_teacher": 1.1382241249084473,
+      "hubness_delta": 0.06132078575047739,
+      "top10_overlap": 0.34429999999999994,
+      "effrank_fitq_teacher": 125.85895538330078,
+      "effrank_q_table_over_teacher": 0.9869552236616491,
+      "top1_cos_delta": -0.16931982338428497,
+      "margin_delta": -0.03728848695755005,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.31100431084632874,
+      "qdoc_ratio_delta": 0.5387030839920044
+    },
+    {
+      "space": "minilm-l12",
+      "family": "minilm",
+      "workload": "trec-covid",
+      "gap": -1.9999999999999962,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.1395020484924316,
+      "qdoc_ratio_teacher": 1.1292896270751953,
+      "hubness_delta": 0.00026990871524290583,
+      "top10_overlap": 0.382,
+      "effrank_fitq_teacher": 125.85895538330078,
+      "effrank_q_table_over_teacher": 1.2117175539708256,
+      "top1_cos_delta": -0.16911464929580688,
+      "margin_delta": 0.0045013427734375,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.16209200024604797,
+      "qdoc_ratio_delta": 1.0102124214172363
+    },
+    {
+      "space": "multi-qa-minilm-l6",
+      "family": "minilm",
+      "workload": "fiqa",
+      "gap": -0.841049382716047,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.2945605516433716,
+      "qdoc_ratio_teacher": 1.0226260423660278,
+      "hubness_delta": 0.00985472761239925,
+      "top10_overlap": 0.3618827160493827,
+      "effrank_fitq_teacher": 107.52017974853516,
+      "effrank_q_table_over_teacher": 0.9207917753032377,
+      "top1_cos_delta": -0.08401510119438171,
+      "margin_delta": -0.02760155498981476,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.3302769660949707,
+      "qdoc_ratio_delta": 0.27193450927734375
+    },
+    {
+      "space": "multi-qa-minilm-l6",
+      "family": "minilm",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.2371467351913452,
+      "qdoc_ratio_teacher": 1.1142451763153076,
+      "hubness_delta": 0.013643395564563399,
+      "top10_overlap": 0.4922,
+      "effrank_fitq_teacher": 107.52017974853516,
+      "effrank_q_table_over_teacher": 0.8838055825472414,
+      "top1_cos_delta": -0.041178882122039795,
+      "margin_delta": -0.02006147801876068,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.36034470796585083,
+      "qdoc_ratio_delta": 0.1229015588760376
+    },
+    {
+      "space": "multi-qa-minilm-l6",
+      "family": "minilm",
+      "workload": "trec-covid",
+      "gap": -1.0999999999999954,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.6311155557632446,
+      "qdoc_ratio_teacher": 1.047526240348816,
+      "hubness_delta": 2.259939766080521e-05,
+      "top10_overlap": 0.514,
+      "effrank_fitq_teacher": 107.52017974853516,
+      "effrank_q_table_over_teacher": 1.1453791310875028,
+      "top1_cos_delta": -0.09674209356307983,
+      "margin_delta": -0.0037245452404022217,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.18356046080589294,
+      "qdoc_ratio_delta": 0.5835893154144287
+    },
+    {
+      "space": "msmarco-minilm-l6",
+      "family": "minilm",
+      "workload": "fiqa",
+      "gap": -0.979938271604941,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.2472132444381714,
+      "qdoc_ratio_teacher": 1.0692851543426514,
+      "hubness_delta": 0.0043619682059889975,
+      "top10_overlap": 0.374537037037037,
+      "effrank_fitq_teacher": 98.1583023071289,
+      "effrank_q_table_over_teacher": 0.8842183718493858,
+      "top1_cos_delta": -0.06318211555480957,
+      "margin_delta": -0.025274768471717834,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.3638126850128174,
+      "qdoc_ratio_delta": 0.17792809009552002
+    },
+    {
+      "space": "msmarco-minilm-l6",
+      "family": "minilm",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.2566584348678589,
+      "qdoc_ratio_teacher": 1.1505194902420044,
+      "hubness_delta": 0.019255135050863403,
+      "top10_overlap": 0.4457,
+      "effrank_fitq_teacher": 98.1583023071289,
+      "effrank_q_table_over_teacher": 0.8799711438912154,
+      "top1_cos_delta": -0.03516972064971924,
+      "margin_delta": -0.014739856123924255,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.3543131351470947,
+      "qdoc_ratio_delta": 0.10613894462585449
+    },
+    {
+      "space": "msmarco-minilm-l6",
+      "family": "minilm",
+      "workload": "trec-covid",
+      "gap": -1.9000000000000017,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.6273012161254883,
+      "qdoc_ratio_teacher": 1.166702151298523,
+      "hubness_delta": -3.410921485769158e-05,
+      "top10_overlap": 0.5219999999999999,
+      "effrank_fitq_teacher": 98.1583023071289,
+      "effrank_q_table_over_teacher": 1.2661427706267727,
+      "top1_cos_delta": -0.09841004014015198,
+      "margin_delta": -0.009247153997421265,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.20031705498695374,
+      "qdoc_ratio_delta": 0.46059906482696533
+    },
+    {
+      "space": "bge-small-en-v1.5",
+      "family": "bge",
+      "workload": "fiqa",
+      "gap": -3.703703703703698,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.7791043519973755,
+      "qdoc_ratio_teacher": 1.4145420789718628,
+      "hubness_delta": 0.006622768800932599,
+      "top10_overlap": 0.3506172839506173,
+      "effrank_fitq_teacher": 137.8005828857422,
+      "effrank_q_table_over_teacher": 0.9529283129920586,
+      "top1_cos_delta": -0.051080912351608276,
+      "margin_delta": -0.016158640384674072,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.14727941155433655,
+      "qdoc_ratio_delta": 0.3645622730255127
+    },
+    {
+      "space": "bge-small-en-v1.5",
+      "family": "bge",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.85153067111969,
+      "qdoc_ratio_teacher": 1.1753857135772705,
+      "hubness_delta": 0.004580699224383311,
+      "top10_overlap": 0.4046,
+      "effrank_fitq_teacher": 137.8005828857422,
+      "effrank_q_table_over_teacher": 1.3796070937433071,
+      "top1_cos_delta": -0.09970995783805847,
+      "margin_delta": -0.011407643556594849,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.1450968086719513,
+      "qdoc_ratio_delta": 0.6761449575424194
+    },
+    {
+      "space": "bge-small-en-v1.5",
+      "family": "bge",
+      "workload": "trec-covid",
+      "gap": -1.200000000000001,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.2836248874664307,
+      "qdoc_ratio_teacher": 1.6225969791412354,
+      "hubness_delta": -4.50820628954407e-05,
+      "top10_overlap": 0.37000000000000005,
+      "effrank_fitq_teacher": 137.8005828857422,
+      "effrank_q_table_over_teacher": 0.961818855925079,
+      "top1_cos_delta": -0.053355872631073,
+      "margin_delta": -0.006511032581329346,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.09210360050201416,
+      "qdoc_ratio_delta": 0.6610279083251953
+    },
+    {
+      "space": "bge-base-en-v1",
+      "family": "bge",
+      "workload": "fiqa",
+      "gap": -5.455246913580236,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.778210163116455,
+      "qdoc_ratio_teacher": 1.4211913347244263,
+      "hubness_delta": 0.01832963742626914,
+      "top10_overlap": 0.29953703703703705,
+      "effrank_fitq_teacher": 142.85684204101562,
+      "effrank_q_table_over_teacher": 0.9290644720723321,
+      "top1_cos_delta": -0.025629401206970215,
+      "margin_delta": -0.009953677654266357,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.0871846005320549,
+      "qdoc_ratio_delta": 0.3570188283920288
+    },
+    {
+      "space": "bge-base-en-v1",
+      "family": "bge",
+      "workload": "scidocs",
+      "gap": -2.0199999999999942,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.444580078125,
+      "qdoc_ratio_teacher": 1.5090656280517578,
+      "hubness_delta": 0.02746628990139155,
+      "top10_overlap": 0.34,
+      "effrank_fitq_teacher": 142.85684204101562,
+      "effrank_q_table_over_teacher": 1.1610525745871345,
+      "top1_cos_delta": -0.059605687856674194,
+      "margin_delta": -0.005762040615081787,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.06888274848461151,
+      "qdoc_ratio_delta": 0.9355144500732422
+    },
+    {
+      "space": "bge-base-en-v1",
+      "family": "bge",
+      "workload": "trec-covid",
+      "gap": -5.300000000000016,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 2.306673526763916,
+      "qdoc_ratio_teacher": 1.7167335748672485,
+      "hubness_delta": 0.0002091378143020961,
+      "top10_overlap": 0.27,
+      "effrank_fitq_teacher": 142.85684204101562,
+      "effrank_q_table_over_teacher": 0.9429446766593281,
+      "top1_cos_delta": -0.03269079327583313,
+      "margin_delta": -0.0032770633697509766,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.052439507097005844,
+      "qdoc_ratio_delta": 0.5899399518966675
+    },
+    {
+      "space": "e5-small-v2",
+      "family": "e5",
+      "workload": "fiqa",
+      "gap": -2.430555555555569,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.5506861209869385,
+      "qdoc_ratio_teacher": 1.2562923431396484,
+      "hubness_delta": 0.034747223946479,
+      "top10_overlap": 0.26141975308641974,
+      "effrank_fitq_teacher": 132.384521484375,
+      "effrank_q_table_over_teacher": 0.9133244387764208,
+      "top1_cos_delta": -0.02362889051437378,
+      "margin_delta": -0.0053886473178863525,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.0908002182841301,
+      "qdoc_ratio_delta": 0.29439377784729004
+    },
+    {
+      "space": "e5-small-v2",
+      "family": "e5",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.5085387229919434,
+      "qdoc_ratio_teacher": 1.2402830123901367,
+      "hubness_delta": 0.011867139572046437,
+      "top10_overlap": 0.4498,
+      "effrank_fitq_teacher": 132.384521484375,
+      "effrank_q_table_over_teacher": 0.9698511002655485,
+      "top1_cos_delta": -0.021726280450820923,
+      "margin_delta": -0.0030241310596466064,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.09831886738538742,
+      "qdoc_ratio_delta": 0.26825571060180664
+    },
+    {
+      "space": "e5-small-v2",
+      "family": "e5",
+      "workload": "trec-covid",
+      "gap": -6.399999999999995,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.039579391479492,
+      "qdoc_ratio_teacher": 1.7542064189910889,
+      "hubness_delta": 0.0003234422057758479,
+      "top10_overlap": 0.304,
+      "effrank_fitq_teacher": 132.384521484375,
+      "effrank_q_table_over_teacher": 0.9128219721993542,
+      "top1_cos_delta": -0.015162795782089233,
+      "margin_delta": -0.004385203123092651,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.05106519162654877,
+      "qdoc_ratio_delta": 0.2853729724884033
+    },
+    {
+      "space": "e5-base-v1",
+      "family": "e5",
+      "workload": "fiqa",
+      "gap": -2.2067901234567753,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.2928950786590576,
+      "qdoc_ratio_teacher": 1.1462141275405884,
+      "hubness_delta": 0.01588499463873916,
+      "top10_overlap": 0.2987654320987655,
+      "effrank_fitq_teacher": 144.0753173828125,
+      "effrank_q_table_over_teacher": 0.8906931642179945,
+      "top1_cos_delta": -0.011667430400848389,
+      "margin_delta": -0.009229391813278198,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.11599438637495041,
+      "qdoc_ratio_delta": 0.14668095111846924
+    },
+    {
+      "space": "e5-base-v1",
+      "family": "e5",
+      "workload": "scidocs",
+      "gap": -0.9050000000000058,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.417508840560913,
+      "qdoc_ratio_teacher": 1.2325711250305176,
+      "hubness_delta": 0.05038443309817975,
+      "top10_overlap": 0.36610000000000004,
+      "effrank_fitq_teacher": 144.0753173828125,
+      "effrank_q_table_over_teacher": 0.9838649084885268,
+      "top1_cos_delta": -0.016056686639785767,
+      "margin_delta": -0.008459597826004028,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.11917290091514587,
+      "qdoc_ratio_delta": 0.1849377155303955
+    },
+    {
+      "space": "e5-base-v1",
+      "family": "e5",
+      "workload": "trec-covid",
+      "gap": -4.400000000000009,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.8065578937530518,
+      "qdoc_ratio_teacher": 1.5478110313415527,
+      "hubness_delta": 0.00010017976793585959,
+      "top10_overlap": 0.26199999999999996,
+      "effrank_fitq_teacher": 144.0753173828125,
+      "effrank_q_table_over_teacher": 0.9045989980482572,
+      "top1_cos_delta": -0.012647479772567749,
+      "margin_delta": -0.005014568567276001,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.06354125589132309,
+      "qdoc_ratio_delta": 0.258746862411499
+    },
+    {
+      "space": "gte-small",
+      "family": "gte",
+      "workload": "fiqa",
+      "gap": -0.6481481481481366,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.1396183967590332,
+      "qdoc_ratio_teacher": 1.0186868906021118,
+      "hubness_delta": 0.04473291475659713,
+      "top10_overlap": 0.26790123456790127,
+      "effrank_fitq_teacher": 126.85054016113281,
+      "effrank_q_table_over_teacher": 0.9461355688910862,
+      "top1_cos_delta": -0.0076035261154174805,
+      "margin_delta": -0.012736767530441284,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.09189250320196152,
+      "qdoc_ratio_delta": 0.12093150615692139
+    },
+    {
+      "space": "gte-small",
+      "family": "gte",
+      "workload": "scidocs",
+      "gap": -0.009999999999998899,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.36033034324646,
+      "qdoc_ratio_teacher": 1.0192193984985352,
+      "hubness_delta": 0.054852126125423784,
+      "top10_overlap": 0.3413,
+      "effrank_fitq_teacher": 126.85054016113281,
+      "effrank_q_table_over_teacher": 1.1017178369440186,
+      "top1_cos_delta": -0.029888033866882324,
+      "margin_delta": -0.010358661413192749,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.09423546493053436,
+      "qdoc_ratio_delta": 0.3411109447479248
+    },
+    {
+      "space": "gte-small",
+      "family": "gte",
+      "workload": "trec-covid",
+      "gap": -0.6000000000000005,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.542191743850708,
+      "qdoc_ratio_teacher": 1.1911295652389526,
+      "hubness_delta": 0.0009093455980202503,
+      "top10_overlap": 0.204,
+      "effrank_fitq_teacher": 126.85054016113281,
+      "effrank_q_table_over_teacher": 0.8876985089486629,
+      "top1_cos_delta": -0.023766696453094482,
+      "margin_delta": -0.009578347206115723,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.05767716094851494,
+      "qdoc_ratio_delta": 0.35106217861175537
+    },
+    {
+      "space": "gte-base",
+      "family": "gte",
+      "workload": "fiqa",
+      "gap": -1.226851851851829,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.2008016109466553,
+      "qdoc_ratio_teacher": 1.0187106132507324,
+      "hubness_delta": 0.0192344492380927,
+      "top10_overlap": 0.27762345679012346,
+      "effrank_fitq_teacher": 151.07736206054688,
+      "effrank_q_table_over_teacher": 0.9374015538700767,
+      "top1_cos_delta": -0.013170033693313599,
+      "margin_delta": -0.012399762868881226,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.1038578599691391,
+      "qdoc_ratio_delta": 0.18209099769592285
+    },
+    {
+      "space": "gte-base",
+      "family": "gte",
+      "workload": "scidocs",
+      "gap": -0.6299999999999917,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.4591107368469238,
+      "qdoc_ratio_teacher": 1.0332194566726685,
+      "hubness_delta": 0.09590120434969007,
+      "top10_overlap": 0.26830000000000004,
+      "effrank_fitq_teacher": 151.07736206054688,
+      "effrank_q_table_over_teacher": 0.9525343995037124,
+      "top1_cos_delta": -0.03980693221092224,
+      "margin_delta": -0.012855708599090576,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.10862144827842712,
+      "qdoc_ratio_delta": 0.42589128017425537
+    },
+    {
+      "space": "gte-base",
+      "family": "gte",
+      "workload": "trec-covid",
+      "gap": -1.1999999999999955,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.6661717891693115,
+      "qdoc_ratio_teacher": 1.1903645992279053,
+      "hubness_delta": 0.0005732029043028497,
+      "top10_overlap": 0.19,
+      "effrank_fitq_teacher": 151.07736206054688,
+      "effrank_q_table_over_teacher": 0.844252416790762,
+      "top1_cos_delta": -0.027988523244857788,
+      "margin_delta": -0.010158270597457886,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.06545744091272354,
+      "qdoc_ratio_delta": 0.47580718994140625
+    },
+    {
+      "space": "gte-large",
+      "family": "gte",
+      "workload": "fiqa",
+      "gap": -0.5864197530864257,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.185351848602295,
+      "qdoc_ratio_teacher": 1.0004839897155762,
+      "hubness_delta": 0.0401110228634316,
+      "top10_overlap": 0.22206790123456788,
+      "effrank_fitq_teacher": 156.02755737304688,
+      "effrank_q_table_over_teacher": 0.9451751511018988,
+      "top1_cos_delta": -0.013906210660934448,
+      "margin_delta": -0.01716560125350952,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.09845428168773651,
+      "qdoc_ratio_delta": 0.18486785888671875
+    },
+    {
+      "space": "gte-large",
+      "family": "gte",
+      "workload": "scidocs",
+      "gap": -0.8849999999999969,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.370363473892212,
+      "qdoc_ratio_teacher": 1.0528442859649658,
+      "hubness_delta": 0.097312070779904,
+      "top10_overlap": 0.2505,
+      "effrank_fitq_teacher": 156.02755737304688,
+      "effrank_q_table_over_teacher": 0.9717949564613557,
+      "top1_cos_delta": -0.029100000858306885,
+      "margin_delta": -0.014531314373016357,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.10225532203912735,
+      "qdoc_ratio_delta": 0.3175191879272461
+    },
+    {
+      "space": "gte-large",
+      "family": "gte",
+      "workload": "trec-covid",
+      "gap": -1.2999999999999956,
+      "log2_width": 10.0,
+      "qdoc_ratio_table": 1.6180402040481567,
+      "qdoc_ratio_teacher": 1.2172863483428955,
+      "hubness_delta": 0.0007641538066442966,
+      "top10_overlap": 0.102,
+      "effrank_fitq_teacher": 156.02755737304688,
+      "effrank_q_table_over_teacher": 0.8245137114680298,
+      "top1_cos_delta": -0.022422313690185547,
+      "margin_delta": -0.009857505559921265,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.06401176005601883,
+      "qdoc_ratio_delta": 0.40075385570526123
+    },
+    {
+      "space": "arctic-embed-xs",
+      "family": "arctic",
+      "workload": "fiqa",
+      "gap": -3.4259259259259265,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.8499102592468262,
+      "qdoc_ratio_teacher": 1.7510346174240112,
+      "hubness_delta": 0.0051577502239392725,
+      "top10_overlap": 0.43132716049382713,
+      "effrank_fitq_teacher": 150.43711853027344,
+      "effrank_q_table_over_teacher": 0.8853022293944525,
+      "top1_cos_delta": -0.010426968336105347,
+      "margin_delta": -0.017240285873413086,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.14944735169410706,
+      "qdoc_ratio_delta": 0.09887564182281494
+    },
+    {
+      "space": "arctic-embed-xs",
+      "family": "arctic",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.435897946357727,
+      "qdoc_ratio_teacher": 1.3513211011886597,
+      "hubness_delta": 0.03684708266749803,
+      "top10_overlap": 0.5159,
+      "effrank_fitq_teacher": 150.43711853027344,
+      "effrank_q_table_over_teacher": 0.850116482357207,
+      "top1_cos_delta": -0.014611512422561646,
+      "margin_delta": -0.016205400228500366,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.20903950929641724,
+      "qdoc_ratio_delta": 0.08457684516906738
+    },
+    {
+      "space": "arctic-embed-xs",
+      "family": "arctic",
+      "workload": "trec-covid",
+      "gap": -4.100000000000003,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.118213176727295,
+      "qdoc_ratio_teacher": 1.9091733694076538,
+      "hubness_delta": 1.1393084771160744e-05,
+      "top10_overlap": 0.40399999999999997,
+      "effrank_fitq_teacher": 150.43711853027344,
+      "effrank_q_table_over_teacher": 0.9610108722315671,
+      "top1_cos_delta": -0.02146342396736145,
+      "margin_delta": -0.004315555095672607,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.1057286262512207,
+      "qdoc_ratio_delta": 0.2090398073196411
+    },
+    {
+      "space": "arctic-embed-s",
+      "family": "arctic",
+      "workload": "fiqa",
+      "gap": -4.691358024691361,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.0443804264068604,
+      "qdoc_ratio_teacher": 1.8220514059066772,
+      "hubness_delta": 0.009106748205808923,
+      "top10_overlap": 0.35787037037037034,
+      "effrank_fitq_teacher": 164.05860900878906,
+      "effrank_q_table_over_teacher": 0.9014955328212989,
+      "top1_cos_delta": -0.02467167377471924,
+      "margin_delta": -0.023496389389038086,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.14083337783813477,
+      "qdoc_ratio_delta": 0.2223290205001831
+    },
+    {
+      "space": "arctic-embed-s",
+      "family": "arctic",
+      "workload": "scidocs",
+      "gap": 0.0,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 1.6475211381912231,
+      "qdoc_ratio_teacher": 1.5400296449661255,
+      "hubness_delta": 0.031234774135713295,
+      "top10_overlap": 0.42269999999999996,
+      "effrank_fitq_teacher": 164.05860900878906,
+      "effrank_q_table_over_teacher": 0.859329506650309,
+      "top1_cos_delta": -0.01644045114517212,
+      "margin_delta": -0.02100345492362976,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.19277700781822205,
+      "qdoc_ratio_delta": 0.10749149322509766
+    },
+    {
+      "space": "arctic-embed-s",
+      "family": "arctic",
+      "workload": "trec-covid",
+      "gap": -6.9,
+      "log2_width": 8.584962500721156,
+      "qdoc_ratio_table": 2.5011985301971436,
+      "qdoc_ratio_teacher": 2.0324201583862305,
+      "hubness_delta": 1.143977774131777e-05,
+      "top10_overlap": 0.31,
+      "effrank_fitq_teacher": 164.05860900878906,
+      "effrank_q_table_over_teacher": 0.9411259858637405,
+      "top1_cos_delta": -0.0499291718006134,
+      "margin_delta": -0.007715880870819092,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.09703969955444336,
+      "qdoc_ratio_delta": 0.4687783718109131
+    },
+    {
+      "space": "contriever",
+      "family": "contriever",
+      "workload": "fiqa",
+      "gap": -1.6589506172839386,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.069453239440918,
+      "qdoc_ratio_teacher": 0.9243781566619873,
+      "hubness_delta": 0.009606563142714242,
+      "top10_overlap": 0.3273148148148148,
+      "effrank_fitq_teacher": 207.55357360839844,
+      "effrank_q_table_over_teacher": 1.0468655745302797,
+      "top1_cos_delta": -0.05580592155456543,
+      "margin_delta": -0.019986405968666077,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.42754361033439636,
+      "qdoc_ratio_delta": 0.14507508277893066
+    },
+    {
+      "space": "contriever",
+      "family": "contriever",
+      "workload": "scidocs",
+      "gap": -0.9749999999999925,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.1973398923873901,
+      "qdoc_ratio_teacher": 0.9502639770507812,
+      "hubness_delta": 0.014393171454184062,
+      "top10_overlap": 0.3877,
+      "effrank_fitq_teacher": 207.55357360839844,
+      "effrank_q_table_over_teacher": 1.2323153121365378,
+      "top1_cos_delta": -0.10294419527053833,
+      "margin_delta": -0.01741783320903778,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.4166177213191986,
+      "qdoc_ratio_delta": 0.2470759153366089
+    },
+    {
+      "space": "contriever",
+      "family": "contriever",
+      "workload": "trec-covid",
+      "gap": -0.9000000000000008,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.2122465372085571,
+      "qdoc_ratio_teacher": 0.6430383920669556,
+      "hubness_delta": -0.00018642168421534322,
+      "top10_overlap": 0.43400000000000005,
+      "effrank_fitq_teacher": 207.55357360839844,
+      "effrank_q_table_over_teacher": 2.108822460199941,
+      "top1_cos_delta": -0.15264922380447388,
+      "margin_delta": -0.013597190380096436,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.25223857164382935,
+      "qdoc_ratio_delta": 0.5692081451416016
+    },
+    {
+      "space": "contriever-msmarco",
+      "family": "contriever",
+      "workload": "fiqa",
+      "gap": -1.2885802469135677,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.4252320528030396,
+      "qdoc_ratio_teacher": 1.1542192697525024,
+      "hubness_delta": 0.0037106917632785397,
+      "top10_overlap": 0.44845679012345685,
+      "effrank_fitq_teacher": 261.7970886230469,
+      "effrank_q_table_over_teacher": 1.0497119742857468,
+      "top1_cos_delta": -0.07572570443153381,
+      "margin_delta": -0.022036045789718628,
+      "log10_ndocs": 4.760708902675724,
+      "doc_nn_distance": 0.28095608949661255,
+      "qdoc_ratio_delta": 0.2710127830505371
+    },
+    {
+      "space": "contriever-msmarco",
+      "family": "contriever",
+      "workload": "scidocs",
+      "gap": -0.5800000000000083,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.4550862312316895,
+      "qdoc_ratio_teacher": 1.2680045366287231,
+      "hubness_delta": 0.018219433293058307,
+      "top10_overlap": 0.5360999999999999,
+      "effrank_fitq_teacher": 261.7970886230469,
+      "effrank_q_table_over_teacher": 0.9761373375517358,
+      "top1_cos_delta": -0.05372357368469238,
+      "margin_delta": -0.016440361738204956,
+      "log10_ndocs": 4.409205874189573,
+      "doc_nn_distance": 0.29061248898506165,
+      "qdoc_ratio_delta": 0.1870816946029663
+    },
+    {
+      "space": "contriever-msmarco",
+      "family": "contriever",
+      "workload": "trec-covid",
+      "gap": -1.100000000000001,
+      "log2_width": 9.584962500721156,
+      "qdoc_ratio_table": 1.8351374864578247,
+      "qdoc_ratio_teacher": 1.1466896533966064,
+      "hubness_delta": -0.00017990801484835117,
+      "top10_overlap": 0.512,
+      "effrank_fitq_teacher": 261.7970886230469,
+      "effrank_q_table_over_teacher": 1.494928363682125,
+      "top1_cos_delta": -0.12031930685043335,
+      "margin_delta": -0.01766878366470337,
+      "log10_ndocs": 5.233838484538868,
+      "doc_nn_distance": 0.16999489068984985,
+      "qdoc_ratio_delta": 0.6884478330612183
+    }
+  ],
+  "receipt": {
+    "script": "m15src/e22_gap_predictors.py",
+    "script_sha256": "04ac5c574addd54ff6aede9dbbae4412af4b0113f9fc616c0db78757eb1294a7",
+    "git_commit": "ed0af15f34b2a26ff70dc433687b4b2ccfebcf1b",
+    "m15src_dirty": true,
+    "started_utc": "2026-10-01T19:08:30Z",
+    "finished_utc": "2026-10-01T19:08:30Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-6.8.0-100-generic-x86_64-with-glibc2.35",
+      "python": "3.12.14"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "e20_result": "results/m15_e20_ann_spaces.json"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "a0d60a5785870fcd6eccd59f02279b77988017123ba0ff7a4832d24380753808"
+  }
+}

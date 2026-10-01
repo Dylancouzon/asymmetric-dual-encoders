@@ -778,3 +778,12 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Distillation over Frozen Indexes" in every file that carried it; PDF rebuilt.
 - Title changed on owner decision to "Your Index Is Fine, Your Query Encoder Is Not: Query
   Distillation over Frozen Indexes"; PDF rebuilt.
+- **E22 complete** (`results/m15_e22_gap_predictors.json`, 19:10 UTC). The query-to-document
+  distance ratio ranks the recovery gap over 75 points (Spearman −0.64 encoder's queries, −0.63
+  student's, intervals clear of zero; per workload −0.80/−0.32/−0.83 and −0.77/−0.45/−0.69);
+  single-feature leave-one-family-out +0.64 with MAE 1.26 pp against 2.22 baseline; all features
+  +0.73 / 1.40; leave-one-workload-out ranks at +0.50 but MAE 2.55 against 2.33, so magnitude does
+  not transfer. Deltas and geometry summaries do not rank it. Written into §5.3 as Table F with
+  feature definitions in Appendix C; card C20.
+- E24 stopped on `nomic-embed-text-v1` (its remote code needs `einops`, absent from the venv);
+  installed and relaunched at 19:33 UTC, resuming from three completed teachers. E23 sweeping.
