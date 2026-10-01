@@ -565,3 +565,37 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - No manuscript, scientific figure, or result payload changed in this collaboration pass. Root
   checks reviewer-package links, pinned Git targets, source-commit ancestry, and diff whitespace;
   all final documentation is committed/pushed. No experiment, rental, retraining, or protected read.
+
+### Owner review with Astra and Fable (2026-10-01)
+
+- Owner-directed reviews: `REVIEWS/2026-10-01-astra-v15-owner-adversarial.md` (gpt-6-astra, verbatim) and `REVIEWS/2026-10-01-fable-v15-owner-review.md`. New points beyond earlier reviews: the 62x-to-2.2x ratio conflates shared search cost with the encoder-specific penalty; the E2 receipts hold unused geometry; per-dataset retention spread is unreported; sections 4, 5.2, and 6 are the stapled parts; fit list and 1M IDs are untracked.
+- Three plan rounds between Astra and Fable (`REVIEWS/2026-10-01-astra-fable-plan-rounds.md`). Agreed: construction-first outline, title "Constella: Teacher Selection and Search Cost in Query-Side Distillation", cuts and adds in `REVISION_PLAN_V16.md`, experiment designs in `FOLLOWUP.md` (E19 cross-recipe teacher screen, E20 cross-space ANN effort). Owner rejected native precision; deferred domain-fit.
+- No manuscript, figure, result, or protected read changed. No experiment, rental, or commit. Plan awaits owner approval.
+
+### E19/E20 execution start (2026-10-01)
+
+- Owner approved `REVISION_PLAN_V16.md` with a $150 compute budget; mid-turn direction: Codex
+  review before any spend (essentials only), strong logging and commit habit.
+- Pod `k3aee2m68765em` (E8 volume) started on the second retry after "not enough free GPUs";
+  volume verified: fit list sha `da0f208e...`, 554 cached encodes, both frozen-lambda files,
+  worktree `/home/dylan/m15run` at `ed0af15f3`. The two spare M13 pods accept only the WSL key and
+  were stopped; the classifier refused adding this Mac's key to them, so they stay unused.
+- Written before any scoring: MEASUREMENTS.md E19, E20 and the E20 amendment (SCIDOCS added as a
+  third workload because TREC-COVID has 50 queries); `m15src/e19_head_screen.py` and
+  `m15src/e20_ann_spaces.py`, each with a synthetic `selftest` that passes locally. Copied to the
+  pod worktree by scp (sha-matched) because the push was blocked by the permission classifier; the
+  owner is asked to push. Receipts will record `m15src_dirty` honestly until then.
+- `/opt/m15-venv` rebuilt from `m13/cloud_requirements.txt`; first attempt failed on uv's
+  single-index strategy, relaunched with `--index-strategy unsafe-best-match`.
+- Astra essentials-only review of E19/E20 requested before the first GPU step.
+- Astra pre-spend review (`REVIEWS/2026-10-01-astra-e19-e20-prespend.md`): three analysis-step
+  findings, no data-collection defect. Applied before any run: E20 multiplier distribution is now
+  per space with builds averaged and space-level censoring; E19 leave-one-family-out now includes
+  the clean-four correlations; E20 adds a non-gating E2 consistency comparison for Stella's teacher
+  path on FiQA. Also fixed before the review landed: the E8 roster is copied verbatim into E19
+  because importing `e8x_towers` rewrites `E8.CONFIGS`.
+- E19 smoke on the pod: features for 337,981 fit queries in 43 s, Stella dev grid in 14 s
+  (recipe-2 dev 0.2069 versus ceiling 0.4806; the M9 frozen-head probe predicted about half).
+  Launched `work/m15/e_chain.sh` (E19 all, then E20 qdrant and vectors per teacher) and
+  `work/m15/e20_sweeps.sh` (sweeps as each space's vectors land, then assemble), both nohup, logs
+  in `work/m15/e_chain.log` and `work/m15/e20_sweeps.log` on the pod.

@@ -148,3 +148,27 @@ substantial unexplained penalty. More arbitrary precision variants would add les
 The current evidence repeats the scoring effect across two workloads within the same Stella-aligned family. It does not repeat across independently trained teacher spaces. Query bootstraps do not close that gap. The 26-teacher experiment is substantial evidence for its table recipe, but does not validate the probe for trained Zero/Nano.
 
 The next experiment depends on the claim to strengthen. Native magnitude-preserving query precision at matched recovery/relevance and measured cost strengthens a deployment recommendation. A compact C40 scoring replication in a contrasting teacher space, using that teacher's query path and a fitted closed-form table, tests reach beyond Stella without full student retraining. Check artifact availability before budgeting it. One added space is a stress test, not an architecture law. Choose the scientific question before launching either; do not turn the owner's concern into an undirected model sweep.
+
+## Owner round 3 (2026-10-01): experiments A and B replace the precision follow-up as the next work
+
+The owner rejected the native scalar8 precision experiment as a knob rather than knowledge, deferred the domain-fit table to future work, approved A, and accepted B on Astra's agreement (`REVIEWS/2026-10-01-astra-fable-plan-rounds.md`). Both are exploratory under the paper-phase rule; A's analysis is fixed before scoring so the paper can label it pre-specified. Neither trains a full model. Reserved four stay out (known-test). Step zero: start the pod and verify the E8 caches (fit-query vectors per teacher, six-set document vectors per teacher, fitted tables); re-encode only if absent (about 8 to 10 A100 hours).
+
+### A. Cross-recipe teacher screen (E19)
+
+- **Question:** does the teacher ranking produced by one student recipe transfer to a second, independent student family, and does it still ignore teacher retrieval quality?
+- **Fixed:** the 26 checkpoints and their own six-set indexes from E8/E8x; the cleaned 337,981 fit queries; the two dev forums for lambda selection; six-set nDCG@10 exact search.
+- **Varied:** the student recipe. Recipe 2 is a frozen bge-small backbone (the Nano feature path: layers 12, 8, 4 concatenated, mean pooled, 1152-d) with a closed-form ridge head to the teacher's query vectors, output normalized. Backbone features are computed once; one head solve per teacher. Optional recipe 3, MiniLM-L6 backbone, only if it adds a different test.
+- **Measured:** per teacher, recipe-2 six-set and dev-forum scores, retention versus the teacher.
+- **Pre-specified analysis (write before scoring):** Spearman between recipe-1 and recipe-2 six-set rankings over the registered ten and over the 26; Spearman between recipe-2 ranking and teacher six-set score; dev-screen-to-public Spearman for recipe 2; checkpoint-resampled intervals and leave-one-family-out as in E13.
+- **Reading:** rankings agree and both ignore teacher quality: the strongest-teacher heuristic is challenged for cheap students generally. Rankings disagree: screen per student recipe. Either is reportable; no outcome upgrades the screen to a selector for the trained Zero or Nano.
+- **Cost:** under $20 pod time if caches exist; two to three days.
+
+### B. Cross-space ANN effort (E20)
+
+- **Question:** is the extra graph-search effort for table queries a recurring consequence of table-based query substitution across embedding spaces, or a property of Stella, and does query geometry predict it?
+- **Fixed:** FiQA (57,638 docs) and TREC-COVID (171,332 docs) document vectors per teacher from the E8 caches; Qdrant 1.19.1, HNSW m=16, ef_construct=100, uncompressed; the ef grid 16, 32, 64, 128, 256, 512; each encoder's own exact top-10 and exact nDCG@10 as its baseline.
+- **Varied:** the 26 spaces; teacher queries versus fitted-table queries; two graph builds per space and workload.
+- **Measured:** per space, workload, build, encoder, ef: recall@10 against own exact, relative nDCG loss, search p50. Per space: median top-1 cosine, median top-1 minus top-10 margin, for teacher and table queries.
+- **Pre-specified analysis:** teacher reference ef is 64. Effort multiplier is the smallest grid ef at which the table reaches the teacher's relative loss at ef=64; unreachable within the grid is reported as censored, not 512. Report the distribution of multipliers across spaces and the paired recovery gap at fixed ef. Geometry correlations are exploratory, not causal. Builds are repetitions; related checkpoints limit independence and are shown by family.
+- **Reading:** a recurring penalty generalizes section 4 beyond Stella; absent or reversed penalties bound it. Both are reportable.
+- **Cost:** hours of local Qdrant time after copying about 26 x 2 workloads of fp16 vectors from the pod; one to two days.

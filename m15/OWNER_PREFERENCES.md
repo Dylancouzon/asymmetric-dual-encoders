@@ -87,3 +87,21 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner permits plugin/MCP installation to create the Doc, with Codex desktop as a fallback if needed.
 - Owner asks for the direction's rationale and alternative approaches to be available to reviewers, enabling them to make their own informed editorial decisions.
 - Owner explicitly defers Google Doc creation, requests instructions and a clean/logged repository, and will review with Astra in a separate session first. No Google Doc is created or uploaded.
+
+### 2026-10-01, owner review with Astra and Fable
+
+- Owner states the reader outcome: the paper should make people want to use the Constella models, or apply the findings to their own indexes and replicate what we did to build their own family. Coherent and applicable; not a benchmark reading or a sea of numbers.
+- Owner rejects Nano-versus-bge-small as a main-text framing: the selling point is the family and the shared index, and Nano alone is not the proposition. Registered reference contrasts still appear in full in the appendix (instructions-m15).
+- Owner questions the value of section 4, wants section 5.2's use-case specialization idea explored, and asks why section 6 lists repaired bugs. Both reviewers answered in `REVIEWS/2026-10-01-*-owner-*.md`; the agreed proposal is `REVISION_PLAN_V16.md`, not yet owner-approved.
+- Owner is willing to run further experiments on the Mac and cloud GPUs to strengthen the paper. Astra is given more authority on narration, Fable on technical correctness; both weigh in on every decision.
+
+### 2026-10-01, owner round 3 on experiments and framing
+
+- Owner judges the paper thin on whitepaper-grade findings. Goal restated: people should talk about the techniques; credibility in IR research; model usage numbers do not matter. Findings that disagree with existing literature are wanted.
+- Owner rejects the native scalar8 precision experiment (a knob, not knowledge) and defers the domain-fit table to future work. Owner approves experiment A (cross-recipe teacher screen) and accepts B (cross-space ANN effort) on Astra's agreement, which was given. Plenty of A100 budget remains within the recorded ceiling.
+- Owner asks that cost efficiency and applicability to an existing index without re-embedding be more central. Recorded technical boundary: QED, EmbedDistill, LEAF, and pyNIFE also keep the document tower frozen; the paper attributes that and centers closed-form construction cost as the enabling method.
+- Owner clarifies that the repository's training-data rules protect shipped weights; evaluation and validation use of datasets is not restricted by them. The reserved four remain known-test under CLAUDE.md regardless.
+- Owner asks that every decision be logged per repository convention so ideas are not re-litigated or reverted.
+- Astra has more authority on narration, Fable on technical correctness; both weigh in on every decision.
+- **2026-10-01, approval.** Owner approves `REVISION_PLAN_V16.md` including experiment B, with a $150 compute budget (slightly over is acceptable). Multiple pods exist; all prior experiments on them are finished, so concurrent work and renting more GPUs to go faster are permitted.
+- **2026-10-01, standing approval.** Owner grants everlasting commit and push approval for this project on the working branch. Coherent batches, no force-push, research history preserved.

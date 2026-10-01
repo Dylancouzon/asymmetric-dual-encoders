@@ -461,3 +461,85 @@ Qdrant scalar8, an ANN remedy, or a guaranteed upper bound. Global candidate bud
 per-segment oversampling. No new encoding of documents, training, cloud rental, protected access or
 query selection occurs. Source:`m15src/e18_query_precision.py`; immutable output:
 `results/m15_e18_query_precision.json`.
+
+## E19, cross-recipe teacher screen (exploratory, pre-specified 2026-10-01, before any scoring)
+
+Owner-approved under `REVISION_PLAN_V16.md`. E8/E8x ranked 26 teachers by the six-set quality of a
+closed-form token table fitted to each teacher's query vectors. E19 asks whether that ranking is a
+property of the table recipe or of the teachers: it repeats the screen with a second, independent
+student family and the same teachers, fit list, targets, document indexes, selection order and
+scoring, changing only the student.
+
+- **Question:** does the teacher ranking transfer from the closed-form table (recipe 1) to a
+  frozen-backbone ridge head (recipe 2), and does recipe 2's ranking also ignore the teacher's own
+  retrieval quality?
+- **Fixed:** the 26 pooled checkpoints of E8x plus the E8 control `arctic-embed-l-mean`; the
+  registered 337,981-query fit list (sha256 `da0f208e...`); each teacher's cached fit-query targets
+  (`trainq-337981`, the teacher's query prefix, fp16) and cached dev/six-set document vectors
+  (`e8-dev-*-docs`, `e8-six-*-docs`); exact nDCG@10 via `evalkit.score` at k=100 with the
+  registered self-hit drop; the dev-then-freeze-then-six order.
+- **Recipe 2:** frozen `BAAI/bge-small-en-v1.5` at the Nano build's pinned revision. Features are
+  the masked-mean-pooled hidden states of layers 12, 8 and 4 concatenated (1152) plus a bias column,
+  the M10 feature path, computed once for the fit list, the dev queries and the six-set queries at
+  max length 512. The head is a dense ridge solve from features to the teacher's targets with
+  penalty `lambda * trace(G)/d`, grid 1e-4, 1e-3, 1e-2, 1e-1, one decade extension at an edge, as
+  E8. Student query vectors are L2-normalized. Lambda is chosen on the two dev forums by retrieval,
+  then all lambdas are frozen to `work/m15/e19/frozen_lambdas.json` (hash in the result) before any
+  six-set load. Each teacher is scored once per set; `m7/SIX_ACCESS.log` records the loads.
+- **Special case:** `bge-small-en-v1.5` is also a teacher; for that row the student shares the
+  teacher's backbone. It is reported, and every correlation is given with and without it.
+- **Pre-specified analysis, descriptive, no p-values:** (1) Spearman between recipe-2 and recipe-1
+  six-set macro over the registered ten and over the 26, with E8x's 10,000-draw checkpoint
+  bootstrap and leave-one-family-out; (2) Spearman between recipe-2 six-set macro and the teacher's
+  six-set score, same rosters and intervals; (3) recipe-2 dev screen versus recipe-2 six-set macro;
+  (4) the strongest-registered-teacher comparison for recipe 2 (gte-large-en-v1.5 versus the
+  recipe-2 screen choice), as C13 did for recipe 1; (5) clean-four variants of (1) to (3).
+- **Reading:** rankings agree and both ignore teacher quality: the strongest-teacher heuristic is
+  challenged for cheap query students beyond one recipe. Rankings disagree: the screen is
+  recipe-specific. Neither outcome makes the screen a selector for the trained Zero or Nano, and a
+  frozen-backbone head is a floor for a trained transformer student (M9: 50.8% of its ceiling).
+- **Cost and access:** the retained A100 pod volume holds every cache; if it is unavailable the
+  fit-list targets and six-set documents are re-encoded (8 to 10 A100 hours). No reserved set, no
+  training, no change to any existing result.
+- **Output:** immutable `results/m15_e19_head_screen.json` from `m15src/e19_head_screen.py`.
+
+## E20, cross-space ANN effort (exploratory, pre-specified 2026-10-01, before any scoring)
+
+Owner-approved under `REVISION_PLAN_V16.md` after Astra's agreement. E2 found that Zero needs more
+graph-search effort than Stella's own queries over the same Stella index. E20 asks whether that is a
+property of Stella or of table-based query substitution.
+
+- **Question:** across 26 teacher spaces, does a fitted table's query path need more HNSW effort
+  than the teacher's own query path to reach the same relative quality over the teacher's unchanged
+  index, and do measurable query-geometry differences track the size of that penalty?
+- **Fixed:** FiQA (57,638 documents) and TREC-COVID (171,332 documents); per teacher, the cached
+  six-set document vectors and teacher query vectors from E8/E8x, and the table re-solved at the
+  frozen E8/E8x lambda (recipe 1). If E19 is complete, its recipe-2 student queries form a third
+  path per space, reported as secondary. Qdrant 1.19.1, cosine, HNSW m=16, ef_construct=100,
+  indexing threshold 1 KB, no quantization, limit 11 with the registered self-hit drop. Two graph
+  builds per space and workload, differing in a seeded insertion order. Exact parity against NumPy
+  on 200 queries per path before any ANN row.
+- **ef grid:** 16, 32, 64, 128, 256, 512.
+- **Measured:** per space, workload, build, path and ef: recall@10 against that path's own exact
+  top-10, nDCG@10 and relative loss against that path's own exact nDCG@10, and search p50/p95.
+  Per space, workload and path: median top-1 cosine and median top-1 minus top-10 score gap from the
+  exact scores. Stella's rows must agree with E2's FiQA rows within the two-build spread; this is a
+  consistency check, not a gate.
+- **Pre-specified analysis:** the teacher reference is ef=64. The effort multiplier is the smallest
+  grid ef at which the table's relative nDCG loss is at or below the teacher's at ef=64, divided by
+  64; a table that does not reach it by ef=512 is censored, not assigned 512. Recovery-based
+  multipliers are computed the same way as a secondary display. Report the multiplier distribution
+  per workload with builds averaged, the paired table-minus-teacher recovery gap at ef=64, and
+  exploratory Spearman between that gap and the geometry differences (table minus teacher top-1
+  cosine; table minus teacher margin). Builds are repetitions; related checkpoints are shown by
+  family and are not independent samples. Latency is recorded on whichever host runs the sweep and
+  is not a latency claim.
+- **Reading:** a recurring penalty generalizes the Stella observation to table-based query
+  substitution; absent or reversed penalties bound it to some spaces. Both are reportable.
+- **Output:** immutable `results/m15_e20_ann_spaces.json` from `m15src/e20_ann_spaces.py`.
+  No reserved set, no training, no change to any existing result.
+
+**E20 amendment (2026-10-01, before any E20 scoring).** TREC-COVID has 50 test queries, too few
+for a per-space relative-loss estimate on its own. SCIDOCS (25,657 documents, 1,000 queries) is
+added as a third workload so the scale axis (TREC-COVID, 171,332 documents) and the query-count axis
+(FiQA 648, SCIDOCS 1,000) are both covered. The ef grid, builds, analysis and outputs are unchanged.
