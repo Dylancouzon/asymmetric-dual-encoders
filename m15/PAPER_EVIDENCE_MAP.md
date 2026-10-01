@@ -67,3 +67,20 @@ below cover the material v16 adds; every other v15 row still maps to the same re
 | Appendix D fusion and routing | evidence C1, C5, C7, C8, C9, C10 as in the v15 rows for §4.1 and §4.2 | Unchanged receipts, moved out of the main text |
 
 Review records for v16: `REVIEWS/2026-10-01-andrey-review-v16.md`, `REVIEWS/2026-10-01-astra-correctness-v16.md`, `REVIEWS/2026-10-01-sol-reader-v16.md`.
+
+## v17 additions (2026-10-01, frozen-index frame)
+
+Section numbers now: 1 introduction, 2 related work, 3 setup, 4 RQ1, 5 RQ2, 6 instance, 7 limits,
+Appendices A to D. Rows above map the same receipts; new or moved material:
+
+| Manuscript location / claim | Source of record | Method and scope |
+|---|---|---|
+| Abstract, §1, §4.2 to 4.4: width-conditioned model, held-out ten-to-16 prediction, partial correlations, selection regret | [E21 result](../results/m15_e21_width_model.json), evidence C18; [method E21](MEASUREMENTS.md) | Exploratory, pre-specified before running; 26 related checkpoints, three width levels; hypothesis formed after seeing all 26, disclosed |
+| §2 joint-training contrast (LightRetriever about 95%) | [related-work notes](RELATED_WORK.md), item 4 | Published figure from the cited paper; different protocol and corpus |
+| §3.1 Table A per-width summary; Appendix B full roster | [E19 result](../results/m15_e19_head_screen.json) configs; E8/E8x pooling fields | Derived from the committed rows |
+| §6 what each path computes and where it loses; internal jargon workload below BM25 | [BEIR-15 aggregate](../results/m20_beir15_run.json), evidence C1; [M18 findings](../m18/FINDINGS.md) dev table | Descriptive; M18 is a small internal model-judged surface, summary only |
+| §6 type-pause-submit capability; prefix retention | [E2 receipts](../results/m15_e2_ann_fiqa.json) (same populated collections); [prefix card](../results/m15_e4_prefix.json), evidence C6 | Capability statement; prefixes are synthetic, no session measured |
+| §6 Table 2 CPU hours per million queries | [latency](../results/m15_e1_latency.json) C2; [1M search](../results/m15_e2_ann_msmarco1m.json) quant none rows at ef 128/256/512 | Arithmetic on registered medians; not a throughput measurement |
+| §6 build costs | [decision audit](../results/m15_e15_decision_audit.json), evidence C13; E19 timings in [LOG.md](LOG.md) | Component costs only |
+| §7 three specialization attempts without an improved encoder | [M17](../m17/FINDINGS.md), [M18](../m18/FINDINGS.md), [M19](../m19/FINDINGS.md) findings | Summaries only; sealed material unopened |
+| [pending] §4.3 E24, §5.3 E22, §5.4 E23 | methods E22 to E24 in [MEASUREMENTS.md](MEASUREMENTS.md); drivers in `m15src/` | Pre-specified; blocked on the pod GPU |

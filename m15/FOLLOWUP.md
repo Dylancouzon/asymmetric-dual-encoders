@@ -172,3 +172,15 @@ The owner rejected the native scalar8 precision experiment as a knob rather than
 - **Pre-specified analysis:** teacher reference ef is 64. Effort multiplier is the smallest grid ef at which the table reaches the teacher's relative loss at ef=64; unreachable within the grid is reported as censored, not 512. Report the distribution of multipliers across spaces and the paired recovery gap at fixed ef. Geometry correlations are exploratory, not causal. Builds are repetitions; related checkpoints limit independence and are shown by family.
 - **Reading:** a recurring penalty generalizes section 4 beyond Stella; absent or reversed penalties bound it. Both are reportable.
 - **Cost:** hours of local Qdrant time after copying about 26 x 2 workloads of fp16 vectors from the pod; one to two days.
+
+## Status after owner round 5 (2026-10-01)
+
+- E21 complete (`results/m15_e21_width_model.json`): the width-conditioned model; see LOG and
+  `REVISION_PLAN_V17.md`. It is the analysis both register reviews ranked first.
+- E22 (gap predictors), E23 (FiQA 25k size deconfound), E24 (prospective eight-encoder test):
+  methods in MEASUREMENTS.md, drivers reviewed (NO-GO, nine fixes, re-review, three leftovers
+  closed), roster and revisions pinned in `m7src/encoders.py`. Blocked only on the E8 pod host
+  having a free GPU; a twelve-hour retry loop is running. The only pod-only input E24 needs is the
+  fit list; E22 and E23 need the E20 vectors.
+- Rejected by owner: native scalar8 query precision. Deferred: domain-fit table (future work; the
+  owner's "task-specific student" idea), noted in the paper's Limitations.

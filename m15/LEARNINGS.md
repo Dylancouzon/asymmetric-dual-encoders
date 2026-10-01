@@ -310,6 +310,35 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** Bounded local negative for these static encoders, linear maps, and target space. Test-selected regularization makes this an optimistic diagnostic, not a prospective deployment policy. It does not rule out nonlinear or jointly trained alignment.
 - **Use:** Construction supplement or alternative-path paragraph; added after Astra identified the omission.
 
+### L34. Width hides the teacher-quality signal for closed-form students
+
+- **Observation:** over 26 spaces, student quality ~ teacher quality alone has R2 0.12 (head) / 0.14
+  (table); adding log2 width gives R2 0.70 / 0.48 with standardized betas +0.69 / −0.83 and
+  +0.63 / −0.64, intervals excluding zero; teacher quality and width correlate +0.61. A fit on the
+  ten registered spaces ranks the 16 later ones at 0.85 / 0.70 against 0.37 / 0.16 for teacher alone.
+- **Decision:** when a cheap student must be built for an existing wide index, expect the width
+  penalty and judge the teacher's quality within its width; when choosing an index, do not pick by
+  teacher score; screen the student.
+- **Evidence:** E21 (`results/m15_e21_width_model.json`), E19, E8/E8x.
+- **Strength/reach:** 26 related checkpoints, three width levels, two closed-form recipes; a
+  hypothesis about what cheap students pay for width, not a mechanism. E24 (pending) tests it
+  prospectively. The dev screen still makes the better pick (regret 0.035 / 0.000 versus the model's
+  0.249 / 0.107).
+- **Use:** v17 RQ1, the central result.
+
+### L35. The search-effort penalty for table queries recurs across teacher spaces
+
+- **Observation:** on FiQA and TREC-COVID the table recovers fewer exact neighbours at ef=64 than the
+  teacher in 25/25 spaces (mean −2.9 and −3.9 pp); SCIDOCS 17/25; median recovery multiplier 4x ef on
+  the larger corpora; the relevance-loss multiplier agrees on FiQA and is mixed elsewhere; the head
+  student shows the same deficit; top-1 cosine and margin deltas do not rank the gap.
+- **Decision:** after replacing the query path over an unchanged graph, re-tune ef against the
+  student's own exact targets; do not assume the index's settings transfer.
+- **Evidence:** E20 (`results/m15_e20_ann_spaces.json`), E2.
+- **Strength/reach:** one engine, one graph configuration, closed-form tables, three workloads that
+  confound size with domain; latency not claimed. E22 and E23 pending.
+- **Use:** v17 RQ2.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

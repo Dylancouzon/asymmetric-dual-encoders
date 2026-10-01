@@ -201,3 +201,15 @@ the learning catalog.
 
 Reviewers may recommend another thesis, splitting the material, or removing a section. The current
 direction is a reasoned selection from the evidence, not a requirement to defend prior drafts.
+
+## Addendum 2026-10-01: v17 direction (supersedes the choice above for the current draft)
+
+After the owner judged v16 an article, two independent reviews and the E21 analysis led to the
+frozen-index frame in `REVISION_PLAN_V17.md`: the organizing question is reducing query cost over an
+index that cannot be rebuilt; RQ1 asks what the index decides about retention (answer: width and
+space quality, conditionally), RQ2 what it decides about search effort. The teacher-selection
+result of the previous drafts is RQ1 viewed from before the index exists and is a corollary.
+Alternatives 1 (teacher-selection paper) and 4 (search-cost paper) above are now the two halves of
+one paper; 2 (cost) is a paragraph and a table in Section 6; 3, 5, 7, 8 are appendices or product
+material (hot-swap goes to the M22 model card). The owner's inclusion philosophy: keep everything
+valuable that meets the criteria; reviewers cut together, unless coherence suffers.

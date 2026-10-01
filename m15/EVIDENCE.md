@@ -608,3 +608,42 @@ bge-small-en-v1.5 is the head's own backbone and gte-small is nearly its linear 
 Two graphs per workload are built from different seeded insertion orders; they are repetitions, not independent samples; related checkpoints are grouped by family in the result file. Geometry correlations are exploratory. The E2 consistency check for Stella's teacher path on FiQA is in the result file and is not a gate.
 
 **Cannot show.** A latency claim (sweeps ran on a shared pod); other engines or graph parameters; the trained Zero (these are closed-form tables); a causal geometric mechanism.
+
+## C18. Width hides the teacher-quality signal
+
+**Label:** exploratory (E21, pre-specified; existing data). **Source:** `results/m15_e21_width_model.json`
+
+**Claim.** Student quality is predicted by the space's own quality once width is held fixed; width is a strong negative effect; a two-variable fit on the ten registered spaces ranks the 16 later spaces far better than the space's own score does.
+
+| student | predictors | standardized betas | checkpoint bootstrap95 | R2 in sample | leave-one-family-out Spearman | leave-one-out Spearman |
+|---|---|---|---|---|---|---|
+| head | space quality | +0.34 | [-0.16, +0.65] | 0.119 | -0.17 | -0.05 |
+| head | space quality + width | +0.69, -0.83 | [+0.40, +0.97]; [-1.14, -0.60] | 0.695 | +0.69 | +0.73 |
+| head | + dev screen | +0.28, -0.22, +0.71 | [+0.01, +0.64]; [-0.59, +0.10]; [+0.36, +0.99] | 0.864 | +0.77 | +0.84 |
+| table | space quality | +0.37 | [-0.30, +0.72] | 0.137 | -0.15 | -0.06 |
+| table | space quality + width | +0.63, -0.64 | [+0.06, +0.89]; [-0.95, -0.32] | 0.478 | +0.40 | +0.50 |
+| table | + dev screen | +0.23, -0.24, +0.70 | [-0.18, +0.58]; [-0.62, +0.11]; [+0.31, +1.01] | 0.777 | +0.80 | +0.81 |
+
+Registered-ten fit predicting the 16 exploratory checkpoints (space quality + width):
+
+| student | n fit | n test | Spearman pred vs actual | bootstrap95 | space quality alone |
+|---|---|---|---|---|---|
+| head | 10 | 16 | +0.85 | [+0.53, +0.99] | +0.37 |
+| table | 10 | 16 | +0.70 | [+0.20, +0.96] | +0.16 |
+
+Selection regret, six-set nDCG@10 below the best student:
+
+| student | rule | pick | student score | regret |
+|---|---|---|---|---|
+| head | strongest_teacher | gte-large-en-v1.5 | 0.2229 | 0.2854 |
+| head | strongest_teacher_widest_band | gte-large-en-v1.5 | 0.2229 | 0.2854 |
+| head | M2_prediction_leave_one_out | arctic-embed-s | 0.2594 | 0.2490 |
+| head | dev_screen | gte-small | 0.4733 | 0.0350 |
+| table | strongest_teacher | gte-large-en-v1.5 | 0.2455 | 0.1519 |
+| table | strongest_teacher_widest_band | gte-large-en-v1.5 | 0.2455 | 0.1519 |
+| table | M2_prediction_leave_one_out | gte-small | 0.2903 | 0.1070 |
+| table | dev_screen | stella-400M-v5 | 0.3974 | 0.0000 |
+
+Pooled Spearman student vs space quality: head +0.09, table +0.09; partial given width: head +0.58, table +0.45; space quality vs width +0.61.
+
+**Cannot show.** A mechanism; independence of related checkpoints; transfer to trained students; a prospective test (the hypothesis was formed after seeing all 26; E24 supplies the prospective roster).

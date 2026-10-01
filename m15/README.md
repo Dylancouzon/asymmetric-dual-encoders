@@ -3,7 +3,7 @@
 Start at **[REVIEW_GUIDE.md](REVIEW_GUIDE.md)**. It explains the current draft, where its evidence
 lives, what a fresh clone does and does not contain, and how to review with coworkers or Codex.
 
-- [Paper source](PAPER.md) and [rendered paper](latex/paper.pdf)
+- [Paper source](PAPER.md) (v17) and [rendered paper](latex/paper.pdf); [v17 plan, voice contract, and agreed claims](REVISION_PLAN_V17.md)
 - [Current manuscript evidence map](PAPER_EVIDENCE_MAP.md) and [numerical evidence cards](EVIDENCE.md)
 - [All milestone learnings](LEARNINGS.md), including findings omitted from the paper
 - [Paper direction and alternative approaches](EDITORIAL_RATIONALE.md)

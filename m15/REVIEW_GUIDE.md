@@ -2,8 +2,9 @@
 
 ## What is ready to review
 
-The current manuscript is **v15, Constella: Lower-Cost Queries over a Fixed Document Index** on
-`m15-whitepaper`. It is an empirical whitepaper for experienced search engineers. The goal is useful,
+The current manuscript is **v17, Reducing Query Cost over a Frozen Document Index: What the Index
+Decides** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
+frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
 
@@ -104,3 +105,14 @@ scratch directory is not part of the branch; the committed notes and references 
 
 The collaboration package adds navigation and provenance. It does not change experiment results,
 upgrade exploratory evidence to confirmation, or certify publication readiness.
+
+## Added 2026-10-01: v17 reviews and pending results
+
+Owner-directed reviews and their dispositions, newest first: `REVIEWS/2026-10-01-fable-voice-v17.md`
+and `-astra-voice-v17.md` (voice contract), `-fable-register-v16.md` and `-astra-register-v16.md`
+(why v16 read as an article), `-astra-correctness-v16.md`, `-sol-reader-v16.md`,
+`-andrey-review-v16.md`, `-astra-e19-e20-reading.md`, `-astra-fable-plan-rounds.md`, and the
+pre-spend reviews `-astra-e19-e20-prespend.md`, `-astra-e22-e24-prespend.md`,
+`-astra-e22-e24-rereview.md`. New results: E19 (`results/m15_e19_head_screen.json`), E20
+(`results/m15_e20_ann_spaces.json`), E21 (`results/m15_e21_width_model.json`), cards C16 to C18.
+Pending: E22, E23, E24 (methods in `MEASUREMENTS.md`; drivers in `m15src/`).

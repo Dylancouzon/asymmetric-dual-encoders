@@ -112,3 +112,28 @@ adversarial correctness reviewer, per mandate and owner permission.
   command line, which once made a live job look dead and caused a duplicate run.
 - Latency runs need an idle machine; background load moved FiQA encode latencies by up to 1.7x.
 - `pgrep -f` over SSH matches its own command line; use a bracket pattern (`[e]8x_towers`).
+
+## Update 2026-10-01 (owner rounds 4 to 6): v17 and pending experiments
+
+- **PAPER.md is v17**, "Reducing Query Cost over a Frozen Document Index: What the Index Decides":
+  research questions and hypotheses first, RQ1 (width-conditioned retention, E21) and RQ2
+  (cross-space search effort, E20), Constella as the worked instance with build cost and CPU hours
+  per million queries, four appendices. Prose about 4,200 words with tables. Three blocks are marked
+  [pending] for E22, E23, E24. Plan, voice contract, and agreed claims: `REVISION_PLAN_V17.md`.
+  Reviews run on v16 and v17 are listed in `REVIEW_GUIDE.md`; dispositions in `LOG.md`.
+- **New results:** E19 (`results/m15_e19_head_screen.json`, cross-recipe screen), E20
+  (`results/m15_e20_ann_spaces.json`, 25-space ANN effort), E21 (`results/m15_e21_width_model.json`,
+  the width model). Cards C16 to C18 in EVIDENCE.md. New figures f7, f8, f9.
+- **Pending:** E22 (gap predictors), E23 (FiQA 25k), E24 (prospective eight encoders). Drivers
+  `m15src/e22_gap_predictors.py`, `e23_fiqa25k.py`, `e24_prospective.py`; roster pinned in
+  `m7src/encoders.py`; reviewed and fixed (`REVIEWS/2026-10-01-astra-e22-e24-*.md`). Launch on the
+  pod: `e24_prospective.py all` (GPU), `e22_gap_predictors.py all` (GPU for the cached fit-query
+  read), `e23_fiqa25k.py all` with `E20_PORT` set per shard. Then fill the three [pending] blocks,
+  regenerate EVIDENCE.md and figures, rebuild the PDF, rerun the voice-contract check.
+- **Pod:** `k3aee2m68765em` holds the fit list and all caches; its host had no free GPU from 16:27
+  local on 2026-10-01; `work/m15/podwait/k3aee2.log` records the retry loop. The venv on container
+  disk must be rebuilt after each restart (`m13/cloud_requirements.txt`, uv with
+  `--index-strategy unsafe-best-match`); use the musl Qdrant build and `E20_STORAGE=/opt/...`.
+- **Owner decisions this day:** standing commit/push approval; $150 budget; science-first title;
+  frozen-index frame; hot-swap goes to the M22 model card; include everything valuable, reviewers
+  cut together. Session pod spend so far about $6.

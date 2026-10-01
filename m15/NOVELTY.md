@@ -35,3 +35,22 @@ V15 is an empirical whitepaper about the quality and systems tradeoffs of query-
 The main text is about 3,300 words, compared with roughly 5,900 in v14, with two figures rather than four. Internal file citations, long diagnostic appendices, and repeated instructional prompts were removed. The owner explicitly wants a whitepaper, not a tutorial; implications remain discussion of measured findings. The hypothetical absolute-quality/time example interprets measured rows and is not an optimized or registered policy.
 
 Independent reviews are REVIEWS/2026-10-01-learning-synthesis-review.md and the v15 reader/correctness files. Their findings were resolved; this is not owner acceptance or a publication-readiness certificate. The full-history catalog retains omitted construction, patching, evaluation, and engineering lessons for future selection. A cost-qualified native remedy would strengthen the main deployment finding; additional model spaces would strengthen its reach. Neither exists yet.
+
+## v17 (2026-10-01): the frozen-index frame
+
+**Question.** What does a cheap query student cost over a frozen index, and what does the index
+decide about that cost? **RQ1:** the space's own quality predicts the student only once width is
+held fixed; width is a strong negative effect (head +0.69 / −0.83, table +0.63 / −0.64, standardized,
+intervals excluding zero); a two-variable model fitted on ten spaces ranks 16 held-out spaces at
+0.85 and 0.70 (E21); the strongest-space rule loses 0.285 / 0.152 nDCG against the best student and
+the student's own dev screen loses 0.035 / 0.000. **RQ2:** table queries recover fewer exact
+neighbours at equal ef in 25/25 spaces on FiQA and TREC-COVID, median recovery multiplier four
+(E20); the pre-specified relevance-loss multiplier agrees on FiQA and is mixed elsewhere; the two
+geometry summaries do not rank the gap. **Instance:** Constella over Stella, with CPU time per
+million queries 9.2 h / 1.2 h / 1.0 h (Stella / Nano / Zero).
+
+**What stays prior art.** Query-side distillation, static tables, switching, stronger-teacher
+weaker-student effects, OOD graph difficulty, query-aware binary decoding. **What is new.** The
+conditional structure of teacher predictability across 26 spaces with a held-out prediction, and
+the cross-space search-effort regularity. **Pending.** E24 makes RQ1 prospective; E22 and E23 decide
+whether RQ2 is predictive and whether corpus size explains its attenuation.

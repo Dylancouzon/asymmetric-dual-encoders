@@ -1,3 +1,5 @@
+# Proposed v16 revision plan (superseded by REVISION_PLAN_V17.md on 2026-10-01; kept as history)
+
 # Proposed v16 revision plan (Astra + Fable, 2026-10-01, revised after owner round 3)
 
 **Status: proposed, awaiting owner approval of the full plan.** Experiment A is owner-approved; B was conditional on Astra's agreement, which is recorded in `REVIEWS/2026-10-01-astra-fable-plan-rounds.md`. Owner direction is in `OWNER_PREFERENCES.md` (2026-10-01 entries). The earlier draft of this file (two-part "use a family / build a family" outline) is superseded by this version; its content survives in the plan rounds file.

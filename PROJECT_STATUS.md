@@ -45,3 +45,9 @@ first: registrations merged as qdrant/fastembed#751, the dtype bug filed as #752
 Historical paths, frozen comparators and registrations retain their original names. In particular,
 **never overwrite `results/perquery.json`**. Research lessons remain in the milestone `FINDINGS.md`
 files; reusable checks and component boundaries are mapped in `HARNESS.md`.
+
+## M15 state (2026-10-01)
+
+Draft v17 of the whitepaper is on `m15-whitepaper` (frozen-index frame, two research questions).
+Results E1 to E21 are committed with receipts; E22 to E24 are pre-specified, reviewed, and waiting on
+the E8 pod's host for a GPU. Entry points: `m15/HANDOFF.md`, `m15/REVISION_PLAN_V17.md`, `m15/LOG.md`.

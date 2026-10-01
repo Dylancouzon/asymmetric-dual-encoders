@@ -744,3 +744,8 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Owner round 6: cost paragraph and Table 2 (CPU hours per million queries from registered medians:
   Stella 9.2 h, Nano 1.2 h, Zero 1.0 h) added to Section 6; construction costs restated there;
   hot-swap noted for the M22 model card (`instructions-m22.md`); inclusion philosophy recorded.
+- Documentation sweep (owner: "log everything properly"): ROADMAP M15 line, PROJECT_STATUS M15
+  state, REVIEW_GUIDE (v17, review list), README, HANDOFF (v17 update with launch sequence and pod
+  notes), PAPER_EVIDENCE_MAP (v17 rows), EVIDENCE (card C18 for E21), FOLLOWUP (status), NOVELTY
+  (v17 contribution), EDITORIAL_RATIONALE (addendum), LEARNINGS (L34 width, L35 cross-space effort),
+  REVISION_PLAN_V16 marked superseded, instructions-m22 hot-swap note.
