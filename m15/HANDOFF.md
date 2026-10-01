@@ -19,9 +19,12 @@ using it for a new collaboration document.
 
 ## Current deliverables
 
-- **PAPER.md v15:** “Constella: Lower-Cost Queries over a Fixed Document Index.” An empirical
-  whitepaper, not a tutorial. Roughly 3,300 main words versus roughly 5,900 in v14; two main figures.
-  The PDF has 11 pages including methods, original contrasts, held-out aggregates, and references.
+- **PAPER.md v16:** “Constella: Teacher Selection and Search Cost in Query-Side Distillation.”
+  Two findings (teacher selection across 26 teachers under two student recipes, E8/E8x/E19; search
+  effort for cheap queries across 25 teacher spaces, E2/E20), about 3,500 main words, five main
+  figures. Plan and agreed claim wording: `REVISION_PLAN_V16.md`. Gates run on 2026-10-01: Andrey,
+  Astra correctness, Sol reader, humanizer; dispositions in `LOG.md` and `REVIEWS/2026-10-01-*-v16.md`.
+  v15 (“Lower-Cost Queries over a Fixed Document Index”) is in git history.
 - **LEARNINGS.md:** 33 candidate lessons from the whole history (M0–M23), with milestone coverage,
   evidence, production decision, strength, limits, editorial selection, and justified research gaps.
   Unscheduled M16 and incomplete release/archive work are identified as lacking new retrieval

@@ -48,3 +48,22 @@ not printed as scholarly citations or substituted for methods. Primary-literatur
 in [RELATED_WORK.md](RELATED_WORK.md).
 
 Owner reiterated the whitepaper genre during this revision. The final manuscript replaces recurring instructional prompts with findings and discussion; the learning catalog retains decision-oriented author notes.
+
+## v16 additions (2026-10-01)
+
+Section numbers in the table above refer to v15; v16 reorders the manuscript (1 motivation, 2 family
+and setup, 3 Finding A, 4 Finding B, 5 shared-index options, 6 limits, Appendices A to D). The rows
+below cover the material v16 adds; every other v15 row still maps to the same receipts.
+
+| Manuscript location / claim | Source of record | Method and scope |
+|---|---|---|
+| §1 and §2 re-encoding cost, 23.7M documents in 39.9 h on one RTX 3080 | [M20 findings](../m20/FINDINGS.md), [M20 status](../m20/STATUS.md) | Measured document encoding for the BEIR-15 evaluation, Stella document path; not a universal estimate |
+| §2 Figure 1 per-dataset retention; word-order correlate | [BEIR-15 aggregate](../results/m20_beir15_run.json), evidence C1; [failure modes](../results/m15_e12_failure_modes.json), evidence C12 | Descriptive per-dataset ratios; exploratory per-query correlation sharing Stella's score |
+| §3 second student recipe, Figure 3, correlation table, strongest-teacher comparison, width qualifier | [E19 result](../results/m15_e19_head_screen.json), evidence C16; [method E19](MEASUREMENTS.md); width analysis in [LOG.md](LOG.md) | Exploratory, analysis pre-specified before scoring; frozen bge-small head; same fit list, selection order, indexes as E8/E8x; width bands exploratory |
+| §4 cross-space ANN effort, Figure 5, multipliers, recovery gaps, geometry null, tas-b exclusion | [E20 result](../results/m15_e20_ann_spaces.json), evidence C17; [method E20 and amendments 1 to 4](MEASUREMENTS.md); [pre-spend review](REVIEWS/2026-10-01-astra-e19-e20-prespend.md) | Exploratory, analysis pre-specified; loss-based multiplier primary, recovery secondary; two builds; one engine; latency not a claim |
+| §4 search time similar at fixed ef; ef 128/256/512 within 1% | [1M search](../results/m15_e2_ann_msmarco1m.json) rows with quant none | Registered sweep rows read directly |
+| Appendix A Nano decision bounds, Zero clean-four intervals, NDO-3 definition | [canonical benchmarks](../m21/BENCHMARKS.md), [published reserved aggregate](../results/m13_reserved_run.json) | Registered outcomes copied in full |
+| Appendix B fidelity versus retrieval | [vector diagnostics](../results/m15_e11_mechanism.json), evidence C4; [M7 findings](../m7/FINDINGS.md), [M17 findings](../m17/FINDINGS.md) | Multiple local counterexamples |
+| Appendix D fusion and routing | evidence C1, C5, C7, C8, C9, C10 as in the v15 rows for §4.1 and §4.2 | Unchanged receipts, moved out of the main text |
+
+Review records for v16: `REVIEWS/2026-10-01-andrey-review-v16.md`, `REVIEWS/2026-10-01-astra-correctness-v16.md`, `REVIEWS/2026-10-01-sol-reader-v16.md`.
