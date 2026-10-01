@@ -504,3 +504,63 @@ Error headroom and mean angular distortion at 40 candidates:
 Coverage is expected inclusion under uniform boundary-tie selection, with each tier's E16/E17 original exact-top10 target. Query-vector hashes match those receipts. Graded scoring is original normalized q dot sign(d), not native scalar8. Global candidate budgets are not native per-segment oversampling. Larger absolute Zero gains have more miss headroom and do not establish greater proportional sensitivity.
 
 **Cannot show.** HNSW performance, nDCG gain, serving latency, native 8-bit query performance, or a new quantizer; no graph is used.
+
+## C16. The teacher screen under a second student recipe
+
+**Label:** exploratory (E19, analysis pre-specified before scoring). **Source:** `results/m15_e19_head_screen.json`
+
+**Claim.** A frozen bge-small backbone with a closed-form ridge head, fitted to the same 26 teachers on the same fit list and scored on the same indexes as the E8/E8x tables, also ranks poorly by the teacher's own score; its ranking agrees only moderately with the table ranking, and its own dev screen predicts its six-set rank.
+
+| correlation | roster | n | Spearman | checkpoint bootstrap95 |
+|---|---|---|---|---|
+| head vs teacher six-set score | registered_ten | 10 | +0.176 | [-0.56, +0.67] |
+| head vs teacher six-set score | pooled | 26 | +0.093 | [-0.36, +0.51] |
+| head vs teacher six-set score | pooled_without_backbone | 25 | +0.092 | [-0.37, +0.53] |
+| head vs table (recipe 1) | registered_ten | 10 | +0.236 | [-0.49, +0.74] |
+| head vs table (recipe 1) | pooled | 26 | +0.506 | [+0.12, +0.79] |
+| head vs table (recipe 1) | pooled_without_backbone | 25 | +0.455 | [+0.04, +0.75] |
+| head dev screen vs head six-set | registered_ten | 10 | +0.709 | [+0.12, +0.96] |
+| head dev screen vs head six-set | pooled | 26 | +0.844 | [+0.61, +0.95] |
+| head dev screen vs head six-set | pooled_without_backbone | 25 | +0.825 | [+0.57, +0.94] |
+| head vs teacher, clean-four | registered_ten | 10 | -0.430 | [-0.84, +0.28] |
+| head vs teacher, clean-four | pooled | 26 | -0.080 | [-0.53, +0.38] |
+| head vs teacher, clean-four | pooled_without_backbone | 25 | -0.071 | [-0.54, +0.40] |
+| head vs table, clean-four | registered_ten | 10 | +0.188 | [-0.52, +0.85] |
+| head vs table, clean-four | pooled | 26 | +0.521 | [+0.13, +0.80] |
+| head vs table, clean-four | pooled_without_backbone | 25 | +0.475 | [+0.06, +0.78] |
+
+Strongest registered teacher gte-large-en-v1.5: head 0.2229; recipe-2 screen choice bge-base-en-v1.5: head 0.3249.
+
+| teacher | dim | teacher six | table (recipe 1) | head (recipe 2) | head retention | lambda |
+|---|---|---|---|---|---|---|
+| gte-large-en-v1.5 | 1024 | 0.5970 | 0.2455 | 0.2229 | 0.373 | 1e-05 |
+| stella-400M-v5 | 1024 | 0.5745 | 0.3974 | 0.2505 | 0.436 | 0.0001 |
+| mxbai-embed-large-v1 | 1024 | 0.5368 | 0.2605 | 0.2641 | 0.492 | 1e-05 |
+| gte-base-en-v1.5 | 768 | 0.5331 | 0.3252 | 0.2618 | 0.491 | 0.001 |
+| bge-large-en-v1.5 | 1024 | 0.5329 | 0.2845 | 0.2679 | 0.503 | 0.001 |
+| arctic-embed-l | 1024 | 0.5289 | 0.3034 | 0.1564 | 0.296 | 0.0001 |
+| arctic-embed-m-v1.5 | 768 | 0.5263 | 0.3279 | 0.1874 | 0.356 | 0.001 |
+| bge-base-en-v1.5 | 768 | 0.5259 | 0.3529 | 0.3249 | 0.618 | 0.001 |
+| bge-base-en-v1 | 768 | 0.5131 | 0.3004 | 0.2773 | 0.540 | 1e-05 |
+| gte-large | 1024 | 0.5129 | 0.2481 | 0.2249 | 0.439 | 0.001 |
+| arctic-embed-l-mean | 1024 | 0.5073 | 0.2764 | 0.1269 | 0.250 | 0.0001 |
+| gte-base | 768 | 0.5063 | 0.2762 | 0.2314 | 0.457 | 0.0001 |
+| bge-small-en-v1.5 | 384 | 0.5042 | 0.3581 | 0.5084 | 1.008 | 0.0001 |
+| arctic-embed-s | 384 | 0.4993 | 0.3516 | 0.2594 | 0.519 | 0.001 |
+| e5-base-v1 | 768 | 0.4934 | 0.3126 | 0.2345 | 0.475 | 0.0001 |
+| gte-small | 384 | 0.4838 | 0.2903 | 0.4733 | 0.978 | 0.01 |
+| e5-large-v2 | 1024 | 0.4735 | 0.2585 | 0.1743 | 0.368 | 0.0001 |
+| e5-base-v2 | 768 | 0.4669 | 0.2930 | 0.2241 | 0.480 | 1e-05 |
+| arctic-embed-xs | 384 | 0.4662 | 0.3440 | 0.2779 | 0.596 | 0.001 |
+| e5-small-v2 | 384 | 0.4544 | 0.3203 | 0.3367 | 0.741 | 0.001 |
+| minilm-l12 | 384 | 0.4219 | 0.3138 | 0.3229 | 0.765 | 0.0001 |
+| minilm-l6 | 384 | 0.4142 | 0.3267 | 0.3088 | 0.746 | 0.001 |
+| multi-qa-minilm-l6 | 384 | 0.4008 | 0.3406 | 0.3094 | 0.772 | 0.001 |
+| contriever-msmarco | 768 | 0.3909 | 0.3270 | 0.1879 | 0.481 | 1e-05 |
+| msmarco-minilm-l6 | 384 | 0.3281 | 0.2905 | 0.1962 | 0.598 | 0.0001 |
+| tas-b | 768 | 0.3262 | 0.2115 | 0.0868 | 0.266 | 0.001 |
+| contriever | 768 | 0.2846 | 0.1864 | 0.0590 | 0.207 | 1e-05 |
+
+bge-small-en-v1.5 is the head's own backbone and gte-small is nearly its linear image (retention 1.008 and 0.978); the without-backbone roster drops the first. Leave-one-family-out values are in the result file.
+
+**Cannot show.** A selector for the trained Zero or Nano; a trained-student ceiling (the frozen head is a floor); independence of related checkpoints; a cause. Head retention falls with teacher width (exploratory Spearman −0.73), which confounds the pooled teacher correlation.

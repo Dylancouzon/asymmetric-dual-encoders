@@ -614,3 +614,14 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - E20: the gnu Qdrant build needs GLIBC 2.38 (pod has older); switched `fetch_qdrant` to the static
   musl build. Vector loop launched 05:12 UTC (`work/m15/e20_vectors.sh`); sweep loop relaunched after
   the binary check.
+- E19 exploratory follow-up (local, no new data): head retention versus teacher dimension
+  Spearman −0.73; table retention versus dimension −0.76 (n = 26). Within one width band the head
+  tracks teacher quality (384-d n=9 +0.47; 768-d n=10 +0.67; 1024-d n=7 +0.36), so the pooled
+  near-zero teacher correlation is partly a width effect: larger teacher spaces are harder for a
+  cheap student, and that penalty cancels the quality signal. Exploratory, small bands; to be
+  reported beside the pre-specified correlations, not instead of them.
+- E20 sweeps restructured at 05:19 UTC into three parallel shards on separate Qdrant ports
+  (`work/m15/e20_shard.sh`, `E20_PORT` 6433/6533/6633) with an assemble waiter
+  (`work/m15/e20_assemble.sh`); the single loop had been on course for about 2.5 h of CPU sweeps.
+  The orphaned stella sweep (killed mid-run) was cleaned and restarted; no result file was written
+  by the partial run. Added evidence card C16 (E19) to `make_evidence.py` and regenerated EVIDENCE.md.

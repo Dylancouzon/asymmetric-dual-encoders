@@ -44,8 +44,8 @@ E19_DIR = REPO / "work" / "m15" / "e19"
 SEED = 20260930
 WARMUP = 100
 EXACT_CHECK = 200
-PORT = 6433                                # dedicated ports: never the E2/E16 instance
-GRPC = 6434
+PORT = int(os.environ.get("E20_PORT", "6433"))   # dedicated ports: never the E2/E16 instance;
+GRPC = PORT + 1                                  # parallel sweep loops set E20_PORT apart
 
 
 def recipe1():
