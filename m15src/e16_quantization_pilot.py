@@ -39,14 +39,14 @@ def free_port():
         return sock.getsockname()[1]
 
 
-def start_server():
-    RUN.mkdir(parents=True, exist_ok=False)
+def start_server(run_dir):
+    run_dir.mkdir(parents=True, exist_ok=False)
     http, grpc = free_port(), free_port()
     while http == grpc:
         grpc = free_port()
-    log = (RUN / 'qdrant.log').open('w')
+    log = (run_dir / 'qdrant.log').open('w')
     env = os.environ.copy()
-    env.update({'QDRANT__STORAGE__STORAGE_PATH': str(RUN / 'storage'),
+    env.update({'QDRANT__STORAGE__STORAGE_PATH': str(run_dir / 'storage'),
                 'QDRANT__TELEMETRY_DISABLED': 'true',
                 'QDRANT__SERVICE__HTTP_PORT': str(http),
                 'QDRANT__SERVICE__GRPC_PORT': str(grpc)})
@@ -85,11 +85,12 @@ def snapshot(client, name):
             'status': info.status.value, 'config': info.config.model_dump(mode='json')}
 
 
-def main():
-    if OUT.exists() or RUN.exists():
-        raise SystemExit('E16 output or isolated run directory exists; refusing to overwrite')
+def main(dataset='fiqa', measurement='E16', label='exploratory pilot',
+         out_path=OUT, run_dir=RUN, script=__file__):
+    if out_path.exists() or run_dir.exists():
+        raise SystemExit('Output or isolated run directory exists; refusing to overwrite')
     started = utc_now()
-    data, dv, provenance = A.load('fiqa')
+    data, dv, provenance = A.load(dataset)
     chosen = sorted(range(len(data['q_ids'])), key=lambda i: hashlib.sha256(
         f"{SEED}:{data['q_ids'][i]}".encode()).hexdigest())[:N]
     qids = [data['q_ids'][i] for i in chosen]
@@ -116,8 +117,8 @@ def main():
                                 else encoder.onnx_sha256)}
         del encoder, scores
         print(f'encoded {tier}: {N} queries; computed original exact neighbors', flush=True)
-    proc, log, client = start_server()
-    name = 'e16-fiqa-fixed-binary'
+    proc, log, client = start_server(run_dir)
+    name = f'{measurement.lower()}-{dataset}-fixed-binary'
     try:
         if client.collection_exists(name):
             raise RuntimeError('Fresh isolated server unexpectedly contains the pilot collection')
@@ -179,8 +180,8 @@ def main():
                 interaction = deltas['zero'] - deltas[other]
                 contrasts[f'{ef}/zero_minus_{other}/quantization_interaction'] = {
                     'mean': float(interaction.mean()), 'query_bootstrap95': bootstrap_mean(interaction)}
-        result = {'status': 'COMPLETE', 'measurement': 'E16', 'label': 'exploratory pilot',
-                  'dataset': 'fiqa', 'n_queries': N, 'n_docs': len(docs),
+        result = {'status': 'COMPLETE', 'measurement': measurement, 'label': label,
+                  'dataset': dataset, 'n_queries': N, 'n_docs': len(docs),
                   'sample': {'method': 'first 192 IDs by SHA256(seed:qid)', 'q_ids': qids,
                              'q_ids_sha256': hashlib.sha256('\n'.join(qids).encode()).hexdigest()},
                   'original_vectors': 'cached fp16 values, cast fp32 and normalized; no fresh document encoding',
@@ -194,11 +195,13 @@ def main():
                              'query-resampling intervals and selected pilot scope; not a confirmatory test',
                              'search timing is diagnostic only; no encoder loading or application dispatch',
                              'no general manifold cause, architecture law, equal-quality dominance, or new quantizer claimed'],
-                  'receipt': receipt(__file__, [provenance, {'dataset_pins': data['pins']},
+                  'receipt': receipt(script, [provenance, {'dataset_pins': data['pins']},
                                               {'encoders': 'm15src/encoders15.py', 'sha256': sha_file(E.__file__)},
-                                              {'e2_build_helper': 'm15src/e2_ann.py', 'sha256': sha_file(A.__file__)}],
+                                              {'e2_build_helper': 'm15src/e2_ann.py', 'sha256': sha_file(A.__file__)},
+                                              {'shared_pilot_source': 'm15src/e16_quantization_pilot.py',
+                                               'sha256': sha_file(__file__)}],
                                      started, extra_packages=('qdrant-client', 'onnxruntime', 'datasets'))}
-        write_result(OUT, result)
+        write_result(out_path, result)
         print(json.dumps(contrasts, indent=2), flush=True)
     finally:
         client.close()
