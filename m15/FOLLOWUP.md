@@ -82,3 +82,21 @@ search cost at matched original-target recovery and retrieval quality would be s
 A null remedy or a result explained by known query hardness is useful if reported accurately;
 neither should be marketed as a breakthrough. More checkpoints or an undirected quantizer search
 would add bulk before adding an argument.
+
+## E17: the larger replication attenuates the primary interaction
+
+The same fixed protocol ran on the cached 1M MS MARCO diagnostic in about 6.7 minutes.
+All three original exact parity checks are 1.0, collection configuration/counts match before/after,
+and no model training or cloud rental occurred. Source/receipt hashes pass independent review.
+
+At primary ef64, binary-rescore1 minus original-scoring recovery penalties are 3.91 points Zero,
+3.07 Nano, and 2.19 Stella. The extra Zero-vs-Nano loss is 0.83 points with a query-bootstrap
+interval spanning −1.15 to 2.81 points; the Zero-vs-Stella interval touches zero. This is not a
+strong primary replication of FiQA's interaction. Secondary ef256 gives larger extra Zero losses,
+but does not replace the primary result. The effect is workload/size sensitive on these two samples.
+Oversampling4 brings recovery close to the original-scoring control for all three at ef64.
+
+Tagged-source inspection establishes that the default one-bit setup also sign-codes queries;
+it discards query magnitudes, not only document magnitudes. Native rescore effects include segment
+merging. The next discriminating test holds sign-coded documents fixed and changes query precision
+in exhaustive candidate scoring, with each encoder's original exact neighbor target held fixed.

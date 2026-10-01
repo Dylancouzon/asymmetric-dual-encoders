@@ -377,3 +377,17 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Astra reviewed source and result, found no essential control defect, and recommends a second
   scale before a broader claim. The hypothesis, values, caveats, and next sequence are in
   `FOLLOWUP.md`; the new result has not yet been added to the paper.
+
+### E17 second-scale replication
+
+- Repeated the same sampling/condition grid on cached 1M MS MARCO vectors, validation-only,
+  192 public queries. Completed in about 6.7 minutes including one graph build. No training,
+  new document encoding, or rental. All original exact parity checks are 1.0; fixed collection
+  counts/config and wrapper/shared-source hashes pass the independent review.
+- The primary ef64 interaction is weaker: binary penalties 3.91/3.07/2.19 points Zero/Nano/Stella,
+  and extra Zero-vs-Nano uncertainty includes zero. Zero-vs-Stella's interval endpoint is
+  numerical zero, not evidence excluding zero. Secondary ef256 differences are kept as
+  sensitivity observations, not substituted for the primary outcome.
+- The tagged native-source review explains one-bit query defaults and segment merging under
+  rescoring. Next is an exhaustive fixed-document-code comparison of sign versus graded query
+  scoring, not a new graph sweep. `FOLLOWUP.md` preserves both the strong pilot and weaker replica.
