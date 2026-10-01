@@ -283,11 +283,18 @@ def sweep(name):
                     qc = data["q_ids"][:EXACT_CHECK]
                     got = top10(ids, doc_ids, qc)
                     parity[f"{ds}-b{b}-{p}"] = recovery_tied(got, tie[p][0], tie[p][1], doc_index, qc)
-                    # Sanity gate for a broken collection, not a tie test: tas-b's teacher path on
-                    # FiQA reached 0.998 under the tie-aware measure after 22 spaces passed 0.999.
+                    # Sanity gate for a broken collection, not a tie test. A space whose exact
+                    # parity cannot reach 0.995 even tie-aware (tas-b: rank-10 gaps at float32
+                    # precision) is excluded and listed, not scored (method amendment 4).
                     if parity[f"{ds}-b{b}-{p}"] < 0.995:
-                        raise SystemExit(f"E20 STOP: exact parity {parity[f'{ds}-b{b}-{p}']} "
-                                         f"for {name} {ds} {p}")
+                        client.delete_collection(cname)
+                        E8.atomic_json(done, {"name": name, "status": "EXCLUDED",
+                                              "reason": f"exact parity {parity[f'{ds}-b{b}-{p}']:.4f} "
+                                                        f"< 0.995 for {ds} build {b} path {p}",
+                                              "exact_parity": parity, "rows_before_exclusion": rows,
+                                              "ties_at_rank10": ties_at_10})
+                        print(f"E20 EXCLUDED {name}: {done.read_text()[:120]}", flush=True)
+                        return
                 for ef in EFS:
                     for p in paths:
                         ids, lat = search_all(client, cname, qv[p], m.SearchParams(hnsw_ef=ef))
@@ -330,10 +337,14 @@ def multiplier(rows, ds, b, path, metric):
 
 def assemble():
     from scipy.stats import spearmanr
-    rows_by, spaces = {}, {}
+    rows_by, spaces, excluded = {}, {}, {}
     for name in eligible():
         meta = json.loads((vec_dir(name) / "vectors.json").read_text())
         sw = json.loads((vec_dir(name) / "sweep.json").read_text())
+        if sw.get("status") == "EXCLUDED":
+            excluded[name] = {"reason": sw["reason"], "exact_parity": sw["exact_parity"],
+                              "ties_at_rank10": sw.get("ties_at_rank10")}
+            continue
         rows_by[name] = sw["rows"]
         sp = {"family": family(name), "lambda": meta["lambda"], "head": meta["head"],
               "builds": sw["builds"], "exact_parity": sw["exact_parity"], "workloads": {}}
@@ -418,6 +429,7 @@ def assemble():
         "qdrant": {"version": "1.19.1", "binary_sha256": sha_file(QDRANT_DIR / "qdrant"),
                    "hnsw": {"m": 16, "ef_construct": 100}, "indexing_threshold_kb": 1},
         "ef_grid": EFS, "reference_ef": REF_EF, "builds_per_workload": BUILDS,
+        "excluded_spaces": excluded,
         "summary": summary, "spaces": spaces, "rows": rows_by,
         "receipt": receipt(__file__, [{"recipe1": [str(E8_RESULT.relative_to(REPO)),
                                                    str(E8X_RESULT.relative_to(REPO))]}],

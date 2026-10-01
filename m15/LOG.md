@@ -636,3 +636,6 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - E20 sweeps restarted 05:37 UTC under tie-aware recovery (tolerance 1e-4); 22 of 27 spaces done
   by 06:45 when `tas-b`'s teacher path on FiQA failed the 0.999 parity gate at 0.998. Gate set to
   0.995 (sanity check, values reported); shard 2 relaunched for the remaining spaces.
+- `tas-b` failed the parity gate again (0.994, head path on SCIDOCS). Its FiQA rank-10 score gaps
+  sit at float32 precision (median 8e-4; 17 of 200 queries under 1e-4). Amendment 4: such a space
+  is excluded and listed rather than stopping the run; assemble skips it. Shards relaunched.

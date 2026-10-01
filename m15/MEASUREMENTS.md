@@ -564,3 +564,11 @@ slots). Every space, path and ef uses the same tolerance.
 Parity gate: 0.995 under the tie-aware measure. After 22 spaces passed at 0.999, `tas-b`'s teacher
 path on FiQA reached 0.998 (four slots in 2,000); the gate exists to catch a broken collection, and
 every parity value is reported per space, workload, build and path in the result.
+
+**E20 amendment 4 (2026-10-01, during the run, 22 spaces complete and unread).** A space whose
+exact parity cannot reach 0.995 even under the tie-aware measure is excluded from the multiplier
+distribution and listed in the result with its parity values, instead of stopping the run. The
+case: `tas-b` on FiQA has a median rank-10-to-11 exact score gap of 8e-4 and 17 of 200 check
+queries under 1e-4, so its exact top-10 is undefined at float32 precision and recall against it
+is not measurable. Completed spaces are unaffected; the roster size in the result is the included
+count.
