@@ -794,3 +794,12 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - E24: predictions committed (sha256 81f2c88e...) before any student was fitted; the table fit for
   `e5-base-unsupervised` stopped at the convergence gate at lambda 1e-5 (listed, not replaced);
   table and head fits continuing.
+- **E24 complete** (`results/m15_e24_prospective.json`, 21:04 UTC; pod stopped 21:10 UTC). All
+  eight passed the tokenizer check; predictions committed at 20:18 UTC (sha256 81f2c88e...) and
+  verified before every student command; e5-base-unsupervised's table fit stopped at the
+  convergence gate, leaving seven. Committed predictions rank the seven at +0.89 [+0.41, +1.00]
+  (head) and +0.71 [−0.12, +1.00] (table) against +0.32 / +0.39 for the space's own score; MAE
+  0.032 both; regret of the model's committed pick 0.000 (head) and 0.043 (table) against 0.086 /
+  0.107 for the strongest-space rule. Written into the abstract, §1, §4.3, Table C, Appendix B;
+  Figure 1 gains the seven as triangles; card C22; all [pending] markers removed. Pod time for
+  E22 to E24 about 2.3 h (about $4). Session pod spend about $11 in total.

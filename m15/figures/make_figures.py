@@ -297,6 +297,15 @@ def f9_width():
                         xytext=(dx, dy), fontsize=7.5, color=C["ink"])
         ax.set_xlabel("Index's own nDCG@10, six sets")
         ax.set_ylabel(yl)
+    p24 = REPO / "results" / "m15_e24_prospective.json"
+    if p24.exists():                       # prospective seven as triangles
+        rows = R("m15_e24_prospective.json")["rows"]
+        for ax, yk in zip(axes, ("table", "head")):
+            for n, r in rows.items():
+                if r[yk] is not None:
+                    ax.scatter(r["teacher_six_macro_all6"], r[yk], s=38, marker="^", zorder=4,
+                               color=wcol[r["dim"]], edgecolor=C["ink"], linewidth=0.8)
+        axes[1].scatter([], [], marker="^", color="white", edgecolor=C["ink"], label="prospective (E24)")
     for w, col in wcol.items():
         axes[1].scatter([], [], color=col, label=f"{w}-d index")
     axes[1].legend(loc="upper left", fontsize=8, frameon=False)

@@ -744,3 +744,28 @@ Held-out models (leave one family out unless named):
 | arctic-embed-s | +0.00 | -4.69 | +0.00 | 0.25/0.25 |
 
 **Cannot show.** A causal size effect (two corpora, one subsample seed); domain and query form remain confounded with the residual.
+
+## C22. Prospective test of the width model
+
+**Label:** exploratory (E24, predictions committed by hash before scoring). **Source:** `results/m15_e24_prospective.json`
+
+**Claim.** Predictions written at 2026-10-01T20:18:43Z (sha256 81f2c88e92d9...) from the space-quality + width model fitted on the 26 rank seven never-seen encoders far better than the space's own score does.
+
+| student | n | Spearman pred vs actual | checkpoint bootstrap95 | space quality alone | dev screen | MAE | regret: strongest space | regret: model pick | regret: dev screen |
+|---|---|---|---|---|---|---|---|---|---|
+| table | 7 | +0.71 | [-0.12, +1.00] | +0.39 | +0.46 | 0.0322 | 0.1071 | 0.0428 | 0.0428 |
+| head | 7 | +0.89 | [+0.41, +1.00] | +0.32 | +0.93 | 0.0315 | 0.0859 | 0.0000 | 0.0000 |
+
+| encoder | width | own nDCG@10 | table actual / predicted | head actual / predicted |
+|---|---|---|---|---|
+| bge-large-en-v1 | 1024 | 0.5237 | 0.2613 / 0.2883 | 0.2481 / 0.2103 |
+| e5-large-v1 | 1024 | 0.4914 | 0.2875 / 0.2757 | 0.2243 / 0.1825 |
+| nomic-embed-text-v1 | 768 | 0.4851 | 0.3684 / 0.2945 | 0.2418 / 0.2336 |
+| all-minilm-l12-v1 | 384 | 0.4115 | 0.3256 / 0.3171 | 0.3340 / 0.3062 |
+| msmarco-distilbert-base-v4 | 768 | 0.3436 | 0.3071 / 0.2395 | 0.1734 / 0.1117 |
+| msmarco-bert-base-dot-v5 | 768 | 0.3239 | 0.2127 / 0.2318 | 0.1032 / 0.0947 |
+| paraphrase-minilm-l6-v2 | 384 | 0.3001 | 0.2566 / 0.2738 | 0.2447 / 0.2103 |
+
+Excluded by tokenizer check: none. One table fit (e5-base-unsupervised) stopped at the convergence gate and is listed, not replaced.
+
+**Cannot show.** Seven points; the table interval includes zero; related checkpoints; transfer to trained students.

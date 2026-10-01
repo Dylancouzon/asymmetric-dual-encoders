@@ -121,20 +121,22 @@ it. The space's own retrieval quality predicts the student's quality
 only once width is held fixed: standardized effects of +0.69 for quality
 and −0.83 for width under a frozen-backbone head student (+0.63 and
 −0.64 under a token-table student), and a two-variable model fitted on
-ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70. The
-strongest space yields the weakest registered table student. Second, we
-ask what the student costs at search time over the index's unchanged
-HNSW graph: by exact-neighbor recovery its queries fall short of the
-encoder's own at equal effort in all 25 measured spaces on two of three
-corpora, and matching the encoder's recovery takes a median four times
-the search budget; by the pre-specified relevance-loss measure the
-penalty is universal on one corpus and mixed on the other two. The same
-penalty appears in a jointly trained model: over LightRetriever's own
-index, its lookup query path recovers 3.6 points fewer exact neighbors
-than its full encoder at equal effort and needs four times the search
-budget to match it. Query-encoding speedups measured alone therefore
-overstate what a cheap query path saves. Constella, three compatible
-query encoders over one frozen Stella index, is the worked instance.
+ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70 and, with
+predictions committed before scoring, seven never-seen spaces at 0.89
+and 0.71. The strongest space yields the weakest registered table
+student. Second, we ask what the student costs at search time over the
+index's unchanged HNSW graph: by exact-neighbor recovery its queries
+fall short of the encoder's own at equal effort in all 25 measured
+spaces on two of three corpora, and matching the encoder's recovery
+takes a median four times the search budget; by the pre-specified
+relevance-loss measure the penalty is universal on one corpus and mixed
+on the other two. The same penalty appears in a jointly trained model:
+over LightRetriever's own index, its lookup query path recovers 3.6
+points fewer exact neighbors than its full encoder at equal effort and
+needs four times the search budget to match it. Query-encoding speedups
+measured alone therefore overstate what a cheap query path saves.
+Constella, three compatible query encoders over one frozen Stella index,
+is the worked instance.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -193,15 +195,19 @@ quality only once width is held fixed; width works against the student,
 and because stronger spaces are usually wider the two effects cancel in
 a pooled comparison. A two-variable model fitted on ten spaces ranks 16
 others at Spearman 0.85 and 0.70 under the two representations, against
-0.37 and 0.16 for the space's own score alone {[}E24 prospective test
-pending{]}. Against RQ2, by exact-neighbor recovery the student's
-queries fall short of the encoder's own at equal HNSW effort in all 25
-measured spaces on two of three corpora, with a median recovery
-multiplier of four; the pre-specified relevance-loss measure agrees on
-one corpus and is mixed on the other two {[}E22 and E23 pending{]}. The
-penalty is not an artifact of fitting students after the fact:
-LightRetriever's jointly trained lookup path pays it over its own index
-(Section 5.5).
+0.37 and 0.16 for the space's own score alone, and a prospective test on
+seven further spaces, with predictions committed by hash before any
+student was fitted, ranks them at 0.89 and 0.71. Against RQ2, by
+exact-neighbor recovery the student's queries fall short of the
+encoder's own at equal HNSW effort in all 25 measured spaces on two of
+three corpora, with a median recovery multiplier of four; the
+pre-specified relevance-loss measure agrees on one corpus and is mixed
+on the other two. A single property of the space, how far its queries
+sit from their nearest documents relative to document spacing, ranks
+that penalty across spaces, and corpus size explains most of its
+attenuation on the smallest corpus. The penalty is not an artifact of
+fitting students after the fact: LightRetriever's jointly trained lookup
+path pays it over its own index (Section 5.5).
 
 \textbf{Constella} is the worked instance: a frozen Stella index
 {[}Stella{]} with three compatible query paths, Stella's own encoder, a
@@ -397,10 +403,11 @@ directly in Section 4.4.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the index's own quality for the table (left) and head (right) students, colored by index width. Filled points are registered indexes.}]{figures/f9_width.pdf}}
-\caption{Student quality against the index's own quality for the table
-(left) and head (right) students, colored by index width. Filled points
-are registered indexes.}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the space's own quality for the table (left) and head (right) students, colored by width. Filled points are registered spaces; triangles are the seven prospective spaces of Section 4.3.}]{figures/f9_width.pdf}}
+\caption{Student quality against the space's own quality for the table
+(left) and head (right) students, colored by width. Filled points are
+registered spaces; triangles are the seven prospective spaces of Section
+4.3.}
 \end{figure}
 
 \subsubsection{4.2 Width as the competing
@@ -480,9 +487,17 @@ registered spaces, scored first, ranks the 16 spaces scored later at
 Spearman 0.85 {[}0.53, 0.99{]} for the head and 0.70 {[}0.20, 0.96{]}
 for the table; the space's own score alone ranks them at 0.37 and 0.16.
 The hypothesis in Table B was formed after all 26 were seen, so this is
-a held-out fit rather than a prospective test. {[}E24 pending: eight
-further spaces never scored before, with predictions committed by hash
-before any student was fitted.{]}
+a held-out fit rather than a prospective test. The prospective test
+followed: eight further BERT-vocabulary encoders that had never been
+scored, chosen to span the three widths, with the model fitted on the 26
+and its predictions written and hashed before any student was fitted
+(Appendix B). One encoder's table fit stopped at the convergence gate
+and is listed, not replaced, leaving seven. The committed predictions
+rank the seven at Spearman +0.89 (checkpoint interval +0.41 to +1.00)
+for the head and +0.71 (−0.12 to +1.00) for the table; the space's own
+score alone ranks them at +0.32 and +0.39. Mean absolute error of the
+predicted six-set score is 0.032 for both. With seven points the table's
+interval does not exclude zero; the head's does.
 
 \subsubsection{4.4 Corollary: choosing an index before it
 exists}\label{corollary-choosing-an-index-before-it-exists}
@@ -518,17 +533,23 @@ Two-variable model, leave-one-out pick & arctic-embed-s, 0.249 &
 gte-small, 0.107 \\
 Student's own dev-forum screen & gte-small, 0.035 & stella-400M-v5,
 0.000 \\
+Prospective seven: strongest space & 0.086 & 0.107 \\
+Prospective seven: committed model pick & 0.000 & 0.043 \\
+Prospective seven: dev screen & 0.000 & 0.043 \\
 \end{longtable}
 }
 
-The strongest-space rule loses 0.285 and 0.152. The two-variable model's
-leave-one-out pick loses 0.249 and 0.107: the model ranks the roster but
-does not identify its top. The student's own development screen, two
-forums scored with the fitted student, predicts the six-set rank at
-Spearman 0.84 (head) and 0.88 (table), makes the best or near-best pick,
-and when added to the two-variable model carries the largest
-standardized coefficient (+0.71 {[}+0.36, +0.99{]} for the head) and
-raises leave-one-family-out prediction to 0.77 and 0.80.
+The strongest-space rule loses 0.285 and 0.152 on the roster and 0.086
+and 0.107 on the prospective seven. The two-variable model's
+leave-one-out pick loses 0.249 and 0.107 on the roster, where it ranks
+the field but misses its top; on the prospective seven its committed
+pick loses nothing for the head and 0.043 for the table, the same as the
+dev screen. The student's own development screen, two forums scored with
+the fitted student, predicts the six-set rank at Spearman 0.84 (head)
+and 0.88 (table), makes the best or near-best pick, and when added to
+the two-variable model carries the largest standardized coefficient
+(+0.71 {[}+0.36, +0.99{]} for the head) and raises leave-one-family-out
+prediction to 0.77 and 0.80.
 
 One caveat governs Section 4: 26 related spaces at three width levels
 support a hypothesis about what a closed-form student pays for width,
@@ -616,22 +637,93 @@ D), and the head student shows the same recovery deficit in 24 and 23 of
 predictable?}\label{is-the-effort-predictable}
 
 H2b predicts that declared features of query placement, computable
-before a graph is built, rank the spaces by the size of the effect. Two
-placement summaries, the median cosine of a query to its nearest
-document and the median gap between its first and tenth scores, are
-lower for every student path than for its encoder's, yet across the 25
-spaces they do not rank the gap: Spearman 0.00 on FiQA, +0.23 on
-SCIDOCS, −0.34 on TREC-COVID, intervals spanning zero. {[}E22 pending:
-Table E, declared placement features (query-to-document distance ratio,
-hubness, top-10 overlap, effective rank) with clustered intervals and
-leave-family-out prediction.{]}
+before a graph is built, rank the spaces by the size of the effect. We
+declared eight features before computing any of them (exploratory,
+pre-specified; Appendix C) and correlated each with the recovery gap at
+\texttt{ef=64} over the 75 space-by-workload points, with intervals from
+resampling spaces together with their three rows. Table F gives the
+result; the held-out test fits a ridge model on all families but one and
+predicts the left-out family.
+
+\textbf{Table F.} Predictors of the recovery gap over 75 points (25
+spaces by three workloads). Negative Spearman means a larger feature
+value goes with a larger penalty.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Feature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Spearman, 75 points
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+95\% interval
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FiQA / SCIDOCS / TREC-COVID
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Leave-one-family-out Spearman, MAE (pp)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Query-to-document distance ratio, encoder's queries & −0.64 & {[}−0.75,
+−0.48{]} & −0.80 / −0.32 / −0.83 & +0.64, 1.26 \\
+Query-to-document distance ratio, student's queries & −0.63 & {[}−0.74,
+−0.46{]} & −0.77 / −0.45 / −0.69 & +0.56, 1.79 \\
+Student minus encoder ratio & −0.23 & {[}−0.42, −0.03{]} & −0.37 / −0.44
+/ +0.17 & −0.15, 2.23 \\
+Hubness of the student's top-10, minus the encoder's & +0.40 & {[}+0.20,
++0.57{]} & +0.12 / −0.20 / −0.15 & +0.14, 2.11 \\
+Student-encoder top-10 overlap & +0.37 & {[}+0.14, +0.60{]} & −0.01 /
++0.43 / +0.28 & +0.11, 2.29 \\
+Effective rank of the encoder's fit-query cloud & −0.17 & {[}−0.40,
++0.11{]} & −0.28 / −0.34 / −0.05 & −0.53, 2.38 \\
+Top-1 cosine, student minus encoder & −0.05 & {[}−0.30, +0.20{]} & 0.00
+/ +0.23 / −0.34 & −0.55, 2.28 \\
+Margin, student minus encoder & −0.28 & {[}−0.48, −0.05{]} & −0.19 /
+−0.05 / −0.37 & −0.11, 2.15 \\
+All features & & & & +0.73, 1.40 \\
+Training-fold mean (baseline) & & & & 2.22 \\
+\end{longtable}
+}
+
+One feature carries the prediction: how far a space's queries sit from
+their nearest documents, relative to the typical distance between
+neighboring documents. It ranks the penalty on every workload, and alone
+it predicts a held-out family's gap at Spearman +0.64 with a mean error
+of 1.26 points against 2.22 for the fold mean. The encoder's own queries
+give that ratio as well as the student's do, so the penalty is a
+property of how the space places queries against documents, which the
+student inherits and worsens. The student-minus-encoder differences,
+including the two geometry summaries of Section 5.2, do not rank it.
+Magnitude does not transfer across workloads: a model fitted on two
+workloads ranks the third at +0.50 but predicts its gaps no better than
+the fold mean, so the ratio says which spaces will pay more, not how
+much.
 
 \subsubsection{5.4 Corpus size}\label{corpus-size}
 
 H2c predicts that the smaller gap on SCIDOCS is an effect of corpus
-size: on FiQA subsampled to SCIDOCS's size the gap should shrink toward
-SCIDOCS's value. {[}E23 pending: FiQA subsampled to 25,657 documents on
-the same queries, paired across indexes.{]}
+size: on FiQA subsampled to SCIDOCS's size, with the same queries, the
+gap should shrink toward SCIDOCS's value. We drew 25,657 of FiQA's
+57,638 documents uniformly with a fixed seed, keeping every document
+judged relevant to a test query, rebuilt two graphs per space, and
+repeated the sweep for the encoder and table paths (exploratory,
+pre-specified). Across the 25 spaces the recovery gap at \texttt{ef=64}
+moves from −2.9 points on the full corpus to −1.2 on the subsample, a
+paired change of +1.8 points (95\% interval over spaces +1.3 to +2.3),
+and the subsample's gap is still 0.4 points larger than SCIDOCS's (−0.9
+to −0.1). On the subsample every 384-wide space shows no gap at all: the
+encoder's own path already recovers its neighbors there, so there is
+nothing left for the student to lose. Corpus size therefore explains
+most of the attenuation and not all of it; the remainder is domain or
+query form.
 
 \subsubsection{5.5 The penalty in a jointly trained
 model}\label{the-penalty-in-a-jointly-trained-model}
@@ -1107,6 +1199,62 @@ the backbone, and gte-small is nearly its linear image (retention 1.008
 and 0.978); correlations without the backbone are +0.09 against the
 index and +0.46 against the table.
 
+\textbf{Prospective roster (E24).} Eight encoders fixed in the method
+before any encoding, all passing the tokenizer check: e5-large (1024),
+bge-large-en v1 (1024), e5-base-unsupervised (768), nomic-embed-text-v1
+(768), msmarco-bert-base-dot-v5 (768), msmarco-distilbert-base-v4 (768),
+all-MiniLM-L12-v1 (384), paraphrase-MiniLM-L6-v2 (384). Teacher scores
+were measured first, the prediction file was written and its sha256
+recorded (81f2c88e\ldots) before any student was fitted, and every
+student command verified that hash. The table fit for
+e5-base-unsupervised stopped at the convergence gate at the extended
+penalty 1e-5 and is excluded from both rows. Per encoder, six-set score
+of the space, then table student actual / predicted, then head student
+actual / predicted:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Encoder
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Width
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Own nDCG@10
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Table: actual / predicted
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Head: actual / predicted
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+bge-large-en v1 & 1024 & 0.5237 & 0.2613 / 0.2883 & 0.2481 / 0.2103 \\
+e5-large & 1024 & 0.4914 & 0.2875 / 0.2757 & 0.2243 / 0.1825 \\
+nomic-embed-text-v1 & 768 & 0.4851 & 0.3684 / 0.2945 & 0.2418 /
+0.2336 \\
+all-MiniLM-L12-v1 & 384 & 0.4115 & 0.3256 / 0.3171 & 0.3340 / 0.3062 \\
+msmarco-distilbert-base-v4 & 768 & 0.3436 & 0.3071 / 0.2395 & 0.1734 /
+0.1117 \\
+msmarco-bert-base-dot-v5 & 768 & 0.3239 & 0.2127 / 0.2318 & 0.1032 /
+0.0947 \\
+paraphrase-MiniLM-L6-v2 & 384 & 0.3001 & 0.2566 / 0.2738 & 0.2447 /
+0.2103 \\
+\end{longtable}
+}
+
+msmarco-bert-base-dot-v5 is the teacher QED distilled from; its
+closed-form students retain 66\% (table) and 32\% (head) of its six-set
+score here, against the 92.5\% QED reports for its trained two-layer
+student on BEIR under its own protocol, which the comparison does not
+reproduce.
+
 \textbf{Correlation rosters.} Registered ten: Spearman head-versus-index
 +0.18 (−0.56 to +0.67), head-versus-table +0.24 (−0.49 to +0.74), head
 development-versus-public +0.71 (+0.12 to +0.96). Leave-one-family-out
@@ -1162,6 +1310,27 @@ SciFact, NFCorpus, and FiQA queries, the three dense paths retain
 descriptively similar shares of their own full-query nDCG@10 at each
 prefix length; this is not an equivalence test and no search-as-you-type
 session was measured.
+
+\textbf{Gap predictors (E22).} Features per space and workload, declared
+before computation: the mean cosine distance from a query to its nearest
+document divided by the mean nearest-neighbor distance among a
+5,000-document sample (for the student's and the encoder's queries, and
+their difference); the Gini coefficient of document occurrence counts
+across the student's exact top-10 lists over the full document support,
+minus the encoder's; the mean overlap of the student's and encoder's
+exact top-10; the effective rank (participation ratio) of a seeded
+20,000-row sample of the encoder's fit-query vectors and the ratio of
+the student's to the encoder's workload-query effective rank; the two
+Section 5.2 geometry summaries; log2 width and log10 corpus size as
+covariates. Ridge with unit penalty on standardized features; the
+baseline is each training fold's mean.
+
+\textbf{Corpus-size subsample (E23).} FiQA documents drawn uniformly
+with seed 20260930 to 25,657, keeping every document with a positive
+judgment for a test query; each path's exact top-10 and tie thresholds
+recomputed over the subsample; two builds; the same \texttt{ef} grid;
+per-space gaps paired against the full-corpus and SCIDOCS values with
+10,000-draw bootstrap intervals over spaces.
 
 \textbf{Native binary pilot and replication.} On one fixed binary
 collection per workload with 192 deterministically selected queries,

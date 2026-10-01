@@ -187,3 +187,6 @@ The owner rejected the native scalar8 precision experiment as a knob rather than
 - E25 complete (owner round 7): LightRetriever's lookup path over its own index needs 4x ef by
   recovery on both corpora (gap −3.6 pp FiQA, −1.7 pp SCIDOCS, intervals clear of zero); the search
   penalty is not an artifact of fitting students after the fact. `results/m15_e25_lightretriever.json`.
+- E22, E23, E24 complete (2026-10-01 evening): see LOG and cards C20 to C22. The paper's three
+  pending blocks are filled. Remaining future work: domain-fit table; native magnitude-preserving
+  query setting; a trained student in a second teacher space.
