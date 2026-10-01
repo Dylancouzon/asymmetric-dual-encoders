@@ -760,3 +760,11 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Title changed on owner decision to "The Index Is Fine; the Query Encoder Is the Cost: Query-Side
   Distillation over Frozen Document Vectors" in PAPER.md, REVISION_PLAN_V17.md, REVIEW_GUIDE.md,
   HANDOFF.md; PDF rebuilt.
+- **E25 launched** (owner round 7, 2026-10-01): pre-registered in MEASUREMENTS.md; fresh pod
+  `8oby6v8j8x6j5p` (A100 SXM 80 GB, $1.59/h, container disk only); venv rebuilt plus peft 0.17.1;
+  model loader smoke passed (1536-d, unit norms); Astra pre-spend review
+  (`REVIEWS/2026-10-01-astra-e25-prespend.md`): two P2s applied before launch (exact references from
+  the stored fp16 vectors; build-averaged multipliers with E20's censoring rule). Owner clarified the
+  goal: not disproving joint-training methods but showing ours is more efficient end to end and
+  drop-in on an existing pipeline; the paper claims drop-in and encoding-plus-search efficiency,
+  never quality superiority.
