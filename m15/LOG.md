@@ -776,3 +776,5 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   `work/m15/e24.log`, `e22.log`, `e23.log` on the pod.
 - Title changed on owner decision to "Your Index Is Fine; the Query Encoder Is the Cost: Query
   Distillation over Frozen Indexes" in every file that carried it; PDF rebuilt.
+- Title changed on owner decision to "Your Index Is Fine, Your Query Encoder Is Not: Query
+  Distillation over Frozen Indexes"; PDF rebuilt.

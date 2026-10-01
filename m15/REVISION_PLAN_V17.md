@@ -120,7 +120,7 @@ The final draft is checked against these by both reviewers before it goes to the
 
 ## Reframing adopted (owner, round 5, 2026-10-01)
 
-**Title:** Your Index Is Fine; the Query Encoder Is the Cost: Query Distillation over Frozen Indexes.
+**Title:** Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes.
 
 **Question:** an index that cannot or will not be rebuilt; a cheaper query encoder over it. What
 does it cost, and what about the index decides the cost?

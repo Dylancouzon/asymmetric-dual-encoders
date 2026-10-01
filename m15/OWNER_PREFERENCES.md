@@ -138,3 +138,5 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - **2026-10-01, round 9, title.** Owner chose "Your Index Is Fine; the Query Encoder Is the Cost:
   Query Distillation over Frozen Indexes" (supersedes the round-8 title). Second person in the title
   is deliberate; the body keeps the third-person contract.
+- **2026-10-01, round 10, title.** Owner chose "Your Index Is Fine, Your Query Encoder Is Not: Query
+  Distillation over Frozen Indexes" (no semicolon; supersedes round 9).
