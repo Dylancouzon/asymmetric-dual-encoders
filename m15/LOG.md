@@ -323,3 +323,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   describes v11, the new question, accounting boundaries, and the optional trained-recipe bridge.
 - No model training, cloud rental, raw evaluation access, or release occurred in this review.
   Commit batches preserve the mandate, E15 calculation, reviews/dispositions, and final artifacts.
+
+## 2026-10-01, owner challenge to the v11 direction
+
+- Owner asks whether this is a good paper, whether Constella's hot-swappable query paths and
+  near-zero latency options belong, and whether the prior revision overfocused on teacher choice
+  and costs. The answer is that v11 is careful but too narrow: it never names the family and gives
+  a closed-form probe more prominence than the served shared-index design.
+- Sol and Astra independently reassessed the broader story. Sol reversed part of its earlier
+  narrowing recommendation. Astra verified E2's same populated persistent collection and supplied
+  an example from one fixed binary collection; fastest settings across quantizations must not be
+  presented as one physical index configuration. Reviews and root disposition are saved under
+  `REVIEWS/2026-10-01-owner-broader-*.md`.
+- Revision underway: lead with selectable query compute over one document index, then exact
+  quality, ANN effort, routing limits, teacher learnability, and component build costs. No new
+  quality experiment or protected access is required. The existing inference quickstart belongs
+  in the reproducibility story; it is distinct from a future standalone training tool.

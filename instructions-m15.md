@@ -36,6 +36,13 @@ within the search engineering community through useful, credible research, not t
 The owner authorizes independent research, challenges to assumptions, and concrete improvements;
 commit and push coherent batches often so the full review and revision remain auditable.
 
+**Owner direction check, 2026-10-01.** The owner challenges whether the cost/teacher framing
+overfocuses on one part of the project and asks whether Constella's interchangeable query tiers
+and near-zero encoding fit the paper. Reassess the whole research object independently. Explain
+what the design makes possible and measure its consequences; prior art is not a reason to hide a
+useful capability. Keep “zero latency” distinct from no transformer inference and warmed encoding,
+and distinguish compatible encoder selection from timed model loading or production failover.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
