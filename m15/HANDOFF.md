@@ -53,7 +53,7 @@ No model training, new document encoding, cloud spend, or protected-data access 
 ## Next steps, in order
 
 1. **Owner read-through** of `m15/latex/paper.pdf` v14. Read OWNER_PREFERENCES.md before further edits. The paper has a central shared-index research question and useful applied findings; it does not claim an architectural breakthrough.
-2. Before arXiv: confirm the author line and affiliation. The 20 printed references have primary-source checks in the owner-literature, followup-literature, and quantization-semantics reviews. The document-vector release still has its separate licence decision in `PLAN.md`.
+2. Before arXiv: confirm the author line and affiliation. The 20 printed references have primary-source checks linked from RELATED_WORK.md, including the owner-literature, followup-literature, and quantization-semantics reviews and the v14 model/benchmark source update. The document-vector release still has its separate licence decision in `PLAN.md`.
 3. **Next research should name the stronger claim:** native precision strengthens practical guidance; one contrasting teacher-space scoring control tests cross-model reach. See FOLLOWUP.md. **Native test, if pursued:** validate native magnitude-preserving query encoding at matched original-target recovery and relevance, including scorer/rescoring cost. Scalar8 query encoding is a collection setting that can rebuild quantization; check graph identity and segment layout or account for rebuild variation. No full model retraining is required. E18 is the reason to run this test, not evidence that its native speedup already exists. Do not automatically expand into a broad quantizer search, navigation correction, or another student.
 
 ## Rules that still bind
