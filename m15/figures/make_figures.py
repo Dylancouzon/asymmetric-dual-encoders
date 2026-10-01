@@ -276,8 +276,35 @@ def f8_spaces():
     save(fig, "f8_spaces")
 
 
+def f9_width():
+    """RQ1: student quality against the index's own quality, coloured by width, both students."""
+    d = R("m15_e19_head_screen.json")
+    cfg = {n: c for n, c in d["configs"].items() if n != "arctic-embed-l-mean"}
+    reg = set(d["rosters"]["registered_ten"]["names"])
+    wcol = {384: C["zero"], 768: C["nano"], 1024: C["stella"]}
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4))
+    panels = [("recipe1_six_table_macro_all6", "Table student nDCG@10, six sets"),
+              ("six_head_macro_all6", "Head student nDCG@10, six sets")]
+    for ax, (yk, yl) in zip(axes, panels):
+        for n, c in cfg.items():
+            col = wcol[c["dim"]]
+            ax.scatter(c["teacher_six_macro_all6"], c[yk], s=30, zorder=3,
+                       color=col if n in reg else "white", edgecolor=col, linewidth=1.3)
+        for n, dx, dy in (("stella-400M-v5", 5, 2), ("gte-large-en-v1.5", -62, -10)):
+            c = cfg[n]
+            ax.annotate(n.replace("-en-v1.5", "").replace("-400M-v5", ""),
+                        (c["teacher_six_macro_all6"], c[yk]), textcoords="offset points",
+                        xytext=(dx, dy), fontsize=7.5, color=C["ink"])
+        ax.set_xlabel("Index's own nDCG@10, six sets")
+        ax.set_ylabel(yl)
+    for w, col in wcol.items():
+        axes[1].scatter([], [], color=col, label=f"{w}-d index")
+    axes[1].legend(loc="upper left", fontsize=8, frameon=False)
+    save(fig, "f9_width")
+
+
 if __name__ == "__main__":
     for f in (f1_frontier, f2_per_dataset, f3_towers, f4_system, f5_routing, f6_precision, f7_recipes,
-              f8_spaces):
+              f8_spaces, f9_width):
         f()
         print("wrote", f.__name__)

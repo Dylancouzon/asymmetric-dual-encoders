@@ -95,14 +95,13 @@ def start_qdrant(tag):
     # mid-build (contriever, TREC-COVID build 1). Storage is scratch; results do not live there.
     storage = Path(os.environ.get("E20_STORAGE", str(QDRANT_DIR))) / f"storage-{tag}"
     storage.parent.mkdir(parents=True, exist_ok=True)
-    # A readiness probe cannot tell our process from another shard's: refuse an occupied port.
-    try:
-        urllib.request.urlopen(f"http://127.0.0.1:{PORT}/readyz", timeout=1)
-        raise SystemExit(f"E20 STOP: port {PORT} already serves a Qdrant; set E20_PORT per shard")
-    except SystemExit:
-        raise
-    except Exception:
-        pass
+    # A readiness probe cannot tell our process from another shard's: both ports must be free
+    # before launch, and the launched process must still be alive when readiness is observed.
+    import socket
+    for port in (PORT, GRPC):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(("127.0.0.1", port)) == 0:
+                raise SystemExit(f"E20 STOP: port {port} is occupied; set E20_PORT per shard")
     log = open(QDRANT_DIR / f"qdrant-{tag}.log", "w")
     proc = subprocess.Popen([str(QDRANT_DIR / "qdrant")], cwd=QDRANT_DIR, stdout=log, stderr=log,
                             env={"QDRANT__STORAGE__STORAGE_PATH": str(storage),
@@ -111,6 +110,8 @@ def start_qdrant(tag):
                                  "QDRANT__TELEMETRY_DISABLED": "true",
                                  "PATH": "/usr/bin:/bin"})
     for _ in range(120):
+        if proc.poll() is not None:
+            raise SystemExit(f"E20 STOP: Qdrant exited with {proc.returncode} before becoming ready")
         try:
             urllib.request.urlopen(f"http://127.0.0.1:{PORT}/readyz", timeout=1)
             return proc

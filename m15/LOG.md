@@ -714,3 +714,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   together and report within-workload intervals, the held-out baseline is the training-fold mean,
   and feature (4) is restated by method amendment 1 before any feature is computed. Pod host has no
   free GPU at 16:27 local; retry loop running.
+- Astra focused re-review (`REVIEWS/2026-10-01-astra-e22-e24-rereview.md`): seven of nine resolved;
+  two operational leftovers and the E19 isolation note fixed in the same hour: undefined bootstrap
+  intervals for a within-workload-constant feature return null instead of crashing; the Qdrant
+  launcher bind-tests both ports and fails if the process dies before readiness; every head command
+  in E24 asserts the E19 feature files exist. Governance budget (one review, one re-review) is spent;
+  no further pre-spend round. v17 draft written in the frozen-index frame (4,302 main words, E22 to
+  E24 sections marked pending); Figure 1 (`f9_width`) added. Pod host still without a free GPU.

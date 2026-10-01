@@ -63,19 +63,22 @@ def _dirs():
         d.mkdir(parents=True, exist_ok=True)
 
 
+def _require_e19_features():
+    """Head commands reuse E19's feature files read-only; a missing file would be written under
+    work/m15/e19, so every head command refuses to start unless all of them exist."""
+    needed = [E19.feat_path(f"fit-{E8.FIT_N}")] + [E19.feat_path(f"dev-{c}-q") for c in E8.DEV] \
+             + [E19.feat_path(f"six-{ds}-q") for ds in E8.SIX]
+    missing = [str(p) for p in needed if not p.exists()]
+    if missing:
+        raise SystemExit(f"E24 STOP: E19 feature files missing, refusing to write under e19: {missing}")
+
+
 def preflight():
     import hashlib
     import torch
     from transformers import AutoTokenizer
     _dirs()
-    # Head features are reused read-only: every file E19 will ask for must already exist, so the
-    # rerouted run writes nothing under work/m15/e19.
-    texts_n = E8.FIT_N
-    needed = [E19.feat_path(f"fit-{texts_n}")] + [E19.feat_path(f"dev-{c}-q") for c in E8.DEV] \
-             + [E19.feat_path(f"six-{ds}-q") for ds in E8.SIX]
-    missing = [str(p) for p in needed if not p.exists()]
-    if missing:
-        raise SystemExit(f"E24 STOP: E19 feature files missing, refusing to write under e19: {missing}")
+    _require_e19_features()
     if E8.PREFLIGHT.exists():
         return
     E8.fit_list()
@@ -240,6 +243,8 @@ if __name__ == "__main__":
     _dirs()
     if cmd in ("dev", "six", "head-dev", "head-six"):
         _require_predictions()
+    if cmd in ("head-dev", "head-six"):
+        _require_e19_features()
     {"preflight": preflight, "predict": predict, "assemble": assemble, "all": all_steps,
      "teacher": lambda: teacher(rest[0]),
      "dev": lambda: E8.dev(rest[0]), "freeze": E8.freeze, "six": lambda: E8.six(rest[0]),

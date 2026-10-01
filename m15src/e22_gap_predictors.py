@@ -167,6 +167,8 @@ def boot_spearman_clustered(a, b, clusters, draws=10_000, seed=SEED):
             v = spearmanr(a[i], b[i])[0]
             if np.isfinite(v):
                 vals.append(v)
+    if not vals:                      # a feature constant within the slice: interval undefined
+        return [None, None]
     return [float(np.quantile(vals, .025)), float(np.quantile(vals, .975))]
 
 
@@ -199,7 +201,8 @@ def assemble():
         per = {}
         for ds in WORKLOADS:
             sel = [i for i, w in enumerate(wl) if w == ds]
-            per[ds] = {"spearman": float(spearmanr(X[sel, j], y[sel])[0]),
+            rho = spearmanr(X[sel, j], y[sel])[0]
+            per[ds] = {"spearman": None if not np.isfinite(rho) else float(rho),
                        "bootstrap95_over_spaces": boot_spearman_clustered(X[sel, j], y[sel], [sp[i] for i in sel])}
         uni[k] = {"spearman_all75": float(spearmanr(X[:, j], y)[0]),
                   "bootstrap95_over_spaces": boot_spearman_clustered(X[:, j], y, sp),
