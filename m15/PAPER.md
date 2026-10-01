@@ -4,7 +4,7 @@
 
 ## Abstract
 
-Query encoding adds compute to every retrieval request, while changing the document encoder requires re-embedding the corpus and rebuilding its index. Query-side distillation offers a cheaper query encoder, or student, that searches the existing document vectors. What retrieval quality can that student preserve, and how much of its encoding saving survives approximate search?
+The cost of a large document encoder can be amortized across many searches using the same stored vectors. Query encoding adds compute to each uncached query, even if that query is used only once. Changing the document encoder requires re-embedding the corpus and rebuilding its index. Query-side distillation offers a cheaper query encoder, or student, that searches the existing document vectors. What retrieval quality can that student preserve, and how much of its encoding saving survives approximate search?
 
 We compare two inexpensive student constructions across 26 embedding spaces: a token-vector table that encodes a query by summing its tokens' vectors, and a fitted linear projection of a small frozen transformer's features. Both are fitted by linear solves under one protocol. The original encoder's retrieval quality alone is a poor guide to student quality. Accounting for vector width reveals a positive association with the original encoder's quality and a negative association with width. Together, these properties predict student rankings on held-out and prospectively tested encoders better than the original encoder's quality alone; the prospective evidence is stronger for the transformer-based student.
 

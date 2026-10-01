@@ -105,8 +105,10 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-Query encoding adds compute to every retrieval request, while changing
-the document encoder requires re-embedding the corpus and rebuilding its
+The cost of a large document encoder can be amortized across many
+searches using the same stored vectors. Query encoding adds compute to
+each uncached query, even if that query is used only once. Changing the
+document encoder requires re-embedding the corpus and rebuilding its
 index. Query-side distillation offers a cheaper query encoder, or
 student, that searches the existing document vectors. What retrieval
 quality can that student preserve, and how much of its encoding saving

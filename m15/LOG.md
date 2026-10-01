@@ -886,3 +886,14 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   A numerical scenario would need explicit corpus length, throughput, build capacity, update load,
   and pricing assumptions. Historical M20 measurement records remain unchanged.
 - PDF rebuilt; opening pages and new reference visually inspected, and `git diff --check` passed.
+
+### 2026-10-02: owner reading feedback, encoding-cost asymmetry
+
+- Owner proposes the reuse argument for the abstract and authorizes inclusion if appropriate.
+  Added it as the opening: document-encoding cost can be amortized across searches over stored
+  vectors; encoding an uncached query is a recurring cost even for a single-use query.
+- Scoped the wording to uncached queries, omitted an unsupported reuse count, and avoided
+  describing a large query encoder as inherently wasteful. The finding remains the measured
+  quality and encoding-plus-search trade-off, not a claim that query compute has no value.
+- Recorded owner direction, rebuilt the PDF, checked the opening-page rendering and text,
+  and ran `git diff --check`.
