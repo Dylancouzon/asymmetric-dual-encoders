@@ -256,6 +256,42 @@ REGISTRY = {
         name="tas-b", repo="sentence-transformers/msmarco-distilbert-base-tas-b",
         revision="b12d9352e776979147078a8975a4885042984fd1", dim=768, pooling="cls", query_prefix='', doc_prefix='',
         notes="M15 E8x exploratory tower (published pooling and query prompt)"),
+    # M15 E24 prospective roster (2026-10-01): never scored before; predictions committed first.
+    # Revisions are the main-branch commits read from the Hub API on 2026-10-01; pooling from each
+    # repo's 1_Pooling/config.json; prompts from the model cards.
+    "e5-large-v1": Spec(
+        name="e5-large-v1", repo="intfloat/e5-large",
+        revision="4dc6d853a804b9c8886ede6dda8a073b7dc08a81", dim=1024, pooling="mean", query_prefix='query: ', doc_prefix='passage: ',
+        notes="M15 E24 prospective tower"),
+    "bge-large-en-v1": Spec(
+        name="bge-large-en-v1", repo="BAAI/bge-large-en",
+        revision="abe7d9d814b775ca171121fb03f394dc42974275", dim=1024, pooling="cls", query_prefix=BGE_PREFIX,
+        notes="M15 E24 prospective tower"),
+    "e5-base-unsupervised": Spec(
+        name="e5-base-unsupervised", repo="intfloat/e5-base-unsupervised",
+        revision="6003a5b7ce770b0549203e41115b9fc683f16dad", dim=768, pooling="mean", query_prefix='query: ', doc_prefix='passage: ',
+        notes="M15 E24 prospective tower"),
+    "nomic-embed-text-v1": Spec(
+        name="nomic-embed-text-v1", repo="nomic-ai/nomic-embed-text-v1",
+        revision="3ac47f125a41961d13b397d0332866be2f9152e1", dim=768, pooling="mean", query_prefix='search_query: ', doc_prefix='search_document: ',
+        trust_remote_code=True,
+        notes="M15 E24 prospective tower; config vocab_size 30528 is padding over the 30,522 BERT vocab, checked by the ordered-vocab hash at preflight"),
+    "msmarco-bert-base-dot-v5": Spec(
+        name="msmarco-bert-base-dot-v5", repo="sentence-transformers/msmarco-bert-base-dot-v5",
+        revision="dbf04e3911e5b11c887fe563d3f2479f81c4415f", dim=768, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E24 prospective tower; trained for dot product, scored here under the shared normalized protocol"),
+    "msmarco-distilbert-base-v4": Spec(
+        name="msmarco-distilbert-base-v4", repo="sentence-transformers/msmarco-distilbert-base-v4",
+        revision="b2f66c95aba1481a880479165582020c2b9b64d7", dim=768, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E24 prospective tower"),
+    "all-minilm-l12-v1": Spec(
+        name="all-minilm-l12-v1", repo="sentence-transformers/all-MiniLM-L12-v1",
+        revision="26ca81849568ce77f97b2f071cfef3995f2e6be7", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E24 prospective tower"),
+    "paraphrase-minilm-l6-v2": Spec(
+        name="paraphrase-minilm-l6-v2", repo="sentence-transformers/paraphrase-MiniLM-L6-v2",
+        revision="c9a2bfebc254878aee8c3aca9e6844d5bbb102d1", dim=384, pooling="mean", query_prefix='', doc_prefix='',
+        notes="M15 E24 prospective tower"),
 }
 
 DEFAULT = "bge-base-en-v1.5"
