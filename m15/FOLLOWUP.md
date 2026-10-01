@@ -100,3 +100,44 @@ Tagged-source inspection establishes that the default one-bit setup also sign-co
 it discards query magnitudes, not only document magnitudes. Native rescore effects include segment
 merging. The next discriminating test holds sign-coded documents fixed and changes query precision
 in exhaustive candidate scoring, with each encoder's original exact neighbor target held fixed.
+
+## E18: query magnitudes restore candidate coverage with document codes fixed
+
+A controlled exhaustive scoring test is complete in `results/m15_e18_query_precision.json`.
+Each model keeps its own original exact-top10 target and the same E16/E17 query-vector hashes.
+Both conditions use identical document sign codes; only sign(q) versus normalized full q changes.
+Expected inclusion averages over uniform selection at quantized-score boundary ties. No graph,
+new training, document encoding, or native scalar8/latency claim is involved.
+
+Primary global candidate budget40:
+
+| Workload | Tier | Sign query coverage | Graded query coverage | Gain (percentage points) |
+|---|---|---:|---:|---:|
+| FiQA | Zero | 0.8217 | 0.9297 | 10.80 |
+| FiQA | Nano | 0.9137 | 0.9771 | 6.33 |
+| FiQA | Stella | 0.9638 | 0.9922 | 2.84 |
+| 1M diagnostic | Zero | 0.9010 | 0.9677 | 6.67 |
+| 1M diagnostic | Nano | 0.9484 | 0.9833 | 3.49 |
+| 1M diagnostic | Stella | 0.9685 | 0.9932 | 2.47 |
+
+The paired extra Zero gain is4.46 points versus Nano on FiQA (95% query interval2.53–6.43), and
+3.17 on the1M diagnostic (1.58–4.75). All budgets10/40/100 are retained. The larger absolute gain
+has more error headroom: the fraction of sign-mode misses restored at40 is60.6%/67.4% for Zero
+on FiQA/1M, versus73.4%/67.7% Nano and78.4%/78.5% Stella. Therefore no claim of universally or
+proportionally greater static-model sensitivity follows. Mean cosine from full query to its sign
+direction is about0.795–0.798 for every tier; angular distortion is not larger for Zero.
+
+The useful finding is **query computation and query precision are separate budgets**, including
+for a no-transformer encoder. Preserving magnitudes at search can recover substantial original
+candidate information without changing document codes or the encoder. This is a specific measured
+consequence of an established asymmetric scoring idea, not a new quantizer or a demonstrated
+production speedup. Independent review verifies the boundary-tie mathematics and claim scopes.
+
+### Next justified experiment
+
+Validate native magnitude-preserving query encoding at matched original-target recovery and
+retrieval quality, including its scorer and rescoring costs. Qdrant's scalar8 query setting is an
+available candidate, but changing that collection setting can rebuild quantization; graph topology
+and segment layout must be checked or replicated rather than assumed identical. This requires no
+full model retraining. Only pursue navigation calibration if the precision control leaves a
+substantial unexplained penalty. More arbitrary precision variants would add less information.

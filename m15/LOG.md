@@ -391,3 +391,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - The tagged native-source review explains one-bit query defaults and segment merging under
   rescoring. Next is an exhaustive fixed-document-code comparison of sign versus graded query
   scoring, not a new graph sweep. `FOLLOWUP.md` preserves both the strong pilot and weaker replica.
+
+### E18 exact query-precision control
+
+- Committed source/method before running. Both existing query samples and each model's encoded
+  vectors match their E16/E17 hashes; document sign codes stay fixed. Compared sign versus
+  full-query exhaustive scores at global candidate budgets10/40/100, primary40, with expected
+  inclusion under boundary ties. No graph, new training/encoding, or rental; about71 seconds.
+- At40, Zero coverage82.17→92.97% FiQA and90.10→96.77%1M. Extra absolute gains versus Nano and
+  Stella have positive paired intervals on both workloads. All tiers improve. Larger Zero gains
+  have greater miss headroom; proportional sensitivity and larger angular distortion are not
+  supported. The sign-direction cosines are nearly identical across tiers.
+- Astra independently checked receipt/source hashes and tie formula with exact enumeration,
+  finding no essential defect. The controlled result supports a separate query-precision budget,
+  not native8bit speed or HNSW performance. Both the weak primary E17 interaction and these
+  positive candidate results will remain in the paper. Next is a scoped native precision/cost
+  validation, not full retraining or a broad quantizer search.
