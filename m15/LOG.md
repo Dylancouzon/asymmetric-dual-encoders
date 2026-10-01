@@ -803,3 +803,16 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   0.107 for the strongest-space rule. Written into the abstract, §1, §4.3, Table C, Appendix B;
   Figure 1 gains the seven as triangles; card C22; all [pending] markers removed. Pod time for
   E22 to E24 about 2.3 h (about $4). Session pod spend about $11 in total.
+
+### 2026-10-02: final reviews of the complete v17
+
+- Astra (`REVIEWS/2026-10-02-astra-complete-v17.md`): ten number/strength corrections, all applied
+  (MAE 0.031/0.032; nine features plus two covariates with Table F selective; SCIDOCS ratio
+  interval includes zero; deltas correlate weakly but do not predict held-out families; no
+  "inherits and worsens" mechanism; 384-d gaps bounded at 0.02 points; size wording non-causal;
+  "predicted deficit holds" instead of "H2d holds"; no ef-to-latency consumption claim in §5.5 and
+  §6; Nano at one fourteenth of Stella's encoding time, three layers read not run; cached-Stella
+  exception on fit timing); hypothesis moved before Table D; related-work adjective replaced by the
+  numbers. Its cut list (about 1,100 words) is held for the owner's decision with the Fable list.
+  Astra would not sign as written over mechanism and latency overreach; those sentences are now
+  removed.
