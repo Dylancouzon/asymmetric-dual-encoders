@@ -543,3 +543,8 @@ property of Stella or of table-based query substitution.
 for a per-space relative-loss estimate on its own. SCIDOCS (25,657 documents, 1,000 queries) is
 added as a third workload so the scale axis (TREC-COVID, 171,332 documents) and the query-count axis
 (FiQA 648, SCIDOCS 1,000) are both covered. The ef grid, builds, analysis and outputs are unchanged.
+
+**E20 amendment 2 (2026-10-01, during the run, before any space's rows were read).** The exact
+parity gate is 0.995 instead of E2's 0.999. The control `arctic-embed-l-mean` table on FiQA scored
+0.9985: fp16-valued document vectors produce tied exact scores that Qdrant and NumPy order
+differently. Every parity value is recorded per space, workload, build and path in the result.

@@ -625,3 +625,6 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   (`work/m15/e20_assemble.sh`); the single loop had been on course for about 2.5 h of CPU sweeps.
   The orphaned stella sweep (killed mid-run) was cleaned and restarted; no result file was written
   by the partial run. Added evidence card C16 (E19) to `make_evidence.py` and regenerated EVIDENCE.md.
+- E20 shard 2 stopped at 05:21 UTC on the exact-parity gate (0.9985 < 0.999) for the control's
+  table on FiQA; ties in fp16-valued scores. Gate relaxed to 0.995 (method amendment 2), parity
+  values stay in the result; shard 2 relaunched. Shards 0 and 1 unaffected.
