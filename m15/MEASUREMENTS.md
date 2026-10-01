@@ -674,3 +674,44 @@ omitted, not approximated. Also fixed before computing: hubness is the Gini of t
 counts over the full document support including zeros; bootstrap intervals resample spaces with
 their three workload rows together and are reported within each workload as well; the held-out
 baseline is each training fold's mean, reported beside every held-out model.
+
+## E25, LightRetriever's own lookup path under graph search (exploratory, pre-specified 2026-10-01, before any encoding)
+
+Owner-approved (round 7). RQ2 found that a lookup-table query path needs more HNSW effort than the
+encoder's own query path over the same index, across 25 encoder spaces built by closed-form
+fitting. LightRetriever [ICLR 2026] trains its lookup query side jointly with an LLM document tower
+and reports a query-encoding speedup of over 1000-fold. E25 asks whether the search-effort penalty
+also appears in that model's own setting, where the lookup path is learned, not fitted.
+
+- **Model:** the released `lightretriever/lightretriever-qwen2.5-1.5b` adapter (Hub revision
+  `59776f218c4d13a1fbb075409514a82c452d27ae`) merged into `Qwen/Qwen2.5-1.5B`, bfloat16, as the
+  project's earlier faithful reproduction loaded it (`bench/run_lightretriever.py`; dense scores
+  reproduced the paper to within reporting precision after the BOS fix recorded in
+  `research/m1-m6-findings.md`). Dense path only; 1536-dimensional last-token pooling, normalized.
+- **Document vectors:** FiQA (57,638) and SCIDOCS (25,657) encoded by the model's document path (no
+  instruction, `add_special_tokens=True`, max length 512). One frozen index per corpus.
+- **Two query paths over each index.** (1) Lookup: the released construction, one table per
+  instruction built by forwarding `[prompt] + [token] + [eos]` and taking the EOS state, query vector
+  = normalized mean of the query's token rows (`add_special_tokens=False`); primary instruction is the
+  "websearch" prompt, the per-task prompt is secondary. (2) Full: the same model encoding
+  `[prompt] + query tokens + [eos]` and taking the EOS state, normalized, with the same instruction.
+  Path (2) is the model's own contextual query encoding; path (1) is what the paper ships as the
+  cheap side.
+- **Search protocol:** E20's, unchanged: Qdrant 1.19.1, HNSW m=16, ef_construct=100, cosine,
+  uncompressed, two builds per corpus with different seeded insertion orders, ef 16 to 512, limit 11
+  with the self-hit drop, each path against its own exact top-10, tie-aware recovery@10, tie-aware
+  exact parity at 0.995 on 200 queries per path and build.
+- **Pre-specified quantities:** the relative-nDCG-loss multiplier (primary) and the recovery
+  multiplier (secondary) of the lookup path against the full path at `ef=64`, averaged over builds,
+  censored at 512; the recovery gap at `ef=64` with a query-bootstrap interval; the exact nDCG@10 of
+  both paths (quality context, not a reproduction claim); encoding time per query for both paths on
+  the pod GPU, reported as context only.
+- **Reading:** a multiplier above one with a recovery gap whose interval excludes zero places the
+  RQ2 regularity in a jointly trained model's own space; a multiplier at or below one bounds RQ2 to
+  closed-form students. Either outcome is reported; neither disputes the paper's retention or its
+  encoding-speedup figure, which is measured in a different place.
+- **Not claimed:** latency on a shared GPU pod; the paper's exact numbers (our dense reproduction
+  carried a documented BOS fix and the sparse side is out of scope); anything about the per-task
+  instruction beyond a secondary row.
+- **Cost:** one fresh A100 pod, about $10 to $15; no project cache is needed.
+- **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
