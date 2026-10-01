@@ -721,3 +721,12 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   in E24 asserts the E19 feature files exist. Governance budget (one review, one re-review) is spent;
   no further pre-spend round. v17 draft written in the frozen-index frame (4,302 main words, E22 to
   E24 sections marked pending); Figure 1 (`f9_width`) added. Pod host still without a free GPU.
+- Voice-contract checks of v17 (`REVIEWS/2026-10-01-astra-voice-v17.md`,
+  `REVIEWS/2026-10-01-fable-voice-v17.md`), both applied: hypotheses now open 4.2, 4.3, 5.2, 5.3,
+  5.4; the abstract labels which representation each number comes from and names the primary
+  measure beside the secondary; RQ1's objects are "encoder spaces" and "index" is reserved for the
+  stored vectors and graph, with the two encoder-fixed index properties (vector width, space quality)
+  defined in the introduction; the false "best in its width band" sentence, "nine" family indicators,
+  the width "larger" claim for the table, the "above eight" censoring wording, and the slogan
+  sentences are corrected; Section 6 keeps only pointers for fusion, routing, and precision; 3.4
+  and 3.5 shortened. C17 wording on builds corrected in the evidence generator.

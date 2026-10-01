@@ -4,20 +4,20 @@
 
 ## Abstract
 
-A dense document index is often the one component of a retrieval system that cannot be rebuilt: re-encoding is expensive, and every downstream consumer depends on the stored vectors. The query encoder has no such constraint. Query-side distillation trains a cheap student to emit queries in the frozen index's space, so the index stays and only the query path changes. This paper asks what that substitution costs and what properties of the index decide the cost. We fit closed-form query students to 26 public embedding indexes under two student representations and ask, first, how much retrieval quality the student recovers and what predicts it. The index's own retrieval quality predicts the student's quality only once the index's width is held fixed: standardized effects of +0.69 for quality and −0.83 for width, and a two-variable model fitted on ten indexes ranks 16 held-out indexes at Spearman 0.85. The strongest index yields one of the weakest students. Second, we ask what the student costs at search time over the index's unchanged HNSW graph: its queries recover fewer of their exact neighbors at equal effort in all 25 measured indexes on two corpora, and matching the index's own queries takes a median four times the search budget. Constella, three compatible query encoders over one frozen Stella index, is the worked instance.
+A dense document index is often the one component of a retrieval system that cannot be rebuilt: re-encoding is expensive, and every downstream consumer depends on the stored vectors. The query encoder has no such constraint. Query-side distillation trains a cheap student to emit queries in the frozen index's space, so the index stays and only the query path changes. This paper asks what that substitution costs and what properties of the index decide the cost. Two properties of a frozen index are fixed by the encoder that built it: the width of its vectors and the retrieval quality of its space. We fit closed-form query students to 26 public encoder spaces under two student representations and ask, first, how much retrieval quality the student recovers and what predicts it. The space's own retrieval quality predicts the student's quality only once width is held fixed: standardized effects of +0.69 for quality and −0.83 for width under a frozen-backbone head student (+0.63 and −0.64 under a token-table student), and a two-variable model fitted on ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70. The strongest space yields the weakest registered table student. Second, we ask what the student costs at search time over the index's unchanged HNSW graph: by exact-neighbor recovery its queries fall short of the encoder's own at equal effort in all 25 measured spaces on two of three corpora, and matching the encoder's recovery takes a median four times the search budget; by the pre-specified relevance-loss measure the penalty is universal on one corpus and mixed on the other two. Constella, three compatible query encoders over one frozen Stella index, is the worked instance.
 
 ## 1. Introduction
 
-A production retrieval system accumulates inertia in its document index. Encoding the 23.7 million documents of the BEIR-15 collection with a 400-million-parameter encoder took a measured 39.9 hours on one RTX 3080; a production index also carries its graph, its quantization, and every consumer that stores or joins against its vectors. For many teams the index is effectively immutable. The query encoder is the opposite: it runs once per request, it can be replaced between requests, and nothing stored depends on it, as long as its output lands in the index's space.
+In a production retrieval system the document index is the component that is hardest to change. Encoding the 23.7 million documents of the BEIR-15 collection with a 400-million-parameter encoder took a measured 39.9 hours on one RTX 3080; a production index also carries its graph, its quantization, and every consumer that stores or joins against its vectors. The query encoder is the opposite: it runs once per request, it can be replaced between requests, and nothing stored depends on it, as long as its output lands in the index's space.
 
 **Query-side distillation** makes that condition hold. A student encoder is trained to reproduce the frozen encoder's query vectors and then searches the frozen document vectors directly [QED, EmbedDistill, LEAF]. Static variants fit a token table instead of a transformer, so a query costs a table lookup and a sum [pyNIFE, LightRetriever]. The capability is established. What is not established is what it costs over a given index, and whether the cost can be predicted from the index before anything is built.
 
-We study that question over 26 public embedding indexes. Because the students we use are fit in closed form in minutes, the same recipe can be applied to every index under one protocol, which turns a one-model demonstration into a comparison across indexes. Two questions organize the paper.
+Two properties of a frozen index are fixed by the encoder that built it and cannot be changed without rebuilding: the width of its stored vectors and the retrieval quality of the space those vectors come from. We study the question over 26 public encoder spaces. Because the students are fit in closed form in minutes, the same recipe can be applied to every space under one protocol, which turns a one-model demonstration into a comparison across spaces. Two questions organize the paper.
 
-- **RQ1, retention.** How much retrieval quality can a closed-form query student recover from a frozen index, and which properties of the index predict it? The field's working assumption, which we take as the hypothesis to test, is that a better index yields a better student.
+- **RQ1, retention.** How much retrieval quality can a closed-form query student recover from a frozen index, and do the two encoder-fixed properties, width and the space's own quality, predict it? The field's working assumption, which we take as the hypothesis to test, is that a better space yields a better student. RQ1 is a property of the space; the corpus and the graph do not enter it.
 - **RQ2, search effort.** Over the index's unchanged approximate-search graph, how much more search effort does the student's query path need than the index's own query path, and is that effort predictable?
 
-The results are these. Against RQ1, the index's own retrieval quality predicts the student's quality only once the index's width is held fixed. Width is the larger effect and works against the student; because stronger indexes are usually wider, the two effects cancel in a pooled comparison, and the strongest index in the roster yields one of the weakest students under both student representations. A two-variable model fitted on ten indexes ranks 16 others at Spearman 0.85 for one representation and 0.70 for the other, where the index's own score alone ranks them at 0.37 and 0.16 [E24 prospective test pending]. Against RQ2, the student's queries recover fewer of their own exact neighbors than the index's queries at equal HNSW effort in all 25 measured indexes on two corpora of 57,638 and 171,332 documents, and matching the index's own recovery takes a median four times the search budget; on a 25,657-document corpus the gap is smaller [E22 predictors and E23 size test pending].
+Against RQ1, the space's own retrieval quality predicts the student's quality only once width is held fixed; width works against the student, and because stronger spaces are usually wider the two effects cancel in a pooled comparison. A two-variable model fitted on ten spaces ranks 16 others at Spearman 0.85 and 0.70 under the two representations, against 0.37 and 0.16 for the space's own score alone [E24 prospective test pending]. Against RQ2, by exact-neighbor recovery the student's queries fall short of the encoder's own at equal HNSW effort in all 25 measured spaces on two of three corpora, with a median recovery multiplier of four; the pre-specified relevance-loss measure agrees on one corpus and is mixed on the other two [E22 and E23 pending].
 
 **Constella** is the worked instance: a frozen Stella index [Stella] with three compatible query paths, Stella's own encoder, a 34.5-million-parameter transformer student (Nano), and a token-table student (Zero), released with the registered evaluations that gated the release. Section 6 reports it.
 
@@ -25,7 +25,7 @@ Throughout, "registered" marks the project's pre-registered evaluations, whose d
 
 ## 2. Related work
 
-Query-side distillation against a frozen document encoder is established. QED retains 92.5% of a dense retriever's BEIR score with a two-layer student trained by embedding alignment [QED]; EmbedDistill keeps the teacher's document encoder and distills an asymmetric student [EmbedDistill]; LEAF aligns a small student to a larger teacher's representation space and reports 97.7% retention at 4.7-fold compression [LEAF]. pyNIFE fits a static token table to a frozen teacher and proposes switching between the static and the contextual path [pyNIFE]; LightRetriever trains a lookup query side jointly with a document tower [LightRetriever]. Static sentence embeddings and Model2Vec build table representations with their own indexes [StaticEmb, Model2Vec]; NanoVDR distills a vision-language retriever into a small text encoder [NanoVDR]. None of these compares students across many teachers under one recipe, which is the comparison RQ1 needs.
+Query-side distillation against a frozen document encoder is established: QED retains 92.5% of a dense retriever's BEIR score with a two-layer student [QED], EmbedDistill distills an asymmetric student against the teacher's frozen document encoder [EmbedDistill], and LEAF reports 97.7% retention at 4.7-fold compression [LEAF]. pyNIFE fits a static token table to a frozen teacher [pyNIFE]; LightRetriever trains a lookup query side jointly with a document tower [LightRetriever]; static sentence embeddings, Model2Vec, and NanoVDR are related compact representations [StaticEmb, Model2Vec, NanoVDR]. None compares students across many teachers under one recipe, which is the comparison RQ1 needs.
 
 That stronger teachers can produce weaker students is known in distillation generally [Cho and Hariharan 2019] and in dense retrieval [PROD]; the explanations offered there concern capacity gaps between teacher and student. Our contribution to that line is a measured competing explanation, the teacher's width, with a held-out prediction.
 
@@ -33,13 +33,13 @@ Graph-based approximate search over HNSW is sensitive to where queries sit relat
 
 ## 3. Experimental setup
 
-### 3.1 Indexes
+### 3.1 Encoder spaces
 
-The roster is 26 public English embedding models that share the 30,522-entry BERT WordPiece vocabulary, a requirement of the table student. Ten were registered before any result; 16 were added as an exploratory expansion under the same recipe and selection order. Each model is an index in the sense of RQ1: its document vectors are frozen and its own query encoder is the reference path. Table A lists them by width.
+The roster is 26 public English embedding encoders that share the 30,522-entry BERT WordPiece vocabulary, a requirement of the table student. Ten were registered before any result; 16 were added as an exploratory expansion under the same recipe and selection order. Each encoder defines one frozen space: its document vectors are frozen and its own query encoder is the reference path. Table A lists them by width.
 
-**Table A.** The 26 indexes. "Own nDCG@10" is the index's own query path on the six-set suite (Section 3.3); the two student columns are the outcomes of Section 4.
+**Table A.** The 26 encoder spaces. "Own nDCG@10" is the encoder's own query path on the six-set suite (Section 3.3); the two student columns are the outcomes of Section 4.
 
-| Index (teacher) | Width | Pooling | Own nDCG@10 | Table student | Head student | Roster |
+| Encoder (frozen space) | Width | Pooling | Own nDCG@10 | Table student | Head student | Roster |
 |---|---:|---|---:|---:|---:|---|
 | bge-small-en-v1.5 | 384 | cls | 0.5042 | 0.3581 | 0.5084 | exploratory |
 | arctic-embed-s | 384 | cls | 0.4993 | 0.3516 | 0.2594 | exploratory |
@@ -86,11 +86,11 @@ Both students are fitted on the same 337,981 screened fit queries, encoded by ea
 
 ### 3.4 Approximate-search protocol
 
-RQ2 uses Qdrant 1.19.1 with HNSW m=16, ef_construct=100, every segment indexed, cosine distance, no quantization. For each index and each of three workloads, FiQA (57,638 documents), SCIDOCS (25,657), and TREC-COVID (171,332), two graphs are built with different seeded insertion orders, and `ef` is swept over 16, 32, 64, 128, 256, and 512 for the index's own queries, the table student's queries, and the head student's queries. Each path is measured against its own exact top-10 over the same document vectors. Recovery@10 is tie-aware: a returned document counts when its exact score is at or above the exact tenth neighbor's score within 1e-4, because some table students produce exact-score ties at rank ten. Exact parity between the engine and a NumPy reference is checked on 200 queries per path and build; one index, tas-b, could not reach parity because its rank-10 score gaps lie at float32 precision, and it is excluded from RQ2. The pre-specified primary quantity is the relative-nDCG-loss multiplier: with the index's own path at `ef=64` as the reference, the smallest `ef` at which the student path reaches the same relative loss, divided by 64, averaged over the two builds, and censored when a build never reaches it by `ef=512`. The secondary quantity is the same multiplier on recovery@10, and the recovery gap at `ef=64`.
+RQ2 uses Qdrant 1.19.1 with HNSW m=16, ef_construct=100, cosine distance, no quantization. For each encoder space and each of three workloads, FiQA (57,638 documents), SCIDOCS (25,657), and TREC-COVID (171,332), two graphs are built with different seeded insertion orders over the encoder's document vectors, and `ef` is swept over 16 to 512 for the encoder's own queries and both students' queries, each path measured against its own exact top-10. The pre-specified primary quantity is the relative-nDCG-loss multiplier: with the encoder's own path at `ef=64` as the reference, the smallest `ef` at which the student path reaches the same relative loss, divided by 64, averaged over builds, and censored when a build never reaches it by 512. The secondary quantity is the same multiplier on tie-aware recovery@10, and the recovery gap at `ef=64`. Parity checks, the tie rule, and the one excluded encoder (tas-b) are in Appendix C.
 
 ### 3.5 The instance
 
-Constella is built around Stella, the `stella_en_400M_v5` encoder, pinned revision `ffeb2b7e`, whose 1024-dimensional normalized document vectors are frozen throughout. Zero is a trained table of 30,522 rows exported as int8; Nano is a 34.5-million-parameter transformer on the head student's feature path, trained with a squared-error loss against Stella's query vectors. Both are evaluated on BEIR-15 by exact search and timed under a registered protocol on an Apple M5 Pro CPU. Their registered contrasts and the one-shot held-out evaluation are in Appendix A.
+Constella is built around Stella, the `stella_en_400M_v5` encoder, whose 1024-dimensional normalized document vectors are frozen throughout; Zero is a trained table student and Nano a 34.5-million-parameter transformer on the head student's feature path, both trained against Stella's query vectors and evaluated on BEIR-15 by exact search (Section 6, Appendix A).
 
 ## 4. RQ1: what the index decides about retention
 
@@ -98,7 +98,7 @@ Constella is built around Stella, the `stella_en_400M_v5` encoder, pinned revisi
 
 **H1.** The stronger the index's own retrieval, the stronger the closed-form student fitted to it; in particular, the strongest index yields the strongest student.
 
-H1 is the heuristic a team would use to choose which index to build a cheap query path for, and it is what the project used before the screen. Table A already contains its refutation in the pooled form. The strongest registered index, gte-large-en-v1.5 at 0.5970, yields a table student of 0.2455, the weakest of the registered ten, and a head student of 0.2229; Stella at 0.5745 yields the strongest table student at 0.3974. Over all 26 indexes, the rank correlation between an index's own score and its student's score is +0.09 for the table (95% checkpoint interval −0.39 to +0.52) and +0.09 for the head (−0.36 to +0.51). The intervals admit a moderate positive association; they exclude the strong one H1 asserts.
+H1 is the heuristic a team would use to choose which space to build a cheap query path for, and it is what the project used before the screen. Table A contains its pooled refutation: the strongest registered space, gte-large-en-v1.5, yields the weakest registered table student and a below-median head student, and Stella, second in the same width band, yields the strongest table student. Over all 26 spaces, the rank correlation between a space's own score and its student's score is +0.09 for the table (95% checkpoint interval −0.39 to +0.52) and +0.09 for the head (−0.36 to +0.51). The intervals are compatible with a moderate positive association; the strongest-index rule itself is tested directly in Section 4.4.
 
 ![Student quality against the index's own quality under both representations, colored by index width](figures/f9_width.png)
 
@@ -106,36 +106,38 @@ H1 is the heuristic a team would use to choose which index to build a cheap quer
 
 ### 4.2 Width as the competing explanation
 
-Figure 1 shows the pooled null is two opposing effects. Within each width level, student quality rises with index quality; across levels, wider indexes yield weaker students. Table B fits that structure. The outcome is the student's absolute six-set score; the predictors are the index's own score and log2 width; coefficients are standardized, with 10,000-draw checkpoint bootstrap intervals; held-out performance is leave-one-family-out prediction over the nine families.
+**H1'.** Conditional on the index's width, the index's own quality predicts the student's quality, and width has a negative effect of its own. H1' is falsified if the width coefficient's interval includes zero or if the two-variable model predicts held-out families no better than the index's score alone. Figure 1 suggests the structure: within each width level student quality rises with index quality, and across levels wider indexes yield weaker students. Table B fits it. The outcome is the student's absolute six-set score, so that retention, the student's score divided by the index's, is a derived quantity rather than the modelled one; the predictors are the space's own score and log2 width; coefficients are standardized, with 10,000-draw checkpoint bootstrap intervals; held-out performance is leave-one-family-out prediction over the nine families.
 
 **Table B.** Nested models of student quality over 26 indexes (exploratory, analysis pre-specified).
 
-| Student | Predictors | Index quality beta | Width beta | In-sample R² | Leave-one-family-out Spearman |
+| Student | Predictors | Space quality beta | Width beta | In-sample R² | Leave-one-family-out Spearman |
 |---|---|---|---|---:|---:|
-| Head | index quality | +0.34 [−0.16, +0.65] | | 0.12 | −0.17 |
-| Head | index quality, width | +0.69 [+0.40, +0.97] | −0.83 [−1.14, −0.60] | 0.70 | +0.69 |
-| Table | index quality | +0.37 [−0.30, +0.72] | | 0.14 | −0.15 |
-| Table | index quality, width | +0.63 [+0.06, +0.89] | −0.64 [−0.95, −0.32] | 0.48 | +0.40 |
+| Head | space quality | +0.34 [−0.16, +0.65] | | 0.12 | −0.17 |
+| Head | space quality, width | +0.69 [+0.40, +0.97] | −0.83 [−1.14, −0.60] | 0.70 | +0.69 |
+| Table | space quality | +0.37 [−0.30, +0.72] | | 0.14 | −0.15 |
+| Table | space quality, width | +0.63 [+0.06, +0.89] | −0.64 [−0.95, −0.32] | 0.48 | +0.40 |
 
-Index quality and width correlate at +0.61 across the roster, which is why the pooled correlation is near zero. The partial rank correlation between student and index quality given width is +0.58 for the head and +0.45 for the table. Adding nine family indicators raises in-sample R² to 0.91 and 0.81 and leaves the signs unchanged; those models cannot be validated out of family and are reported only in sample. The width effect is the larger of the two under both representations.
+The space's quality and its width correlate at +0.61 across the roster, which is why the pooled correlation is near zero; given width, the partial rank correlation between student and index quality is +0.58 for the head and +0.45 for the table. Adding eight family indicators raises in-sample R² to 0.91 and 0.81 and leaves the signs unchanged; those models cannot be validated out of family and are reported only in sample. Under the head representation the width effect is the larger of the two (−0.83 against +0.69); under the table the two are of similar size (−0.64 and +0.63), and the intervals do not separate them.
 
 ### 4.3 Held-out and prospective prediction
 
-The roster's own history supplies a held-out test. The two-variable model fitted on the ten registered indexes, scored first, ranks the 16 indexes scored later at Spearman 0.85 [0.53, 0.99] for the head and 0.70 [0.20, 0.96] for the table; the index's own score alone ranks them at 0.37 and 0.16. The hypothesis in Table B was formed after all 26 were seen, so this is a held-out fit rather than a prospective test. [E24 pending: eight further indexes never scored before, with predictions committed by hash before any student was fitted.]
+The prediction: a two-variable model fitted on part of the roster ranks the rest better than the space's own score does. The roster's own history supplies the test. The two-variable model fitted on the ten registered spaces, scored first, ranks the 16 spaces scored later at Spearman 0.85 [0.53, 0.99] for the head and 0.70 [0.20, 0.96] for the table; the space's own score alone ranks them at 0.37 and 0.16. The hypothesis in Table B was formed after all 26 were seen, so this is a held-out fit rather than a prospective test. [E24 pending: eight further spaces never scored before, with predictions committed by hash before any student was fitted.]
 
-### 4.4 Selection regret and the student's own screen
+### 4.4 Corollary: choosing an index before it exists
+
+RQ1 concerns a space that already exists. For a team that can still choose, the same data answer a second question: which rule picks the encoder whose student will be best? Table C scores three rules by the six-set nDCG@10 their pick loses against the best student in the roster.
 
 **Table C.** Six-set nDCG@10 lost against the best student in the roster, by selection rule.
 
 | Rule | Head: pick, regret | Table: pick, regret |
 |---|---|---|
-| Strongest index (H1) | gte-large-en-v1.5, 0.285 | gte-large-en-v1.5, 0.152 |
+| Strongest space (H1) | gte-large-en-v1.5, 0.285 | gte-large-en-v1.5, 0.152 |
 | Two-variable model, leave-one-out pick | arctic-embed-s, 0.249 | gte-small, 0.107 |
 | Student's own dev-forum screen | gte-small, 0.035 | stella-400M-v5, 0.000 |
 
-The model explains the structure but does not make the pick: its leave-one-out choice still loses 0.25 and 0.11. The student's own development screen, two forums scored with the fitted student, predicts the six-set rank at Spearman 0.84 (head) and 0.88 (table) and makes the best or near-best pick. Added to the two-variable model it dominates (standardized +0.71 [+0.36, +0.99] for the head) and raises leave-one-family-out prediction to 0.77 and 0.80. Width is what the index decides; the screen is how a team should decide.
+The strongest-space rule loses 0.285 and 0.152. The two-variable model's leave-one-out pick loses 0.249 and 0.107: the model ranks the roster but does not identify its top. The student's own development screen, two forums scored with the fitted student, predicts the six-set rank at Spearman 0.84 (head) and 0.88 (table), makes the best or near-best pick, and when added to the two-variable model carries the largest standardized coefficient (+0.71 [+0.36, +0.99] for the head) and raises leave-one-family-out prediction to 0.77 and 0.80.
 
-One caveat governs Section 4: 26 related indexes at three width levels support a hypothesis about what a closed-form student pays for width, not a mechanism, and the head's own backbone appears in the roster (bge-small-en-v1.5, head retention 1.008); every statistic above changes by less than 0.06 without it.
+One caveat governs Section 4: 26 related spaces at three width levels support a hypothesis about what a closed-form student pays for width, not a mechanism; the head's own backbone is in the roster (bge-small-en-v1.5), and every statistic above changes by less than 0.06 without it.
 
 ## 5. RQ2: what the index decides about search effort
 
@@ -143,7 +145,7 @@ One caveat governs Section 4: 26 related indexes at three width levels support a
 
 **H2.** Over the index's unchanged HNSW graph, the student's query path needs more search effort than the index's own query path to recover the same fraction of its exact neighbors, because the student's queries sit differently against the indexed vectors.
 
-The first half of H2 is testable per index; the second half is the mechanism, tested in Section 5.3.
+The first half of H2 is testable per index. The second half is a hypothesis about placement; Section 5.3 tests whether declared placement features predict the size of the effect, which is correlational evidence for it, not an identification of a mechanism.
 
 ### 5.2 Effort across 25 indexes
 
@@ -159,21 +161,21 @@ The first half of H2 is testable per index; the second half is the mechanism, te
 
 **Figure 2.** Recovery gap at `ef=64` by index, three workloads, two builds averaged.
 
-On FiQA every index needs more effort by the primary measure, with a median of four times the reference `ef` over the 21 reached and four censored above eight. On SCIDOCS 17 indexes need more and eight do not. On TREC-COVID the primary measure is mixed, 12 above and 13 at or below, with a median of 0.25; its index paths lose only 0.2% of nDCG at `ef=64` over 50 queries, so a threshold on relative loss there is sensitive to differences smaller than its noise. The secondary measure is consistent across all three: the student recovers fewer of its own exact neighbors at `ef=64` in 25 of 25 indexes on FiQA and TREC-COVID and in 17 of 25 on SCIDOCS, with a median recovery multiplier of four on the two larger corpora and two on the smallest. The head student shows the same recovery deficit (24 and 23 of 25). The first half of H2 holds for recovery on every corpus and for relevance on the largest-query corpus.
+H2 predicts a multiplier above one in most indexes on every workload. By the primary measure that holds on FiQA (25 of 25, median four over the 21 reached, four censored in at least one build) and on SCIDOCS (17 of 25), and it is mixed on TREC-COVID (12 of 25), where the index's own path loses only 0.2% of nDCG at `ef=64` over 50 queries, so a relative-loss threshold there is sensitive to differences smaller than its noise. By the secondary measure it holds on every workload (Table D), and the head student shows the same recovery deficit in 24 and 23 of 25 spaces.
 
 ### 5.3 Is the effort predictable?
 
-Two summaries of query placement measured in the Stella instance, the median cosine of a query to its nearest document and the median gap between its first and tenth scores, differ between student and index paths in every roster (the student's queries sit farther from the documents, with flatter margins). Across the 25 indexes they do not predict the size of the gap: Spearman 0.00 on FiQA, +0.23 on SCIDOCS, and −0.34 on TREC-COVID, with intervals spanning zero. [E22 pending: Table E, declared placement features (query-to-document distance ratio, hubness, top-10 overlap, effective rank) with clustered intervals and leave-family-out prediction.]
+H2b predicts that declared features of query placement, computable before a graph is built, rank the spaces by the size of the effect. Two placement summaries, the median cosine of a query to its nearest document and the median gap between its first and tenth scores, are lower for every student path than for its encoder's, yet across the 25 spaces they do not rank the gap: Spearman 0.00 on FiQA, +0.23 on SCIDOCS, −0.34 on TREC-COVID, intervals spanning zero. [E22 pending: Table E, declared placement features (query-to-document distance ratio, hubness, top-10 overlap, effective rank) with clustered intervals and leave-family-out prediction.]
 
 ### 5.4 Corpus size
 
-The gap is smallest on the smallest corpus, where the index's own path already loses almost nothing at `ef=64`. Three workloads confound corpus size with domain. [E23 pending: FiQA subsampled to 25,657 documents on the same queries, paired across indexes.]
+H2c predicts that the smaller gap on SCIDOCS is an effect of corpus size: on FiQA subsampled to SCIDOCS's size the gap should shrink toward SCIDOCS's value. [E23 pending: FiQA subsampled to 25,657 documents on the same queries, paired across indexes.]
 
-One caveat governs Section 5: one engine, one graph configuration, closed-form students, and timing on a shared machine; a multiplier on `ef` is a multiplier on graph effort, not on latency, and a recovery deficit is not a relevance deficit until the primary measure agrees.
+One caveat governs Section 5: a multiplier on `ef` is a multiplier on graph effort, not on latency, and a recovery deficit is a relevance deficit only where the primary measure agrees.
 
 ## 6. The Constella instance
 
-Over Stella's frozen index, the three query paths give the budgets in Table 1, by exact search over BEIR-15.
+Table 1 gives the three query paths over Stella's frozen index, by exact search over BEIR-15.
 
 **Table 1.** Three query paths over one frozen Stella index. Encoding medians: 100 real 5-to-12-word queries, batch one, four CPU threads, Apple M5 Pro, registered protocol.
 
@@ -183,13 +185,13 @@ Over Stella's frozen index, the three query paths give the budgets in Table 1, b
 | Nano (34.5M transformer) | 0.5081 | 90.5% | 2.25 ms | 132.3 MiB |
 | Zero (token table) | 0.4572 | 81.4% | 0.044 ms | 90.1 MiB |
 
-Retention varies by dataset, from 0.67 for Zero on TREC-COVID and FiQA to 0.96 on climate-fever and Quora (Figure 3). RQ1's answer applies to this instance: Stella is a 1024-wide index with the best own score among its width band, and its table student is the roster's best, while a wider-and-stronger index would not have been.
+Retention varies by dataset (Figure 3). The instance illustrates RQ1 without validating the width model, which was fitted to closed-form students: Stella's closed-form table student is the roster's best (0.3974), while the strongest encoder of the same width, gte-large-en-v1.5, yields the weakest registered table (0.2455).
 
 ![Per-dataset retention of the Stella query path by Zero and Nano over 15 BEIR datasets](figures/f2_per_dataset.png)
 
 **Figure 3.** Retention per dataset. Datasets with disclosed Stella training exposure are ArguAna, FiQA, and FEVER; the four originally held-out sets are FEVER, DBpedia-entity, and the CQADupStack android and english forums.
 
-RQ2's answer applies too. On the uncompressed million-passage diagnostic, search time at a fixed `ef` is the same for all three paths within 5%, and the paths differ in the `ef` they need: to stay within 1% of their own exact score, Stella needs `ef=128`, Nano 256, and Zero 512, with search medians of 1.53, 2.18, and 3.58 ms. On one binary-quantized collection the fastest setting within 1% gives Zero 0.6116 at 1.11 ms, Nano 0.6893 at 2.48 ms, and Stella 0.7226 at 21.3 ms: a 63-fold encoding gap between Zero and Nano becomes 2.2-fold after search, at different quality levels, and the part specific to the cheap path is the extra `ef`. Figure 4 gives the registered sweep. Fusing Zero with BM25 recovers more quality than any table-side tuning did (BEIR-15 macro 0.4572 to 0.4933) at the cost of a second index and retrieval; per-query routing between Zero and Nano has an oracle headroom of 0.031 that the cheap selectors tested recover little of (Appendix D). With document codes fixed and no graph, scoring with full query magnitudes instead of signs raises Zero's exact-top-10 coverage from 82.2% to 93.0% on FiQA at a 40-candidate budget, in line with query-aware decoding of binary sketches [QA-Cos]; the engine's native setting for it was not tested (Appendix C).
+The instance also shows RQ2's cost in time. On the uncompressed million-passage diagnostic, search time at a fixed `ef` is the same for all three paths within 5%, and the paths differ in the `ef` they need: to stay within 1% of their own exact score, Stella needs `ef=128`, Nano 256, and Zero 512, with search medians of 1.53, 2.18, and 3.58 ms. On one binary-quantized collection the fastest setting within 1% gives Zero 0.6116 at 1.11 ms, Nano 0.6893 at 2.48 ms, and Stella 0.7226 at 21.3 ms: on that collection's query sample the encoding gap between Zero and Nano is 63-fold (51-fold on Table 1's sample) and becomes 2.2-fold after search, at different quality levels. Figure 4 gives the registered sweep. Lexical fusion, per-query routing, and a query-precision control over the same index are reported in Appendices C and D.
 
 ![Measured quality and encoding-plus-search time for the three query paths on two collections](figures/f4_system.png)
 

@@ -471,7 +471,7 @@ def cross_space_ann():
                        "mult. q10 / q50 / q90", "mean table-teacher recovery gap at ef=64 (pp)",
                        "Spearman gap vs top-1 cosine delta", "Spearman gap vs margin delta"], srows)
                 + "\n\n" + table(head, prow)
-                + "\n\nBuilds are repetitions of one insertion-order permutation, not independent "
+                + "\n\nTwo graphs per workload are built from different seeded insertion orders; they are repetitions, not independent "
                   "samples; related checkpoints are grouped by family in the result file. Geometry "
                   "correlations are exploratory. The E2 consistency check for Stella's teacher path "
                   "on FiQA is in the result file and is not a gate.",

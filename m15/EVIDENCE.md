@@ -605,6 +605,6 @@ bge-small-en-v1.5 is the head's own backbone and gte-small is nearly its linear 
 | mxbai-embed-large-v1 | mxbai | 8/4 | -4.0 | 2/4 | -1.2 | 0.25/0.25 | -2.7 |
 | stella-400M-v5 | stella | 8/cens. | -3.0 | 0.5/4 | -1.3 | 0.25/0.25 | -5.2 |
 
-Builds are repetitions of one insertion-order permutation, not independent samples; related checkpoints are grouped by family in the result file. Geometry correlations are exploratory. The E2 consistency check for Stella's teacher path on FiQA is in the result file and is not a gate.
+Two graphs per workload are built from different seeded insertion orders; they are repetitions, not independent samples; related checkpoints are grouped by family in the result file. Geometry correlations are exploratory. The E2 consistency check for Stella's teacher path on FiQA is in the result file and is not a gate.
 
 **Cannot show.** A latency claim (sweeps ran on a shared pod); other engines or graph parameters; the trained Zero (these are closed-form tables); a causal geometric mechanism.
