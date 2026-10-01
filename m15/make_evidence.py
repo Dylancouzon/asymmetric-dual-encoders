@@ -328,12 +328,77 @@ def decision_audit():
                 "; ".join(d["limits"]))
 
 
+def precision_followup():
+    native_rows, interactions = [], []
+    for dataset, filename in (("fiqa", "m15_e16_quantization_pilot.json"),
+                              ("msmarco1m", "m15_e17_quantization_replication.json")):
+        d = R(filename)
+        for tier in ("zero", "nano", "stella-query"):
+            base = f"64/{tier}/"
+            values = [d["measurements"][base + mode]["recovery_at10"] for mode in
+                      ("original_traversal", "binary_rescore_1", "binary_rescore_4")]
+            native_rows.append([dataset, tier, *[f4(v) for v in values]])
+        for other in ("nano", "stella-query"):
+            c = d["contrasts"][f"64/zero_minus_{other}/quantization_interaction"]
+            lo, hi = (-100 * c["query_bootstrap95"][1], -100 * c["query_bootstrap95"][0])
+            lo, hi = (0.0 if abs(v) < 1e-10 else v for v in (lo, hi))
+            interactions.append([dataset, f"Zero minus {other}", f"{-100*c['mean']:.2f}",
+                                 f"[{lo:.2f}, {hi:.2f}]"])
+    native = card("C14. Quantized scoring on the same collection", "exploratory (E16, E17)",
+                  "Binary scoring adds a workload-dependent neighbor-recovery penalty. Primary ef64; "
+                  "192 deterministic queries per workload. Original scoring uses ignore=true on the "
+                  "same binary collection, not a separately built original-vector graph.",
+                  table(["workload", "tier", "original scoring", "binary rescore1", "binary rescore4"], native_rows)
+                  + "\n\nExtra Zero recovery penalty, percentage points:\n\n"
+                  + table(["workload", "contrast", "extra loss (pp)", "query-bootstrap95 (pp)"], interactions)
+                  + "\n\nThe 1M primary Zero-versus-Nano contrast includes zero; the Zero-versus-Stella "
+                    "interval touches zero. Secondary ef16/256 are in the receipts, not substituted for "
+                    "the primary display. Each tier retains its own exact-neighbor target. Native "
+                    "rescoring can change global candidates through segment merging.",
+                  "`results/m15_e16_quantization_pilot.json`; `results/m15_e17_quantization_replication.json`",
+                  "A general static-model sensitivity law, a fixed candidate-pool decomposition, "
+                  "training/graph-build variation, or a native query-precision remedy.")
+    d = R("m15_e18_query_precision.json")
+    rows, gain_rows, headroom = [], [], []
+    for dataset, result in d["datasets"].items():
+        for tier in ("zero", "nano", "stella-query"):
+            for budget in d["candidate_budgets"]:
+                sign = result["rows"][f"{tier}/sign_query/{budget}"]["expected_original_top10_coverage"]
+                full = result["rows"][f"{tier}/float_query/{budget}"]["expected_original_top10_coverage"]
+                c = result["precision_deltas"][f"{tier}/{budget}"]
+                rows.append([dataset, tier, budget, f4(sign), f4(full), f"{100*c['float_minus_sign']:.2f}"])
+                if budget == 40:
+                    headroom.append([dataset, tier, f"{(full-sign)/(1-sign):.3f}",
+                                     f"{result['query_magnitude_diagnostic'][tier]['mean_cosine_to_sign_direction']:.3f}"])
+        for other in ("nano", "stella-query"):
+            c = result["tier_interactions"][f"zero_minus_{other}/40"]
+            gain_rows.append([dataset, f"Zero minus {other}", f"{100*c['mean']:.2f}",
+                              f"[{100*c['query_bootstrap95'][0]:.2f}, {100*c['query_bootstrap95'][1]:.2f}]"])
+    exact = card("C15. Query precision with document codes fixed", "exploratory (E18)",
+                 "Retaining query magnitudes increases original-top10 candidate coverage on identical "
+                 "document sign codes; all tiers benefit. Candidate budget 40 is primary.",
+                 table(["workload", "tier", "candidates", "sign query", "graded query", "gain (pp)"], rows)
+                 + "\n\nExtra absolute Zero gain at 40 candidates, with paired query intervals:\n\n"
+                 + table(["workload", "contrast", "gain (pp)", "query-bootstrap95 (pp)"], gain_rows)
+                 + "\n\nError headroom and mean angular distortion at 40 candidates:\n\n"
+                 + table(["workload", "tier", "fraction of sign misses recovered", "mean cosine to sign query"], headroom)
+                 + "\n\nCoverage is expected inclusion under uniform boundary-tie selection, with "
+                   "each tier's E16/E17 original exact-top10 target. Query-vector hashes match those "
+                   "receipts. Graded scoring is original normalized q dot sign(d), not native scalar8. "
+                   "Global candidate budgets are not native per-segment oversampling. Larger absolute "
+                   "Zero gains have more miss headroom and do not establish greater proportional sensitivity.",
+                 "`results/m15_e18_query_precision.json`",
+                 "HNSW performance, nDCG gain, serving latency, native 8-bit query performance, "
+                 "or a new quantizer; no graph is used.")
+    return native + "\n" + exact
+
+
 if __name__ == "__main__":
     parts = ["# M15 evidence, in plain language\n",
              "Generated by `python m15/make_evidence.py` from committed result files. Each card "
              "states one claim of the paper, whether it was registered before observation or is "
              "exploratory, the numbers, the file that holds them, and what the result cannot show.\n",
              beir(), latency(), towers(), towers_extended(), mechanisms(), oracle(), prefixes(), routers(), blend(),
-             system(), failure_modes(), heldout(), decision_audit()]
+             system(), failure_modes(), heldout(), decision_audit(), precision_followup()]
     OUT.write_text("\n".join(p for p in parts if p))
     print("wrote", OUT.relative_to(REPO))

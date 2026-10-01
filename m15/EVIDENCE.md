@@ -425,3 +425,82 @@ Zero: 20 minutes retraining and 8-12 hours target preparation; approximate plann
 Screen timing: coarse historical intervals between output files, not an isolated cold-start benchmark. Excludes model downloads, data preparation, full document-index construction; Stella reuses cached fit-query vectors.
 
 **Cannot show.** The strongest public teacher is a hindsight selection rule, not a prospectively tested model-card recommendation.; The screen chooses closed-form tables, not the trained Zero recipe or transformer students.; All-six and clean-four targets differ; checkpoint selection is task dependent.; Dimension and retention share a teacher-quality confound; no causal size claim.; No new training or evaluation access; only published aggregate receipts were read.
+
+## C14. Quantized scoring on the same collection
+
+**Label:** exploratory (E16, E17). **Source:** `results/m15_e16_quantization_pilot.json`; `results/m15_e17_quantization_replication.json`
+
+**Claim.** Binary scoring adds a workload-dependent neighbor-recovery penalty. Primary ef64; 192 deterministic queries per workload. Original scoring uses ignore=true on the same binary collection, not a separately built original-vector graph.
+
+| workload | tier | original scoring | binary rescore1 | binary rescore4 |
+|---|---|---|---|---|
+| fiqa | zero | 0.9802 | 0.8635 | 0.9521 |
+| fiqa | nano | 0.9964 | 0.9453 | 0.9927 |
+| fiqa | stella-query | 0.9995 | 0.9766 | 0.9990 |
+| msmarco1m | zero | 0.9234 | 0.8844 | 0.9240 |
+| msmarco1m | nano | 0.9682 | 0.9375 | 0.9682 |
+| msmarco1m | stella-query | 0.9797 | 0.9578 | 0.9807 |
+
+Extra Zero recovery penalty, percentage points:
+
+| workload | contrast | extra loss (pp) | query-bootstrap95 (pp) |
+|---|---|---|---|
+| fiqa | Zero minus nano | 6.56 | [4.69, 8.44] |
+| fiqa | Zero minus stella-query | 9.38 | [7.40, 11.41] |
+| msmarco1m | Zero minus nano | 0.83 | [-1.15, 2.81] |
+| msmarco1m | Zero minus stella-query | 1.72 | [0.00, 3.49] |
+
+The 1M primary Zero-versus-Nano contrast includes zero; the Zero-versus-Stella interval touches zero. Secondary ef16/256 are in the receipts, not substituted for the primary display. Each tier retains its own exact-neighbor target. Native rescoring can change global candidates through segment merging.
+
+**Cannot show.** A general static-model sensitivity law, a fixed candidate-pool decomposition, training/graph-build variation, or a native query-precision remedy.
+
+## C15. Query precision with document codes fixed
+
+**Label:** exploratory (E18). **Source:** `results/m15_e18_query_precision.json`
+
+**Claim.** Retaining query magnitudes increases original-top10 candidate coverage on identical document sign codes; all tiers benefit. Candidate budget 40 is primary.
+
+| workload | tier | candidates | sign query | graded query | gain (pp) |
+|---|---|---|---|---|---|
+| fiqa | zero | 10 | 0.4968 | 0.6422 | 14.53 |
+| fiqa | zero | 40 | 0.8217 | 0.9297 | 10.80 |
+| fiqa | zero | 100 | 0.9249 | 0.9875 | 6.26 |
+| fiqa | nano | 10 | 0.6084 | 0.7083 | 10.00 |
+| fiqa | nano | 40 | 0.9137 | 0.9771 | 6.33 |
+| fiqa | nano | 100 | 0.9811 | 0.9974 | 1.63 |
+| fiqa | stella-query | 10 | 0.6714 | 0.7651 | 9.38 |
+| fiqa | stella-query | 40 | 0.9638 | 0.9922 | 2.84 |
+| fiqa | stella-query | 100 | 0.9979 | 1.0000 | 0.21 |
+| msmarco1m | zero | 10 | 0.6243 | 0.7250 | 10.07 |
+| msmarco1m | zero | 40 | 0.9010 | 0.9677 | 6.67 |
+| msmarco1m | zero | 100 | 0.9636 | 0.9938 | 3.02 |
+| msmarco1m | nano | 10 | 0.6861 | 0.7760 | 8.99 |
+| msmarco1m | nano | 40 | 0.9484 | 0.9833 | 3.49 |
+| msmarco1m | nano | 100 | 0.9850 | 0.9979 | 1.29 |
+| msmarco1m | stella-query | 10 | 0.7302 | 0.8036 | 7.34 |
+| msmarco1m | stella-query | 40 | 0.9685 | 0.9932 | 2.47 |
+| msmarco1m | stella-query | 100 | 0.9939 | 1.0000 | 0.61 |
+
+Extra absolute Zero gain at 40 candidates, with paired query intervals:
+
+| workload | contrast | gain (pp) | query-bootstrap95 (pp) |
+|---|---|---|---|
+| fiqa | Zero minus nano | 4.46 | [2.53, 6.43] |
+| fiqa | Zero minus stella-query | 7.96 | [6.13, 9.78] |
+| msmarco1m | Zero minus nano | 3.17 | [1.58, 4.75] |
+| msmarco1m | Zero minus stella-query | 4.20 | [2.65, 5.80] |
+
+Error headroom and mean angular distortion at 40 candidates:
+
+| workload | tier | fraction of sign misses recovered | mean cosine to sign query |
+|---|---|---|---|
+| fiqa | zero | 0.606 | 0.798 |
+| fiqa | nano | 0.734 | 0.794 |
+| fiqa | stella-query | 0.784 | 0.796 |
+| msmarco1m | zero | 0.674 | 0.798 |
+| msmarco1m | nano | 0.677 | 0.796 |
+| msmarco1m | stella-query | 0.785 | 0.796 |
+
+Coverage is expected inclusion under uniform boundary-tie selection, with each tier's E16/E17 original exact-top10 target. Query-vector hashes match those receipts. Graded scoring is original normalized q dot sign(d), not native scalar8. Global candidate budgets are not native per-segment oversampling. Larger absolute Zero gains have more miss headroom and do not establish greater proportional sensitivity.
+
+**Cannot show.** HNSW performance, nDCG gain, serving latency, native 8-bit query performance, or a new quantizer; no graph is used.

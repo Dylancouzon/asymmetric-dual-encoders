@@ -35,6 +35,11 @@ s = s.replace(r"{\def\LTcaptype{none}",
 s = s.replace(r"\textbf{Table 3.}", r"\Needspace{16\baselineskip}" + "\n" + r"\textbf{Table 3.}")
 s = s.replace("The originally held-out four,", r"\Needspace{20\baselineskip}" + "\n" +
               "The originally held-out four,")
+# Keep the five-row router comparison intact when the expanded main text shifts it.
+router_start = s.index(r"\subsubsection{C.2 Frozen routers}")
+s = s[:router_start] + s[router_start:].replace(
+    r"{\def\LTcaptype{none}",
+    r"\Needspace{18\baselineskip}" + "\n" + r"{\def\LTcaptype{none}", 1)
 p.write_text(s)
 PY
 tectonic -X compile paper.tex --keep-logs > build.log 2>&1 || { tail -30 build.log; exit 1; }

@@ -3,7 +3,7 @@
 2026-10-01. The owner welcomes justified additional research and compute, with no full-model
 retraining and no publication rush. The owner also proposes quantization, provided comparisons
 remain fair. This file records the scientific question, experiments, findings, and next decisions.
-The v12 paper is a credible applied study; stronger discoveries require evidence, not stronger wording.
+The v13 paper is a credible applied study; stronger discoveries require evidence, not stronger wording.
 
 ## The question worth spending on
 
@@ -52,7 +52,7 @@ In particular, native rescore/no-rescore return different neighbor sets even wit
 The original stored vectors are fp16 values decoded to fp32, not fresh full-precision encodes.
 The independent pilot review finds no essential control defect and recommends a second-scale test.
 
-## Next sequence
+## Original sequence (now completed through the precision control)
 
 1. **E17 replication:** repeat the paired same-graph request-option test on the cached 1M MS MARCO
    diagnostic, with the same deterministic 192-query sample rule and fixed condition grid. The
@@ -109,7 +109,7 @@ Both conditions use identical document sign codes; only sign(q) versus normalize
 Expected inclusion averages over uniform selection at quantized-score boundary ties. No graph,
 new training, document encoding, or native scalar8/latency claim is involved.
 
-Primary global candidate budget40:
+Primary global candidate budget 40:
 
 | Workload | Tier | Sign query coverage | Graded query coverage | Gain (percentage points) |
 |---|---|---:|---:|---:|
@@ -120,12 +120,13 @@ Primary global candidate budget40:
 | 1M diagnostic | Nano | 0.9484 | 0.9833 | 3.49 |
 | 1M diagnostic | Stella | 0.9685 | 0.9932 | 2.47 |
 
-The paired extra Zero gain is4.46 points versus Nano on FiQA (95% query interval2.53–6.43), and
-3.17 on the1M diagnostic (1.58–4.75). All budgets10/40/100 are retained. The larger absolute gain
-has more error headroom: the fraction of sign-mode misses restored at40 is60.6%/67.4% for Zero
-on FiQA/1M, versus73.4%/67.7% Nano and78.4%/78.5% Stella. Therefore no claim of universally or
+The paired extra Zero gain is 4.46 points versus Nano on FiQA (95% query interval 2.53–6.43), and
+3.17 on the 1M diagnostic (1.58–4.75). All budgets 10/40/100 are retained. The larger absolute gain
+has more error headroom: the fraction of sign-mode misses restored at 40 is 60.6%/67.4% for Zero
+on FiQA/1M, versus 73.4%/67.7% Nano and 78.4%/78.5% Stella. Therefore no claim of universally or
 proportionally greater static-model sensitivity follows. Mean cosine from full query to its sign
-direction is about0.795–0.798 for every tier; angular distortion is not larger for Zero.
+direction is about 0.80 for every tier. Zero does not show a larger mean angular distortion;
+the source of the coverage difference remains unresolved.
 
 The useful finding is **query computation and query precision are separate budgets**, including
 for a no-transformer encoder. Preserving magnitudes at search can recover substantial original

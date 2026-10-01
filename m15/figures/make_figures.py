@@ -189,7 +189,42 @@ def f5_routing():
     save(fig, "f5_routing")
 
 
+def f6_precision():
+    """E18: identical sign-coded documents, only query scoring precision changes."""
+    from matplotlib.lines import Line2D
+    study = R("m15_e18_query_precision.json")["datasets"]
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.3), sharey=True)
+    budgets = (10, 40, 100)
+    for ax, ds, title in zip(axes, ("fiqa", "msmarco1m"),
+                             ("FiQA, 57,638 documents", "1M MS MARCO diagnostic")):
+        rows = study[ds]["rows"]
+        for tier, color in (("zero", C["zero"]), ("nano", C["nano"]),
+                            ("stella-query", C["stella"])):
+            for mode, style in (("sign_query", "--"), ("float_query", "-")):
+                values = [rows[f"{tier}/{mode}/{c}"]["expected_original_top10_coverage"]
+                          for c in budgets]
+                ax.plot(budgets, values, linestyle=style, marker="o", markersize=4,
+                        color=color, linewidth=1.7)
+        ax.axvline(40, color="#bbbbbb", linewidth=0.8, linestyle=":")
+        ax.set_xscale("log")
+        ax.set_xticks(budgets, [str(c) for c in budgets])
+        ax.set_ylim(0.45, 1.015)
+        ax.set_title(title, loc="left", fontsize=9)
+        ax.set_xlabel("Global candidate count (log scale)")
+    axes[0].set_ylabel("Original top-10 coverage in candidate pool")
+    handles = [Line2D([0], [0], color=C[k], linewidth=2, label=label)
+               for k, label in (("zero", "Zero"), ("nano", "Nano"), ("stella", "Stella"))]
+    handles += [Line2D([0], [0], color=C["muted"], linestyle=style, label=label)
+                for style, label in (("--", "Sign query"), ("-", "Graded query"))]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.99),
+               ncol=5, frameon=False, fontsize=8)
+    fig.tight_layout(rect=(0, 0, 1, 0.90))
+    for ext in ("pdf", "png"):
+        fig.savefig(OUT / f"f6_precision.{ext}", dpi=200)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
-    for f in (f1_frontier, f2_per_dataset, f3_towers, f4_system, f5_routing):
+    for f in (f1_frontier, f2_per_dataset, f3_towers, f4_system, f5_routing, f6_precision):
         f()
         print("wrote", f.__name__)

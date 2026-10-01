@@ -141,18 +141,20 @@ frozen Stella document space: Zero, a token lookup table, and Nano, a
 81.4\% and 90.5\% of Stella's exact-search nDCG@10 on BEIR-15. On a
 laptop CPU, warmed encoding takes 44 microseconds, 2.25 ms, and 31.6 ms
 for Zero, Nano, and Stella. All three search the same populated Qdrant
-collections without rebuilding between encoder batches. Yet
-compatibility does not imply identical search cost: Zero loses more
-quality to a narrow HNSW search. On one binary-quantized million-passage
-diagnostic, encode-plus-search takes 1.11, 2.48, and 21.3 ms while
-staying within 1\% of each tier's own exact quality. A separate
-closed-form table study across 26 teachers finds that the strongest
-registered teacher yields the weakest registered table; directly
-screening tables transfers better than ranking teachers. Nano's
-optimization loop costs about \$95 at the recorded rental rate,
-excluding target preparation and research. The study establishes
-selectable query budgets over one index and measures the quality,
-search, and construction constraints on that flexibility.
+collections without rebuilding between encoder batches. Compatibility
+does not imply identical search cost: Zero loses more quality to a
+narrow HNSW search, and its approximately 62-fold encoding advantage
+over Nano becomes 2.2-fold including retrieval on one binary-quantized
+million-passage diagnostic, preserving each tier's own exact quality
+within 1\%. A separate controlled scoring experiment holds document sign
+codes fixed and retains query magnitudes. At 40 candidates, this raises
+Zero's original-top10 coverage from 82.2\% to 93.0\% on FiQA and 90.1\%
+to 96.8\% on the 1M diagnostic, with larger absolute gains than the
+other tiers but no native latency claim. A closed-form table study
+across 26 teachers also finds that the strongest registered teacher
+yields the weakest registered table. These results connect selectable
+query compute with retrieval quality, search effort, and query
+precision; build accounting shows what constructing the family requires.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -190,6 +192,15 @@ binary index preserves useful speed differences; an unquantized index
 can absorb nearly all of Zero's advantage over Nano. Index compatibility
 and search effort are separate properties.
 
+A second finding separates query computation from query precision.
+Default one-bit scoring discards query magnitudes as well as document
+magnitudes. Keeping the document codes fixed, graded query scoring
+restores 10.8 percentage points of Zero's original-neighbor coverage at
+40 candidates on FiQA and 6.7 on the 1M diagnostic. All tiers improve;
+Zero's larger absolute gain also has more error headroom. The controlled
+result motivates measuring query precision separately, even when the
+query encoder runs no neural network.
+
 The tiers also disagree on individual queries. A relevance-label oracle
 can match always-Nano while sending only 15\% of queries to Nano on the
 12 non-held-out datasets. Our simple frozen routers do not approach that
@@ -209,11 +220,12 @@ historical rental rate, while the complete preparation and research
 effort costs more.
 
 The contributions are the measured shared-index quality and compute
-choices, the query-dependent ANN penalty over a fixed document graph,
-and a bounded cross-teacher table comparison with explicit build
-accounting. Public model artifacts, a runnable inference quickstart, and
-the full evidence trail make the study inspectable. We do not claim a
-new architecture or a production routing policy.
+choices, the query-dependent ANN penalty, a fixed-document-code
+query-precision control, and a bounded cross-teacher table comparison
+with explicit build accounting. Public model artifacts, a runnable
+inference quickstart, and the full evidence trail make the study
+inspectable. We do not claim a new architecture or a production routing
+policy.
 
 \subsection{2. Related work and
 contribution}\label{related-work-and-contribution}
@@ -249,12 +261,22 @@ addresses index reuse when retrieval models change {[}BCT, FCT{]}. Our
 routing experiments are a bounded study of two compatible query
 encoders, not a claim to invent adaptive retrieval.
 
+\textbf{Query distributions and approximate search.} OOD-DiskANN and
+RoarGraph establish that queries differing from the indexed-data
+distribution can make graph search harder; both use query information
+when constructing an index {[}OOD-DiskANN, RoarGraph{]}. QA-Cos improves
+binary-sketch candidate selection with query-aware decoding
+{[}QA-Cos{]}. Our work does not introduce OOD search or magnitude-aware
+scoring. We measure compatible encoder substitutions and a
+query-precision control over fixed text document representations.
+
 Our empirical contribution is to measure what interchangeable query
 representations buy over fixed document vectors: exact quality, encoding
-cost, and the extra approximate-search work. The cross-teacher table
-study and build accounting explain design and construction decisions
-behind such a family. We do not claim a new distillation architecture, a
-universal teacher-selection rule, or a generally superior small model.
+cost, approximate-search work, and the candidate information lost to
+query precision. The cross-teacher table study and build accounting
+explain design and construction decisions behind such a family. We do
+not claim a new distillation architecture, a universal teacher-selection
+rule, or a generally superior small model.
 
 \subsection{3. Constella: one document index, three query
 tiers}\label{constella-one-document-index-three-query-tiers}
@@ -388,6 +410,9 @@ policy remains a research opportunity.
 \subsection{4. Changing the query encoder changes the
 search}\label{changing-the-query-encoder-changes-the-search}
 
+\subsubsection{4.1 Encoding savings and graph-search
+work}\label{encoding-savings-and-graph-search-work}
+
 \textbf{A table's query needs a wider graph search.} We served each tier
 from Qdrant (v1.19.1, native macOS build) over a one-million-passage MS
 MARCO subset that keeps every judged positive and fills the rest at
@@ -459,6 +484,68 @@ encoder changes, even when the document vectors and graph are unchanged.
 The table's exact quality loss and its approximate-search loss are
 distinct. The speedup remaining after retuning is still useful on the
 measured workload, but it is much smaller than its encoding speedup.
+
+\subsubsection{4.2 Query precision is a separate
+budget}\label{query-precision-is-a-separate-budget}
+
+\textbf{A same-collection diagnostic.} E2's precision configurations
+used separate graph builds. To isolate native search scoring, we ran 192
+deterministically selected queries on one fixed binary collection per
+workload, switching original-vector scoring (\texttt{ignore=true}),
+binary scoring, rescoring, and oversampling
+(\path{results/m15_e16_quantization_pilot.json},
+\path{results/m15_e17_quantization_replication.json}, exploratory).
+At the primary \texttt{ef} 64, binary scoring with rescoring and
+oversampling 1 loses 11.7 points of exact-neighbor recovery for Zero on
+FiQA, 5.1 for Nano, and 2.3 for Stella. The 1M replication is weaker:
+3.9, 3.1, and 2.2 points, with extra Zero-versus-Nano uncertainty
+including zero. Secondary \texttt{ef} settings do not replace that
+primary result. Native rescoring also changes collection-level candidate
+selection through segment merging; these treatments are not a pure
+rerank of one fixed global pool.
+
+\textbf{Hold document codes fixed and change only query precision.} The
+tagged Qdrant 1.19.1 implementation defaults to sign-coded queries for
+one-bit documents {[}Qdrant 1.19.1{]}. We separately compare exhaustive
+\texttt{sign(q)} dot \texttt{sign(d)} scores with original normalized
+\texttt{q} dot the same \texttt{sign(d)}, using the identical 192 query
+vectors and each tier's original exact-top10 target. Global candidate
+budgets are 10, 40, and 100; 40 is the primary display. Coverage is
+expected target-neighbor inclusion under uniform selection at boundary
+ties (\path{results/m15_e18_query_precision.json}, exploratory). No
+graph or new encoder is used.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Exact candidate selection on fixed one-bit document codes. Each tier retains its own original-vector top10 target; solid lines retain query magnitudes, dashed lines keep signs only. Coverage averages expected inclusion under boundary ties over 192 queries per workload; 40 candidates is the primary display. This is an exact-scoring control, not a native ANN or latency benchmark.}]{figures/f6_precision.pdf}}
+\caption{Exact candidate selection on fixed one-bit document codes. Each
+tier retains its own original-vector top10 target; solid lines retain
+query magnitudes, dashed lines keep signs only. Coverage averages
+expected inclusion under boundary ties over 192 queries per workload; 40
+candidates is the primary display. This is an exact-scoring control, not
+a native ANN or latency benchmark.}
+\end{figure}
+
+At 40 candidates, Zero's coverage rises from 0.8217 to 0.9297 on FiQA
+and from 0.9010 to 0.9677 on the 1M diagnostic. Nano gains 6.33 and 3.49
+percentage points, and Stella 2.84 and 2.47. The extra absolute Zero
+gain versus Nano is 4.46 points on FiQA (95\% paired query interval
+2.53-6.43) and 3.17 on the 1M diagnostic (1.58-4.75). Larger absolute
+gains have more headroom: Zero does not recover a larger fraction of its
+sign-mode misses than the other tiers. Mean cosine to the sign-query
+direction is about 0.80 for every tier. Zero does not show a larger mean
+angular distortion; the source of the coverage difference remains
+unresolved. Full budget rows and miss fractions are in the evidence
+file.
+
+Preserving query magnitudes recovers useful candidate information
+without changing the document codes or the encoder. Query precision
+therefore remains a separate choice even when encoding is almost
+negligible. The graded scorer is an analytical control, not native 8-bit
+query encoding; global candidate budgets are not per-segment
+oversampling, and candidate coverage is not nDCG or serving latency.
+Validating the supported native precision setting and its cost is the
+next deployment test.
 
 \subsection{5. Building compatible query
 encoders}\label{building-compatible-query-encoders}
@@ -689,6 +776,14 @@ price recorded compute and estimates; they omit the complete research
 and engineering effort. All-tier resident memory, encoder-load switching
 overhead, and concurrent dispatch were not measured.
 
+The new precision studies use 192 selected queries per workload and
+fixed trained models. Native option contrasts are workload-sensitive,
+and the 1M primary interaction is weaker than FiQA. E18 isolates sign
+versus graded query scoring on fixed document codes; it does not
+evaluate native scalar8 performance, graph traversal, or relevance
+gains. Absolute candidate gains partly reflect different error headroom,
+not an architecture sensitivity law.
+
 A symmetric small model is also a real alternative. Nano scores below
 bge-small and LEAF on their own indexes in our BEIR-15 comparison. Its
 practical value depends on preserving an existing Stella index and
@@ -706,6 +801,13 @@ vectors changes the work needed to traverse the same document graph, so
 an encoder benchmark cannot determine the deployment saving.
 Shared-index compatibility also exposes routing headroom, although the
 simple policies tested here fall well short of the label-aware oracle.
+
+Query compute and query precision are separate budgets. With document
+sign codes fixed, preserving query magnitudes improves original-neighbor
+candidate coverage for all three tiers, with substantial absolute gains
+for Zero. This gives a controlled reason to test search precision when
+adding a cheap query path; the native cost and geometry mechanism remain
+open.
 
 Building such a family requires evaluating the intended cheap
 representation, not only its teacher. The strongest registered teacher
@@ -840,6 +942,7 @@ router with random routing at its realized Nano share and with the
 oracle at that share (\path{results/m15_e6_router.json},
 \path{results/m15_e10_router.json}, registered).
 
+\Needspace{18\baselineskip}
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
@@ -1059,11 +1162,12 @@ measured training time, priced component cost, and historical estimates.
 \subsection{References}\label{references}
 
 Primary-source checks and supporting passages are recorded in
-\path{m15/RELATED_WORK.md} and
-\path{m15/REVIEWS/2026-10-01-owner-literature.md}.
+\path{m15/RELATED_WORK.md},
+\path{m15/REVIEWS/2026-10-01-owner-literature.md},
+\path{m15/REVIEWS/2026-10-01-followup-literature.md}, and
+\path{m15/REVIEWS/2026-10-01-quantization-semantics.md}.
 
 \begin{itemize}
-\tightlist
 \item
   {[}QED{]} Yuxuan Wang and Hong Lyu. Query Encoder Distillation via
   Embedding Alignment is a Strong Baseline Method to Boost Dense
@@ -1128,6 +1232,27 @@ Primary-source checks and supporting passages are recorded in
   Oncel Tuzel, and Hadi Pouransari. Forward Compatible Training for
   Large-Scale Embedding Retrieval Systems. CVPR, 2022.
   \href{https://arxiv.org/abs/2112.02805}{arXiv:2112.02805}.
+\item
+  {[}OOD-DiskANN{]} Shikhar Jaiswal, Ravishankar Krishnaswamy, Ankit
+  Garg, Harsha Vardhan Simhadri, and Sheshansh Agrawal. OOD-DiskANN:
+  Efficient and Scalable Graph ANNS for Out-of-Distribution Queries.
+  2022. \href{https://arxiv.org/abs/2211.12850}{arXiv:2211.12850}.
+\item
+  {[}RoarGraph{]} Meng Chen, Kai Zhang, Zhenying He, Yinan Jing, and X.
+  Sean Wang. RoarGraph: A Projected Bipartite Graph for Efficient
+  Cross-Modal Approximate Nearest Neighbor Search. PVLDB 17(11):
+  2735-2749, 2024.
+  \href{https://www.vldb.org/pvldb/vol17/p2735-chen.pdf}{Paper}.
+\item
+  {[}QA-Cos{]} Daehun Nyang. Beyond Hamming: Query-Aware Decoding of
+  Binary Cosine Sketches. ICML 2026, PMLR 306: 94126-94143.
+  \href{https://proceedings.mlr.press/v306/nyang26a.html}{Proceedings}.
+\item
+  {[}Qdrant 1.19.1{]} Qdrant contributors. Binary query encoding and
+  vector-index search implementation, v1.19.1.
+  \href{https://github.com/qdrant/qdrant/tree/v1.19.1}{Tagged source}.
+  Exact source paths and semantics are recorded in
+  \path{m15/REVIEWS/2026-10-01-quantization-semantics.md}.
 \end{itemize}
 
 \end{document}

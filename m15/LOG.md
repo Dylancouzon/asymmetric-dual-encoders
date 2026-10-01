@@ -397,7 +397,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Committed source/method before running. Both existing query samples and each model's encoded
   vectors match their E16/E17 hashes; document sign codes stay fixed. Compared sign versus
   full-query exhaustive scores at global candidate budgets10/40/100, primary40, with expected
-  inclusion under boundary ties. No graph, new training/encoding, or rental; about71 seconds.
+  inclusion under boundary ties. No graph, new training/document encoding, or rental; about 71 seconds.
 - At40, Zero coverage82.17→92.97% FiQA and90.10→96.77%1M. Extra absolute gains versus Nano and
   Stella have positive paired intervals on both workloads. All tiers improve. Larger Zero gains
   have greater miss headroom; proportional sensitivity and larger angular distortion are not
@@ -407,3 +407,23 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   not native8bit speed or HNSW performance. Both the weak primary E17 interaction and these
   positive candidate results will remain in the paper. Next is a scoped native precision/cost
   validation, not full retraining or a broad quantizer search.
+
+### V13: controlled query precision joins the broader Constella paper
+
+- Added E16–E18 to the paper as a fixed-index search follow-up, with a new precision figure and
+  evidence cards C14/C15. The strong native FiQA pilot and weaker primary 1M replication both
+  remain visible. E18 holds document sign codes fixed and compares sign versus graded query
+  scoring; candidate coverage is distinct from nDCG, HNSW, and latency.
+- The main question remains selectable query compute over one frozen index. Hot swapping and
+  no-transformer queries are explicit, bounded capabilities. Teacher choice and component build
+  accounting support construction, rather than displacing the served family's system finding.
+- Added primary OOD-DiskANN, RoarGraph, QA-Cos, and tagged Qdrant references (18 printed entries).
+  Updated NOVELTY, RELATED_WORK, FOLLOWUP, and HANDOFF. Native query-precision cost at matched
+  recovery/relevance is the next justified study, not an already demonstrated serving remedy.
+- Independent Sol reader passes the direction and interest. Astra passes claim scopes after one
+  correction: similar mean angular distortion does not exclude angular mechanisms. Its focused
+  correction check closes that issue. Review and root dispositions are in the v13 review files.
+- Regenerated evidence and the 15-page PDF. Rendered and inspected all pages, verified the new
+  figure at page resolution, and kept the five-row router table together. Build has no missing
+  glyph/clipping warning; git diff --check passes. Three new studies used no training, fresh
+  document encoding, or rental; historical M15 cloud spend remains $22.79.

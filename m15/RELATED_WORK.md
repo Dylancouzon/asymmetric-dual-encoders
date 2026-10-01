@@ -106,3 +106,15 @@ Seen only as search-result titles/snippets (not read): https://arxiv.org/abs/240
 ## Verification update, 2026-10-01
 
 `REVIEWS/2026-10-01-owner-literature.md` records primary-source checks for all 14 printed references, corrected bibliography entries, and the closest overlaps. NanoVDR's positive teacher-quality association varies datasets for a fixed teacher, not teachers. Cheap training, frozen-index reuse, static/contextual switching, and full-BEIR evaluation already have prior art. The paper claims the cross-teacher table comparison and measured same-index search penalty, with scoped component-cost accounting. No unverified LEAF venue is printed. The bibliography now gives full entries for LightRetriever and QPP instead of placeholders.
+
+
+## Fixed-index search and precision update, 2026-10-01
+
+V13 adds four primary references, making 18 printed entries. `REVIEWS/2026-10-01-followup-literature.md` records the broader search; `REVIEWS/2026-10-01-quantization-semantics.md` checks the tested release against tagged source. Bibliographic identities were checked on the primary pages below.
+
+- OOD-DiskANN, Jaiswal et al. (2022 preprint): https://arxiv.org/abs/2211.12850. Query-distribution effects on graph-search cost are prior art; its remedy uses queries when constructing the graph.
+- RoarGraph, Chen et al. (PVLDB 17(11):2735–2749, 2024): https://www.vldb.org/pvldb/vol17/p2735-chen.pdf. Query-aware graph construction addresses cross-modal query difficulty. Constella measures substituted text query encoders over frozen document representations.
+- Beyond Hamming / QA-Cos, Daehun Nyang (ICML 2026, PMLR306:94126–94143): https://proceedings.mlr.press/v306/nyang26a.html. Query-aware binary candidate decoding is established; E18 is a controlled empirical consequence, not a new quantizer or scorer.
+- Qdrant v1.19.1: https://github.com/qdrant/qdrant/tree/v1.19.1. Exact file links in the semantics review establish the default sign-coded query, scalar8 collection setting, and native rescoring/segment behavior. Current documentation alone cannot certify the tested version.
+
+The native FiQA interaction weakens at the primary setting on the larger diagnostic. E18 instead holds document sign codes fixed and compares exact sign-query and graded-query candidate coverage. The paper claims separate query-computation and query-precision choices, with no native precision speedup, architectural sensitivity law, or proven geometry mechanism.
