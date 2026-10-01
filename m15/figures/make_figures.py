@@ -72,7 +72,7 @@ def f2_per_dataset():
     ax.scatter([r[2] for r in rows], y, color=C["nano"], s=36, zorder=3, label="Nano")
     ax.set_yticks(y, [r[0] for r in rows])
     ax.set_xlabel("Retention of the Stella query path's nDCG@10")
-    ax.legend(frameon=False, loc="lower right")
+    ax.legend(frameon=False, loc="upper left")
     save(fig, "f2_per_dataset")
 
 
