@@ -675,3 +675,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   hypothesis, "independent student" to "second student representation", universal "no single best
   teacher" dropped, Section 5 compressed with numbers moved to Appendix D, precision numbers
   shortened, fidelity observations to Appendix B; figure-level suggestions recorded as P2 debt).
+- Humanizer pass on v16 (calibrated, after the three gates): vocabulary clean (the one "robust"
+  is in a cited title), no em dashes or curly quotes, no negative-parallel openers; 18 sentences
+  over 40 words split into two or three; four remain, two of them tables. Numbers, identifiers,
+  and claim boundaries unchanged.
