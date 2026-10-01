@@ -28,11 +28,15 @@ p = Path("paper.tex")
 s = re.sub(r"\\texttt\{([^{}\s]*/[^{}\s]*)\}",
            lambda m: r"\path{" + m.group(1).replace(r"\_", "_") + "}", p.read_text())
 s = s.replace(r"\usepackage{longtable,booktabs,array}",
-              r"\usepackage{longtable,booktabs,array}" + "\n" + r"\usepackage{needspace}")
+              r"\usepackage{longtable,booktabs,array}" + "\n" + r"\usepackage{needspace,placeins}")
 # Keep the compact setup table intact and the quality table together with its caption.
 s = s.replace(r"{\def\LTcaptype{none}",
               r"\Needspace{18\baselineskip}" + "\n" + r"{\def\LTcaptype{none}", 1)
 s = s.replace(r"\textbf{Table 3.}", r"\Needspace{16\baselineskip}" + "\n" + r"\textbf{Table 3.}")
+s = s.replace(r"\textbf{Table 1.}", r"\Needspace{14\baselineskip}" + "\n" + r"\textbf{Table 1.}")
+# Keep the precision figure in its research section before construction starts.
+s = s.replace(r"\subsection{5. Building compatible query",
+              r"\FloatBarrier" + "\n" + r"\subsection{5. Building compatible query")
 s = s.replace("The originally held-out four,", r"\Needspace{20\baselineskip}" + "\n" +
               "The originally held-out four,")
 # Keep the five-row router comparison intact when the expanded main text shifts it.

@@ -29,6 +29,7 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 - **Training cost and approachability.** The owner suggests that the cost of training small models, and whether others can do it, might be interesting. This is a possible angle, not an instruction to make the entire paper about cost or promise turnkey reproduction.
 - **Teacher differences.** The owner points to evidence that teachers are not interchangeable in their suitability for these small encoders. Its significance and scope should be evaluated, rather than assumed.
 - **Constella capabilities.** Hot swapping and what the owner calls “zero latency options” might belong in the paper. The intent is to assess their fit and value, not to claim literal zero retrieval time or instantaneous model loading.
+- **External comparators.** The owner questions whether bge-small and LEAF, selected as project targets, give a balanced paper comparison. A full model resweep may cost too much; whether and how to include these references remains a question. This is not an instruction to remove unfavorable results or to call these two models universally best in class.
 - **Quantization.** The owner proposes it tentatively and worries about fit and fair comparisons. This authorizes investigating a useful controlled question, not adding a broad quantization sweep or treating the suggestion as a required headline.
 
 ## Auditability and iteration
@@ -59,4 +60,5 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Quantization proposed with uncertainty about relevance and comparability.
 - Owner identifies undefined Stella, asks for a narration pass, and clarifies the audience's prior knowledge.
 - Owner says the paper is generally hard to read and jargon heavy, then challenges anecdotal evidence and asks for some generalizability under skeptical reading.
+- Owner questions the relevance and balance of the selected bge-small/LEAF comparators, and the feasibility of rerunning a much broader roster.
 - Owner requests this persistent record to prevent repeated mistakes.

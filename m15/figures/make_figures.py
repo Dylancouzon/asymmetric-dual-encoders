@@ -42,9 +42,7 @@ def f1_frontier():
     st = mac["stella-query"]
     pts = [("Stella query path", "stella-query", "stella-query", C["stella"], True),
            ("Nano", "nano", "nano-dense", C["nano"], True),
-           ("Zero", "zero", "zero-dense", C["zero"], True),
-           ("bge-small (own index)", "bge-small", "bge-small-en-v1.5", C["ref"], False),
-           ("LEAF (own index)", "leaf-query", "leaf-ir-asym", C["ref"], False)]
+           ("Zero", "zero", "zero-dense", C["zero"], True)]
     fig, ax = plt.subplots(figsize=(4.6, 3.2))
     for label, e, s, color, filled in pts:
         x = e1[e]["p50_ms_median_of_trials"]["medium"]
@@ -54,7 +52,7 @@ def f1_frontier():
         ax.annotate(label, (x, y), textcoords="offset points", xytext=(7, -3), fontsize=8,
                     color=C["ink"])
     ax.set_xscale("log")
-    ax.set_xlabel("Query encode latency, p50 (ms, M5 Pro CPU, log scale)")
+    ax.set_xlabel("Query encoding time, median (ms, M5 Pro CPU, log scale)")
     ax.set_ylabel("BEIR-15 nDCG@10 retention\n(vs Stella query path)")
     ax.set_ylim(0.78, 1.02)
     ax.set_xlim(0.02, 120)

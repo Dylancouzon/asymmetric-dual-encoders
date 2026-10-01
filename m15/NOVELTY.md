@@ -1,6 +1,6 @@
 # M15 contribution and prior-art boundaries
 
-Updated 2026-10-01 for v13 after the owner challenged the earlier cost/teacher emphasis and proposed quantization. Earlier maps remain in git history. Primary-source audits: `REVIEWS/2026-10-01-owner-literature.md`, `REVIEWS/2026-10-01-followup-literature.md`, and `REVIEWS/2026-10-01-quantization-semantics.md`.
+Updated 2026-10-01 for v14 after the owner challenged the earlier cost/teacher emphasis and proposed quantization. Earlier maps remain in git history. Primary-source audits: `REVIEWS/2026-10-01-owner-literature.md`, `REVIEWS/2026-10-01-followup-literature.md`, and `REVIEWS/2026-10-01-quantization-semantics.md`.
 
 ## The research question
 
@@ -30,4 +30,4 @@ NanoVDR's positive teacher-quality association varies datasets for one teacher, 
 
 ## Judgment
 
-V13 is a coherent applied research paper for search engineers, with a useful fixed-index systems finding and a controlled precision follow-up. It is not an architectural breakthrough. A matched-quality native remedy would strengthen it; more checkpoints or undirected precision sweeps would mostly add bulk. The focused reader and correctness reviews are `REVIEWS/2026-10-01-v13-*.md`.
+V14 is a coherent applied research paper for search engineers, with a useful fixed-index systems finding and a controlled precision follow-up. It is not an architectural breakthrough. A matched-quality native remedy would strengthen it; more checkpoints or undirected precision sweeps would mostly add bulk. The focused reader and correctness reviews are `REVIEWS/2026-10-01-v14-*.md`. The narration makes the unit of replication explicit and uses external targets as selected context, not a comprehensive frontier. OWNER_PREFERENCES.md records the intended audience and scientific expectations.

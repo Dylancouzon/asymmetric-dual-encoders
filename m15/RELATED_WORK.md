@@ -118,3 +118,7 @@ V13 adds four primary references, making 18 printed entries. `REVIEWS/2026-10-01
 - Qdrant v1.19.1: https://github.com/qdrant/qdrant/tree/v1.19.1. Exact file links in the semantics review establish the default sign-coded query, scalar8 collection setting, and native rescoring/segment behavior. Current documentation alone cannot certify the tested version.
 
 The native FiQA interaction weakens at the primary setting on the larger diagnostic. E18 instead holds document sign codes fixed and compares exact sign-query and graded-query candidate coverage. The paper claims separate query-computation and query-precision choices, with no native precision speedup, architectural sensitivity law, or proven geometry mechanism.
+
+## Explanatory source update, 2026-10-01 (v14)
+
+The narration pass adds two primary references, bringing the printed bibliography to 20. The Stella model card identifies the model and its default 1024-dimensional output: https://huggingface.co/NovaSearch/stella_en_400M_v5. The official BEIR repository describes the heterogeneous retrieval benchmark and its dataset/evaluation framework: https://github.com/beir-cellar/beir. Read-only copies were fetched into ignored `.firecrawl/v14-stella-model.md` and `.firecrawl/v14-beir-overview.md`. These clarify names and roles; they supply no new performance comparison. Exact model revision and the study's 15-dataset selection remain pinned in the local evidence.

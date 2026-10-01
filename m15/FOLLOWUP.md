@@ -142,3 +142,9 @@ available candidate, but changing that collection setting can rebuild quantizati
 and segment layout must be checked or replicated rather than assumed identical. This requires no
 full model retraining. Only pursue navigation calibration if the precision control leaves a
 substantial unexplained penalty. More arbitrary precision variants would add less information.
+
+## Owner's generalization question (v14)
+
+The current evidence repeats the scoring effect across two workloads within the same Stella-aligned family. It does not repeat across independently trained teacher spaces. Query bootstraps do not close that gap. The 26-teacher experiment is substantial evidence for its table recipe, but does not validate the probe for trained Zero/Nano.
+
+The next experiment depends on the claim to strengthen. Native magnitude-preserving query precision at matched recovery/relevance and measured cost strengthens a deployment recommendation. A compact C40 scoring replication in a contrasting teacher space, using that teacher's query path and a fitted closed-form table, tests reach beyond Stella without full student retraining. Check artifact availability before budgeting it. One added space is a stress test, not an architecture law. Choose the scientific question before launching either; do not turn the owner's concern into an undirected model sweep.

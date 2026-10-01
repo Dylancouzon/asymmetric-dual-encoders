@@ -427,3 +427,26 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   figure at page resolution, and kept the five-row router table together. Build has no missing
   glyph/clipping warning; git diff --check passes. Three new studies used no training, fresh
   document encoding, or rental; historical M15 cloud spend remains $22.79.
+
+### V14: readable narration, skeptical reach, and reference selection
+
+- Owner identifies undefined Stella, requests a narration pass for a seasoned search engineer,
+  and says the paper is broadly jargon heavy. Rewrote the abstract and main text around the
+  practical question, with model roles and techniques explained where used. Added an explicit
+  map of quality, encoding, approximate search, and candidate-scoring measurements.
+- Owner challenges anecdotal/generalization limits. Independent scope audit distinguishes the
+  alignment capability, multi-dataset artifact evaluation, two-workload within-family replication,
+  and recipe-specific teacher screen. Section 6 now makes those units and limits explicit.
+  Counterexamples justify direct testing; they do not establish frequency across architectures.
+- Owner questions selected bge-small/LEAF targets and a costly broad rerun. Kept the main figure
+  strictly same-index, disclosed the historical selection and Nano's lower own-index scores in
+  the main text, and preserved exact selected-reference and all registered negative/unresolved
+  outcomes in Appendix B. No new comparison runs or favorable replacement references.
+- Created and pushed OWNER_PREFERENCES.md with links from instructions and handoff, then recorded
+  the later comparator question. It distinguishes tentative owner ideas from agent decisions.
+- Sol narration and Astra focused scientific reviews pass. Root dispositions and skeptical
+  assessment are in REVIEWS/2026-10-01-v14-synthesis.md. Two added explanatory references were
+  checked on the primary Stella card and BEIR repository; bibliography has 20 entries.
+- Rebuilt and visually inspected the 18-page PDF, kept the quality caption/table together and
+  precision figure before the construction section. No overflow/missing-glyph warnings;
+  git diff --check passes. Existing result JSONs and evidence numbers remain unchanged.
