@@ -897,3 +897,30 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   quality and encoding-plus-search trade-off, not a claim that query compute has no value.
 - Recorded owner direction, rebuilt the PDF, checked the opening-page rendering and text,
   and ran `git diff --check`.
+
+### 2026-10-02: owner reading feedback, narration and repository hygiene
+
+- Owner requests a necessity pass and direct findings instead of repeated statements of what
+  the work is not or does not do. Owner also explicitly requests durable preference logging
+  to prevent later iterations reverting these decisions. Recorded both in OWNER_PREFERENCES.md.
+- Tightened the abstract and main narrative: lead with the conditional quality/width finding,
+  explain constructions and measures before interpreting them, remove repeated previews,
+  summaries, defensive qualifications, and procedural diary detail. Main prose, excluding
+  headings, tables, and figures, falls from 4,520 to 3,664 words (about 19%).
+- Moved dataset-specific Constella observations to Appendix A, family-adjusted fits and
+  published retention context to Appendix B, and internal workload observations to Appendix D.
+  Updated PAPER_EVIDENCE_MAP.md with these dispositions; evidence and method history remain
+  available. All scientific Markdown tables and the manuscript's numerical-token set are
+  unchanged. No experiment or result payload was modified.
+- Retained actual adverse findings, prospective uncertainty, predictive-versus-causal scope,
+  related-family sensitivity, own-exact-neighbor versus relevance recovery, and the distinction
+  between search effort and latency. Constella quality and timing workloads remain separate.
+  The E22 description retains its eight-family held-out protocol without an incorrect ninth
+  family. Removed unsupported baseline-as-floor phrasing.
+- Updated README.md, HANDOFF.md, and REVIEW_GUIDE.md to identify these owner-directed revisions
+  and distinguish them from the earlier reviewer-signed snapshot. No new independent reviewer
+  sign-off is claimed.
+- Rebuilt and visually inspected the 19-page PDF. Adjusted compact-table space reservations,
+  figure barriers, widow/orphan penalties, and Appendix A figure numbering/caption handling.
+  Long appendix tables retain their multipage layout. Verified unchanged scientific tables and
+  numerical-token set, shell syntax, and whitespace; no retraining or new experiments were run.

@@ -87,3 +87,13 @@ Appendices A to D. Rows above map the same receipts; new or moved material:
 | §4.3 prospective test, Table C prospective rows, Appendix B prospective roster, Figure 1 triangles | [E24 amended assembly](../results/m15_e24_prospective_amend1.json) (first assembly [kept](../results/m15_e24_prospective.json)), evidence C22; [method E24 and amendment 1](MEASUREMENTS.md); prediction commitment recorded in the result | Exploratory; predictions hashed before any student was fitted; one table fit stopped at the convergence gate, so head n=8 and table n=7 |
 | §5.3 Table F gap predictors; Appendix C feature definitions | [E22 result](../results/m15_e22_gap_predictors.json), evidence C20; [method E22 and amendment 1](MEASUREMENTS.md) | Exploratory, features declared before computation; clustered intervals; fold-mean baseline |
 | §5.2 corpus-size paragraph (E23) | [E23 result](../results/m15_e23_fiqa25k.json), evidence C21; [method E23](MEASUREMENTS.md) | Exploratory; seeded subsample keeping judged-relevant documents |
+
+## Owner narration pass (2026-10-02)
+
+The main-text claims continue to use the same receipts. Family-adjusted E21 fits are now in
+Appendix B; per-dataset Constella commentary is in Appendix A; the internal-workload example is
+in Appendix D. Build-component detail remains in Appendix B, and secondary placement features
+remain in Appendix C. Scientific tables and the whole manuscript's numeric-token set are
+unchanged. Claim wording now emphasizes predictive associations and the distinction between
+the screen's fitted baselines and the separately trained release models. E24 assembly history
+remains in MEASUREMENTS.md and the evidence cards; the manuscript gives the completed-fit rule.

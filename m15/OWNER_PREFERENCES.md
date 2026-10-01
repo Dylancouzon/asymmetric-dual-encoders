@@ -73,6 +73,7 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner explicitly asks for a critical IR-research collaborator in this session, not agreement or flattery. Challenge proposed changes when the evidence or scientific argument does not support them.
 - Owner rejects the introduction's BEIR document-encoding duration as representative of a production workload. Prefers motivation grounded in migration time and cost, availability, risks, infrastructure challenges, and added load; estimates are a possible way to explain those costs, not measured production results.
 - Owner suggests motivating the abstract through reuse: an expensive document representation can serve many searches, while a query may be used once. Authorizes inclusion if it fits. Implemented as amortized document-encoding cost versus recurring uncached-query encoding, without assuming a reuse count or calling large query encoders wasteful.
+- Owner requests a narration pass questioning whether each statement is needed, and flags a tendency to state what things are not or do not do. Prefer direct findings and their interpretation; remove redundant negative framing and repeated defensive qualifications. Essential distinctions and observed negative results still need accurate reporting. Owner explicitly requests that these preferences and revision decisions be logged so later iterations do not revert them.
 
 ### 2026-10-01
 

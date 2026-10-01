@@ -12,7 +12,7 @@ sed -e '1{/^# /d;}' -e '/^\*\*Draft v[0-9]*/d' -e 's#(figures/\([a-z0-9_]*\)\.pn
 python3 - <<'PY'
 import re
 s = open("paper.md").read()
-s = re.sub(r"!\[[^\]]*\]\((figures/[^)]+)\)\n\n\*\*Figure \d+\.\*\* ([^\n]+)",
+s = re.sub(r"!\[[^\]]*\]\((figures/[^)]+)\)\n\n\*\*Figure [A-Z]?\d+\.\*\* ([^\n]+)",
            lambda m: "![" + m.group(2).replace("[", "(").replace("]", ")") + "](" + m.group(1) + ")", s)
 open("paper.md", "w").write(s)
 PY
@@ -45,10 +45,19 @@ s = s.replace(r"\hypersetup{", r"\hypersetup{" + "\n  pdfauthor={" +
               ", ".join(tex_escape(a["name"]) for a in roster["authors"]) + "},", 1)
 s = s.replace(r"\usepackage{longtable,booktabs,array}",
               r"\usepackage{longtable,booktabs,array}" + "\n" + r"\usepackage{needspace,placeins}")
+s = s.replace(r"\begin{document}",
+              r"\widowpenalty=10000" + "\n" + r"\clubpenalty=10000" + "\n" + r"\begin{document}")
 # Captions include the method; reserve enough room for them and each compact table.
-for number, lines in ((1, 16), (2, 14), (3, 13)):
+for number, lines in ((1, 16), (2, 14), (3, 13), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
     caption = rf"\textbf{{Table {number}.}}"
     s = s.replace(caption, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + caption)
+s = s.replace(r"\subsection{Appendix A.",
+              r"\FloatBarrier" + "\n" + r"\setcounter{figure}{0}" + "\n" +
+              r"\renewcommand{\thefigure}{A\arabic{figure}}" + "\n" + r"\subsection{Appendix A.")
+s = s.replace(r"\subsection{Appendix B.", r"\FloatBarrier" + "\n" + r"\subsection{Appendix B.")
+for heading in (r"\subsubsection{5.3 Is the effort predictable?}",
+                r"\subsection{7. Limitations}", r"\textbf{Variation across datasets.}"):
+    s = s.replace(heading, r"\FloatBarrier" + "\n" + heading)
 for heading in ("4. Lexical fusion", "6. Serving compatibility"):
     needle = r"\subsection{" + heading
     s = s.replace(needle, r"\FloatBarrier" + "\n" + needle)

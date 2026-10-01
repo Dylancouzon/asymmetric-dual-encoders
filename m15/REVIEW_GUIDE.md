@@ -7,6 +7,10 @@ frame, the voice contract, and the agreed claim wording). It is an empirical whi
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
 
+The owner is reading and revising v18 on 2026-10-02. The abstract, production motivation, and
+narration have changed since the recorded reviewer sign-offs. Use the latest commit for the text
+under discussion; [LOG.md](LOG.md) records these revisions and their checks.
+
 The branch contains the current paper, its numerical result summaries, methods, experiment code,
 figures, original registered outcomes, negative findings, full-history synthesis, author preferences,
 and previous reviews with dispositions. All 55 local targets linked by the current manuscript's

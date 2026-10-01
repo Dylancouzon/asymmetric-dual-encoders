@@ -144,3 +144,14 @@ adversarial correctness reviewer, per mandate and owner permission.
   list (identified by hash in the artifact statement); the owner reads the PDF; author roster and
   contact details in `latex/build.sh`.
 - **Pods:** both stopped; session spend about $11; nothing running.
+
+## Update 2026-10-02: owner reading and narration pass
+
+- The owner requests a critical IR-research collaborator, a standalone problem-first abstract,
+  operational migration motivation, and narration that states findings directly. All direction
+  is in OWNER_PREFERENCES.md; subsequent iterations should read its owner-reading section.
+- Current v18 includes revisions after the reviewer-signed snapshot: an abstract opening on
+  document reuse and recurring uncached-query cost, a production-migration introduction, and
+  a narration pass. Main prose is about 19% shorter by the same before/after counting method;
+  scientific tables and the manuscript's numeric-token set are unchanged. Secondary detail
+  is retained in appendices. The log records dispositions; prior sign-offs are historical.
