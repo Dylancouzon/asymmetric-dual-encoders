@@ -117,3 +117,11 @@ These checks operationalize the owner's readability and evidence concerns; they 
   blog post. Neither is acceptable. The target is a research paper that is rigorous and interesting
   at once: research questions and hypotheses up front, a surprising structural result carried by
   tables with intervals, one narrative thread, no inventories, no advice voice.
+- **2026-10-01, round 5.** Owner proposed that the insight is reducing query cost over a frozen,
+  possibly immutable index, and that teacher selection is incidental. Fable argued the frozen
+  index is the question and the width result is its answer (teacher = the index you are stuck
+  with; selection is the corollary). Owner: "let's test out your way." Title becomes "Reducing
+  Query Cost over a Frozen Document Index: What the Index Decides"; RQ1 what a closed-form query
+  student recovers from a frozen index and which index properties predict it; RQ2 how much more
+  search effort it needs over the index's graph and whether that is predictable. Constella is the
+  worked instance.

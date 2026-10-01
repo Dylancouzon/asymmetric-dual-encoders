@@ -117,3 +117,27 @@ The final draft is checked against these by both reviewers before it goes to the
 - **Limits once.** One caveat sentence per result in the body; everything else in Limitations.
 - **Length as a symptom.** Above 4,000 main-text words the paper is inventorying; below 3,000 it is
   asserting. Both reviewers flag either.
+
+## Reframing adopted (owner, round 5, 2026-10-01)
+
+**Title:** Reducing Query Cost over a Frozen Document Index: What the Index Decides.
+
+**Question:** an index that cannot or will not be rebuilt; a cheaper query encoder over it. What
+does it cost, and what about the index decides the cost?
+
+- **RQ1, retention.** How much retrieval quality can a closed-form query student recover from a
+  frozen index, and which properties of the index predict it? H1 (the field's heuristic): the
+  stronger the index's own retrieval, the better the student. Result: true only given width; the
+  wider the index, the more the student loses; a two-variable model fitted on ten spaces ranks 16
+  held-out spaces at 0.85 and 0.70, and E24 tests eight never-seen spaces prospectively. The
+  student's own dev screen still makes the best pick. Corollary for teams that have not built the
+  index: the strongest teacher gives one of the weakest students.
+- **RQ2, search effort.** How much more graph effort does the student need over the index's
+  unchanged HNSW graph, and is it predictable from the index and the query placement? Result: a
+  recovery deficit in 25 of 25 spaces on two corpora, median four times ef; E22 tests declared
+  predictors; E23 tests corpus size.
+- **Instance.** Constella over Stella's frozen index: Zero and Nano, Table 1, the registered
+  evaluations, Zero's ef 512, the 2.2-fold figure, fusion and routing in one paragraph.
+
+Section plan from the v17 shape stands with RQ1 and RQ2 renamed as above; the introduction opens
+on the frozen index (39.9 h re-encode, downstream consumers) and poses the two questions.
