@@ -1,0 +1,552 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E23 (exploratory, pre-specified)",
+  "scope": "FiQA subsampled to 25,657 documents keeping judged-relevant ones; same 648 queries; size versus domain is a comparison across two corpora, not an identified cause",
+  "n_sub": 25657,
+  "seed": 20260930,
+  "summary": {
+    "n_spaces": 25,
+    "mean_gap_fiqa25k": -1.1746913580246907,
+    "mean_gap_fiqa57k": -2.9447530864197478,
+    "mean_gap_scidocs": -0.7511999999999972,
+    "paired_25k_minus_57k": 1.770061728395057,
+    "paired_25k_minus_57k_bootstrap95": [
+      1.3200540123456697,
+      2.2660570987654314
+    ],
+    "paired_25k_minus_scidocs": -0.4234913580246935,
+    "paired_25k_minus_scidocs_bootstrap95": [
+      -0.8533790740740729,
+      -0.09122592592592882
+    ],
+    "spaces_gap_negative_25k": 17
+  },
+  "spaces": {
+    "stella-400M-v5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -1.3348765432098786,
+      "gap_fiqa57k": -2.9629629629629397,
+      "gap_scidocs": -1.2900000000000023,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.630464899195652,
+        "table": 0.39238821207642083
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "arctic-embed-l": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -7.314814814814824,
+      "gap_fiqa57k": -11.751543209876548,
+      "gap_scidocs": -3.0600000000000014,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5224030046375141,
+        "table": 0.23970580893162932
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "arctic-embed-m-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -2.1836419753086256,
+      "gap_fiqa57k": -4.320987654320973,
+      "gap_scidocs": -0.7999999999999785,
+      "recovery_multiplier_builds": [
+        2.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5067370901026694,
+        "table": 0.2660409422141352
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "bge-base-en-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -2.9783950617284005,
+      "gap_fiqa57k": -4.7376543209876445,
+      "gap_scidocs": -1.154999999999995,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.483567024128843,
+        "table": 0.3032981121045097
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "bge-large-en-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -2.592592592592596,
+      "gap_fiqa57k": -4.930555555555549,
+      "gap_scidocs": -1.6199999999999937,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5296674001590294,
+        "table": 0.24844141917726142
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "e5-base-v2": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -1.3734567901234451,
+      "gap_fiqa57k": -3.8271604938271695,
+      "gap_scidocs": -1.084999999999986,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.48370199906226097,
+        "table": 0.21302188490317012
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "e5-large-v2": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -1.5432098765432167,
+      "gap_fiqa57k": -3.9660493827160415,
+      "gap_scidocs": -1.0999999999999843,
+      "recovery_multiplier_builds": [
+        4.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.48781806297767705,
+        "table": 0.1754196376302474
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "gte-base-en-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.5864197530864035,
+      "gap_fiqa57k": -1.504629629629628,
+      "gap_scidocs": -0.6249999999999978,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5636935439621371,
+        "table": 0.27222357736639546
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "gte-large-en-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.16975308641975495,
+      "gap_fiqa57k": -0.4938271604938316,
+      "gap_scidocs": -0.7950000000000013,
+      "recovery_multiplier_builds": [
+        null,
+        null
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.7171583750185464,
+        "table": 0.12768561448256655
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 0.9995,
+        "b1-teacher": 1.0,
+        "b1-table": 0.9995
+      }
+    },
+    "mxbai-embed-large-v1": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -2.5925925925925855,
+      "gap_fiqa57k": -3.9814814814814694,
+      "gap_scidocs": -1.2450000000000017,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5343930056815174,
+        "table": 0.21696706800372778
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "minilm-l6": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -0.8024691358024583,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.4409087633562589,
+        "table": 0.23959361068020363
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "minilm-l12": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -1.1959876543209846,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.473335653205115,
+        "table": 0.2511403925753573
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "multi-qa-minilm-l6": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -0.841049382716047,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.43655054760820394,
+        "table": 0.2741274398969692
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "msmarco-minilm-l6": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -0.979938271604941,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.28554747053544033,
+        "table": 0.19926184368548222
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "bge-small-en-v1.5": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.015432098765433278,
+      "gap_fiqa57k": -3.703703703703698,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        null,
+        null
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.47381001066219686,
+        "table": 0.3092687255444325
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 0.9995,
+        "b1-teacher": 1.0,
+        "b1-table": 0.9995
+      }
+    },
+    "bge-base-en-v1": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -3.4336419753086265,
+      "gap_fiqa57k": -5.455246913580236,
+      "gap_scidocs": -2.0199999999999942,
+      "recovery_multiplier_builds": [
+        4.0,
+        4.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.4889414700612511,
+        "table": 0.26896541294501625
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "e5-small-v2": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -2.430555555555569,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.4495347046236529,
+        "table": 0.2407253710766371
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "e5-base-v1": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -1.103395061728396,
+      "gap_fiqa57k": -2.2067901234567753,
+      "gap_scidocs": -0.9050000000000058,
+      "recovery_multiplier_builds": [
+        2.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.43791851618196825,
+        "table": 0.23325769962945334
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "gte-small": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -0.6481481481481366,
+      "gap_scidocs": -0.009999999999998899,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.46457645779493495,
+        "table": 0.22568878321501937
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "gte-base": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.43981481481482065,
+      "gap_fiqa57k": -1.226851851851829,
+      "gap_scidocs": -0.6299999999999917,
+      "recovery_multiplier_builds": [
+        2.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.48625723678195665,
+        "table": 0.2550661528747259
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "gte-large": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.25462962962964353,
+      "gap_fiqa57k": -0.5864197530864257,
+      "gap_scidocs": -0.8849999999999969,
+      "recovery_multiplier_builds": [
+        4.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.5224060474522678,
+        "table": 0.23422992996314132
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "arctic-embed-xs": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -3.4259259259259265,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.41445597104220333,
+        "table": 0.28043172233468155
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "arctic-embed-s": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": 0.0,
+      "gap_fiqa57k": -4.691358024691361,
+      "gap_scidocs": 0.0,
+      "recovery_multiplier_builds": [
+        0.25,
+        0.25
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.4744528550818985,
+        "table": 0.2873972196988567
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "contriever": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.6944444444444475,
+      "gap_fiqa57k": -1.6589506172839386,
+      "gap_scidocs": -0.9749999999999925,
+      "recovery_multiplier_builds": [
+        2.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.16220572599667651,
+        "table": 0.08654342734828278
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    },
+    "contriever-msmarco": {
+      "status": "COMPLETE",
+      "gap_fiqa25k": -0.7561728395061695,
+      "gap_fiqa57k": -1.2885802469135677,
+      "gap_scidocs": -0.5800000000000083,
+      "recovery_multiplier_builds": [
+        2.0,
+        2.0
+      ],
+      "exact_ndcg10": {
+        "teacher": 0.3413850137779805,
+        "table": 0.24772074216044046
+      },
+      "exact_parity": {
+        "b0-teacher": 1.0,
+        "b0-table": 1.0,
+        "b1-teacher": 1.0,
+        "b1-table": 1.0
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e23_fiqa25k.py",
+    "script_sha256": "31840020db36a3559b30479bc1009f12aa30760b71fd1afdabbe65d0dd4dea10",
+    "git_commit": "ed0af15f34b2a26ff70dc433687b4b2ccfebcf1b",
+    "m15src_dirty": true,
+    "started_utc": "2026-10-01T19:34:54Z",
+    "finished_utc": "2026-10-01T19:34:54Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-6.8.0-100-generic-x86_64-with-glibc2.35",
+      "python": "3.12.14"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "qdrant-client": "1.19.0",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "e20_result": "results/m15_e20_ann_spaces.json"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "a0d60a5785870fcd6eccd59f02279b77988017123ba0ff7a4832d24380753808"
+  }
+}

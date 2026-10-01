@@ -787,3 +787,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   feature definitions in Appendix C; card C20.
 - E24 stopped on `nomic-embed-text-v1` (its remote code needs `einops`, absent from the venv);
   installed and relaunched at 19:33 UTC, resuming from three completed teachers. E23 sweeping.
+- **E23 complete** (`results/m15_e23_fiqa25k.json`, 20:21 UTC). FiQA at SCIDOCS size: mean gap
+  −1.18 pp against −2.95 on the full corpus (paired +1.77 [+1.32, +2.27] over 25 spaces) and
+  −0.75 on SCIDOCS (subsample still 0.42 larger, [−0.85, −0.09]); all eight 384-d spaces show no
+  gap at 25k. Size explains most of the attenuation, not all. Written into §5.4; card C21.
+- E24: predictions committed (sha256 81f2c88e...) before any student was fitted; the table fit for
+  `e5-base-unsupervised` stopped at the convergence gate at lambda 1e-5 (listed, not replaced);
+  table and head fits continuing.

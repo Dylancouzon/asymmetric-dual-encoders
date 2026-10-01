@@ -708,3 +708,39 @@ Held-out models (leave one family out unless named):
 | placement_only | +0.35 | 2.17 | 2.22 |
 
 **Cannot show.** A mechanism; independence of families; transfer of magnitude across workloads.
+
+## C21. Corpus size and the recovery gap
+
+**Label:** exploratory (E23, pre-specified). **Source:** `results/m15_e23_fiqa25k.json`
+
+**Claim.** On FiQA subsampled to SCIDOCS's size the table's recovery gap at ef=64 shrinks from -2.94 to -1.17 points (paired +1.77, bootstrap95 over spaces [+1.32, +2.27]) and stays +0.42 points larger than SCIDOCS's ([-0.85, -0.09]); 17 of 25 spaces keep a gap at 25k.
+
+| space | gap FiQA 25k (pp) | gap FiQA 57k (pp) | gap SCIDOCS (pp) | recovery multiplier b0/b1 at 25k |
+|---|---|---|---|---|
+| arctic-embed-l | -7.31 | -11.75 | -3.06 | 4/4 |
+| bge-base-en-v1 | -3.43 | -5.46 | -2.02 | 4/4 |
+| bge-base-en-v1.5 | -2.98 | -4.74 | -1.15 | 4/4 |
+| bge-large-en-v1.5 | -2.59 | -4.93 | -1.62 | 4/4 |
+| mxbai-embed-large-v1 | -2.59 | -3.98 | -1.25 | 4/4 |
+| arctic-embed-m-v1.5 | -2.18 | -4.32 | -0.80 | 2/2 |
+| e5-large-v2 | -1.54 | -3.97 | -1.10 | 4/2 |
+| e5-base-v2 | -1.37 | -3.83 | -1.08 | 4/4 |
+| stella-400M-v5 | -1.33 | -2.96 | -1.29 | 4/4 |
+| e5-base-v1 | -1.10 | -2.21 | -0.91 | 2/2 |
+| contriever-msmarco | -0.76 | -1.29 | -0.58 | 2/2 |
+| contriever | -0.69 | -1.66 | -0.97 | 2/2 |
+| gte-base-en-v1.5 | -0.59 | -1.50 | -0.62 | 4/4 |
+| gte-base | -0.44 | -1.23 | -0.63 | 2/2 |
+| gte-large | -0.25 | -0.59 | -0.88 | 4/2 |
+| gte-large-en-v1.5 | -0.17 | -0.49 | -0.80 | cens./cens. |
+| bge-small-en-v1.5 | -0.02 | -3.70 | +0.00 | cens./cens. |
+| minilm-l6 | +0.00 | -0.80 | +0.00 | 0.25/0.25 |
+| minilm-l12 | +0.00 | -1.20 | +0.00 | 0.25/0.25 |
+| multi-qa-minilm-l6 | +0.00 | -0.84 | +0.00 | 0.25/0.25 |
+| msmarco-minilm-l6 | +0.00 | -0.98 | +0.00 | 0.25/0.25 |
+| e5-small-v2 | +0.00 | -2.43 | +0.00 | 0.25/0.25 |
+| gte-small | +0.00 | -0.65 | -0.01 | 0.25/0.25 |
+| arctic-embed-xs | +0.00 | -3.43 | +0.00 | 0.25/0.25 |
+| arctic-embed-s | +0.00 | -4.69 | +0.00 | 0.25/0.25 |
+
+**Cannot show.** A causal size effect (two corpora, one subsample seed); domain and query form remain confounded with the residual.

@@ -163,7 +163,7 @@ One feature carries the prediction: how far a space's queries sit from their nea
 
 ### 5.4 Corpus size
 
-H2c predicts that the smaller gap on SCIDOCS is an effect of corpus size: on FiQA subsampled to SCIDOCS's size the gap should shrink toward SCIDOCS's value. [E23 pending: FiQA subsampled to 25,657 documents on the same queries, paired across indexes.]
+H2c predicts that the smaller gap on SCIDOCS is an effect of corpus size: on FiQA subsampled to SCIDOCS's size, with the same queries, the gap should shrink toward SCIDOCS's value. We drew 25,657 of FiQA's 57,638 documents uniformly with a fixed seed, keeping every document judged relevant to a test query, rebuilt two graphs per space, and repeated the sweep for the encoder and table paths (exploratory, pre-specified). Across the 25 spaces the recovery gap at `ef=64` moves from −2.9 points on the full corpus to −1.2 on the subsample, a paired change of +1.8 points (95% interval over spaces +1.3 to +2.3), and the subsample's gap is still 0.4 points larger than SCIDOCS's (−0.9 to −0.1). On the subsample every 384-wide space shows no gap at all: the encoder's own path already recovers its neighbors there, so there is nothing left for the student to lose. Corpus size therefore explains most of the attenuation and not all of it; the remainder is domain or query form.
 
 ### 5.5 The penalty in a jointly trained model
 
@@ -325,6 +325,8 @@ The registered clean-four sensitivity is descriptive: −0.0443 [−0.0675, −0
 **Truncated queries (registered).** On synthetic prefixes of SciFact, NFCorpus, and FiQA queries, the three dense paths retain descriptively similar shares of their own full-query nDCG@10 at each prefix length; this is not an equivalence test and no search-as-you-type session was measured.
 
 **Gap predictors (E22).** Features per space and workload, declared before computation: the mean cosine distance from a query to its nearest document divided by the mean nearest-neighbor distance among a 5,000-document sample (for the student's and the encoder's queries, and their difference); the Gini coefficient of document occurrence counts across the student's exact top-10 lists over the full document support, minus the encoder's; the mean overlap of the student's and encoder's exact top-10; the effective rank (participation ratio) of a seeded 20,000-row sample of the encoder's fit-query vectors and the ratio of the student's to the encoder's workload-query effective rank; the two Section 5.2 geometry summaries; log2 width and log10 corpus size as covariates. Ridge with unit penalty on standardized features; the baseline is each training fold's mean.
+
+**Corpus-size subsample (E23).** FiQA documents drawn uniformly with seed 20260930 to 25,657, keeping every document with a positive judgment for a test query; each path's exact top-10 and tie thresholds recomputed over the subsample; two builds; the same `ef` grid; per-space gaps paired against the full-corpus and SCIDOCS values with 10,000-draw bootstrap intervals over spaces.
 
 **Native binary pilot and replication.** On one fixed binary collection per workload with 192 deterministically selected queries, binary scoring with rescoring at 1x oversampling loses 11.7, 5.1, and 2.3 percentage points of exact-neighbor recovery for Zero, Nano, and Stella on FiQA at `ef=64`; the million-passage replication loses 3.9, 3.1, and 2.2, and the extra Zero-versus-Nano interval includes zero. Native rescoring also changes cross-segment candidate merging.
 
