@@ -51,6 +51,12 @@ Update it when the owner gives new direction; do not record agent recommendation
 endorsements. In particular, define models at first use, narrate experiments before giving settings,
 and distinguish generalizable conclusions from recipe-specific observations and diagnostics.
 
+**Full-history selection, 2026-10-01.** Read `m15/LEARNINGS.md` before choosing paper content. It
+synthesizes potential lessons from all past milestones with evidence, production decisions, and
+limits. Keep it broader than the manuscript. The paper must stand alone without internal file
+citations and make the value to a production search engineer explicit. Owner rejects the term
+“search service,” verbosity, and a measurement inventory with no clear reader benefit.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
