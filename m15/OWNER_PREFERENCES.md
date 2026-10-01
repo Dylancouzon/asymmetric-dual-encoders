@@ -105,3 +105,15 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Astra has more authority on narration, Fable on technical correctness; both weigh in on every decision.
 - **2026-10-01, approval.** Owner approves `REVISION_PLAN_V16.md` including experiment B, with a $150 compute budget (slightly over is acceptable). Multiple pods exist; all prior experiments on them are finished, so concurrent work and renting more GPUs to go faster are permitted.
 - **2026-10-01, standing approval.** Owner grants everlasting commit and push approval for this project on the working branch. Coherent batches, no force-push, research history preserved.
+
+### 2026-10-01, owner round 4 decisions
+
+- Owner: v16 reads like an article and is not scientifically exciting; "Stella retains 100%"
+  against itself is absurd. Two independent reviews (Fable, Astra) and the E21 analysis followed.
+- Decisions: title is science-first ("Teacher Selection and Search Cost for Closed-Form Query
+  Students over a Frozen Document Index"); E22, E23, E24 approved (about $25 to $35) with the
+  pre-spend review rule; register rules in `REVISION_PLAN_V17.md` agreed.
+- Owner's standing warning: revisions have oscillated between a boring benchmark reading and a
+  blog post. Neither is acceptable. The target is a research paper that is rigorous and interesting
+  at once: research questions and hypotheses up front, a surprising structural result carried by
+  tables with intervals, one narrative thread, no inventories, no advice voice.

@@ -95,3 +95,25 @@ Pre-spend essentials-only Codex review precedes the first pod minute, per the ow
 1. Title option 1 or 2.
 2. Approve E22, E23, and E24 (about $25 to $35 total within the $150).
 3. Confirm the register rules above, then the v17 rewrite proceeds.
+
+## Voice contract (owner, 2026-10-01): neither benchmark reading nor blog
+
+The final draft is checked against these by both reviewers before it goes to the owner.
+
+- **One thread.** The paper tells one story: the obvious way to choose a teacher for a cheap query
+  student fails, the data say why (width), a two-variable model predicts unseen checkpoints, and
+  the student you then deploy pays a measurable search-effort cost over the unchanged index. Every
+  section advances that thread; a result that does not is an appendix.
+- **Hypothesis first.** Each results subsection opens with the question and the prediction, then
+  the table, then the reading. The reader learns what would have falsified the claim.
+- **Evidence in tables, argument in prose.** Numbers with intervals live in tables and figures.
+  Prose interprets; it does not inventory. A paragraph that lists numbers is rewritten or cut.
+- **Effect sizes, not adjectives.** "Larger", "strong", "poor" appear only next to a number.
+- **Third person, declarative.** No "you", no takeaway boxes, no sentences addressed to a referee,
+  no "what to take from this". Implications are stated as consequences of the result.
+- **Surprise is allowed.** A result the field would not expect is stated plainly in the abstract
+  and the introduction, with its effect size, and defended in the results. Excitement comes from
+  the claim and its evidence, never from adjectives.
+- **Limits once.** One caveat sentence per result in the body; everything else in Limitations.
+- **Length as a symptom.** Above 4,000 main-text words the paper is inventorying; below 3,000 it is
+  asserting. Both reviewers flag either.
