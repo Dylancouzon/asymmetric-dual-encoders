@@ -504,3 +504,28 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   checked latency units, inspected the title page and all-page render contacts, and rechecked the
   affected appendix pages after keeping the Zero/precision tables with their explanations.
   No overflow/underflow/missing-character or build error warnings; git diff --check passes.
+
+
+### Coworker evidence audit and collaboration package
+
+- Owner asks whether coworkers have everything needed for review, proposes a Google Doc with
+  evidence/inventory appendix, and notes coworkers have Codex/repository access. Owner permits
+  plugin/MCP installation if necessary; Google Drive is already connected. Preferences recorded.
+- Root and Astra perform a named-file availability audit. All 55 local targets in the current
+  manuscript map, 45 catalog targets, and 24 explicit evidence-card targets are tracked. This is
+  a source-availability audit, not a new statistical validation of every number.
+- Checked all 26 tracked M15 JSON records. Twenty-five have receipts; the auxiliary E8 frozen
+  penalties are bound by the E8 receipt. Every recorded main-script and method hash has a matching
+  committed version. Six exploratory runs honestly record dirty source: their exact scripts were
+  committed later. PROVENANCE_AUDIT.md links those versions without altering original receipts.
+- Review completeness differs from full rerun completeness: large caches/model files/environments
+  and some raw logs are outside Git; the cleaned teacher-fit list is untracked and absent locally;
+  the 1M sampled-ID list is local/untracked; M20's separate local archive is verified but its
+  object-storage copy is outstanding. These limitations are explicit in the reviewer package.
+- Added README.md and REVIEW_GUIDE.md, role/question-based evidence navigation, a practical
+  comments/suggestions-to-Git workflow, and a bounded Codex review prompt with protected exclusions.
+  BRANCH_INVENTORY.md catalogs paper/code/results/reviews; BRANCH_FILES.tsv lists all 1,841 baseline
+  tracked paths with blob IDs and sizes from Git metadata only, pinned to 41d436c.
+- Fixed stale CLAUDE.md guidance that described completed M20 evaluations as running. Marked the
+  old EVIDENCE_INDEX.md clearly superseded while retaining its historical text. Current results,
+  manuscript, and scientific figures remain unchanged. No experiment or protected raw read.

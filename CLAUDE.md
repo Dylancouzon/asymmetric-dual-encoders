@@ -21,14 +21,16 @@ M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M14 (Nano r
 M17, M18, M19 and M21 are closed historical evidence. M18 shipped an internal Qdrant project-memory
 system but no improved encoder; M19 closed `ENCODER_INCONCLUSIVE` with its confirmation surface
 still sealed, so it establishes neither improvement nor equivalence and released Zero v1 stays
-selected. **M20 is the active execution milestone.** Its stages A and B are complete: the reserved access was
-spent once on 2026-09-19 (`m8-reserved-spent`), `results/m10_final_run.json` ends `COMPLETE`, and the
-reserved four are now **known-test** — never again usable to decide anything in this project. Stage C
-(BEIR-15) is **running** and is unprotected; two of its three towers are complete. Read
-`m20/STATUS.md` and `m20/FINDINGS.md` before touching it, and never relaunch it with a truncating
-`>` redirect or without preserving the existing receipt. Paper milestone references in older files are historical. Harness
-improvements remain ordinary maintenance. Do not infer execution readiness from the historical
-phrase “half A ready to push” or from a closed milestone's executable status.
+selected. **M15 is the paper work on this branch.** Start a coworker review at `m15/REVIEW_GUIDE.md`.
+M20's stages A, B, and C are complete: the reserved access was spent once on 2026-09-19
+(`m8-reserved-spent`), `results/m10_final_run.json` and `results/m20_beir15_run.json` end
+`COMPLETE`, and the reserved four are now **known-test** — never again usable to decide anything
+in this project. M20 remains open only for the object-storage half of its archive; its local
+archive target was verified. Read `m20/STATUS.md` and `m20/FINDINGS.md` before touching it.
+Do not relaunch completed evaluations for a paper review. Paper milestone references in older
+files are historical. Harness improvements remain ordinary maintenance. Do not infer execution
+readiness from the historical phrase “half A ready to push” or from a closed milestone's
+executable status.
 
 ## Evidence and protocol
 

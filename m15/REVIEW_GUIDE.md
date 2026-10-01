@@ -1,0 +1,101 @@
+# Coworker review guide
+
+## What is ready to review
+
+The current manuscript is **v15, Constella: Lower-Cost Queries over a Fixed Document Index** on
+`m15-whitepaper`. It is an empirical whitepaper for experienced search engineers. The goal is useful,
+credible research that improves Qdrant's reputation in that community. The thesis and content remain
+open to challenge; the owner has not accepted this draft.
+
+The branch contains the current paper, its numerical result summaries, methods, experiment code,
+figures, original registered outcomes, negative findings, full-history synthesis, author preferences,
+and previous reviews with dispositions. All 55 local targets linked by the current manuscript's
+evidence map are tracked. That establishes source availability, not a new independent verification
+of every scientific conclusion.
+
+**A fresh clone is sufficient for substantive review. It is not a complete, offline rerun bundle.**
+Large vectors, model weights, fit matrices, environments, and some raw logs are outside Git. The
+cleaned teacher-screen fit list is not in the branch; its recorded hash does not replace the list.
+Some experiments would need artifact recovery or reconstruction before an exact rerun. See
+[PROVENANCE_AUDIT.md](PROVENANCE_AUDIT.md) for the checked scope and remaining limits.
+
+## Start with the question you want to answer
+
+| Review question | Read first | Go deeper |
+|---|---|---|
+| Is this clear, interesting, and useful for a production search engineer? | [PAPER.md](PAPER.md) | [Owner expectations](OWNER_PREFERENCES.md), [all potential learnings](LEARNINGS.md) |
+| Does a particular claim follow from the experiment? | [Current evidence map](PAPER_EVIDENCE_MAP.md) | [Numerical cards](EVIDENCE.md), the source result named in that row, [methods](MEASUREMENTS.md) |
+| Did we choose the right findings from the whole project? | [LEARNINGS.md](LEARNINGS.md) | Its milestone coverage table and named historical FINDINGS/STATUS files |
+| Are confirmatory outcomes and unfavorable comparisons visible? | Paper Appendix A | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published reserved aggregate](../results/m13_reserved_run.json), [canonical benchmarks](../m21/BENCHMARKS.md) |
+| How strong are the ANN and query-precision conclusions? | Paper §3 and Appendix B | [C10/C14/C15 cards](EVIDENCE.md), E2/E16–E18 in [methods](MEASUREMENTS.md), [follow-up options](FOLLOWUP.md) |
+| What did earlier reviewers find, and what was fixed? | [V15 dispositions](REVIEWS/2026-10-01-v15-synthesis.md) | [Reader review](REVIEWS/2026-10-01-v15-reader.md), [correctness review](REVIEWS/2026-10-01-v15-correctness.md), [LOG.md](LOG.md) |
+| Is a claim already established in prior work? | [Paper references](PAPER.md) | [Primary-source literature notes](RELATED_WORK.md) and the linked papers |
+| What exactly is in the branch? | [BRANCH_INVENTORY.md](BRANCH_INVENTORY.md) | [All baseline tracked paths and blob identities](BRANCH_FILES.tsv) |
+
+The old [EVIDENCE_INDEX.md](EVIDENCE_INDEX.md) is a historical candidate list. It contains superseded
+claims and status statements; it is not a current reviewer entry point. Older drafts and plans also
+remain in history. The current map and synthesis govern how those historical results are interpreted.
+
+## Recommended collaboration workflow
+
+Use **one Google Doc as the discussion copy**, containing the paper with its existing scientific
+appendices, followed by a clearly marked reviewer appendix with evidence links and a repository
+index. Google Doc comments and suggestions keep the discussion attached to the text. Git keeps
+the experimental record and accepted manuscript revisions auditable.
+
+1. Identify the source commit and draft at the top of the Doc. Evidence links should use that commit,
+   so a claim does not silently change underneath an active review. Link the branch separately for
+   readers who want subsequent work.
+2. Comment on the relevant sentence, table, or figure. For a scientific objection, include the claim,
+   the named evidence card or result, and what would change the assessment. C10 has separate FiQA
+   and million-passage cards: name the workload as well as the card number.
+3. Use suggestions for proposed prose changes. Start broad discussions about thesis, missing
+   findings, or additional experiments in an anchored comment near the introduction or conclusion.
+   Rewrites and removals are welcome; keep the whitepaper genre and owner goals in view.
+4. After agreement, implement targeted changes in `PAPER.md`, preserve the underlying receipts,
+   rebuild the PDF, and commit/push a coherent revision. Summarize consequential decisions and their
+   rationale in `LOG.md`; owner direction also belongs in `OWNER_PREFERENCES.md`.
+5. Update the same Google Doc with targeted edits, then record its new repository source commit.
+   Avoid replacing the whole Doc after comments begin: that can detach or lose the useful context.
+   Resolve a thread only when its disposition is recorded or the participants agree it is closed.
+
+The Google Doc and repository are **not automatically synchronized**. Its link and source snapshot
+will be recorded in the handoff. Before making an edit, check which version you are discussing.
+Coworkers who want to change the repo should use individual branches and PRs based on
+`m15-whitepaper`, rather than simultaneous direct edits to the shared manuscript branch.
+
+## Using Codex for a review
+
+The following prompt is a starting point; replace the focus with the question under discussion.
+
+> Review the Constella v15 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
+> instructions-m15.md, m15/REVIEW_GUIDE.md, m15/OWNER_PREFERENCES.md, and the relevant section of
+> m15/PAPER.md. Use m15/PAPER_EVIDENCE_MAP.md to select exact result/method files. Use
+> m15/LEARNINGS.md if challenging the paper's selection across the whole history. Distinguish
+> scientific evidence from prior agent opinions. Report consequential findings with the claim,
+> evidence, effect on the conclusion, and a concrete proposed fix. This is a whitepaper, not a
+> tutorial or Qdrant sales piece. Do not run experiments or alter existing result files for this review.
+> Never read results/frozen_eval/untouched-*, reserved qrels caches, work/m9reserve, raw closed M18
+> confirmation, or sealed M19 confirmation. Never overwrite results/perquery.json. No repo-wide
+> content search across results/ or work/: select a named-file allowlist first. Use published aggregate
+> receipts for protected evaluations. A filename in the inventory is not authorization to read it.
+
+Ordinary literature rechecking can use the public primary-source links. The ignored `.firecrawl/`
+scratch directory is not part of the branch; the committed notes and references are the review trail.
+
+## Boundaries that affect interpretation
+
+- Exact-search relevance, ANN losses, candidate coverage, and latency are different quantities.
+  Encoder savings are not equal-quality, end-to-end production speedups.
+- Three aligned query paths share Stella's index. The teacher screen compares different teacher
+  spaces with their own indexes; it does not authorize swapping unrelated teachers into this index.
+- Registered tests and exploratory analyses remain distinct. Negative/unresolved outcomes and
+  training/exposure differences are part of the record, including Zero's failed Holm BM25 test.
+- Query-bootstrap intervals do not include retraining variance. The repeated precision control
+  does not establish native engine latency or a general result across embedding spaces.
+- The approximately $95 Nano figure prices the final optimization loop, not the whole build.
+- Protected raw evaluations remain excluded from ordinary review. The published aggregates are
+  available; this collaboration pass does not reopen those evaluations.
+
+The collaboration package adds navigation and provenance. It does not change experiment results,
+upgrade exploratory evidence to confirmation, or certify publication readiness.

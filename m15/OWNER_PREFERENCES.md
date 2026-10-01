@@ -47,6 +47,8 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 - **Commit and push often.** Coherent changes, methods, results, and dispositions should remain auditable in the repository.
 - **Preserve the owner's preferences across sessions.** The owner explicitly requests a persistent decision record so repeated iterations do not repeat earlier mistakes. Append new direction or mark superseded direction here; keep the detailed work history in `LOG.md`.
 - **Do not turn agent judgments into owner decisions.** For example, calling v13 a good applied study or recommending native precision validation is an agent assessment. It is not an owner endorsement of the draft or approval of a final thesis.
+- **Make coworker review easy.** Coworkers have repository access and Codex. The owner wants them to have the paper, all relevant evidence, and a clear inventory of the branch, with a place for comments and discussion. A Google Doc with a reviewer evidence appendix is the owner's suggested collaboration surface; accepted work must remain auditable in Git.
+- **Create the collaboration Doc when feasible.** The owner permits installing a plugin or MCP if necessary and offers Codex desktop as a fallback. The connected Google Drive plugin is available; no installation is needed. This is not authorization to email invitations or publish the draft publicly.
 
 ## Checks before the next draft
 
@@ -79,3 +81,5 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner defines the ultimate reader outcome: interesting, applicable, worth sharing, and value for a production system. No current draft is endorsed by this instruction.
 - Owner reiterates that the deliverable is a whitepaper, not a tutorial; practical value must stay within an empirical research narrative.
 - Owner provides Dylan's email and three additional authors with their emails, for now; recorded in AUTHORS.json. Owner flags inconsistent ms/microsecond units.
+- Owner asks whether coworkers have all evidence, requests easy collaborative review with comments/back-and-forth, and suggests a Google Doc containing the paper and evidence/branch inventory appendix. Coworkers have Codex and repository access.
+- Owner permits plugin/MCP installation to create the Doc, with Codex desktop as a fallback if needed.

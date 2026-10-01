@@ -4,6 +4,11 @@ Branch `m15-whitepaper`. Read **OWNER_PREFERENCES.md**, **LEARNINGS.md**, the la
 and **PAPER.md** before revising. The owner keeps challenging purpose, readability, and value;
 previous agent passes are not owner acceptance.
 
+For coworker review, start at **REVIEW_GUIDE.md**. **BRANCH_INVENTORY.md / BRANCH_FILES.tsv** list
+the baseline tracked content; **PROVENANCE_AUDIT.md** resolves exact source versions and states
+which inputs are external/unavailable. A fresh clone supports substantive review, not every exact
+rerun. EVIDENCE_INDEX.md is explicitly superseded historical discovery material.
+
 ## Current deliverables
 
 - **PAPER.md v15:** “Constella: Lower-Cost Queries over a Fixed Document Index.” An empirical

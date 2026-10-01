@@ -1,4 +1,12 @@
-# M15 evidence index
+# Historical candidate evidence index — superseded
+
+**Archive, not current evidence or project status.** This was a discovery list for the first draft.
+Some rows below retain withdrawn interpretations and obsolete availability statements, even after
+the dated corrections. Do not cite its candidate numbers or conclusions without checking the
+current record. Start at [REVIEW_GUIDE.md](REVIEW_GUIDE.md), use
+[PAPER_EVIDENCE_MAP.md](PAPER_EVIDENCE_MAP.md) for the current manuscript,
+[EVIDENCE.md](EVIDENCE.md) for numerical cards, and [LEARNINGS.md](LEARNINGS.md) for the
+full-history synthesis. The original text remains here for auditability.
 
 ## Corrections 2026-09-30 (Astra and Sonnet passes; each verified against the named source)
 
