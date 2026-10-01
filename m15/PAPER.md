@@ -18,8 +18,8 @@ We built **Constella** around **Stella**, the `stella_en_400M_v5` embedding mode
 
 Two findings follow from the cheapness of the students, and the paper is organized around them.
 
-- **Finding A, construction.** Fitting a table student takes four to seven minutes per teacher on an A100, target encoding included, so we could screen 26 teachers under one recipe, then repeat the screen under a second, independent student recipe. The teacher's own retrieval quality was a poor standalone guide to the student's quality under either recipe. A cheap development screen of the student was a good one.
-- **Finding B, serving.** A student's queries are not the teacher's queries, and the graph index was built for the teacher's. Over the unchanged index, table queries need more graph effort to recover their exact neighbors, in all 25 measured teacher spaces on the two larger corpora.
+- **Finding A, construction.** Fitting a table student takes four to seven minutes per teacher on an A100, target encoding included, so we could screen 26 teachers under one recipe, then repeat the screen with a second student representation. The teacher's own retrieval quality was a poor standalone guide to the student's quality under either recipe. A cheap development screen of the student was a good one.
+- **Finding B, serving.** A student's queries are not the teacher's queries, and they sit differently against the document graph. Over the unchanged index, table queries need more graph effort to recover their exact neighbors, in all 25 measured teacher spaces on the two larger corpora.
 
 The remaining sections give the setup, the two findings, what the shared index then allows, and the limits. "Registered" marks the project's pre-registered evaluations, whose methods and decision rules were fixed before any result was observed. "Exploratory" marks analyses added afterwards. The two screens that extend Finding A and Finding B across teachers are exploratory: their analyses were written down before scoring, but they were not part of the registered programme. The registered evaluations that gated the project, including the ones Constella did not pass, are in Appendix A.
 
