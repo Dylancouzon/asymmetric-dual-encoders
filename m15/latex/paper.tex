@@ -113,14 +113,15 @@ queries in the frozen index's space, so the index stays and only the
 query path changes. This paper asks what that substitution costs and
 what properties of the index decide the cost. Two properties of a frozen
 index are fixed by the encoder that built it: the width of its vectors
-and the retrieval quality of its space. We fit closed-form query
-students to 26 public encoder spaces under two student representations
-and ask, first, how much retrieval quality the student recovers and what
-predicts it. The space's own retrieval quality predicts the student's
-quality only once width is held fixed: standardized effects of +0.69 for
-quality and −0.83 for width under a frozen-backbone head student (+0.63
-and −0.64 under a token-table student), and a two-variable model fitted
-on ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70. The
+and the retrieval quality of its space. We fit query students to 26
+public encoder spaces under two student representations, each fitted by
+a single linear solve with no gradient training (closed form) and ask,
+first, how much retrieval quality the student recovers and what predicts
+it. The space's own retrieval quality predicts the student's quality
+only once width is held fixed: standardized effects of +0.69 for quality
+and −0.83 for width under a frozen-backbone head student (+0.63 and
+−0.64 under a token-table student), and a two-variable model fitted on
+ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70. The
 strongest space yields the weakest registered table student. Second, we
 ask what the student costs at search time over the index's unchanged
 HNSW graph: by exact-neighbor recovery its queries fall short of the
@@ -134,31 +135,35 @@ is the worked instance.
 \subsection{1. Introduction}\label{introduction}
 
 In a production retrieval system the document index is the component
-that is hardest to change. Encoding the 23.7 million documents of the
-BEIR-15 collection with a 400-million-parameter encoder took a measured
-39.9 hours on one RTX 3080; a production index also carries its graph,
-its quantization, and every consumer that stores or joins against its
-vectors. The query encoder is the opposite: it runs once per request, it
-can be replaced between requests, and nothing stored depends on it, as
-long as its output lands in the index's space.
+that is hardest to change. Re-encoding is the smaller part of the cost
+and already substantial: the 23.7 million documents of the BEIR-15
+collection took a measured 39.9 hours with a 400-million-parameter
+encoder on one consumer GPU, and production corpora and encoders are
+larger. The larger part is everything built on the vectors: the graph,
+its quantization, and every consumer that stores, caches, or joins
+against them. The query encoder is the opposite: it runs once per
+request, it can be replaced between requests, and nothing stored depends
+on it, as long as its output lands in the index's space.
 
 \textbf{Query-side distillation} makes that condition hold. A student
 encoder is trained to reproduce the frozen encoder's query vectors and
 then searches the frozen document vectors directly {[}QED, EmbedDistill,
 LEAF{]}. Static variants fit a token table instead of a transformer, so
 a query costs a table lookup and a sum {[}pyNIFE, LightRetriever{]}. The
-capability is established. What is not established is what it costs over
-a given index, and whether the cost can be predicted from the index
-before anything is built.
+capability is established; so is its ceiling, since methods that
+co-train the document tower retain more {[}LightRetriever{]}. What is
+not established is what the frozen-index version costs over a given
+index, and whether the cost can be predicted from the index before
+anything is built.
 
 Two properties of a frozen index are fixed by the encoder that built it
 and cannot be changed without rebuilding: the width of its stored
 vectors and the retrieval quality of the space those vectors come from.
 We study the question over 26 public encoder spaces. Because the
-students are fit in closed form in minutes, the same recipe can be
-applied to every space under one protocol, which turns a one-model
-demonstration into a comparison across spaces. Two questions organize
-the paper.
+students are fitted by a single linear solve in minutes rather than
+trained, the same recipe can be applied to every space under one
+protocol, which turns a one-model demonstration into a comparison across
+spaces. Two questions organize the paper.
 
 \begin{itemize}
 \tightlist
@@ -212,8 +217,13 @@ fits a static token table to a frozen teacher {[}pyNIFE{]};
 LightRetriever trains a lookup query side jointly with a document tower
 {[}LightRetriever{]}; static sentence embeddings, Model2Vec, and NanoVDR
 are related compact representations {[}StaticEmb, Model2Vec, NanoVDR{]}.
-None compares students across many teachers under one recipe, which is
-the comparison RQ1 needs.
+Methods that train both towers at once reach higher retention:
+LightRetriever's lookup query side keeps about 95\% of its co-trained
+document tower's BEIR score, against 81.4\% for Zero over a frozen
+Stella. That gap is the price of the frozen index: joint training
+re-encodes every document, which is the operation this paper assumes is
+not available. None of these works compares students across many
+teachers under one recipe, which is the comparison RQ1 needs.
 
 That stronger teachers can produce weaker students is known in
 distillation generally {[}Cho and Hariharan 2019{]} and in dense
@@ -243,73 +253,37 @@ encoder defines one frozen space: its document vectors are frozen and
 its own query encoder is the reference path. Table A lists them by
 width.
 
-\textbf{Table A.} The 26 encoder spaces. ``Own nDCG@10'' is the
-encoder's own query path on the six-set suite (Section 3.3); the two
-student columns are the outcomes of Section 4.
+\textbf{Table A.} The 26 encoder spaces by width (full roster in
+Appendix B). ``Own nDCG@10'' is the encoder's own query path on the
+six-set suite (Section 3.3); student columns are the outcomes of Section
+4.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
-  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}@{}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2353}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}@{}}
 \toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Encoder (frozen space)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+\begin{minipage}[b]{\linewidth}\raggedleft
 Width
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Spaces (registered)
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Pooling
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Own nDCG@10
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Table student
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Head student
+Own nDCG@10, range
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Roster
+Table student, range
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Head student, range
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-bge-small-en-v1.5 & 384 & cls & 0.5042 & 0.3581 & 0.5084 &
-exploratory \\
-arctic-embed-s & 384 & cls & 0.4993 & 0.3516 & 0.2594 & exploratory \\
-gte-small & 384 & mean & 0.4838 & 0.2903 & 0.4733 & exploratory \\
-arctic-embed-xs & 384 & cls & 0.4662 & 0.3440 & 0.2779 & exploratory \\
-e5-small-v2 & 384 & mean & 0.4544 & 0.3203 & 0.3367 & exploratory \\
-minilm-l12 & 384 & mean & 0.4219 & 0.3138 & 0.3229 & exploratory \\
-minilm-l6 & 384 & mean & 0.4142 & 0.3267 & 0.3088 & exploratory \\
-multi-qa-minilm-l6 & 384 & mean & 0.4008 & 0.3406 & 0.3094 &
-exploratory \\
-msmarco-minilm-l6 & 384 & mean & 0.3281 & 0.2905 & 0.1962 &
-exploratory \\
-gte-base-en-v1.5 & 768 & cls & 0.5331 & 0.3252 & 0.2618 & registered \\
-arctic-embed-m-v1.5 & 768 & cls & 0.5263 & 0.3279 & 0.1874 &
-registered \\
-bge-base-en-v1.5 & 768 & cls & 0.5259 & 0.3529 & 0.3249 & registered \\
-bge-base-en-v1 & 768 & cls & 0.5131 & 0.3004 & 0.2773 & exploratory \\
-gte-base & 768 & mean & 0.5063 & 0.2762 & 0.2314 & exploratory \\
-e5-base-v1 & 768 & mean & 0.4934 & 0.3126 & 0.2345 & exploratory \\
-e5-base-v2 & 768 & mean & 0.4669 & 0.2930 & 0.2241 & registered \\
-contriever-msmarco & 768 & mean & 0.3909 & 0.3270 & 0.1879 &
-exploratory \\
-tas-b & 768 & cls & 0.3262 & 0.2115 & 0.0868 & exploratory \\
-contriever & 768 & mean & 0.2846 & 0.1864 & 0.0590 & exploratory \\
-gte-large-en-v1.5 & 1024 & cls & 0.5970 & 0.2455 & 0.2229 &
-registered \\
-stella-400M-v5 & 1024 & mean & 0.5745 & 0.3974 & 0.2505 & registered \\
-mxbai-embed-large-v1 & 1024 & cls & 0.5368 & 0.2605 & 0.2641 &
-registered \\
-bge-large-en-v1.5 & 1024 & cls & 0.5329 & 0.2845 & 0.2679 &
-registered \\
-arctic-embed-l & 1024 & cls & 0.5289 & 0.3034 & 0.1564 & registered \\
-gte-large & 1024 & mean & 0.5129 & 0.2481 & 0.2249 & exploratory \\
-e5-large-v2 & 1024 & mean & 0.4735 & 0.2585 & 0.1743 & registered \\
+384 & 9 (0) & 0.328 to 0.504 & 0.291 to 0.358 & 0.196 to 0.508 \\
+768 & 10 (4) & 0.285 to 0.533 & 0.186 to 0.353 & 0.059 to 0.325 \\
+1024 & 7 (6) & 0.474 to 0.597 & 0.246 to 0.397 & 0.156 to 0.268 \\
 \end{longtable}
 }
 
@@ -330,8 +304,10 @@ Two closed-form students are fitted to every index, each producing a
 by ridge regression from the token counts of each fit query to the
 index's query vector for that query, initialized from the index's own
 token embeddings and solved by block conjugate gradient with a
-convergence gate. A query is the normalized, square-root-count-weighted
-sum of its tokens' rows; no transformer runs at query time.
+convergence gate. A query is the sum of its tokens' rows, each weighted
+by the square root of the token's count, then normalized; no transformer
+runs at query time, so a query costs a tokenizer pass and one vector
+sum.
 
 \textbf{Head student.} A frozen bge-small backbone, read out as the
 concatenated masked-mean states of layers 12, 8, and 4 (1,152
@@ -370,10 +346,12 @@ measured against its own exact top-10. The pre-specified primary
 quantity is the relative-nDCG-loss multiplier: with the encoder's own
 path at \texttt{ef=64} as the reference, the smallest \texttt{ef} at
 which the student path reaches the same relative loss, divided by 64,
-averaged over builds, and censored when a build never reaches it by 512.
-The secondary quantity is the same multiplier on tie-aware recovery@10,
-and the recovery gap at \texttt{ef=64}. Parity checks, the tie rule, and
-the one excluded encoder (tas-b) are in Appendix C.
+averaged over builds; a space whose student never reaches the reference
+by \texttt{ef=512} in a build is reported as censored, meaning its
+multiplier is at least eight and otherwise unknown. The secondary
+quantity is the same multiplier on tie-aware recovery@10, and the
+recovery gap at \texttt{ef=64}. Parity checks, the tie rule, and the one
+excluded encoder (tas-b) are in Appendix C.
 
 \subsubsection{3.5 The instance}\label{the-instance}
 
@@ -396,15 +374,15 @@ yields the strongest student.
 
 H1 is the heuristic a team would use to choose which space to build a
 cheap query path for, and it is what the project used before the screen.
-Table A contains its pooled refutation: the strongest registered space,
-gte-large-en-v1.5, yields the weakest registered table student and a
-below-median head student, and Stella, second in the same width band,
-yields the strongest table student. Over all 26 spaces, the rank
-correlation between a space's own score and its student's score is +0.09
-for the table (95\% checkpoint interval −0.39 to +0.52) and +0.09 for
-the head (−0.36 to +0.51). The intervals are compatible with a moderate
-positive association; the strongest-index rule itself is tested directly
-in Section 4.4.
+The roster (Appendix B) contains its pooled refutation: the strongest
+registered space, gte-large-en-v1.5, yields the weakest registered table
+student and a below-median head student, and Stella, second in the same
+width band, yields the strongest table student. Over all 26 spaces, the
+rank correlation between a space's own score and its student's score is
++0.09 for the table (95\% checkpoint interval −0.39 to +0.52) and +0.09
+for the head (−0.36 to +0.51). The intervals are compatible with a
+moderate positive association; the strongest-index rule itself is tested
+directly in Section 4.4.
 
 \begin{figure}
 \centering
@@ -427,9 +405,11 @@ wider indexes yield weaker students. Table B fits it. The outcome is the
 student's absolute six-set score, so that retention, the student's score
 divided by the index's, is a derived quantity rather than the modelled
 one; the predictors are the space's own score and log2 width;
-coefficients are standardized, with 10,000-draw checkpoint bootstrap
-intervals; held-out performance is leave-one-family-out prediction over
-the nine families.
+coefficients are standardized, so each is the change in student quality,
+in standard deviations, per standard deviation of the predictor;
+intervals come from 10,000 resamples of the 26 checkpoints; held-out
+performance is prediction for each model family from a fit on the other
+eight (leave-one-family-out).
 
 \textbf{Table B.} Nested models of student quality over 26 indexes
 (exploratory, analysis pre-specified).
@@ -670,20 +650,31 @@ Zero (token table) & 0.4572 & 81.4\% & 0.044 ms & 90.1 MiB \\
 \end{longtable}
 }
 
-Retention varies by dataset (Figure 3). The instance illustrates RQ1
-without validating the width model, which was fitted to closed-form
-students: Stella's closed-form table student is the roster's best
-(0.3974), while the strongest encoder of the same width,
-gte-large-en-v1.5, yields the weakest registered table (0.2455).
+The three paths differ in what they compute, and therefore in where each
+loses. Zero reads one learned vector per token and sums them, so it
+cannot use word order or context: two queries with the same tokens in a
+different order get the same vector. Its retention is lowest on topical
+and scientific sets (0.67 on TREC-COVID and FiQA) and highest where the
+query is a short entity or a near-duplicate of a document (0.95 on
+Quora, 0.96 on climate-fever), and in an internal domain-jargon workload
+it fell below BM25. Nano runs three layers of a small transformer over
+the query, so it sees context at about a fiftieth of Stella's cost; its
+retention is flat across datasets (0.85 to 0.99 except FEVER, which was
+in Zero's training pool and not in Nano's), and on BEIR-15 it is below
+two small models that use their own indexes (Appendix A). Stella's own
+encoder is the reference and costs 31.6 ms per query. Per-dataset
+retention is in Appendix A.
 
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Retention per dataset. Datasets with disclosed Stella training exposure are ArguAna, FiQA, and FEVER; the four originally held-out sets are FEVER, DBpedia-entity, and the CQADupStack android and english forums.}]{figures/f2_per_dataset.pdf}}
-\caption{Retention per dataset. Datasets with disclosed Stella training
-exposure are ArguAna, FiQA, and FEVER; the four originally held-out sets
-are FEVER, DBpedia-entity, and the CQADupStack android and english
-forums.}
-\end{figure}
+Because all three were verified against the same populated collections
+with no rebuild between encoder batches, a request can use any of them,
+and an application can match the path to the moment: a table lookup
+while the user is typing, the small transformer when typing pauses, and
+the full encoder on submit. This is a capability of the design, not a
+measured result; the prefix experiment in Appendix C shows the dense
+paths retain similar fractions of their full-query quality on truncated
+queries, and no cascade was timed end to end. Three attempts to
+specialize a student to one workload over the same index did not produce
+an improved encoder (Section 7).
 
 The instance also shows RQ2's cost in time. On the uncompressed
 million-passage diagnostic, search time at a fixed \texttt{ef} is the
@@ -695,7 +686,7 @@ the fastest setting within 1\% gives Zero 0.6116 at 1.11 ms, Nano 0.6893
 at 2.48 ms, and Stella 0.7226 at 21.3 ms: on that collection's query
 sample the encoding gap between Zero and Nano is 63-fold (51-fold on
 Table 1's sample) and becomes 2.2-fold after search, at different
-quality levels. Figure 4 gives the registered sweep. Lexical fusion,
+quality levels. Figure 3 gives the registered sweep. Lexical fusion,
 per-query routing, and a query-precision control over the same index are
 reported in Appendices C and D.
 
@@ -719,7 +710,9 @@ not a latency claim. The instance's two students have different training
 pools, including different FEVER exposure, and Stella discloses training
 exposure on ArguAna, FiQA, and FEVER. Query intervals condition on the
 trained models. The native magnitude-preserving query setting was not
-tested.
+tested. Three bounded attempts to specialize a student to one internal
+workload over the same index produced no improved encoder, so
+per-workload students remain a possibility of the design, not a result.
 
 \subsection{Artifact availability}\label{artifact-availability}
 
@@ -748,6 +741,18 @@ and HotpotQA; Nano excludes FEVER. MS MARCO is licensed for
 non-commercial use, so it was validation-only in our distillation: it
 supplied no training targets, negatives, or generation seeds, although
 Nano's pretrained base has prior exposure to it.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Per-dataset retention of the Stella query path by Zero and Nano over 15 BEIR datasets}]{figures/f2_per_dataset.pdf}}
+\caption{Per-dataset retention of the Stella query path by Zero and Nano
+over 15 BEIR datasets}
+\end{figure}
+
+\textbf{Figure A1.} Retention per dataset. Datasets with disclosed
+Stella training exposure are ArguAna, FiQA, and FEVER; the four
+originally held-out sets are FEVER, DBpedia-entity, and the CQADupStack
+android and english forums.
 
 \textbf{Partitions.} The six-set suite is NFCorpus, SCIDOCS, SciFact,
 TREC-COVID, FiQA, and ArguAna. ``Clean-four'' means the first four,
@@ -875,6 +880,75 @@ Nano + BM25 & 0.6879 & 0.4296 & 0.4750 & 0.4323 \\
 \subsection{Appendix B. Construction
 details}\label{appendix-b.-construction-details}
 
+\textbf{The roster.} The 26 encoder spaces of Section 3.1, by width and
+own six-set score.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1600}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1200}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Encoder (frozen space)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Width
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Pooling
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Own nDCG@10
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Table student
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Head student
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Roster
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+bge-small-en-v1.5 & 384 & cls & 0.5042 & 0.3581 & 0.5084 &
+exploratory \\
+arctic-embed-s & 384 & cls & 0.4993 & 0.3516 & 0.2594 & exploratory \\
+gte-small & 384 & mean & 0.4838 & 0.2903 & 0.4733 & exploratory \\
+arctic-embed-xs & 384 & cls & 0.4662 & 0.3440 & 0.2779 & exploratory \\
+e5-small-v2 & 384 & mean & 0.4544 & 0.3203 & 0.3367 & exploratory \\
+minilm-l12 & 384 & mean & 0.4219 & 0.3138 & 0.3229 & exploratory \\
+minilm-l6 & 384 & mean & 0.4142 & 0.3267 & 0.3088 & exploratory \\
+multi-qa-minilm-l6 & 384 & mean & 0.4008 & 0.3406 & 0.3094 &
+exploratory \\
+msmarco-minilm-l6 & 384 & mean & 0.3281 & 0.2905 & 0.1962 &
+exploratory \\
+gte-base-en-v1.5 & 768 & cls & 0.5331 & 0.3252 & 0.2618 & registered \\
+arctic-embed-m-v1.5 & 768 & cls & 0.5263 & 0.3279 & 0.1874 &
+registered \\
+bge-base-en-v1.5 & 768 & cls & 0.5259 & 0.3529 & 0.3249 & registered \\
+bge-base-en-v1 & 768 & cls & 0.5131 & 0.3004 & 0.2773 & exploratory \\
+gte-base & 768 & mean & 0.5063 & 0.2762 & 0.2314 & exploratory \\
+e5-base-v1 & 768 & mean & 0.4934 & 0.3126 & 0.2345 & exploratory \\
+e5-base-v2 & 768 & mean & 0.4669 & 0.2930 & 0.2241 & registered \\
+contriever-msmarco & 768 & mean & 0.3909 & 0.3270 & 0.1879 &
+exploratory \\
+tas-b & 768 & cls & 0.3262 & 0.2115 & 0.0868 & exploratory \\
+contriever & 768 & mean & 0.2846 & 0.1864 & 0.0590 & exploratory \\
+gte-large-en-v1.5 & 1024 & cls & 0.5970 & 0.2455 & 0.2229 &
+registered \\
+stella-400M-v5 & 1024 & mean & 0.5745 & 0.3974 & 0.2505 & registered \\
+mxbai-embed-large-v1 & 1024 & cls & 0.5368 & 0.2605 & 0.2641 &
+registered \\
+bge-large-en-v1.5 & 1024 & cls & 0.5329 & 0.2845 & 0.2679 &
+registered \\
+arctic-embed-l & 1024 & cls & 0.5289 & 0.3034 & 0.1564 & registered \\
+gte-large & 1024 & mean & 0.5129 & 0.2481 & 0.2249 & exploratory \\
+e5-large-v2 & 1024 & mean & 0.4735 & 0.2585 & 0.1743 & registered \\
+\end{longtable}
+}
+
 \textbf{Table student.} Ridge regression from WordPiece token counts to
 the index's query vectors, initialized from the index's own token
 embeddings, solved by block conjugate gradient with a convergence gate;
@@ -943,6 +1017,12 @@ reported; and the exclusion rule that removed tas-b (SCIDOCS head parity
 \texttt{ef}. Loss-based censoring: four indexes on FiQA, eight on
 SCIDOCS, eight on TREC-COVID; recovery-based censoring: one per
 workload.
+
+\textbf{Truncated queries (registered).} On synthetic prefixes of
+SciFact, NFCorpus, and FiQA queries, the three dense paths retain
+descriptively similar shares of their own full-query nDCG@10 at each
+prefix length; this is not an equivalence test and no search-as-you-type
+session was measured.
 
 \textbf{Native binary pilot and replication.} On one fixed binary
 collection per workload with 192 deterministically selected queries,

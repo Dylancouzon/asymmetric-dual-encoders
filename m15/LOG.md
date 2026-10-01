@@ -730,3 +730,14 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   the width "larger" claim for the table, the "above eight" censoring wording, and the slogan
   sentences are corrected; Section 6 keeps only pointers for fusion, routing, and precision; 3.4
   and 3.5 shortened. C17 wording on builds corrected in the evidence generator.
+- Owner feedback on v17 applied: Table A reduced to a per-width summary with the full roster in
+  Appendix B; the re-encode motivation scoped (consumer GPU, mid-sized encoder, downstream
+  consumers as the larger cost); joint-training methods contrasted explicitly (LightRetriever
+  about 95% with a co-trained document tower versus 81.4% for Zero over a frozen Stella; the gap
+  is the price of the frozen index); first-use definitions for closed form, standardized
+  coefficients, leave-one-family-out, censoring, ef, and the table's query rule; Section 6 gained
+  a paragraph on what each path computes, where each loses, and matching the path to the moment
+  (type, pause, submit) as a design capability, with the three failed specialization attempts in
+  Limitations; per-dataset retention figure moved to Appendix A; prefix-retention line added to
+  Appendix C. Prose now 3,943 words. Owner's hot-swap and task-specific points answered in chat:
+  capability described, not claimed as a finding.
