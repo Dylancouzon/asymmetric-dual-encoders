@@ -1,0 +1,3510 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E19 (exploratory, pre-specified before scoring)",
+  "scope": "second student recipe over the E8/E8x teachers; descriptive, no p-values; frozen-backbone head is a floor for a trained student, not Nano",
+  "backbone": {
+    "repo": "BAAI/bge-small-en-v1.5",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "layers": [
+      12,
+      8,
+      4
+    ],
+    "pooling": "masked mean per layer, concatenated, bias column"
+  },
+  "features": {
+    "backbone": {
+      "repo": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "layers": [
+        12,
+        8,
+        4
+      ],
+      "pooling": "masked mean per layer, concatenated, bias column"
+    },
+    "fit_list_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+    "n_fit": 337981,
+    "fit_features_sha256": "68d413e524450dd1747c158ee4d599ec8045cee0fc92091b6c37a156f7be2c7d",
+    "seconds": 0.8
+  },
+  "rosters": {
+    "registered_ten": {
+      "n": 10,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ]
+    },
+    "pooled": {
+      "n": 26,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1",
+        "minilm-l6",
+        "minilm-l12",
+        "multi-qa-minilm-l6",
+        "msmarco-minilm-l6",
+        "bge-small-en-v1.5",
+        "bge-base-en-v1",
+        "e5-small-v2",
+        "e5-base-v1",
+        "gte-small",
+        "gte-base",
+        "gte-large",
+        "arctic-embed-xs",
+        "arctic-embed-s",
+        "contriever",
+        "contriever-msmarco",
+        "tas-b"
+      ]
+    },
+    "registered_ten_without_backbone": {
+      "n": 10,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ]
+    },
+    "pooled_without_backbone": {
+      "n": 25,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1",
+        "minilm-l6",
+        "minilm-l12",
+        "multi-qa-minilm-l6",
+        "msmarco-minilm-l6",
+        "bge-base-en-v1",
+        "e5-small-v2",
+        "e5-base-v1",
+        "gte-small",
+        "gte-base",
+        "gte-large",
+        "arctic-embed-xs",
+        "arctic-embed-s",
+        "contriever",
+        "contriever-msmarco",
+        "tas-b"
+      ]
+    }
+  },
+  "spearman": {
+    "registered_ten": {
+      "n": 10,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ],
+      "recipe2_vs_recipe1_all6": {
+        "spearman": 0.23636363636363633,
+        "bootstrap95_over_checkpoints": [
+          -0.4906832298136646,
+          0.7436305732484071
+        ]
+      },
+      "recipe2_vs_teacher_all6": {
+        "spearman": 0.17575757575757575,
+        "bootstrap95_over_checkpoints": [
+          -0.559748427672956,
+          0.6666666666666665
+        ]
+      },
+      "recipe2_dev_vs_six_all6": {
+        "spearman": 0.709090909090909,
+        "bootstrap95_over_checkpoints": [
+          0.11879370629370639,
+          0.9620253164556963
+        ]
+      },
+      "recipe2_vs_recipe1_clean4": {
+        "spearman": 0.18787878787878787,
+        "bootstrap95_over_checkpoints": [
+          -0.5249999999999999,
+          0.849056603773585
+        ]
+      },
+      "recipe2_vs_teacher_clean4": {
+        "spearman": -0.43030303030303024,
+        "bootstrap95_over_checkpoints": [
+          -0.8374999999999999,
+          0.28207547169811287
+        ]
+      },
+      "recipe2_dev_vs_six_clean4": {
+        "spearman": 0.4787878787878787,
+        "bootstrap95_over_checkpoints": [
+          -0.28205128205128205,
+          0.9230769230769231
+        ]
+      },
+      "leave_one_family_out": {
+        "arctic": {
+          "recipe2_vs_recipe1_all6": 0.5000000000000001,
+          "recipe2_vs_teacher_all6": 0.0,
+          "recipe2_vs_recipe1_clean4": 0.6428571428571429,
+          "recipe2_vs_teacher_clean4": -0.2380952380952381
+        },
+        "bge": {
+          "recipe2_vs_recipe1_all6": 0.14285714285714288,
+          "recipe2_vs_teacher_all6": 0.4047619047619048,
+          "recipe2_vs_recipe1_clean4": 0.19047619047619052,
+          "recipe2_vs_teacher_clean4": -0.3333333333333334
+        },
+        "e5": {
+          "recipe2_vs_recipe1_all6": 0.07142857142857144,
+          "recipe2_vs_teacher_all6": -0.14285714285714288,
+          "recipe2_vs_recipe1_clean4": 0.09523809523809526,
+          "recipe2_vs_teacher_clean4": -0.4047619047619048
+        },
+        "gte": {
+          "recipe2_vs_recipe1_all6": 0.19047619047619052,
+          "recipe2_vs_teacher_all6": 0.261904761904762,
+          "recipe2_vs_recipe1_clean4": 0.023809523809523815,
+          "recipe2_vs_teacher_clean4": -0.4523809523809524
+        },
+        "mxbai": {
+          "recipe2_vs_recipe1_all6": 0.35,
+          "recipe2_vs_teacher_all6": 0.15,
+          "recipe2_vs_recipe1_clean4": 0.16666666666666669,
+          "recipe2_vs_teacher_clean4": -0.38333333333333336
+        },
+        "stella": {
+          "recipe2_vs_recipe1_all6": 0.2333333333333333,
+          "recipe2_vs_teacher_all6": 0.16666666666666669,
+          "recipe2_vs_recipe1_clean4": 0.16666666666666669,
+          "recipe2_vs_teacher_clean4": -0.6333333333333333
+        }
+      }
+    },
+    "pooled": {
+      "n": 26,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1",
+        "minilm-l6",
+        "minilm-l12",
+        "multi-qa-minilm-l6",
+        "msmarco-minilm-l6",
+        "bge-small-en-v1.5",
+        "bge-base-en-v1",
+        "e5-small-v2",
+        "e5-base-v1",
+        "gte-small",
+        "gte-base",
+        "gte-large",
+        "arctic-embed-xs",
+        "arctic-embed-s",
+        "contriever",
+        "contriever-msmarco",
+        "tas-b"
+      ],
+      "recipe2_vs_recipe1_all6": {
+        "spearman": 0.5063247863247863,
+        "bootstrap95_over_checkpoints": [
+          0.12339925968880121,
+          0.7864042838638047
+        ]
+      },
+      "recipe2_vs_teacher_all6": {
+        "spearman": 0.09264957264957263,
+        "bootstrap95_over_checkpoints": [
+          -0.35857043893569085,
+          0.5065463917525771
+        ]
+      },
+      "recipe2_dev_vs_six_all6": {
+        "spearman": 0.844102564102564,
+        "bootstrap95_over_checkpoints": [
+          0.6114339695308271,
+          0.945017182130584
+        ]
+      },
+      "recipe2_vs_recipe1_clean4": {
+        "spearman": 0.5206837606837607,
+        "bootstrap95_over_checkpoints": [
+          0.12585434092431821,
+          0.8012413793918424
+        ]
+      },
+      "recipe2_vs_teacher_clean4": {
+        "spearman": -0.07965811965811966,
+        "bootstrap95_over_checkpoints": [
+          -0.5302683695558793,
+          0.37582052326896737
+        ]
+      },
+      "recipe2_dev_vs_six_clean4": {
+        "spearman": 0.7429059829059829,
+        "bootstrap95_over_checkpoints": [
+          0.42228068006563074,
+          0.9168099003093847
+        ]
+      },
+      "leave_one_family_out": {
+        "arctic": {
+          "recipe2_vs_recipe1_all6": 0.6036137775268211,
+          "recipe2_vs_teacher_all6": 0.2659514398644834,
+          "recipe2_vs_recipe1_clean4": 0.6600790513833994,
+          "recipe2_vs_teacher_clean4": 0.1044607566346697
+        },
+        "bge": {
+          "recipe2_vs_recipe1_all6": 0.4500282326369283,
+          "recipe2_vs_teacher_all6": 0.08187464709203841,
+          "recipe2_vs_recipe1_clean4": 0.5155279503105591,
+          "recipe2_vs_teacher_clean4": -0.08639186900056467
+        },
+        "contriever": {
+          "recipe2_vs_recipe1_all6": 0.5078260869565216,
+          "recipe2_vs_teacher_all6": -0.11565217391304347,
+          "recipe2_vs_recipe1_clean4": 0.48173913043478256,
+          "recipe2_vs_teacher_clean4": -0.32608695652173914
+        },
+        "e5": {
+          "recipe2_vs_recipe1_all6": 0.4703557312252965,
+          "recipe2_vs_teacher_all6": 0.07735742518351214,
+          "recipe2_vs_recipe1_clean4": 0.4895539243365331,
+          "recipe2_vs_teacher_clean4": -0.018633540372670808
+        },
+        "gte": {
+          "recipe2_vs_recipe1_all6": 0.5675324675324676,
+          "recipe2_vs_teacher_all6": 0.16883116883116883,
+          "recipe2_vs_recipe1_clean4": 0.5077922077922078,
+          "recipe2_vs_teacher_clean4": 0.04025974025974026
+        },
+        "minilm": {
+          "recipe2_vs_recipe1_all6": 0.5008469791078487,
+          "recipe2_vs_teacher_all6": 0.16883116883116886,
+          "recipe2_vs_recipe1_clean4": 0.6182947487295314,
+          "recipe2_vs_teacher_clean4": -0.02089215132693394
+        },
+        "mxbai": {
+          "recipe2_vs_recipe1_all6": 0.5292307692307692,
+          "recipe2_vs_teacher_all6": 0.09461538461538462,
+          "recipe2_vs_recipe1_clean4": 0.5007692307692309,
+          "recipe2_vs_teacher_clean4": -0.059230769230769226
+        },
+        "stella": {
+          "recipe2_vs_recipe1_all6": 0.5384615384615384,
+          "recipe2_vs_teacher_all6": 0.10307692307692308,
+          "recipe2_vs_recipe1_clean4": 0.5307692307692308,
+          "recipe2_vs_teacher_clean4": -0.07692307692307691
+        },
+        "tas-b": {
+          "recipe2_vs_recipe1_all6": 0.44461538461538463,
+          "recipe2_vs_teacher_all6": -0.020769230769230772,
+          "recipe2_vs_recipe1_clean4": 0.4623076923076923,
+          "recipe2_vs_teacher_clean4": -0.21461538461538462
+        }
+      }
+    },
+    "registered_ten_without_backbone": {
+      "n": 10,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1"
+      ],
+      "recipe2_vs_recipe1_all6": {
+        "spearman": 0.23636363636363633,
+        "bootstrap95_over_checkpoints": [
+          -0.4906832298136646,
+          0.7436305732484071
+        ]
+      },
+      "recipe2_vs_teacher_all6": {
+        "spearman": 0.17575757575757575,
+        "bootstrap95_over_checkpoints": [
+          -0.559748427672956,
+          0.6666666666666665
+        ]
+      },
+      "recipe2_dev_vs_six_all6": {
+        "spearman": 0.709090909090909,
+        "bootstrap95_over_checkpoints": [
+          0.11879370629370639,
+          0.9620253164556963
+        ]
+      },
+      "recipe2_vs_recipe1_clean4": {
+        "spearman": 0.18787878787878787,
+        "bootstrap95_over_checkpoints": [
+          -0.5249999999999999,
+          0.849056603773585
+        ]
+      },
+      "recipe2_vs_teacher_clean4": {
+        "spearman": -0.43030303030303024,
+        "bootstrap95_over_checkpoints": [
+          -0.8374999999999999,
+          0.28207547169811287
+        ]
+      },
+      "recipe2_dev_vs_six_clean4": {
+        "spearman": 0.4787878787878787,
+        "bootstrap95_over_checkpoints": [
+          -0.28205128205128205,
+          0.9230769230769231
+        ]
+      },
+      "leave_one_family_out": {
+        "arctic": {
+          "recipe2_vs_recipe1_all6": 0.5000000000000001,
+          "recipe2_vs_teacher_all6": 0.0,
+          "recipe2_vs_recipe1_clean4": 0.6428571428571429,
+          "recipe2_vs_teacher_clean4": -0.2380952380952381
+        },
+        "bge": {
+          "recipe2_vs_recipe1_all6": 0.14285714285714288,
+          "recipe2_vs_teacher_all6": 0.4047619047619048,
+          "recipe2_vs_recipe1_clean4": 0.19047619047619052,
+          "recipe2_vs_teacher_clean4": -0.3333333333333334
+        },
+        "e5": {
+          "recipe2_vs_recipe1_all6": 0.07142857142857144,
+          "recipe2_vs_teacher_all6": -0.14285714285714288,
+          "recipe2_vs_recipe1_clean4": 0.09523809523809526,
+          "recipe2_vs_teacher_clean4": -0.4047619047619048
+        },
+        "gte": {
+          "recipe2_vs_recipe1_all6": 0.19047619047619052,
+          "recipe2_vs_teacher_all6": 0.261904761904762,
+          "recipe2_vs_recipe1_clean4": 0.023809523809523815,
+          "recipe2_vs_teacher_clean4": -0.4523809523809524
+        },
+        "mxbai": {
+          "recipe2_vs_recipe1_all6": 0.35,
+          "recipe2_vs_teacher_all6": 0.15,
+          "recipe2_vs_recipe1_clean4": 0.16666666666666669,
+          "recipe2_vs_teacher_clean4": -0.38333333333333336
+        },
+        "stella": {
+          "recipe2_vs_recipe1_all6": 0.2333333333333333,
+          "recipe2_vs_teacher_all6": 0.16666666666666669,
+          "recipe2_vs_recipe1_clean4": 0.16666666666666669,
+          "recipe2_vs_teacher_clean4": -0.6333333333333333
+        }
+      }
+    },
+    "pooled_without_backbone": {
+      "n": 25,
+      "names": [
+        "stella-400M-v5",
+        "arctic-embed-l",
+        "arctic-embed-m-v1.5",
+        "bge-base-en-v1.5",
+        "bge-large-en-v1.5",
+        "e5-base-v2",
+        "e5-large-v2",
+        "gte-base-en-v1.5",
+        "gte-large-en-v1.5",
+        "mxbai-embed-large-v1",
+        "minilm-l6",
+        "minilm-l12",
+        "multi-qa-minilm-l6",
+        "msmarco-minilm-l6",
+        "bge-base-en-v1",
+        "e5-small-v2",
+        "e5-base-v1",
+        "gte-small",
+        "gte-base",
+        "gte-large",
+        "arctic-embed-xs",
+        "arctic-embed-s",
+        "contriever",
+        "contriever-msmarco",
+        "tas-b"
+      ],
+      "recipe2_vs_recipe1_all6": {
+        "spearman": 0.45461538461538464,
+        "bootstrap95_over_checkpoints": [
+          0.04490448976806499,
+          0.7524201884571139
+        ]
+      },
+      "recipe2_vs_teacher_all6": {
+        "spearman": 0.09230769230769231,
+        "bootstrap95_over_checkpoints": [
+          -0.3712809051763512,
+          0.5259143309862001
+        ]
+      },
+      "recipe2_dev_vs_six_all6": {
+        "spearman": 0.8253846153846154,
+        "bootstrap95_over_checkpoints": [
+          0.5723529467460317,
+          0.9407447727665456
+        ]
+      },
+      "recipe2_vs_recipe1_clean4": {
+        "spearman": 0.4746153846153846,
+        "bootstrap95_over_checkpoints": [
+          0.055164915250252716,
+          0.7843921558055664
+        ]
+      },
+      "recipe2_vs_teacher_clean4": {
+        "spearman": -0.07076923076923076,
+        "bootstrap95_over_checkpoints": [
+          -0.541314338866543,
+          0.3965340148572612
+        ]
+      },
+      "recipe2_dev_vs_six_clean4": {
+        "spearman": 0.7115384615384615,
+        "bootstrap95_over_checkpoints": [
+          0.357106879882156,
+          0.9085289031398049
+        ]
+      },
+      "leave_one_family_out": {
+        "arctic": {
+          "recipe2_vs_recipe1_all6": 0.5584415584415584,
+          "recipe2_vs_teacher_all6": 0.274025974025974,
+          "recipe2_vs_recipe1_clean4": 0.6116883116883116,
+          "recipe2_vs_teacher_clean4": 0.12207792207792208
+        },
+        "bge": {
+          "recipe2_vs_recipe1_all6": 0.4500282326369283,
+          "recipe2_vs_teacher_all6": 0.08187464709203841,
+          "recipe2_vs_recipe1_clean4": 0.5155279503105591,
+          "recipe2_vs_teacher_clean4": -0.08639186900056467
+        },
+        "contriever": {
+          "recipe2_vs_recipe1_all6": 0.4535573122529644,
+          "recipe2_vs_teacher_all6": -0.12450592885375496,
+          "recipe2_vs_recipe1_clean4": 0.42885375494071143,
+          "recipe2_vs_teacher_clean4": -0.32411067193675897
+        },
+        "e5": {
+          "recipe2_vs_recipe1_all6": 0.40649350649350646,
+          "recipe2_vs_teacher_all6": 0.10389610389610389,
+          "recipe2_vs_recipe1_clean4": 0.4311688311688312,
+          "recipe2_vs_teacher_clean4": 0.012987012987012986
+        },
+        "gte": {
+          "recipe2_vs_recipe1_all6": 0.5157894736842105,
+          "recipe2_vs_teacher_all6": 0.14436090225563908,
+          "recipe2_vs_recipe1_clean4": 0.4526315789473684,
+          "recipe2_vs_teacher_clean4": 0.03458646616541353
+        },
+        "minilm": {
+          "recipe2_vs_recipe1_all6": 0.438961038961039,
+          "recipe2_vs_teacher_all6": 0.1935064935064935,
+          "recipe2_vs_recipe1_clean4": 0.5766233766233767,
+          "recipe2_vs_teacher_clean4": 0.014285714285714285
+        },
+        "mxbai": {
+          "recipe2_vs_recipe1_all6": 0.4782608695652173,
+          "recipe2_vs_teacher_all6": 0.08956521739130434,
+          "recipe2_vs_recipe1_clean4": 0.4513043478260869,
+          "recipe2_vs_teacher_clean4": -0.05217391304347826
+        },
+        "stella": {
+          "recipe2_vs_recipe1_all6": 0.4782608695652173,
+          "recipe2_vs_teacher_all6": 0.09826086956521737,
+          "recipe2_vs_recipe1_clean4": 0.48521739130434777,
+          "recipe2_vs_teacher_clean4": -0.07217391304347825
+        },
+        "tas-b": {
+          "recipe2_vs_recipe1_all6": 0.3834782608695652,
+          "recipe2_vs_teacher_all6": -0.02608695652173913,
+          "recipe2_vs_recipe1_clean4": 0.40782608695652167,
+          "recipe2_vs_teacher_clean4": -0.21043478260869564
+        }
+      }
+    }
+  },
+  "strongest_teacher_comparison": {
+    "strongest_registered_teacher": "gte-large-en-v1.5",
+    "recipe2_screen_choice": "bge-base-en-v1.5",
+    "recipe2_six_strongest": 0.2229356203153647,
+    "recipe2_six_choice": 0.32490339702230964,
+    "recipe1_screen_choice": "stella-400M-v5"
+  },
+  "configs": {
+    "stella-400M-v5": {
+      "family": "stella",
+      "repo": "NovaSearch/stella_en_400M_v5",
+      "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+      "dim": 1024,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.20690475804845757,
+          "per_forum": {
+            "cqadup-programmers": 0.19104318982665836,
+            "cqadup-physics": 0.22276632627025678
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2060261259523786,
+          "per_forum": {
+            "cqadup-programmers": 0.19057030532475444,
+            "cqadup-physics": 0.22148194658000275
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.19946458843451764,
+          "per_forum": {
+            "cqadup-programmers": 0.18261835191958944,
+            "cqadup-physics": 0.21631082494944584
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.16247304997407108,
+          "per_forum": {
+            "cqadup-programmers": 0.1414307381314098,
+            "cqadup-physics": 0.18351536181673234
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.20688504120808582,
+          "per_forum": {
+            "cqadup-programmers": 0.19099224010227084,
+            "cqadup-physics": 0.22277784231390077
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.20690475804845757,
+      "six_head": {
+        "scifact": 0.4159582658390645,
+        "nfcorpus": 0.21363021586034125,
+        "fiqa": 0.16713425280967417,
+        "arguana": 0.34112937187702197,
+        "scidocs": 0.10747813784844337,
+        "trec-covid": 0.2577465889918666
+      },
+      "six_head_macro_all6": 0.2505128055377353,
+      "six_head_macro_clean4": 0.24870330213492892,
+      "recipe1_dev_table": 0.34372112121876397,
+      "recipe1_six_table_macro_all6": 0.39738121822679684,
+      "teacher_six_macro_all6": 0.5744902327155205,
+      "recipe1_six_table_macro_clean4": 0.37265976202425094,
+      "teacher_six_macro_clean4": 0.5639868186448334,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4360610351086434
+    },
+    "arctic-embed-l": {
+      "family": "arctic",
+      "repo": "Snowflake/snowflake-arctic-embed-l",
+      "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+      "dim": 1024,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.12272053642463698,
+          "per_forum": {
+            "cqadup-programmers": 0.09968096619492949,
+            "cqadup-physics": 0.14576010665434447
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.12228893492387083,
+          "per_forum": {
+            "cqadup-programmers": 0.10011657232876085,
+            "cqadup-physics": 0.14446129751898082
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.11550636954364826,
+          "per_forum": {
+            "cqadup-programmers": 0.09447408629972025,
+            "cqadup-physics": 0.13653865278757626
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.08056741723456814,
+          "per_forum": {
+            "cqadup-programmers": 0.06838040912499424,
+            "cqadup-physics": 0.09275442534414206
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.1223824106437253,
+          "per_forum": {
+            "cqadup-programmers": 0.09940877096777129,
+            "cqadup-physics": 0.14535605031967933
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.12272053642463698,
+      "six_head": {
+        "scifact": 0.29038564785639126,
+        "nfcorpus": 0.15250422140904873,
+        "fiqa": 0.09470841270498345,
+        "arguana": 0.23029015590514862,
+        "scidocs": 0.042178949065757386,
+        "trec-covid": 0.12846403092533523
+      },
+      "six_head_macro_all6": 0.15642190297777744,
+      "six_head_macro_clean4": 0.15338321231413315,
+      "recipe1_dev_table": 0.25855093912104476,
+      "recipe1_six_table_macro_all6": 0.3033809133834615,
+      "teacher_six_macro_all6": 0.5288890802464533,
+      "recipe1_six_table_macro_clean4": 0.34002907753572365,
+      "teacher_six_macro_clean4": 0.5337776633926088,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.2957555919000776
+    },
+    "arctic-embed-l-mean": {
+      "family": "arctic",
+      "repo": "Snowflake/snowflake-arctic-embed-l",
+      "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+      "dim": 1024,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.05587414433148134,
+          "per_forum": {
+            "cqadup-programmers": 0.04338585626367007,
+            "cqadup-physics": 0.06836243239929261
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.055515769438956857,
+          "per_forum": {
+            "cqadup-programmers": 0.043631269838830686,
+            "cqadup-physics": 0.06740026903908303
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.0493233560698756,
+          "per_forum": {
+            "cqadup-programmers": 0.04016757152152195,
+            "cqadup-physics": 0.058479140618229244
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.02720251971733091,
+          "per_forum": {
+            "cqadup-programmers": 0.02315394667374173,
+            "cqadup-physics": 0.03125109276092009
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.055727853884503624,
+          "per_forum": {
+            "cqadup-programmers": 0.04336937808887356,
+            "cqadup-physics": 0.06808632968013369
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.05587414433148134,
+      "six_head": {
+        "scifact": 0.2566823778790058,
+        "nfcorpus": 0.1372335802691919,
+        "fiqa": 0.04484666086274649,
+        "arguana": 0.19503635930551416,
+        "scidocs": 0.03901557138345542,
+        "trec-covid": 0.08844087704432017
+      },
+      "six_head_macro_all6": 0.12687590445737232,
+      "six_head_macro_clean4": 0.13034310164399332,
+      "recipe1_dev_table": 0.2216920770773902,
+      "recipe1_six_table_macro_all6": 0.27638161890695895,
+      "teacher_six_macro_all6": 0.5072654878531461,
+      "recipe1_six_table_macro_clean4": 0.3245254867850755,
+      "teacher_six_macro_clean4": 0.5105901843406816,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.25011735963812115
+    },
+    "arctic-embed-m-v1.5": {
+      "family": "arctic",
+      "repo": "Snowflake/snowflake-arctic-embed-m-v1.5",
+      "revision": "e58a8f756156a1293d763f17e3aae643474e9b8a",
+      "dim": 768,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2013404740658551,
+          "per_forum": {
+            "cqadup-programmers": 0.1418788425517574,
+            "cqadup-physics": 0.2608021055799528
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.20228257012829096,
+          "per_forum": {
+            "cqadup-programmers": 0.14317589859408453,
+            "cqadup-physics": 0.2613892416624974
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.1974228189904077,
+          "per_forum": {
+            "cqadup-programmers": 0.1363294458211698,
+            "cqadup-physics": 0.2585161921596456
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.16388215563315975,
+          "per_forum": {
+            "cqadup-programmers": 0.10675418961445331,
+            "cqadup-physics": 0.22101012165186618
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.20228257012829096,
+      "six_head": {
+        "scifact": 0.36904166657207677,
+        "nfcorpus": 0.20151496173924122,
+        "fiqa": 0.12161675815223406,
+        "arguana": 0.257439389213964,
+        "scidocs": 0.035623953300462925,
+        "trec-covid": 0.1388820885289668
+      },
+      "six_head_macro_all6": 0.1873531362511576,
+      "six_head_macro_clean4": 0.18626566753518692,
+      "recipe1_dev_table": 0.3018599112685916,
+      "recipe1_six_table_macro_all6": 0.3278676157517864,
+      "teacher_six_macro_all6": 0.5263104040043238,
+      "recipe1_six_table_macro_clean4": 0.37746572974519976,
+      "teacher_six_macro_clean4": 0.534595776264509,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.35597460134878584
+    },
+    "bge-base-en-v1.5": {
+      "family": "bge",
+      "repo": "BAAI/bge-base-en-v1.5",
+      "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+      "dim": 768,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2402367029087522,
+          "per_forum": {
+            "cqadup-programmers": 0.22210104193623637,
+            "cqadup-physics": 0.25837236388126805
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2404298076420613,
+          "per_forum": {
+            "cqadup-programmers": 0.22116516660381969,
+            "cqadup-physics": 0.2596944486803029
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.23530820087291926,
+          "per_forum": {
+            "cqadup-programmers": 0.21828663315444605,
+            "cqadup-physics": 0.2523297685913925
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.20700770598697033,
+          "per_forum": {
+            "cqadup-programmers": 0.18911257970742765,
+            "cqadup-physics": 0.22490283226651303
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.2404298076420613,
+      "six_head": {
+        "scifact": 0.45746456213917697,
+        "nfcorpus": 0.2295948437370211,
+        "fiqa": 0.2228519946902504,
+        "arguana": 0.4356430671723085,
+        "scidocs": 0.12104764323342007,
+        "trec-covid": 0.48281827116168075
+      },
+      "six_head_macro_all6": 0.32490339702230964,
+      "six_head_macro_clean4": 0.32273133006782473,
+      "recipe1_dev_table": 0.30733441092744274,
+      "recipe1_six_table_macro_all6": 0.3529108001800629,
+      "teacher_six_macro_all6": 0.5258658994418152,
+      "recipe1_six_table_macro_clean4": 0.3628207164083858,
+      "teacher_six_macro_clean4": 0.5277893871329808,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.6178445823682066
+    },
+    "bge-large-en-v1.5": {
+      "family": "bge",
+      "repo": "BAAI/bge-large-en-v1.5",
+      "revision": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",
+      "dim": 1024,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.18183569903886954,
+          "per_forum": {
+            "cqadup-programmers": 0.16296429110012192,
+            "cqadup-physics": 0.20070710697761718
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.18194141444119644,
+          "per_forum": {
+            "cqadup-programmers": 0.16360932536873915,
+            "cqadup-physics": 0.2002735035136537
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.17698071428369627,
+          "per_forum": {
+            "cqadup-programmers": 0.16026019193398364,
+            "cqadup-physics": 0.19370123663340888
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.14806153518415144,
+          "per_forum": {
+            "cqadup-programmers": 0.12910471354001563,
+            "cqadup-physics": 0.16701835682828725
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.18194141444119644,
+      "six_head": {
+        "scifact": 0.42801114330828,
+        "nfcorpus": 0.19702099549888444,
+        "fiqa": 0.19413205070524114,
+        "arguana": 0.40886039363019094,
+        "scidocs": 0.11274937157638926,
+        "trec-covid": 0.2666011271772039
+      },
+      "six_head_macro_all6": 0.26789584698269825,
+      "six_head_macro_clean4": 0.2510956593901894,
+      "recipe1_dev_table": 0.27593451876742003,
+      "recipe1_six_table_macro_all6": 0.2845373756039062,
+      "teacher_six_macro_all6": 0.5328786400343317,
+      "recipe1_six_table_macro_clean4": 0.30237625707578497,
+      "teacher_six_macro_clean4": 0.5254195424914688,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5027333183507572
+    },
+    "e5-base-v2": {
+      "family": "e5",
+      "repo": "intfloat/e5-base-v2",
+      "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+      "dim": 768,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.1365067402599222,
+          "per_forum": {
+            "cqadup-programmers": 0.10822253284294153,
+            "cqadup-physics": 0.1647909476769029
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.13570822800809185,
+          "per_forum": {
+            "cqadup-programmers": 0.10716074646123534,
+            "cqadup-physics": 0.16425570955494834
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.1306040491205278,
+          "per_forum": {
+            "cqadup-programmers": 0.10320172928262078,
+            "cqadup-physics": 0.15800636895843484
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.10653945431828996,
+          "per_forum": {
+            "cqadup-programmers": 0.07891193146382042,
+            "cqadup-physics": 0.1341669771727595
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.13651720172201776,
+          "per_forum": {
+            "cqadup-programmers": 0.10804548689341954,
+            "cqadup-physics": 0.16498891655061595
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.13651720172201776,
+      "six_head": {
+        "scifact": 0.3836224058633079,
+        "nfcorpus": 0.18998055771311492,
+        "fiqa": 0.15728522230394013,
+        "arguana": 0.1552612094779104,
+        "scidocs": 0.0878918177914586,
+        "trec-covid": 0.3705883917545079
+      },
+      "six_head_macro_all6": 0.22410493415070665,
+      "six_head_macro_clean4": 0.25802079328059735,
+      "recipe1_dev_table": 0.23410574975396362,
+      "recipe1_six_table_macro_all6": 0.29297262548901326,
+      "teacher_six_macro_all6": 0.466905413419962,
+      "recipe1_six_table_macro_clean4": 0.35090181199934034,
+      "teacher_six_macro_clean4": 0.4892755379633813,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4799793013946779
+    },
+    "e5-large-v2": {
+      "family": "e5",
+      "repo": "intfloat/e5-large-v2",
+      "revision": "f169b11e22de13617baa190a028a32f3493550b6",
+      "dim": 1024,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.09067401724989801,
+          "per_forum": {
+            "cqadup-programmers": 0.07587537932663883,
+            "cqadup-physics": 0.1054726551731572
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.08994545076319652,
+          "per_forum": {
+            "cqadup-programmers": 0.07522276443312688,
+            "cqadup-physics": 0.10466813709326617
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.08632833876691143,
+          "per_forum": {
+            "cqadup-programmers": 0.0729144184612565,
+            "cqadup-physics": 0.09974225907256637
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.06316941528474757,
+          "per_forum": {
+            "cqadup-programmers": 0.05017355005573508,
+            "cqadup-physics": 0.07616528051376006
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.09052214251852625,
+          "per_forum": {
+            "cqadup-programmers": 0.07591295360336288,
+            "cqadup-physics": 0.10513133143368963
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.09067401724989801,
+      "six_head": {
+        "scifact": 0.40403249665200575,
+        "nfcorpus": 0.1705273760528624,
+        "fiqa": 0.07292739352473179,
+        "arguana": 0.14939816054511093,
+        "scidocs": 0.07181098484642774,
+        "trec-covid": 0.17719052637225682
+      },
+      "six_head_macro_all6": 0.17431448966556592,
+      "six_head_macro_clean4": 0.20589034598088818,
+      "recipe1_dev_table": 0.21924431667775074,
+      "recipe1_six_table_macro_all6": 0.2585154132528187,
+      "teacher_six_macro_all6": 0.47353959771750914,
+      "recipe1_six_table_macro_clean4": 0.31737161831232064,
+      "teacher_six_macro_clean4": 0.49143633663810005,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.368109637516636
+    },
+    "gte-base-en-v1.5": {
+      "family": "gte",
+      "repo": "Alibaba-NLP/gte-base-en-v1.5",
+      "revision": "a829fd0e060bb84554da0dfd354d0de0f7712b7f",
+      "dim": 768,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.22189167864741943,
+          "per_forum": {
+            "cqadup-programmers": 0.19405388118753694,
+            "cqadup-physics": 0.24972947610730195
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.22240426854375578,
+          "per_forum": {
+            "cqadup-programmers": 0.19488334216820558,
+            "cqadup-physics": 0.24992519491930595
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.21672527667382946,
+          "per_forum": {
+            "cqadup-programmers": 0.18905897811969755,
+            "cqadup-physics": 0.2443915752279614
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.1942083173864819,
+          "per_forum": {
+            "cqadup-programmers": 0.16456785639760357,
+            "cqadup-physics": 0.2238487783753602
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.22240426854375578,
+      "six_head": {
+        "scifact": 0.43242634405883784,
+        "nfcorpus": 0.18047243624932055,
+        "fiqa": 0.19196807324083126,
+        "arguana": 0.3878455789471712,
+        "scidocs": 0.09537846861336624,
+        "trec-covid": 0.28262910751919684
+      },
+      "six_head_macro_all6": 0.26178666810478735,
+      "six_head_macro_clean4": 0.24772658911018036,
+      "recipe1_dev_table": 0.27482516203597845,
+      "recipe1_six_table_macro_all6": 0.32516428787003987,
+      "teacher_six_macro_all6": 0.5331471367746647,
+      "recipe1_six_table_macro_clean4": 0.34665340266670885,
+      "teacher_six_macro_clean4": 0.5188841910296099,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.49102142738399773
+    },
+    "gte-large-en-v1.5": {
+      "family": "gte",
+      "repo": "Alibaba-NLP/gte-large-en-v1.5",
+      "revision": "104333d6af6f97649377c2afbde10a7704870c7b",
+      "dim": 1024,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.14103602348915892,
+          "per_forum": {
+            "cqadup-programmers": 0.09767226757863313,
+            "cqadup-physics": 0.1843997793996847
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.14063716612375726,
+          "per_forum": {
+            "cqadup-programmers": 0.09710502632971732,
+            "cqadup-physics": 0.18416930591779718
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.13698470586129888,
+          "per_forum": {
+            "cqadup-programmers": 0.09282784607101253,
+            "cqadup-physics": 0.18114156565158523
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.11029943542481245,
+          "per_forum": {
+            "cqadup-programmers": 0.06771775404398431,
+            "cqadup-physics": 0.1528811168056406
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.14123963355629596,
+          "per_forum": {
+            "cqadup-programmers": 0.09818413373444143,
+            "cqadup-physics": 0.18429513337815048
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.14123963355629596,
+      "six_head": {
+        "scifact": 0.4007153194852292,
+        "nfcorpus": 0.17977452547480982,
+        "fiqa": 0.07977105795557604,
+        "arguana": 0.4357194377445804,
+        "scidocs": 0.08914838471219874,
+        "trec-covid": 0.15248499651979378
+      },
+      "six_head_macro_all6": 0.2229356203153647,
+      "six_head_macro_clean4": 0.20553080654800787,
+      "recipe1_dev_table": 0.2038898996083526,
+      "recipe1_six_table_macro_all6": 0.24549633091813186,
+      "teacher_six_macro_all6": 0.5969910507689252,
+      "recipe1_six_table_macro_clean4": 0.26397124554025,
+      "teacher_six_macro_clean4": 0.5582619411636035,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.3734320975636458
+    },
+    "mxbai-embed-large-v1": {
+      "family": "mxbai",
+      "repo": "mixedbread-ai/mxbai-embed-large-v1",
+      "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c",
+      "dim": 1024,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.17127587528745497,
+          "per_forum": {
+            "cqadup-programmers": 0.1499694175827067,
+            "cqadup-physics": 0.1925823329922032
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.17033120315435246,
+          "per_forum": {
+            "cqadup-programmers": 0.1486913973687405,
+            "cqadup-physics": 0.1919710089399644
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.1657319224380377,
+          "per_forum": {
+            "cqadup-programmers": 0.1431036960827121,
+            "cqadup-physics": 0.18836014879336327
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.14067260371418638,
+          "per_forum": {
+            "cqadup-programmers": 0.11947169728463897,
+            "cqadup-physics": 0.16187351014373377
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.1713733261674432,
+          "per_forum": {
+            "cqadup-programmers": 0.15005602326522224,
+            "cqadup-physics": 0.19269062906966414
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.1713733261674432,
+      "six_head": {
+        "scifact": 0.4147994108547043,
+        "nfcorpus": 0.19377704544919547,
+        "fiqa": 0.19898339022964673,
+        "arguana": 0.44326485847302305,
+        "scidocs": 0.11558687325163249,
+        "trec-covid": 0.21824167038897543
+      },
+      "six_head_macro_all6": 0.26410887477452955,
+      "six_head_macro_clean4": 0.23560124998612694,
+      "recipe1_dev_table": 0.2504654384013658,
+      "recipe1_six_table_macro_all6": 0.26051796283936396,
+      "teacher_six_macro_all6": 0.5368057712002477,
+      "recipe1_six_table_macro_clean4": 0.25814730680509657,
+      "teacher_six_macro_clean4": 0.5283067772988665,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4920008109898049
+    },
+    "minilm-l6": {
+      "family": "minilm",
+      "repo": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+      "dim": 384,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2786685560392814,
+          "per_forum": {
+            "cqadup-programmers": 0.24901273846098332,
+            "cqadup-physics": 0.30832437361757953
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.27880335102009585,
+          "per_forum": {
+            "cqadup-programmers": 0.24907319472958234,
+            "cqadup-physics": 0.30853350731060936
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2758098304962637,
+          "per_forum": {
+            "cqadup-programmers": 0.24528234491132975,
+            "cqadup-physics": 0.3063373160811976
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.2593779197173199,
+          "per_forum": {
+            "cqadup-programmers": 0.22974308899139984,
+            "cqadup-physics": 0.28901275044323993
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.27880335102009585,
+      "six_head": {
+        "scifact": 0.47167005652205946,
+        "nfcorpus": 0.24844323167603546,
+        "fiqa": 0.19172026814879972,
+        "arguana": 0.37892398598191757,
+        "scidocs": 0.12987767634243874,
+        "trec-covid": 0.43212668050585856
+      },
+      "six_head_macro_all6": 0.30879364986285157,
+      "six_head_macro_clean4": 0.32052941126159806,
+      "recipe1_dev_table": 0.30078675741764516,
+      "recipe1_six_table_macro_all6": 0.32665095410091866,
+      "teacher_six_macro_all6": 0.4141680764640885,
+      "recipe1_six_table_macro_clean4": 0.33241206078420027,
+      "teacher_six_macro_clean4": 0.4101663829993712,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.7455756911521072
+    },
+    "minilm-l12": {
+      "family": "minilm",
+      "repo": "sentence-transformers/all-MiniLM-L12-v2",
+      "revision": "a50ef00143b4d5391434df20ae11632588ac25be",
+      "dim": 384,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.29243522221988966,
+          "per_forum": {
+            "cqadup-programmers": 0.26907369630886296,
+            "cqadup-physics": 0.31579674813091635
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.29174465293796875,
+          "per_forum": {
+            "cqadup-programmers": 0.26853869785394463,
+            "cqadup-physics": 0.3149506080219929
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.29132901117969556,
+          "per_forum": {
+            "cqadup-programmers": 0.2691313009084625,
+            "cqadup-physics": 0.31352672145092864
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.2675489563558035,
+          "per_forum": {
+            "cqadup-programmers": 0.24645368879768997,
+            "cqadup-physics": 0.28864422391391703
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.292161941783427,
+          "per_forum": {
+            "cqadup-programmers": 0.2685506501987078,
+            "cqadup-physics": 0.31577323336814633
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.29243522221988966,
+      "six_head": {
+        "scifact": 0.5095524176425222,
+        "nfcorpus": 0.26462264513985656,
+        "fiqa": 0.2274672375276068,
+        "arguana": 0.41226470674244015,
+        "scidocs": 0.14815017814449052,
+        "trec-covid": 0.37524698905702186
+      },
+      "six_head_macro_all6": 0.322884029042323,
+      "six_head_macro_clean4": 0.3243930574959728,
+      "recipe1_dev_table": 0.2870441268668955,
+      "recipe1_six_table_macro_all6": 0.3137780363477004,
+      "teacher_six_macro_all6": 0.4219313438129439,
+      "recipe1_six_table_macro_clean4": 0.30936296061494734,
+      "teacher_six_macro_clean4": 0.4153970904227012,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.7652525316665456
+    },
+    "multi-qa-minilm-l6": {
+      "family": "minilm",
+      "repo": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+      "revision": "b207367332321f8e44f96e224ef15bc607f4dbf0",
+      "dim": 384,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.24499800442230796,
+          "per_forum": {
+            "cqadup-programmers": 0.22432136971441355,
+            "cqadup-physics": 0.26567463913020234
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2458108626107408,
+          "per_forum": {
+            "cqadup-programmers": 0.22478856894736235,
+            "cqadup-physics": 0.2668331562741193
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.24331363445026644,
+          "per_forum": {
+            "cqadup-programmers": 0.22233365162601673,
+            "cqadup-physics": 0.2642936172745161
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.22255611427688965,
+          "per_forum": {
+            "cqadup-programmers": 0.1996473434756055,
+            "cqadup-physics": 0.2454648850781738
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.2458108626107408,
+      "six_head": {
+        "scifact": 0.4355013185319118,
+        "nfcorpus": 0.2263805729600462,
+        "fiqa": 0.22119960205999628,
+        "arguana": 0.3463977594386849,
+        "scidocs": 0.09739990801290482,
+        "trec-covid": 0.5293365890213001
+      },
+      "six_head_macro_all6": 0.30936929167080734,
+      "six_head_macro_clean4": 0.3221545971315407,
+      "recipe1_dev_table": 0.3039888116321243,
+      "recipe1_six_table_macro_all6": 0.34061328697872906,
+      "teacher_six_macro_all6": 0.40082683022902277,
+      "recipe1_six_table_macro_clean4": 0.35519372290077034,
+      "teacher_six_macro_clean4": 0.38760556500664456,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.7718278027796722
+    },
+    "msmarco-minilm-l6": {
+      "family": "minilm",
+      "repo": "sentence-transformers/msmarco-MiniLM-L6-cos-v5",
+      "revision": "14ca9be4bbcf1402eac0f43a2e2ccb6e0f994ba3",
+      "dim": 384,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.1285567265969193,
+          "per_forum": {
+            "cqadup-programmers": 0.11442478307394592,
+            "cqadup-physics": 0.14268867011989267
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.12766477616932098,
+          "per_forum": {
+            "cqadup-programmers": 0.11446011176273206,
+            "cqadup-physics": 0.14086944057590992
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.1268885953213616,
+          "per_forum": {
+            "cqadup-programmers": 0.11413347103358948,
+            "cqadup-physics": 0.13964371960913374
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.11730014445140671,
+          "per_forum": {
+            "cqadup-programmers": 0.10656230262459614,
+            "cqadup-physics": 0.1280379862782173
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.12839496217682958,
+          "per_forum": {
+            "cqadup-programmers": 0.11433098968637592,
+            "cqadup-physics": 0.14245893466728324
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.1285567265969193,
+      "six_head": {
+        "scifact": 0.33595176319039394,
+        "nfcorpus": 0.19146173074164538,
+        "fiqa": 0.13445661542114984,
+        "arguana": 0.2112714047373496,
+        "scidocs": 0.0554451895520032,
+        "trec-covid": 0.24873304003011554
+      },
+      "six_head_macro_all6": 0.19621995727877625,
+      "six_head_macro_clean4": 0.20789793087853953,
+      "recipe1_dev_table": 0.21511524277097482,
+      "recipe1_six_table_macro_all6": 0.2904842304958633,
+      "teacher_six_macro_all6": 0.32808983942910114,
+      "recipe1_six_table_macro_clean4": 0.30779908144088103,
+      "teacher_six_macro_clean4": 0.3362341344755537,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5980677658906245
+    },
+    "bge-small-en-v1.5": {
+      "family": "bge",
+      "repo": "BAAI/bge-small-en-v1.5",
+      "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+      "dim": 384,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.41164965631183065,
+          "per_forum": {
+            "cqadup-programmers": 0.38001197701750045,
+            "cqadup-physics": 0.44328733560616085
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.411150135053446,
+          "per_forum": {
+            "cqadup-programmers": 0.3789134737713194,
+            "cqadup-physics": 0.44338679633557254
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.4108275386510303,
+          "per_forum": {
+            "cqadup-programmers": 0.37864972533872365,
+            "cqadup-physics": 0.4430053519633369
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.406630842413998,
+          "per_forum": {
+            "cqadup-programmers": 0.37345294721215694,
+            "cqadup-physics": 0.43980873761583905
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.4115066914580572,
+          "per_forum": {
+            "cqadup-programmers": 0.38000410257188305,
+            "cqadup-physics": 0.44300928034423137
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.41164965631183065,
+      "six_head": {
+        "scifact": 0.7280243114991081,
+        "nfcorpus": 0.3434318017053793,
+        "fiqa": 0.40124139892313126,
+        "arguana": 0.6120494965319833,
+        "scidocs": 0.20838725221197038,
+        "trec-covid": 0.7570126924977169
+      },
+      "six_head_macro_all6": 0.5083578255615483,
+      "six_head_macro_clean4": 0.5092140144785436,
+      "recipe1_dev_table": 0.30811661405816454,
+      "recipe1_six_table_macro_all6": 0.35810312872393313,
+      "teacher_six_macro_all6": 0.5042288582323616,
+      "recipe1_six_table_macro_clean4": 0.380627834187605,
+      "teacher_six_macro_clean4": 0.5047446735789591,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 1.0081886771488273
+    },
+    "bge-base-en-v1": {
+      "family": "bge",
+      "repo": "BAAI/bge-base-en",
+      "revision": "b737bf5dcc6ee8bdc530531266b4804a5d77b5d8",
+      "dim": 768,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.17384186514680028,
+          "per_forum": {
+            "cqadup-programmers": 0.15850808283523332,
+            "cqadup-physics": 0.18917564745836724
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.1731886570885364,
+          "per_forum": {
+            "cqadup-programmers": 0.15776859585750205,
+            "cqadup-physics": 0.18860871831957074
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.16631302326905004,
+          "per_forum": {
+            "cqadup-programmers": 0.15116007894622263,
+            "cqadup-physics": 0.18146596759187744
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.13190637007639935,
+          "per_forum": {
+            "cqadup-programmers": 0.11766792212088227,
+            "cqadup-physics": 0.14614481803191645
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.17392081219243205,
+          "per_forum": {
+            "cqadup-programmers": 0.15859821703342986,
+            "cqadup-physics": 0.18924340735143427
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.17392081219243205,
+      "six_head": {
+        "scifact": 0.42340460735775515,
+        "nfcorpus": 0.18795280237949188,
+        "fiqa": 0.18644007597083298,
+        "arguana": 0.3586667977598735,
+        "scidocs": 0.11693110241786003,
+        "trec-covid": 0.39039680041492225
+      },
+      "six_head_macro_all6": 0.27729869771678933,
+      "six_head_macro_clean4": 0.27967132814250734,
+      "recipe1_dev_table": 0.2688024878348897,
+      "recipe1_six_table_macro_all6": 0.3003996768390756,
+      "teacher_six_macro_all6": 0.5131479083738872,
+      "recipe1_six_table_macro_clean4": 0.31732803465884907,
+      "teacher_six_macro_clean4": 0.5162923130902608,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.540387465663692
+    },
+    "e5-small-v2": {
+      "family": "e5",
+      "repo": "intfloat/e5-small-v2",
+      "revision": "ffb93f3bd4047442299a41ebb6fa998a38507c52",
+      "dim": 384,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2824082810301852,
+          "per_forum": {
+            "cqadup-programmers": 0.2744604476118027,
+            "cqadup-physics": 0.2903561144485678
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.28263432371562575,
+          "per_forum": {
+            "cqadup-programmers": 0.2748921789723481,
+            "cqadup-physics": 0.2903764684589034
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2777993866605252,
+          "per_forum": {
+            "cqadup-programmers": 0.2693946144606471,
+            "cqadup-physics": 0.28620415886040335
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.2517521395113513,
+          "per_forum": {
+            "cqadup-programmers": 0.23476680471551556,
+            "cqadup-physics": 0.26873747430718703
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.28263432371562575,
+      "six_head": {
+        "scifact": 0.5808889508813847,
+        "nfcorpus": 0.2716728707197132,
+        "fiqa": 0.24301711055083236,
+        "arguana": 0.2963822894082955,
+        "scidocs": 0.11597710725150448,
+        "trec-covid": 0.5121520508175613
+      },
+      "six_head_macro_all6": 0.33668172993821527,
+      "six_head_macro_clean4": 0.37017274491754093,
+      "recipe1_dev_table": 0.29527909525787466,
+      "recipe1_six_table_macro_all6": 0.3202569937162221,
+      "teacher_six_macro_all6": 0.454449404925521,
+      "recipe1_six_table_macro_clean4": 0.3883367148272856,
+      "teacher_six_macro_clean4": 0.48370314256714486,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.7408563556011114
+    },
+    "e5-base-v1": {
+      "family": "e5",
+      "repo": "intfloat/e5-base",
+      "revision": "b533fe4636f4a2507c08ddab40644d20b0006d6a",
+      "dim": 768,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.14518460837932468,
+          "per_forum": {
+            "cqadup-programmers": 0.13779923709809971,
+            "cqadup-physics": 0.15256997966054966
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.1450602794517751,
+          "per_forum": {
+            "cqadup-programmers": 0.13806799118517488,
+            "cqadup-physics": 0.15205256771837533
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.13831509652171808,
+          "per_forum": {
+            "cqadup-programmers": 0.13164584848522423,
+            "cqadup-physics": 0.14498434455821196
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.109075685813532,
+          "per_forum": {
+            "cqadup-programmers": 0.10314892787837453,
+            "cqadup-physics": 0.11500244374868945
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.14489416537198663,
+          "per_forum": {
+            "cqadup-programmers": 0.13732261175876168,
+            "cqadup-physics": 0.15246571898521158
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.14518460837932468,
+      "six_head": {
+        "scifact": 0.3482605159835931,
+        "nfcorpus": 0.1694847802864094,
+        "fiqa": 0.13395961022675837,
+        "arguana": 0.23808823164978846,
+        "scidocs": 0.06640534093400043,
+        "trec-covid": 0.45079554397878546
+      },
+      "six_head_macro_all6": 0.23449900384322253,
+      "six_head_macro_clean4": 0.25873654529569706,
+      "recipe1_dev_table": 0.2698738056485995,
+      "recipe1_six_table_macro_all6": 0.3126093046424592,
+      "teacher_six_macro_all6": 0.4933934966366594,
+      "recipe1_six_table_macro_clean4": 0.37475580692187827,
+      "teacher_six_macro_clean4": 0.5207341436729208,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.47527785721081417
+    },
+    "gte-small": {
+      "family": "gte",
+      "repo": "thenlper/gte-small",
+      "revision": "17e1f347d17fe144873b1201da91788898c639cd",
+      "dim": 384,
+      "lambda": 0.01,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.415122861912599,
+          "per_forum": {
+            "cqadup-programmers": 0.3732233513375754,
+            "cqadup-physics": 0.4570223724876226
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.4147999351453024,
+          "per_forum": {
+            "cqadup-programmers": 0.37265339390601415,
+            "cqadup-physics": 0.4569464763845906
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.41578195732390333,
+          "per_forum": {
+            "cqadup-programmers": 0.37488158580073155,
+            "cqadup-physics": 0.45668232884707505
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.41027501368838104,
+          "per_forum": {
+            "cqadup-programmers": 0.36749874818702416,
+            "cqadup-physics": 0.45305127918973787
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.41578195732390333,
+      "six_head": {
+        "scifact": 0.7271580260390825,
+        "nfcorpus": 0.3393493515683949,
+        "fiqa": 0.3882678859770241,
+        "arguana": 0.5811845943801817,
+        "scidocs": 0.21329563254299944,
+        "trec-covid": 0.5906250486372397
+      },
+      "six_head_macro_all6": 0.4733134231908204,
+      "six_head_macro_clean4": 0.4676070146969291,
+      "recipe1_dev_table": 0.2820638425505325,
+      "recipe1_six_table_macro_all6": 0.2903316542459501,
+      "teacher_six_macro_all6": 0.4838047638382989,
+      "recipe1_six_table_macro_clean4": 0.2829621559849963,
+      "teacher_six_macro_clean4": 0.4887554767381047,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.9783149290134212
+    },
+    "gte-base": {
+      "family": "gte",
+      "repo": "thenlper/gte-base",
+      "revision": "c078288308d8dee004ab72c6191778064285ec0c",
+      "dim": 768,
+      "lambda": 0.0001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.24655260635392864,
+          "per_forum": {
+            "cqadup-programmers": 0.2123654630311767,
+            "cqadup-physics": 0.2807397496766806
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.24548977894801405,
+          "per_forum": {
+            "cqadup-programmers": 0.21107262939264668,
+            "cqadup-physics": 0.2799069285033814
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2401654769685176,
+          "per_forum": {
+            "cqadup-programmers": 0.20817656430418977,
+            "cqadup-physics": 0.2721543896328454
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.2061494265069419,
+          "per_forum": {
+            "cqadup-programmers": 0.17216560177095097,
+            "cqadup-physics": 0.24013325124293286
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.24609604128874316,
+          "per_forum": {
+            "cqadup-programmers": 0.21184295051929436,
+            "cqadup-physics": 0.28034913205819195
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.24655260635392864,
+      "six_head": {
+        "scifact": 0.3168547777348696,
+        "nfcorpus": 0.17522564734064547,
+        "fiqa": 0.18794927323850977,
+        "arguana": 0.42505636770514005,
+        "scidocs": 0.10730831224583495,
+        "trec-covid": 0.17578161466739034
+      },
+      "six_head_macro_all6": 0.23136266548873166,
+      "six_head_macro_clean4": 0.19379258799718507,
+      "recipe1_dev_table": 0.27695811382143665,
+      "recipe1_six_table_macro_all6": 0.2761852162018034,
+      "teacher_six_macro_all6": 0.5063318284748346,
+      "recipe1_six_table_macro_clean4": 0.25166629115075734,
+      "teacher_six_macro_clean4": 0.5147090747489925,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.45693881458260077
+    },
+    "gte-large": {
+      "family": "gte",
+      "repo": "thenlper/gte-large",
+      "revision": "4bef63f39fcc5e2d6b0aae83089f307af4970164",
+      "dim": 1024,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.22306181577498663,
+          "per_forum": {
+            "cqadup-programmers": 0.19787047001801317,
+            "cqadup-physics": 0.24825316153196006
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.22312258456867332,
+          "per_forum": {
+            "cqadup-programmers": 0.19754423473485438,
+            "cqadup-physics": 0.24870093440249225
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.2206242881738184,
+          "per_forum": {
+            "cqadup-programmers": 0.19731466329455374,
+            "cqadup-physics": 0.24393391305308307
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.1894233253722305,
+          "per_forum": {
+            "cqadup-programmers": 0.1746006564430343,
+            "cqadup-physics": 0.2042459943014267
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.22312258456867332,
+      "six_head": {
+        "scifact": 0.25150384679796595,
+        "nfcorpus": 0.1656911245471806,
+        "fiqa": 0.20137671810669244,
+        "arguana": 0.43290715386772,
+        "scidocs": 0.1063279693153751,
+        "trec-covid": 0.19185362973122164
+      },
+      "six_head_macro_all6": 0.22494340706102597,
+      "six_head_macro_clean4": 0.17884414259793582,
+      "recipe1_dev_table": 0.25334187732473334,
+      "recipe1_six_table_macro_all6": 0.24813111402801438,
+      "teacher_six_macro_all6": 0.5128613840615363,
+      "recipe1_six_table_macro_clean4": 0.21966632893677318,
+      "teacher_six_macro_clean4": 0.5149829812988453,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4386046874491059
+    },
+    "arctic-embed-xs": {
+      "family": "arctic",
+      "repo": "Snowflake/snowflake-arctic-embed-xs",
+      "revision": "d8c86521100d3556476a063fc2342036d45c106f",
+      "dim": 384,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.26840186225547613,
+          "per_forum": {
+            "cqadup-programmers": 0.23646723284707238,
+            "cqadup-physics": 0.30033649166387993
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.27039785322705234,
+          "per_forum": {
+            "cqadup-programmers": 0.23864166441132076,
+            "cqadup-physics": 0.30215404204278395
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.26682481440020006,
+          "per_forum": {
+            "cqadup-programmers": 0.23313671908319195,
+            "cqadup-physics": 0.3005129097172082
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.24034478557713412,
+          "per_forum": {
+            "cqadup-programmers": 0.19676711875228048,
+            "cqadup-physics": 0.28392245240198777
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.27039785322705234,
+      "six_head": {
+        "scifact": 0.42207250504475835,
+        "nfcorpus": 0.21587206022194866,
+        "fiqa": 0.20904277602822408,
+        "arguana": 0.29284905976046355,
+        "scidocs": 0.1056561276730256,
+        "trec-covid": 0.42195003104804124
+      },
+      "six_head_macro_all6": 0.27790709329607693,
+      "six_head_macro_clean4": 0.29138768099694345,
+      "recipe1_dev_table": 0.3225019218770433,
+      "recipe1_six_table_macro_all6": 0.3439596243203007,
+      "teacher_six_macro_all6": 0.46620213870735744,
+      "recipe1_six_table_macro_clean4": 0.40043487373971987,
+      "teacher_six_macro_clean4": 0.48280859764547746,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5961085765643037
+    },
+    "arctic-embed-s": {
+      "family": "arctic",
+      "repo": "Snowflake/snowflake-arctic-embed-s",
+      "revision": "e596f507467533e48a2e17c007f0e1dacc837b33",
+      "dim": 384,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2253029700587648,
+          "per_forum": {
+            "cqadup-programmers": 0.20052424535484387,
+            "cqadup-physics": 0.2500816947626857
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.2253424017317789,
+          "per_forum": {
+            "cqadup-programmers": 0.20021080151871418,
+            "cqadup-physics": 0.25047400194484365
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.21952112383846556,
+          "per_forum": {
+            "cqadup-programmers": 0.19631882945483245,
+            "cqadup-physics": 0.2427234182220987
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.18521705285799467,
+          "per_forum": {
+            "cqadup-programmers": 0.1625772131227343,
+            "cqadup-physics": 0.20785689259325502
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.2253424017317789,
+      "six_head": {
+        "scifact": 0.3950231895654175,
+        "nfcorpus": 0.15815993240131823,
+        "fiqa": 0.18663307135124968,
+        "arguana": 0.30992603233161503,
+        "scidocs": 0.09589649323206763,
+        "trec-covid": 0.4105394430064406
+      },
+      "six_head_macro_all6": 0.25936302698135144,
+      "six_head_macro_clean4": 0.264904764551311,
+      "recipe1_dev_table": 0.3013710416098729,
+      "recipe1_six_table_macro_all6": 0.35160875816167464,
+      "teacher_six_macro_all6": 0.49932988433987835,
+      "recipe1_six_table_macro_clean4": 0.39136806701996474,
+      "teacher_six_macro_clean4": 0.5076489389567045,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.5194221998633894
+    },
+    "contriever": {
+      "family": "contriever",
+      "repo": "facebook/contriever",
+      "revision": "2bd46a25019aeea091fd42d1f0fd4801675cf699",
+      "dim": 768,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.046315147557347836,
+          "per_forum": {
+            "cqadup-programmers": 0.0372624455060706,
+            "cqadup-physics": 0.05536784960862508
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.045996927863632464,
+          "per_forum": {
+            "cqadup-programmers": 0.03700403363685727,
+            "cqadup-physics": 0.054989822090407654
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.04454282125758641,
+          "per_forum": {
+            "cqadup-programmers": 0.03572000149571551,
+            "cqadup-physics": 0.05336564101945731
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.03534344209859106,
+          "per_forum": {
+            "cqadup-programmers": 0.02722707794991,
+            "cqadup-physics": 0.04345980624727212
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.04650784487311666,
+          "per_forum": {
+            "cqadup-programmers": 0.03726803424721712,
+            "cqadup-physics": 0.055747655499016203
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.04650784487311666,
+      "six_head": {
+        "scifact": 0.07905437753428911,
+        "nfcorpus": 0.06428996891460532,
+        "fiqa": 0.017774863192517764,
+        "arguana": 0.11405368279815126,
+        "scidocs": 0.025779811409820354,
+        "trec-covid": 0.05313651400033342
+      },
+      "six_head_macro_all6": 0.05901486964161953,
+      "six_head_macro_clean4": 0.055565167964762054,
+      "recipe1_dev_table": 0.14276292337156815,
+      "recipe1_six_table_macro_all6": 0.1863616669197945,
+      "teacher_six_macro_all6": 0.2845995253015106,
+      "recipe1_six_table_macro_clean4": 0.21824808537295037,
+      "teacher_six_macro_clean4": 0.28358321128694186,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.20736109654117646
+    },
+    "contriever-msmarco": {
+      "family": "contriever",
+      "repo": "facebook/contriever-msmarco",
+      "revision": "abe8c1493371369031bcb1e02acb754cf4e162fa",
+      "dim": 768,
+      "lambda": 1e-05,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.2017418187174913,
+          "per_forum": {
+            "cqadup-programmers": 0.1795257656546626,
+            "cqadup-physics": 0.22395787178032
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.201392891711002,
+          "per_forum": {
+            "cqadup-programmers": 0.1791098292721463,
+            "cqadup-physics": 0.22367595414985766
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.20062143775427854,
+          "per_forum": {
+            "cqadup-programmers": 0.1790480524238989,
+            "cqadup-physics": 0.2221948230846582
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.18371889866449925,
+          "per_forum": {
+            "cqadup-programmers": 0.15871023949573135,
+            "cqadup-physics": 0.20872755783326716
+          }
+        },
+        "1e-05": {
+          "dev_macro_2": 0.20204163662695485,
+          "per_forum": {
+            "cqadup-programmers": 0.17992901489554955,
+            "cqadup-physics": 0.22415425835836017
+          }
+        }
+      },
+      "extended_with": 1e-05,
+      "dev_head": 0.20204163662695485,
+      "six_head": {
+        "scifact": 0.3008993962032102,
+        "nfcorpus": 0.1432616627653173,
+        "fiqa": 0.12235089999664903,
+        "arguana": 0.2602895603120161,
+        "scidocs": 0.08600042888973718,
+        "trec-covid": 0.2148956850669166
+      },
+      "six_head_macro_all6": 0.1879496055389744,
+      "six_head_macro_clean4": 0.1862642932312953,
+      "recipe1_dev_table": 0.30856802893402796,
+      "recipe1_six_table_macro_all6": 0.3270102699848363,
+      "teacher_six_macro_all6": 0.39085152146309315,
+      "recipe1_six_table_macro_clean4": 0.34305136809371545,
+      "teacher_six_macro_clean4": 0.3966866211411383,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.4808721348593289
+    },
+    "tas-b": {
+      "family": "tas-b",
+      "repo": "sentence-transformers/msmarco-distilbert-base-tas-b",
+      "revision": "b12d9352e776979147078a8975a4885042984fd1",
+      "dim": 768,
+      "lambda": 0.001,
+      "lambda_curve": {
+        "0.0001": {
+          "dev_macro_2": 0.11703793500333715,
+          "per_forum": {
+            "cqadup-programmers": 0.09925212454075769,
+            "cqadup-physics": 0.1348237454659166
+          }
+        },
+        "0.001": {
+          "dev_macro_2": 0.11711297727658489,
+          "per_forum": {
+            "cqadup-programmers": 0.0983952456151907,
+            "cqadup-physics": 0.13583070893797908
+          }
+        },
+        "0.01": {
+          "dev_macro_2": 0.1120093174634279,
+          "per_forum": {
+            "cqadup-programmers": 0.09388759239637973,
+            "cqadup-physics": 0.13013104253047608
+          }
+        },
+        "0.1": {
+          "dev_macro_2": 0.08971999623595647,
+          "per_forum": {
+            "cqadup-programmers": 0.07354265391871175,
+            "cqadup-physics": 0.1058973385532012
+          }
+        }
+      },
+      "extended_with": null,
+      "dev_head": 0.11711297727658489,
+      "six_head": {
+        "scifact": 0.0902584405024404,
+        "nfcorpus": 0.08427255287238469,
+        "fiqa": 0.04382365371070762,
+        "arguana": 0.113232669860515,
+        "scidocs": 0.051444835037540826,
+        "trec-covid": 0.13782890084755178
+      },
+      "six_head_macro_all6": 0.08681017547185672,
+      "six_head_macro_clean4": 0.09095118231497942,
+      "recipe1_dev_table": 0.2542607330936236,
+      "recipe1_six_table_macro_all6": 0.2114607496239759,
+      "teacher_six_macro_all6": 0.32618988298688906,
+      "recipe1_six_table_macro_clean4": 0.24991326302523986,
+      "teacher_six_macro_clean4": 0.3217790462619167,
+      "pins": {
+        "scifact": {
+          "source": "BeIR/scifact",
+          "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+          "qrels_source": "BeIR/scifact-qrels",
+          "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+          "split": "test"
+        },
+        "nfcorpus": {
+          "source": "BeIR/nfcorpus",
+          "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+          "qrels_source": "BeIR/nfcorpus-qrels",
+          "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+          "split": "test"
+        },
+        "fiqa": {
+          "source": "BeIR/fiqa",
+          "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+          "qrels_source": "BeIR/fiqa-qrels",
+          "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+          "split": "test"
+        },
+        "arguana": {
+          "source": "BeIR/arguana",
+          "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+          "qrels_source": "BeIR/arguana-qrels",
+          "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+          "split": "test"
+        },
+        "scidocs": {
+          "source": "BeIR/scidocs",
+          "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+          "qrels_source": "BeIR/scidocs-qrels",
+          "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+          "split": "test"
+        },
+        "trec-covid": {
+          "source": "BeIR/trec-covid",
+          "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+          "qrels_source": "BeIR/trec-covid-qrels",
+          "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+          "split": "test"
+        }
+      },
+      "retention_all6": 0.26613386864406824
+    }
+  },
+  "frozen_lambdas": {
+    "frozen_utc": "2026-10-01T04:57:41Z",
+    "configs": {
+      "stella-400M-v5": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.20690475804845757
+      },
+      "arctic-embed-l": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.12272053642463698
+      },
+      "arctic-embed-l-mean": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.05587414433148134
+      },
+      "arctic-embed-m-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.20228257012829096
+      },
+      "bge-base-en-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.2404298076420613
+      },
+      "bge-large-en-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.18194141444119644
+      },
+      "e5-base-v2": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.13651720172201776
+      },
+      "e5-large-v2": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.09067401724989801
+      },
+      "gte-base-en-v1.5": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.22240426854375578
+      },
+      "gte-large-en-v1.5": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.14123963355629596
+      },
+      "mxbai-embed-large-v1": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.1713733261674432
+      },
+      "minilm-l6": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.27880335102009585
+      },
+      "minilm-l12": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.29243522221988966
+      },
+      "multi-qa-minilm-l6": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.2458108626107408
+      },
+      "msmarco-minilm-l6": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.1285567265969193
+      },
+      "bge-small-en-v1.5": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.41164965631183065
+      },
+      "bge-base-en-v1": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.17392081219243205
+      },
+      "e5-small-v2": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.28263432371562575
+      },
+      "e5-base-v1": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.14518460837932468
+      },
+      "gte-small": {
+        "lambda": 0.01,
+        "dev_macro_2": 0.41578195732390333
+      },
+      "gte-base": {
+        "lambda": 0.0001,
+        "dev_macro_2": 0.24655260635392864
+      },
+      "gte-large": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.22312258456867332
+      },
+      "arctic-embed-xs": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.27039785322705234
+      },
+      "arctic-embed-s": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.2253424017317789
+      },
+      "contriever": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.04650784487311666
+      },
+      "contriever-msmarco": {
+        "lambda": 1e-05,
+        "dev_macro_2": 0.20204163662695485
+      },
+      "tas-b": {
+        "lambda": 0.001,
+        "dev_macro_2": 0.11711297727658489
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e19_head_screen.py",
+    "script_sha256": "76d3ead295a6f56508090bae135925654f58f3c354df58cacaa1c96f3190ffb3",
+    "git_commit": "ed0af15f34b2a26ff70dc433687b4b2ccfebcf1b",
+    "m15src_dirty": true,
+    "started_utc": "2026-10-01T04:57:41Z",
+    "finished_utc": "2026-10-01T05:10:20Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-6.8.0-100-generic-x86_64-with-glibc2.35",
+      "python": "3.12.14"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "torch": "2.8.0+cu126",
+      "transformers": "4.57.6",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "fit_list_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2"
+      },
+      {
+        "frozen_lambdas": "work/m15/e19/frozen_lambdas.json",
+        "sha256": "fdb63f78c5fd2fdaa4ecefce794904373bb39f371dc1eeb1601ad4d0b877a814"
+      },
+      {
+        "recipe1": [
+          "results/m15_e8_towers.json",
+          "results/m15_e8x_towers.json"
+        ]
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "94df3da272d3e90617e4645a3ad7e8fc68d4a85ac29f23264d3d9ece81e58f83"
+  }
+}

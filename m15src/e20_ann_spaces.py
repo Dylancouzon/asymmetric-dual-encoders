@@ -71,10 +71,11 @@ def fetch_qdrant():
     QDRANT_DIR.mkdir(parents=True, exist_ok=True)
     rel = json.load(urllib.request.urlopen(
         "https://api.github.com/repos/qdrant/qdrant/releases/tags/v1.19.1"))
-    assets = [a for a in rel["assets"] if "x86_64-unknown-linux-gnu" in a["name"]
+    # The static musl build: the pod image's glibc is older than the gnu build requires.
+    assets = [a for a in rel["assets"] if "x86_64-unknown-linux-musl" in a["name"]
               and a["name"].endswith(".tar.gz")]
     if not assets:
-        raise SystemExit("E20 STOP: no x86_64 linux-gnu asset for v1.19.1")
+        raise SystemExit("E20 STOP: no x86_64 linux-musl asset for v1.19.1")
     tar = QDRANT_DIR / assets[0]["name"]
     urllib.request.urlretrieve(assets[0]["browser_download_url"], tar)
     subprocess.run(["tar", "-xzf", str(tar), "-C", str(QDRANT_DIR)], check=True)

@@ -605,3 +605,12 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   the pod repository as branch `m15-sync`. Pod driver files equal the committed ones by sha256
   (`e19_head_screen.py` 76d3ead2…, `e20_ann_spaces.py` f47f5966…), so receipts showing
   `ed0af15f3` plus dirty source refer to exactly this committed code.
+- **E19 complete** (`results/m15_e19_head_screen.json`, pod, 05:10 UTC; 27 configurations, 26
+  pooled checkpoints). Pooled: recipe-2 head versus teacher six-set score +0.09 [−0.36, +0.51];
+  recipe-2 versus recipe-1 table +0.51 [+0.12, +0.79]; recipe-2 dev screen versus six +0.84
+  [+0.61, +0.95]. Strongest registered teacher gte-large-en-v1.5 gives head 0.223 versus the
+  recipe-2 screen choice bge-base-en-v1.5 at 0.325. Backbone special cases: bge-small-en-v1.5
+  (head retention 1.008) and gte-small (0.978) are flagged; pooled-without-backbone rho +0.46.
+- E20: the gnu Qdrant build needs GLIBC 2.38 (pod has older); switched `fetch_qdrant` to the static
+  musl build. Vector loop launched 05:12 UTC (`work/m15/e20_vectors.sh`); sweep loop relaunched after
+  the binary check.
