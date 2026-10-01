@@ -664,3 +664,13 @@ the recipe-specific dev screen adds predictive value beyond them. No new encodin
 - **Reading:** prediction above teacher-only with an interval excluding zero makes RQ1 prospective;
   failure keeps the held-out fit and drops the prospective claim.
 - **Output:** `results/m15_e24_prospective.json` from `m15src/e24_prospective.py`.
+
+**E22 amendment 1 (2026-10-01, before any feature was computed; pre-spend review finding 5).**
+Feature (4) is restated. The table's fit-query cloud is not available without re-solving every
+table, so the declared quantities are: the effective rank of a seeded 20,000-row sample of the
+teacher's cached fit-query vectors, and the ratio of the effective rank of the table's workload
+query vectors to that of the teacher's workload query vectors. The table fit-cloud rank is
+omitted, not approximated. Also fixed before computing: hubness is the Gini of top-10 occurrence
+counts over the full document support including zeros; bootstrap intervals resample spaces with
+their three workload rows together and are reported within each workload as well; the held-out
+baseline is each training fold's mean, reported beside every held-out model.

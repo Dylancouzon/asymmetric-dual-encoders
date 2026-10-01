@@ -53,10 +53,16 @@ def sweep(name):
         return
     data = load_public("fiqa", with_corpus=False)
     src = E20.vec_dir(name)
-    doc_ids_full = json.loads((src / "fiqa-doc-ids.json").read_text())
+    ids_path = src / "fiqa-doc-ids.json"
+    if not ids_path.exists():
+        raise SystemExit(f"E23 STOP: {ids_path} missing (written by the E20 sweep); refusing to guess")
+    doc_ids_full = json.loads(ids_path.read_text())
+    dv_full = np.load(src / "fiqa-docs.npy")
+    if len(doc_ids_full) != len(dv_full):
+        raise SystemExit(f"E23 STOP: {name} has {len(doc_ids_full)} ids for {len(dv_full)} vectors")
     idx = subsample(doc_ids_full, data["qrels"], N_SUB, SEED)
     doc_ids = [doc_ids_full[i] for i in idx]
-    dv = np.load(src / "fiqa-docs.npy")[idx]
+    dv = dv_full[idx]
     qv = {p: np.load(src / f"fiqa-{p}-q.npy") for p in PATHS}
     from evalkit import topk_arrays
     exact, exact_ndcg = {}, {}
@@ -109,13 +115,19 @@ def sweep(name):
     E20.E8.atomic_json(done, {"name": name, "status": "COMPLETE", "n_docs": len(dv),
                               "n_relevant_kept": int(len({d for q in data["qrels"].values() for d, s in q.items() if s > 0})),
                               "exact_ndcg10": exact_ndcg, "exact_parity": parity, "builds": builds,
-                              "rows": rows, "subsample_sha256": sha_file.__module__ and None})
+                              "rows": rows, "subsample_first_last_idx": [int(idx[0]), int(idx[-1])]})
+
+
+def included():
+    """The E20 included roster (the committed result's spaces), not the E8/E8x eligibility list."""
+    e20 = json.loads(E20.RESULT.read_text())
+    return [n for n in e20["spaces"] if n != "arctic-embed-l-mean"]
 
 
 def assemble():
     e20 = json.loads(E20.RESULT.read_text())
     out = {}
-    for name in E20.eligible():
+    for name in included():
         f = OUT_DIR / name / "sweep.json"
         if not f.exists():
             continue
@@ -159,9 +171,10 @@ def all_steps():
     py = sys.executable
     env = {**os.environ, "PYTHONPATH": f"{REPO / 'm15src'}:{REPO / 'm8src'}:{REPO / 'm7src'}",
            "M7_ENCODER": "stella-400M-v5"}
-    for name in E20.eligible():
-        if (E20.vec_dir(name) / "fiqa-doc-ids.json").exists():
-            subprocess.run([py, __file__, "sweep", name], check=True, cwd=REPO, env=env)
+    for name in included():
+        if not (E20.vec_dir(name) / "fiqa-doc-ids.json").exists():
+            raise SystemExit(f"E23 STOP: inputs missing for {name}")
+        subprocess.run([py, __file__, "sweep", name], check=True, cwd=REPO, env=env)
     subprocess.run([py, __file__, "assemble"], check=True, env=env, cwd=REPO)
 
 

@@ -66,8 +66,9 @@ def gini(counts):
 
 
 def hubness(exact_ids, n_docs):
+    """Gini of top-10 occurrence counts over the full document support, zeros included."""
     counts = np.bincount(exact_ids[:, :10].ravel(), minlength=n_docs)
-    return gini(counts[counts > 0])
+    return gini(counts)
 
 
 def effective_rank(X):
@@ -139,22 +140,29 @@ def ridge_predict(model, X):
 
 
 def held_out(X, y, groups, feature_idx=None):
+    """Leave-one-group-out ridge prediction, with the training-fold mean as the matched baseline."""
     from scipy.stats import spearmanr
     Xs = X if feature_idx is None else X[:, feature_idx]
-    pred = np.empty(len(y))
+    pred, base = np.empty(len(y)), np.empty(len(y))
     for g in set(groups):
         m = np.array([h != g for h in groups])
         pred[~m] = ridge_predict(ridge_fit(Xs[m], y[m]), Xs[~m])
-    return {"spearman": float(spearmanr(pred, y)[0]), "mae": float(np.mean(np.abs(pred - y)))}
+        base[~m] = y[m].mean()
+    return {"spearman": float(spearmanr(pred, y)[0]), "mae": float(np.mean(np.abs(pred - y))),
+            "baseline_fold_mean_mae": float(np.mean(np.abs(base - y)))}
 
 
-def boot_spearman(a, b, draws=10_000, seed=SEED):
+def boot_spearman_clustered(a, b, clusters, draws=10_000, seed=SEED):
+    """Bootstrap over cluster ids (spaces), keeping each space's rows together."""
     from scipy.stats import spearmanr
     rng = np.random.default_rng(seed)
-    a, b = np.asarray(a), np.asarray(b)
+    a, b, clusters = np.asarray(a), np.asarray(b), np.asarray(clusters)
+    ids = sorted(set(clusters))
+    rows_of = {c: np.where(clusters == c)[0] for c in ids}
     vals = []
     for _ in range(draws):
-        i = rng.integers(0, len(a), len(a))
+        pick = rng.choice(ids, size=len(ids), replace=True)
+        i = np.concatenate([rows_of[c] for c in pick])
         if len(set(i)) > 2:
             v = spearmanr(a[i], b[i])[0]
             if np.isfinite(v):
@@ -185,14 +193,17 @@ def assemble():
     X = np.column_stack([[r[k] for r in rows] for k in FEATURES])
     fam = [r["family"] for r in rows]
     wl = [r["workload"] for r in rows]
+    sp = [r["space"] for r in rows]
     uni = {}
     for j, k in enumerate(FEATURES):
+        per = {}
+        for ds in WORKLOADS:
+            sel = [i for i, w in enumerate(wl) if w == ds]
+            per[ds] = {"spearman": float(spearmanr(X[sel, j], y[sel])[0]),
+                       "bootstrap95_over_spaces": boot_spearman_clustered(X[sel, j], y[sel], [sp[i] for i in sel])}
         uni[k] = {"spearman_all75": float(spearmanr(X[:, j], y)[0]),
-                  "bootstrap95": boot_spearman(X[:, j], y),
-                  "per_workload": {ds: float(spearmanr(X[[i for i, w in enumerate(wl) if w == ds], j],
-                                                       y[[i for i, w in enumerate(wl) if w == ds]])[0])
-                                   for ds in WORKLOADS}}
-    const_lofo = {"spearman": None, "mae": float(np.mean(np.abs(y - y.mean())))}
+                  "bootstrap95_over_spaces": boot_spearman_clustered(X[:, j], y, sp),
+                  "per_workload": per}
     models = {"all_features": held_out(X, y, fam),
               "all_features_leave_workload_out": held_out(X, y, wl),
               "covariates_only_width_ndocs": held_out(X, y, fam, [FEATURES.index("log2_width"), FEATURES.index("log10_ndocs")]),
@@ -206,7 +217,7 @@ def assemble():
         "scope": "75 space-by-workload points, 25 spaces; families and workloads are not independent; "
                  "ridge lambda 1 on standardized features; declared features only",
         "features": list(FEATURES), "n_points": len(rows), "univariate": uni,
-        "held_out_models": models, "constant_predictor_mae": const_lofo["mae"], "rows": rows,
+        "held_out_models": models, "rows": rows,
         "receipt": receipt(__file__, [{"e20_result": str(E20_RESULT.relative_to(REPO))}], utc_now(), ("scipy",))})
 
 

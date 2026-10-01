@@ -704,3 +704,13 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Abstract's "100%" sentence replaced. Methods E22 to E24 pre-specified. `REVISION_PLAN_V17.md`
   written: research-paper structure, width as the result, predictor table, title fork, three
   experiments awaiting owner approval and a pre-spend review.
+- Owner round 5: frozen-index framing adopted (`REVISION_PLAN_V17.md`, OWNER_PREFERENCES).
+  Astra pre-spend review of E22-E24 (`REVIEWS/2026-10-01-astra-e22-e24-prespend.md`): NO-GO on
+  nine findings, all applied before any run: E24 creates its output directories, verifies the
+  committed prediction hash before every student command and at assembly, and asserts every E19
+  feature file exists so nothing is written under e19; E23 fails fast on missing inputs, checks
+  id/vector alignment, and uses the E20 included roster; E20's Qdrant launcher refuses an occupied
+  port; E22's hubness uses the full document support, bootstraps resample spaces with their rows
+  together and report within-workload intervals, the held-out baseline is the training-fold mean,
+  and feature (4) is restated by method amendment 1 before any feature is computed. Pod host has no
+  free GPU at 16:27 local; retry loop running.

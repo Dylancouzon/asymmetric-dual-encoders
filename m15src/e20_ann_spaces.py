@@ -95,6 +95,14 @@ def start_qdrant(tag):
     # mid-build (contriever, TREC-COVID build 1). Storage is scratch; results do not live there.
     storage = Path(os.environ.get("E20_STORAGE", str(QDRANT_DIR))) / f"storage-{tag}"
     storage.parent.mkdir(parents=True, exist_ok=True)
+    # A readiness probe cannot tell our process from another shard's: refuse an occupied port.
+    try:
+        urllib.request.urlopen(f"http://127.0.0.1:{PORT}/readyz", timeout=1)
+        raise SystemExit(f"E20 STOP: port {PORT} already serves a Qdrant; set E20_PORT per shard")
+    except SystemExit:
+        raise
+    except Exception:
+        pass
     log = open(QDRANT_DIR / f"qdrant-{tag}.log", "w")
     proc = subprocess.Popen([str(QDRANT_DIR / "qdrant")], cwd=QDRANT_DIR, stdout=log, stderr=log,
                             env={"QDRANT__STORAGE__STORAGE_PATH": str(storage),

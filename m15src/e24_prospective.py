@@ -41,6 +41,7 @@ OUT_DIR = REPO / "work" / "m15" / "e24"
 TABLE_DIR = OUT_DIR / "table"
 HEAD_DIR = OUT_DIR / "head"
 PREDICTIONS = OUT_DIR / "predictions.json"
+COMMIT = OUT_DIR / "predictions.sha256.json"
 RESULT = REPO / "results" / "m15_e24_prospective.json"
 E21 = REPO / "results" / "m15_e21_width_model.json"
 E19_RESULT = REPO / "results" / "m15_e19_head_screen.json"
@@ -57,10 +58,24 @@ E19.eligible = lambda: [n for n in ROSTER if n in json.loads(E8.PREFLIGHT.read_t
 E8.eligible = E19.eligible
 
 
+def _dirs():
+    for d in (OUT_DIR, TABLE_DIR, HEAD_DIR):
+        d.mkdir(parents=True, exist_ok=True)
+
+
 def preflight():
     import hashlib
     import torch
     from transformers import AutoTokenizer
+    _dirs()
+    # Head features are reused read-only: every file E19 will ask for must already exist, so the
+    # rerouted run writes nothing under work/m15/e19.
+    texts_n = E8.FIT_N
+    needed = [E19.feat_path(f"fit-{texts_n}")] + [E19.feat_path(f"dev-{c}-q") for c in E8.DEV] \
+             + [E19.feat_path(f"six-{ds}-q") for ds in E8.SIX]
+    missing = [str(p) for p in needed if not p.exists()]
+    if missing:
+        raise SystemExit(f"E24 STOP: E19 feature files missing, refusing to write under e19: {missing}")
     if E8.PREFLIGHT.exists():
         return
     E8.fit_list()
@@ -133,16 +148,25 @@ def predict():
     blob = {"written_utc": utc_now(), "fit_on": names, "coefficients_intercept_teacher_log2width": fits,
             "predictions": preds, "e19_result_sha256": sha_file(E19_RESULT)}
     PREDICTIONS.write_text(json.dumps(blob, indent=2))
-    print(f"PREDICTIONS sha256 {sha_file(PREDICTIONS)}", flush=True)
+    digest = sha_file(PREDICTIONS)
+    COMMIT.write_text(json.dumps({"predictions_sha256": digest, "committed_utc": utc_now()}, indent=2))
+    print(f"PREDICTIONS sha256 {digest}", flush=True)
 
 
 def _require_predictions():
-    if not PREDICTIONS.exists():
+    """The commitment: the hash recorded at predict time must match the file before every student
+    command and at assembly. A changed or missing prediction file stops the run."""
+    if not PREDICTIONS.exists() or not COMMIT.exists():
         raise SystemExit("E24 STOP: predictions must be committed before any student is fitted")
+    recorded = json.loads(COMMIT.read_text())["predictions_sha256"]
+    if sha_file(PREDICTIONS) != recorded:
+        raise SystemExit("E24 STOP: predictions file changed after commitment")
+    return recorded
 
 
 def assemble():
     from scipy.stats import spearmanr
+    recorded = _require_predictions()
     pred = json.loads(PREDICTIONS.read_text())
     names = [n for n in E19.eligible() if (TABLE_DIR / f"six-{n}.json").exists()
              and (HEAD_DIR / f"six-{n}.json").exists()]
@@ -180,7 +204,9 @@ def assemble():
         "status": "COMPLETE", "measurement": "E24 (exploratory, pre-specified; predictions committed before scoring)",
         "scope": "eight pre-declared checkpoints never scored before; the E21 fit on 26 predicts them; "
                  "tokenizer-incompatible checkpoints excluded, not replaced",
-        "predictions_sha256": sha_file(PREDICTIONS), "predictions_written_utc": pred["written_utc"],
+        "predictions_sha256": sha_file(PREDICTIONS), "predictions_committed_sha256": recorded,
+        "predictions_committed_utc": json.loads(COMMIT.read_text())["committed_utc"],
+        "predictions_written_utc": pred["written_utc"],
         "preflight": json.loads(E8.PREFLIGHT.read_text()), "rows": rows, "stats": stats,
         "receipt": receipt(__file__, [{"predictions": str(PREDICTIONS.relative_to(REPO)), "sha256": sha_file(PREDICTIONS)},
                                       {"e21": str(E21.relative_to(REPO))}], utc_now(), ("torch", "transformers", "scipy"))})
@@ -211,6 +237,7 @@ def all_steps():
 
 if __name__ == "__main__":
     cmd, *rest = sys.argv[1:] or ["all"]
+    _dirs()
     if cmd in ("dev", "six", "head-dev", "head-six"):
         _require_predictions()
     {"preflight": preflight, "predict": predict, "assemble": assemble, "all": all_steps,
