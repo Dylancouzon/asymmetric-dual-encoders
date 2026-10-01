@@ -155,3 +155,8 @@ adversarial correctness reviewer, per mandate and owner permission.
   a narration pass. Main prose is about 19% shorter by the same before/after counting method;
   scientific tables and the manuscript's numeric-token set are unchanged. Secondary detail
   is retained in appendices. The log records dispositions; prior sign-offs are historical.
+
+- **Further owner feedback:** the abstract remained hard to parse; its rhetorical question was
+  removed and its argument rewritten in four paragraphs. Manuscript terminology is now embedding
+  dimensionality, defined in the introduction. This revision is logged; the owner has not accepted
+  the abstract merely because it was rewritten.

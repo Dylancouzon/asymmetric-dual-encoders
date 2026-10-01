@@ -69,6 +69,8 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 ### 2026-10-02, owner reading feedback
 
+- Owner finds the abstract still awkward and hard to parse after the narration pass, flags its rhetorical question about encoding savings and approximate search as a poor fit, and questions “vector width” as unfamiliar terminology. Revise the abstract as a standalone argument and prefer established embedding terminology; do not treat sentence-level shortening as sufficient evidence of readability.
+
 - Owner finds v18's abstract impossible to understand without first reading the paper. It must answer why the reader should care and stand alone. Owner requests the rewrite after discussion of a problem-first abstract that explains the question, study, findings, and practical implication with fewer numerical details.
 - Owner explicitly asks for a critical IR-research collaborator in this session, not agreement or flattery. Challenge proposed changes when the evidence or scientific argument does not support them.
 - Owner rejects the introduction's BEIR document-encoding duration as representative of a production workload. Prefers motivation grounded in migration time and cost, availability, risks, infrastructure challenges, and added load; estimates are a possible way to explain those costs, not measured production results.

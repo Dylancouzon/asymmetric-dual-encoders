@@ -107,37 +107,38 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-The cost of a large document encoder can be amortized across many
-searches using the same stored vectors. Query encoding adds compute to
-each uncached query, even if that query is used only once. Changing the
-document encoder requires re-embedding the corpus and rebuilding its
-index. Query-side distillation offers a cheaper query encoder, or
-student, that searches the existing document vectors. What retrieval
-quality can that student preserve, and how much of its encoding saving
-survives approximate search?
+A large document encoder's cost can be spread across many searches using
+the same stored embeddings. Query encoding incurs a cost on every
+uncached query. Replacing the document encoder requires re-embedding the
+corpus and rebuilding its index; query-side distillation instead trains
+a smaller query encoder to search the existing document embeddings. We
+study what determines this smaller encoder's retrieval quality and the
+combined cost of encoding and search.
 
-We fit two inexpensive query students across 26 embedding spaces under
-one protocol: a token-vector table that sums its tokens' vectors, and a
-linear projection of a small frozen transformer's features. At a given
-vector width, stronger original encoders tend to yield stronger
-students; after accounting for encoder quality, wider vectors predict
-weaker students. A model using both properties predicts student rankings
-on held-out and prospectively tested encoders better than encoder
-quality alone. The prospective evidence is stronger for the
-transformer-based student.
+We compare two student query encoders across 26 embedding models: a
+table that sums learned token vectors, and a small frozen transformer
+with a learned linear projection. At the same embedding dimensionality,
+stronger original models tend to yield stronger students. After
+accounting for original-model quality, higher dimensionality predicts
+lower student quality. Using both properties improves predictions for
+held-out models. A prospective test supports the transformer student's
+predicted ranking; the token-table result remains uncertain.
 
-The token-table students require a median two to four times the
-graph-search budget across three corpora to match the original query
-path's fraction of recovered exact neighbors, with each path measured
-against its own exact results. The corresponding relevance-loss penalty
-depends on the corpus. The neighbor-recovery penalty also appears in
-LightRetriever's jointly trained lookup path. Constella demonstrates the
-substitution over Stella, a frozen document encoder: its compact
-transformer and token-table query paths retain 90.5\% and 81.4\% of
-Stella's exact retrieval quality on BEIR-15. Separate timing
-measurements show that extra search narrows their encoding advantage.
-Student quality and encoding-plus-search cost together determine the
-value of a cheaper query path over an existing index.
+Reducing query-encoding cost can increase the work required during
+approximate search. The token-table students need more graph-search
+effort to recover their exact nearest neighbors than the original
+encoders need to recover theirs. The effect on retrieval relevance
+varies by corpus. The neighbor-recovery penalty also appears in a
+separately trained lookup model.
+
+Constella provides a worked example: a compact transformer and a
+token-table query encoder search an unchanged index built with the
+Stella embedding model. They retain 90.5\% and 81.4\% of Stella's
+exact-search nDCG@10 on BEIR-15. Separate timing measurements show that
+additional search reduces their encoding savings. The results connect
+the choice of a smaller query encoder to two properties of the existing
+embeddings, and show why its value must be assessed through encoding and
+search together.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -165,20 +166,21 @@ LightRetriever{]}. We study the retrieval quality and search effort of
 these replacements, and whether properties of the existing embedding
 space predict their performance.
 
-We examine two properties of the space: vector width and the original
-encoder's retrieval quality. A frozen index inherits both from its
-document encoder. Fitting each student by a linear solve takes minutes,
-allowing the same recipe to be compared across 26 public encoder spaces.
-Two questions organize the paper.
+We examine two properties of the space: embedding dimensionality (the
+number of components in each vector) and the original encoder's
+retrieval quality. A frozen index inherits both from its document
+encoder. Fitting each student by a linear solve takes minutes, allowing
+the same recipe to be compared across 26 public encoder spaces. Two
+questions organize the paper.
 
 \begin{itemize}
 \tightlist
 \item
   \textbf{RQ1, retention.} How much retrieval quality can a query
   student fitted by a linear solve recover from a frozen index, and do
-  vector width and the space's own quality predict it? We test the
-  project's initial heuristic that a better space yields a better
-  student, using exact retrieval.
+  embedding dimensionality and the space's own quality predict it? We
+  test the project's initial heuristic that a better space yields a
+  better student, using exact retrieval.
 \item
   \textbf{RQ2, search effort.} Over the index's unchanged
   approximate-search graph, how much more search effort does the
@@ -187,13 +189,13 @@ Two questions organize the paper.
 \end{itemize}
 
 Student quality follows two opposing associations: stronger spaces favor
-the student, while wider vectors work against it. A model using both
-properties predicts held-out and prospectively tested encoders (Section
-4). The token-table students also need more graph effort to recover
-their exact neighbors in every measured space on two of three corpora.
-The distance between queries and documents predicts the size of that
-penalty, which also appears in LightRetriever's jointly trained lookup
-path (Section 5).
+the student, while higher dimensionality predicts weaker students. A
+model using both properties predicts held-out and prospectively tested
+encoders (Section 4). The token-table students also need more graph
+effort to recover their exact neighbors in every measured space on two
+of three corpora. The distance between queries and documents predicts
+the size of that penalty, which also appears in LightRetriever's jointly
+trained lookup path (Section 5).
 
 \textbf{Constella} is the worked instance: a frozen Stella index
 {[}Stella{]} with three compatible query paths, Stella's own encoder, a
@@ -225,9 +227,9 @@ own index alongside the fitted students.
 
 Stronger teachers can produce weaker students in distillation generally
 {[}Cho and Hariharan 2019{]} and in dense retrieval {[}PROD{]}; those
-works discuss capacity gaps between teacher and student. Here, vector
-width is a predictive property tested across encoder spaces, with
-held-out and prospective predictions.
+works discuss capacity gaps between teacher and student. Here, embedding
+dimensionality is a predictive property tested across encoder spaces,
+with held-out and prospective predictions.
 
 Graph-based approximate search over HNSW is sensitive to where queries
 sit relative to the indexed vectors {[}HNSW{]}. Out-of-distribution
@@ -247,10 +249,10 @@ student. Ten were registered before any result; 16 were added as an
 exploratory expansion under the same recipe and selection order. Each
 encoder defines one frozen space: its document vectors are frozen and
 its own query encoder is the reference path. Table A lists them by
-width.
+dimensionality.
 
-\textbf{Table A.} The 26 encoder spaces by width (full roster in
-Appendix B). ``Own nDCG@10'' is the encoder's own query path on the
+\textbf{Table A.} The 26 encoder spaces by dimensionality (full roster
+in Appendix B). ``Own nDCG@10'' is the encoder's own query path on the
 six-set suite (Section 3.3); student columns are the outcomes of Section
 4.
 
@@ -263,7 +265,7 @@ six-set suite (Section 3.3); student columns are the outcomes of Section
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1765}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedleft
-Width
+Dimensionality
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
 Spaces (registered)
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
@@ -283,7 +285,7 @@ Head student, range
 \end{longtable}
 }
 
-The roster spans nine related model families and three width levels;
+The roster spans nine related model families and three embedding sizes;
 several checkpoints are revisions of one another. We report
 checkpoint-resampling intervals alongside family-level sensitivity
 analyses. The arctic-embed-l mean-pooling control is excluded from
@@ -294,7 +296,7 @@ entry.
 representations}\label{student-representations}
 
 Two closed-form students, fitted by linear solves, produce query vectors
-at each index's width.
+at each index's dimensionality.
 
 \textbf{Table student.} Ridge regression fits one vector per WordPiece
 token to reproduce the original encoder's query vectors. At query time,
@@ -369,36 +371,37 @@ yields the strongest student.
 
 H1 was the project's initial selection rule. The strongest registered
 space, gte-large-en-v1.5, yields the weakest registered table student
-and a below-median head student. Stella, second in the same width band,
-yields the strongest table student. Across all 26 spaces, the rank
-correlation between the original encoder's score and its student's score
-is +0.09 for the table (95\% checkpoint interval −0.39 to +0.52) and
-+0.09 for the head (−0.36 to +0.51). These wide intervals allow a
-moderate positive association. Section 4.4 evaluates the selection rule
-by the quality of the student it picks.
+and a below-median head student. Stella, second in the same
+dimensionality band, yields the strongest table student. Across all 26
+spaces, the rank correlation between the original encoder's score and
+its student's score is +0.09 for the table (95\% checkpoint interval
+−0.39 to +0.52) and +0.09 for the head (−0.36 to +0.51). These wide
+intervals allow a moderate positive association. Section 4.4 evaluates
+the selection rule by the quality of the student it picks.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the space's own quality for the table (left) and head (right) students, colored by width. Filled points are registered spaces; triangles are the prospective spaces of E24 (eight for the head, seven for the table).}]{figures/f9_width.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the space's own quality for the table (left) and head (right) students, colored by dimensionality. Filled points are registered spaces; triangles are the prospective spaces of E24 (eight for the head, seven for the table).}]{figures/f9_width.pdf}}
 \caption{Student quality against the space's own quality for the table
-(left) and head (right) students, colored by width. Filled points are
-registered spaces; triangles are the prospective spaces of E24 (eight
-for the head, seven for the table).}
+(left) and head (right) students, colored by dimensionality. Filled
+points are registered spaces; triangles are the prospective spaces of
+E24 (eight for the head, seven for the table).}
 \end{figure}
 
-\subsubsection{4.2 Width as the competing
-explanation}\label{width-as-the-competing-explanation}
+\subsubsection{4.2 Dimensionality as the competing
+explanation}\label{dimensionality-as-the-competing-explanation}
 
-\textbf{H1'.} At a given width, stronger spaces yield stronger students;
-after accounting for space quality, wider vectors predict weaker
-students. Support requires a width coefficient whose interval excludes
-zero and better held-out-family prediction than space quality alone.
+\textbf{H1'.} At a given dimensionality, stronger spaces yield stronger
+students; after accounting for space quality, higher-dimensional
+embeddings predict weaker students. Support requires a dimensionality
+coefficient whose interval excludes zero and better held-out-family
+prediction than space quality alone.
 
 Table B models the student's absolute six-set score using the space's
-own score and log2 vector width. Retention is the ratio of student to
-original-encoder scores. Standardized coefficients express the change in
-student quality, in standard deviations, per standard deviation of a
-predictor. Intervals use 10,000 checkpoint resamples.
+own score and log2 embedding dimensionality. Retention is the ratio of
+student to original-encoder scores. Standardized coefficients express
+the change in student quality, in standard deviations, per standard
+deviation of a predictor. Intervals use 10,000 checkpoint resamples.
 Leave-one-family-out prediction fits on eight model families and
 predicts the ninth.
 
@@ -421,7 +424,7 @@ Predictors
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Space quality beta
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Width beta
+Dimensionality beta
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
 In-sample R²
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
@@ -432,41 +435,41 @@ Leave-one-family-out Spearman
 \bottomrule\noalign{}
 \endlastfoot
 Head & space quality & +0.34 {[}−0.16, +0.65{]} & & 0.12 & −0.17 \\
-Head & space quality, width & +0.69 {[}+0.40, +0.97{]} & −0.83 {[}−1.14,
-−0.60{]} & 0.70 & +0.69 \\
+Head & space quality, dimensionality & +0.69 {[}+0.40, +0.97{]} & −0.83
+{[}−1.14, −0.60{]} & 0.70 & +0.69 \\
 Table & space quality & +0.37 {[}−0.30, +0.72{]} & & 0.14 & −0.15 \\
-Table & space quality, width & +0.63 {[}+0.06, +0.89{]} & −0.64
+Table & space quality, dimensionality & +0.63 {[}+0.06, +0.89{]} & −0.64
 {[}−0.95, −0.32{]} & 0.48 & +0.40 \\
 \end{longtable}
 }
 
-Space quality and width correlate at +0.61 across the roster. Their
-opposing associations with student quality help explain the near-zero
-pooled rank correlation. Given width, the partial rank correlation
-between student and index quality is +0.58 for the head and +0.45 for
-the table. Table B shows a larger standardized coefficient for width
-under the head representation and coefficients of similar magnitude
-under the table representation. Family-adjusted fits and coefficient
-intervals are reported in Appendix B.
+Space quality and dimensionality correlate at +0.61 across the roster.
+Their opposing associations with student quality help explain the
+near-zero pooled rank correlation. Given dimensionality, the partial
+rank correlation between student and index quality is +0.58 for the head
+and +0.45 for the table. Table B shows a larger standardized coefficient
+for dimensionality under the head representation and coefficients of
+similar magnitude under the table representation. Family-adjusted fits
+and coefficient intervals are reported in Appendix B.
 
 \subsubsection{4.3 Held-out and prospective
 prediction}\label{held-out-and-prospective-prediction}
 
-We test whether the quality-and-width model ranks further encoders
-better than their own retrieval scores do. Fitted on the ten registered
-spaces, the model ranks the 16 later spaces at Spearman 0.85 {[}0.53,
-0.99{]} for the head and 0.70 {[}0.20, 0.96{]} for the table; the
-original scores alone rank them at 0.37 and 0.16. The hypothesis was
+We test whether the quality-and-dimensionality model ranks further
+encoders better than their own retrieval scores do. Fitted on the ten
+registered spaces, the model ranks the 16 later spaces at Spearman 0.85
+{[}0.53, 0.99{]} for the head and 0.70 {[}0.20, 0.96{]} for the table;
+the original scores alone rank them at 0.37 and 0.16. The hypothesis was
 formed after all 26 spaces had been seen, making this a held-out fit.
 
 For the prospective test, we chose eight previously unscored
-BERT-vocabulary encoders spanning the three widths, fitted the model on
-the 26, and committed its predictions by hash before fitting any student
-(Appendix B). One table fit stopped at the convergence gate, leaving
-seven table students and eight head students. The committed predictions
-rank them at Spearman +0.86 {[}+0.33, +1.00{]} for the head and +0.71
-{[}−0.12, +1.00{]} for the table, against +0.26 and +0.39 for the
-original scores alone. Mean absolute error of the predicted six-set
+BERT-vocabulary encoders spanning the three embedding sizes, fitted the
+model on the 26, and committed its predictions by hash before fitting
+any student (Appendix B). One table fit stopped at the convergence gate,
+leaving seven table students and eight head students. The committed
+predictions rank them at Spearman +0.86 {[}+0.33, +1.00{]} for the head
+and +0.71 {[}−0.12, +1.00{]} for the table, against +0.26 and +0.39 for
+the original scores alone. Mean absolute error of the predicted six-set
 score is 0.039 (head) and 0.032 (table). The head's checkpoint interval
 supports a positive association; the table's wider interval leaves its
 prospective result uncertain.
@@ -516,13 +519,14 @@ Prospective spaces: dev screen & 0.000 & 0.043 \\
 The student's development screen makes the best or near-best pick under
 both representations. It scores the fitted student on two forums and
 predicts six-set rank at Spearman 0.84 (head) and 0.88 (table). Adding
-it to the quality-and-width model gives it the largest standardized
-coefficient (+0.71 {[}+0.36, +0.99{]} for the head) and raises
-leave-one-family-out prediction to 0.77 and 0.80. The quality-and-width
-model captures the ranking structure, while testing a fitted student
-improves selection. On the prospective spaces, the model's committed
-pick matches the development screen's; selecting by the original
-encoder's score incurs the largest regret on both rosters.
+it to the quality-and-dimensionality model gives it the largest
+standardized coefficient (+0.71 {[}+0.36, +0.99{]} for the head) and
+raises leave-one-family-out prediction to 0.77 and 0.80. The
+quality-and-dimensionality model captures the ranking structure, while
+testing a fitted student improves selection. On the prospective spaces,
+the model's committed pick matches the development screen's; selecting
+by the original encoder's score incurs the largest regret on both
+rosters.
 
 The head's backbone, bge-small-en-v1.5, is also a roster encoder.
 Removing it changes every statistic above by less than 0.06.
@@ -852,12 +856,12 @@ time, registered sweep. Dotted lines are each path's exact score.}
 \FloatBarrier
 \subsection{7. Limitations}\label{limitations}
 
-RQ1 covers two closed-form recipes over 26 related spaces at three width
-levels. Width covaries with family and quality, making its association
-predictive rather than causal. Checkpoint-resampling intervals describe
-variation within this roster; family-level prediction tests transfer
-across its families. Transfer to fully trained students such as Zero and
-Nano remains an open question.
+RQ1 covers two closed-form recipes over 26 related spaces at three
+embedding sizes. Dimensionality covaries with family and quality, making
+its association predictive rather than causal. Checkpoint-resampling
+intervals describe variation within this roster; family-level prediction
+tests transfer across its families. Transfer to fully trained students
+such as Zero and Nano remains an open question.
 
 RQ2 covers one engine, one graph configuration, and three workloads with
 different sizes and domains, including 50 queries on TREC-COVID. Its
@@ -1050,8 +1054,8 @@ actual loader and device.
 \subsection{Appendix B. Construction
 details}\label{appendix-b.-construction-details}
 
-\textbf{The roster.} The 26 encoder spaces of Section 3.1, by width and
-own six-set score.
+\textbf{The roster.} The 26 encoder spaces of Section 3.1, by
+dimensionality and own six-set score.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -1066,7 +1070,7 @@ own six-set score.
 \begin{minipage}[b]{\linewidth}\raggedright
 Encoder (frozen space)
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Width
+Dimensionality
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 Pooling
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
@@ -1139,12 +1143,12 @@ and 0.978); correlations without the backbone are +0.09 against the
 index and +0.46 against the table.
 
 \textbf{Family-adjusted quality model.} Adding eight family indicators
-to the quality-and-width model raises in-sample R² to 0.91 (head) and
-0.81 (table), preserving both coefficient signs. These models describe
-the observed families and are reported in sample. In Table B, the head's
-standardized width and quality coefficients are −0.83 and +0.69; the
-table's are −0.64 and +0.63. The table coefficient intervals overlap in
-magnitude.
+to the quality-and-dimensionality model raises in-sample R² to 0.91
+(head) and 0.81 (table), preserving both coefficient signs. These models
+describe the observed families and are reported in sample. In Table B,
+the head's standardized dimensionality and quality coefficients are
+−0.83 and +0.69; the table's are −0.64 and +0.63. The table coefficient
+intervals overlap in magnitude.
 
 \textbf{Published retention context.} LightRetriever reports about 95\%
 retention for its jointly trained lookup path, while Zero retains 81.4\%
@@ -1177,7 +1181,7 @@ predicted, then head student actual / predicted:
 \begin{minipage}[b]{\linewidth}\raggedright
 Encoder
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-Width
+Dimensionality
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
 Own nDCG@10
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
@@ -1215,7 +1219,7 @@ reproduce.
 +0.18 (−0.56 to +0.67), head-versus-table +0.24 (−0.49 to +0.74), head
 development-versus-public +0.71 (+0.12 to +0.96). Leave-one-family-out
 values range from +0.44 to +0.60 for head-versus-table and −0.12 to
-+0.27 for head-versus-index over the 26. Within width bands,
++0.27 for head-versus-index over the 26. Within dimensionality bands,
 head-versus-index Spearman is +0.47 {[}−0.47, +1.00{]} at 384 (n=9),
 +0.67 {[}−0.03, +1.00{]} at 768 (n=10), and +0.36 {[}−0.76, +0.87{]} at
 1024 (n=7).
@@ -1280,9 +1284,9 @@ exact top-10; the effective rank (participation ratio) of a seeded
 20,000-row sample of the encoder's fit-query vectors and the ratio of
 the student's to the encoder's workload-query effective rank; the
 student-minus-encoder top-1 cosine and margin recorded by the search
-sweep; log2 width and log10 corpus size as covariates. Ridge with unit
-penalty on standardized features; the baseline is each training fold's
-mean. The seven features not in Table F, same columns:
+sweep; log2 dimensionality and log10 corpus size as covariates. Ridge
+with unit penalty on standardized features; the baseline is each
+training fold's mean. The seven features not in Table F, same columns:
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}

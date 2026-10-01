@@ -924,3 +924,23 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   figure barriers, widow/orphan penalties, and Appendix A figure numbering/caption handling.
   Long appendix tables retain their multipage layout. Verified unchanged scientific tables and
   numerical-token set, shell syntax, and whitespace; no retraining or new experiments were run.
+
+### 2026-10-02: owner reading feedback, abstract structure and terminology
+
+- Owner still finds the abstract awkward and hard to parse, rejects the fit of its rhetorical
+  quality/savings question, and questions the unfamiliar term "vector width". Recorded this
+  feedback in OWNER_PREFERENCES.md rather than treating the preceding narration pass as accepted.
+- Rebuilt the abstract as four connected paragraphs: recurring query cost and preservation of
+  the index; the two student constructions and conditional quality/dimensionality associations;
+  approximate-search consequences; and Constella as a worked example. Removed the rhetorical
+  question, abstract search-multiplier inventory, and unnecessary LightRetriever name. The body
+  retains the exact recovery protocol, multipliers, and named replication. Prospective token-table
+  uncertainty and separate quality/timing workloads remain explicit.
+- Replaced width terminology throughout manuscript prose and table labels with embedding
+  dimensionality, defining it as the number of vector components in the introduction. Preserved
+  numerical table data, links, figure filenames, code identifiers, and historical records.
+  BAAI's primary bge-small-en-v1.5 model card uses "Embedding dimension":
+  https://huggingface.co/BAAI/bge-small-en-v1.5 (checked 2026-10-02).
+- Rebuilt the 19-page PDF and inspected the opening page plus all page contact sheets. Verified
+  unchanged numerical-token set, unchanged table data after terminology substitution, preserved
+  manuscript links, and clean whitespace. No new measurements or independent sign-off.
