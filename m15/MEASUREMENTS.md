@@ -548,3 +548,13 @@ added as a third workload so the scale axis (TREC-COVID, 171,332 documents) and 
 parity gate is 0.995 instead of E2's 0.999. The control `arctic-embed-l-mean` table on FiQA scored
 0.9985: fp16-valued document vectors produce tied exact scores that Qdrant and NumPy order
 differently. Every parity value is recorded per space, workload, build and path in the result.
+
+**E20 amendment 3 (2026-10-01, during the run; one space's partial rows were discarded, none were
+analysed).** Some tables produce exact-score ties at rank 10 (13 of 200 FiQA queries for
+`arctic-embed-m-v1.5`; identical fp16-valued documents), so two exact scorers legitimately return
+different members of a tied set and set-overlap recovery cannot reach 1 even for exact search.
+Recovery@10 is therefore tie-aware: a returned document counts when its exact score is at or above
+the exact 10th neighbour's score. This equals E2's set definition when no ties exist. The set
+version and the per-path count of tied queries are kept in every row, and the parity gate returns
+to 0.999 under the tie-aware measure. Amendment 2's 0.995 gate is superseded. All sweeps restart
+from scratch so every space is measured identically.

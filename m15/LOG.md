@@ -628,3 +628,8 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - E20 shard 2 stopped at 05:21 UTC on the exact-parity gate (0.9985 < 0.999) for the control's
   table on FiQA; ties in fp16-valued scores. Gate relaxed to 0.995 (method amendment 2), parity
   values stay in the result; shard 2 relaunched. Shards 0 and 1 unaffected.
+- E20 shard 0 stopped at 05:30 UTC on parity 0.9695 for `arctic-embed-m-v1.5`'s table on FiQA.
+  Diagnosis on the pod: no NaN or zero query vectors, all document vectors unit-norm; 13 of 200
+  queries have exact-score ties at rank 10, and a CPU recompute of the exact top-10 agrees with the
+  saved GPU top-10 at only 0.966 for that path. Genuine ties, not a broken collection. Recovery made
+  tie-aware (method amendment 3), parity gate back to 0.999, all sweeps restarted from scratch.

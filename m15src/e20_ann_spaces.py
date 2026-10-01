@@ -220,6 +220,28 @@ def recovery(ann_run, exact_run):
                           for q in exact_run]))
 
 
+def tie_thresholds(qv, dv, exact_run, doc_index, q_ids):
+    """Per query: the exact score of its 10th exact neighbor, and how many docs tie at it.
+
+    Tie-aware recovery counts a returned doc as recovered when its exact score is at or above
+    that threshold, so two exact scorers that break ties differently agree (E20 amendment 3)."""
+    S = qv.astype(np.float32) @ dv.astype(np.float32).T
+    thr, ties = {}, 0
+    for i, q in enumerate(q_ids):
+        last = exact_run[q][-1] if exact_run[q] else None
+        thr[q] = S[i, doc_index[last]] - 1e-6 if last is not None else np.inf
+        ties += int((S[i] >= thr[q]).sum() > len(exact_run[q]))
+    return S, thr, ties
+
+
+def recovery_tied(ann_run, S, thr, doc_index, q_ids):
+    out = []
+    for i, q in enumerate(q_ids):
+        got = [doc_index[d] for d in ann_run[q]]
+        out.append(float((S[i, got] >= thr[q]).sum()) / 10 if got else 0.0)
+    return float(np.mean(out))
+
+
 def sweep(name):
     from qdrant_client import QdrantClient, models as m
     import vectors15 as V
@@ -244,6 +266,9 @@ def sweep(name):
             qv = {p: np.load(out / f"{ds}-{p}-q.npy") for p in paths}
             exact = {p: top10([list(map(int, r)) for r in np.load(out / f"{ds}-{p}-exact-ids.npy")],
                               doc_ids, data["q_ids"]) for p in paths}
+            doc_index = {d: i for i, d in enumerate(doc_ids)}
+            tie = {p: tie_thresholds(qv[p], dv, exact[p], doc_index, data["q_ids"]) for p in paths}
+            ties_at_10 = {p: tie[p][2] for p in paths}
             for b in range(BUILDS):
                 order = np.arange(len(dv)) if b == 0 else \
                     np.random.default_rng(SEED + b).permutation(len(dv))
@@ -253,11 +278,10 @@ def sweep(name):
                 for p in paths:                       # collection agrees with numpy exact search
                     ids, _ = search_all(client, cname, qv[p][:EXACT_CHECK],
                                         m.SearchParams(exact=True), limit=11)
-                    got = top10(ids, doc_ids, data["q_ids"][:EXACT_CHECK])
-                    parity[f"{ds}-b{b}-{p}"] = recovery(got, {q: exact[p][q] for q in got})
-                    # 0.995, not E2's 0.999: fp16-valued document vectors give score ties that the
-                    # two exact scorers break differently (first seen 0.9985 on the control's table).
-                    if parity[f"{ds}-b{b}-{p}"] < 0.995:
+                    qc = data["q_ids"][:EXACT_CHECK]
+                    got = top10(ids, doc_ids, qc)
+                    parity[f"{ds}-b{b}-{p}"] = recovery_tied(got, tie[p][0], tie[p][1], doc_index, qc)
+                    if parity[f"{ds}-b{b}-{p}"] < 0.999:
                         raise SystemExit(f"E20 STOP: exact parity {parity[f'{ds}-b{b}-{p}']} "
                                          f"for {name} {ds} {p}")
                 for ef in EFS:
@@ -270,7 +294,10 @@ def sweep(name):
                         ex = meta["workloads"][ds]["paths"][p]["exact_ndcg10"]
                         rows.append({"workload": ds, "build": b, "path": p, "hnsw_ef": ef,
                                      "ann_ndcg10": ndcg, "ann_ndcg_loss_rel": 1 - ndcg / ex,
-                                     "ann_recovery_at10": recovery(run, exact[p]),
+                                     "ann_recovery_at10": recovery_tied(run, tie[p][0], tie[p][1],
+                                                                        doc_index, data["q_ids"]),
+                                     "ann_recovery_at10_set": recovery(run, exact[p]),
+                                     "queries_with_ties_at_rank10": ties_at_10[p],
                                      "search_p50_ms": float(np.median(lat)),
                                      "search_p95_ms": float(np.quantile(lat, .95))})
                         print(f"  {name} {ds} b{b} ef={ef} {p}: loss {rows[-1]['ann_ndcg_loss_rel']:.3f} "
