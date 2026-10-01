@@ -564,3 +564,47 @@ Strongest registered teacher gte-large-en-v1.5: head 0.2229; recipe-2 screen cho
 bge-small-en-v1.5 is the head's own backbone and gte-small is nearly its linear image (retention 1.008 and 0.978); the without-backbone roster drops the first. Leave-one-family-out values are in the result file.
 
 **Cannot show.** A selector for the trained Zero or Nano; a trained-student ceiling (the frozen head is a floor); independence of related checkpoints; a cause. Head retention falls with teacher width (exploratory Spearman −0.73), which confounds the pooled teacher correlation.
+
+## C17. ANN effort for table queries across teacher spaces
+
+**Label:** exploratory (E20, analysis pre-specified before scoring). **Source:** `results/m15_e20_ann_spaces.json`
+
+**Claim.** Over each teacher's own uncompressed HNSW index, the fitted table's queries need more graph effort than the teacher's queries to reach the teacher's ef=64 relative loss; the multiplier is the smallest grid ef that reaches it, divided by 64, averaged over two builds, censored if either build never reaches it by ef=512.
+
+| workload | spaces | censored | mult. > 1 | mult. <= 1 | mult. q10 / q50 / q90 | mean table-teacher recovery gap at ef=64 (pp) | Spearman gap vs top-1 cosine delta | Spearman gap vs margin delta |
+|---|---|---|---|---|---|---|---|---|
+| fiqa | 25 | 4 | 25 | 0 | 2.0 / 4.0 / 6.0 | -2.9 | +0.00 | -0.19 |
+| scidocs | 25 | 8 | 17 | 8 | 0.2 / 1.2 / 5.4 | -0.8 | +0.23 | -0.05 |
+| trec-covid | 25 | 8 | 12 | 13 | 0.2 / 0.2 / 2.2 | -3.9 | -0.34 | -0.37 |
+
+| space | family | fiqa mult. b0/b1 | fiqa rec. gap pp | scidocs mult. b0/b1 | scidocs rec. gap pp | trec-covid mult. b0/b1 | trec-covid rec. gap pp |
+|---|---|---|---|---|---|---|---|
+| arctic-embed-l | arctic | 8/8 | -11.8 | 4/4 | -3.1 | cens./cens. | -18.3 |
+| arctic-embed-m-v1.5 | arctic | 4/8 | -4.3 | 4/8 | -0.8 | cens./cens. | -6.1 |
+| arctic-embed-s | arctic | 4/4 | -4.7 | cens./cens. | +0.0 | 0.25/4 | -6.9 |
+| arctic-embed-xs | arctic | 4/8 | -3.4 | cens./cens. | +0.0 | 1/cens. | -4.1 |
+| bge-base-en-v1 | bge | 4/4 | -5.5 | 1/1 | -2.0 | 0.25/0.25 | -5.3 |
+| bge-base-en-v1.5 | bge | 4/4 | -4.7 | 8/2 | -1.2 | 4/0.25 | -2.8 |
+| bge-large-en-v1.5 | bge | cens./4 | -4.9 | 0.5/1 | -1.6 | 0.25/0.25 | -3.7 |
+| bge-small-en-v1.5 | bge | 4/4 | -3.7 | cens./cens. | +0.0 | cens./8 | -1.2 |
+| contriever | contriever | 2/2 | -1.7 | 8/4 | -1.0 | 2/4 | -0.9 |
+| contriever-msmarco | contriever | 2/1 | -1.3 | 0.5/1 | -0.6 | 1/cens. | -1.1 |
+| e5-base-v1 | e5 | 2/2 | -2.2 | 2/0.5 | -0.9 | 0.25/0.25 | -4.4 |
+| e5-base-v2 | e5 | 4/4 | -3.8 | 0.5/cens. | -1.1 | 0.25/0.25 | -6.7 |
+| e5-large-v2 | e5 | 4/8 | -4.0 | 0.25/1 | -1.1 | 0.25/0.25 | -8.3 |
+| e5-small-v2 | e5 | 4/4 | -2.4 | cens./cens. | +0.0 | 0.25/0.25 | -6.4 |
+| gte-base | gte | 2/8 | -1.2 | 1/2 | -0.6 | 1/0.25 | -1.2 |
+| gte-base-en-v1.5 | gte | 2/4 | -1.5 | 1/cens. | -0.6 | cens./cens. | -1.2 |
+| gte-large | gte | 2/4 | -0.6 | cens./cens. | -0.9 | 0.25/0.25 | -1.3 |
+| gte-large-en-v1.5 | gte | cens./4 | -0.5 | 2/2 | -0.8 | 0.25/0.25 | -2.0 |
+| gte-small | gte | cens./cens. | -0.6 | cens./cens. | -0.0 | cens./cens. | -0.6 |
+| minilm-l12 | minilm | 4/2 | -1.2 | 0.25/0.25 | +0.0 | 4/0.5 | -2.0 |
+| minilm-l6 | minilm | 1/4 | -0.8 | 0.25/0.25 | +0.0 | cens./8 | -0.9 |
+| msmarco-minilm-l6 | minilm | 2/1 | -1.0 | 0.25/0.25 | +0.0 | 0.25/0.25 | -1.9 |
+| multi-qa-minilm-l6 | minilm | 4/2 | -0.8 | 0.25/0.25 | +0.0 | 1/0.25 | -1.1 |
+| mxbai-embed-large-v1 | mxbai | 8/4 | -4.0 | 2/4 | -1.2 | 0.25/0.25 | -2.7 |
+| stella-400M-v5 | stella | 8/cens. | -3.0 | 0.5/4 | -1.3 | 0.25/0.25 | -5.2 |
+
+Builds are repetitions of one insertion-order permutation, not independent samples; related checkpoints are grouped by family in the result file. Geometry correlations are exploratory. The E2 consistency check for Stella's teacher path on FiQA is in the result file and is not a gate.
+
+**Cannot show.** A latency claim (sweeps ran on a shared pod); other engines or graph parameters; the trained Zero (these are closed-form tables); a causal geometric mechanism.

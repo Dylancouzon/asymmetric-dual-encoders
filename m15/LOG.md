@@ -643,3 +643,14 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Gridstore IO error 116), the known mfs behaviour. Qdrant scratch storage moved to container disk
   via `E20_STORAGE`; shard 0 relaunched for that space. `contriever-msmarco` reran under the
   exclusion rule on shard 1. 25 of 27 spaces complete, `tas-b` excluded by amendment 4.
+- **E20 complete** (`results/m15_e20_ann_spaces.json`, 07:11 UTC; 26 spaces scored, `tas-b`
+  excluded by amendment 4). Pod stopped at 07:13 UTC; session pod time about 2.5 h (about $4).
+  Pre-specified loss-based multiplier: FiQA all 25 spaces above 1 (median 4, q10 2, q90 6, four
+  censored above 8); SCIDOCS 17 above 1, 8 at or below (median 1.25); TREC-COVID bimodal and
+  unreliable with 50 queries (relative nDCG loss at ef=64 is 0.2% for teachers). Secondary
+  recovery-based multiplier: median 4 on FiQA and TREC-COVID (q10 to q90 2 to 6), 2 on SCIDOCS.
+  Table recovery at ef=64 is below the teacher's in 25/25 spaces on FiQA (mean −2.9 pp) and
+  25/25 on TREC-COVID (−3.9 pp), 17/25 on SCIDOCS (−0.8 pp; a 25k-document corpus where ef=64
+  nearly saturates every path). The recipe-2 head shows the same gap (24/25 and 23/25). Geometry
+  deltas do not predict the gap size across spaces (Spearman 0.00 FiQA, −0.34 TREC-COVID, intervals
+  span zero). Stella's teacher path agrees with E2 at every ef. Evidence card C17 regenerated.
