@@ -305,3 +305,21 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - All 14 printed references have primary-source verification; QPP and LightRetriever placeholders
   are filled. NanoVDR's across-dataset result is distinguished from our across-teacher result.
   `NOVELTY.md` and `RELATED_WORK.md` use the same boundaries as the paper.
+
+### Final verification and delivery
+
+- Replayed E15 to an unused scratch output with `--output`, and compared all scientific values and
+  accounting labels with the immutable committed result: exact match. The original result was
+  preserved. The new flag makes reproduction possible without deleting a committed receipt.
+- Regenerated `EVIDENCE.md`. Regenerated the changed two-panel teacher figure with the existing
+  `.venv-mac` plotting environment (`.venv` has no matplotlib). Rebuilt the LaTeX and PDF from the
+  Markdown title; source paths wrap, and the compact setup and quality tables keep their context.
+- Inspected rendered pages of the final 13-page PDF. No clipping, overlap, missing figure, or TeX
+  warning remains. Removed the redundant per-dataset figure from the paper; its source artifact
+  and full per-dataset values remain in the repository and evidence file. Four figures remain,
+  two in the main text. `git diff --check` passes.
+- Astra's scientific review and Sol's reader review are closed with no unresolved essential
+  finding for this scope. Primary-source bibliography checks are preserved. The handoff now
+  describes v11, the new question, accounting boundaries, and the optional trained-recipe bridge.
+- No model training, cloud rental, raw evaluation access, or release occurred in this review.
+  Commit batches preserve the mandate, E15 calculation, reviews/dispositions, and final artifacts.

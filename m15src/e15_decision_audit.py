@@ -6,6 +6,7 @@ and Nano's training-loop cost at its recorded historical rental rate. Does not t
 
     .venv/bin/python m15src/e15_decision_audit.py
 """
+import argparse
 import json
 import re
 
@@ -54,6 +55,14 @@ def selection(rows):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=str, default=str(OUT.relative_to(REPO)),
+                        help="unused result path inside the repository; existing files are refused")
+    args = parser.parse_args()
+    out = (REPO / args.output).resolve()
+    if not out.is_relative_to(REPO):
+        parser.error("--output must be inside the repository")
+    out.parent.mkdir(parents=True, exist_ok=True)
     started = utc_now()
     blobs = {p: json.loads((REPO / p).read_text()) for p in INPUTS if p.endswith(".json")}
     ten = {n: c for n, c in blobs[INPUTS[0]]["configs"].items() if n != "arctic-embed-l-mean"}
@@ -67,7 +76,7 @@ def main():
     if target is None or train is None:
         raise RuntimeError("historical Zero cost estimates moved; inspect the source before quoting")
     inputs = [{"path": p, "sha256": sha_file(REPO / p)} for p in INPUTS]
-    write_result(OUT, {
+    write_result(out, {
         "status": "COMPLETE", "measurement": "E15 (exploratory, derived from existing receipts)",
         "selection_registered_ten": selection(ten), "selection_pooled_26": selection(pooled),
         "screen_timing": {"minutes_per_configuration": blobs[INPUTS[2]]["screen_minutes_per_tower_a100"],

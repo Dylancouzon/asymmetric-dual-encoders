@@ -95,10 +95,7 @@ def f3_towers():
     for c in rows.values():
         c["ret"] = c["six_table_macro_all6"] / c["six_ceiling_macro_all6"]
     st = e8x["stats"]
-    from scipy.stats import spearmanr
-    names = list(rows)
-    rho_dim = spearmanr([rows[n]["dim"] for n in names], [rows[n]["ret"] for n in names])[0]
-    fig, axes = plt.subplots(1, 3, figsize=(10.2, 3.4))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4))
     panels = [("six_ceiling_macro_all6", "six_table_macro_all6", "Tower's own nDCG@10, six sets",
                "Table nDCG@10, six sets",
                f"Tower quality: Spearman {st['tower']['spearman']:+.2f}\n"
@@ -108,15 +105,11 @@ def f3_towers():
                "Table nDCG@10, six sets",
                f"Dev screen: Spearman {st['screen']['spearman']:+.2f}\n"
                f"95% [{st['screen']['bootstrap95_over_towers'][0]:+.2f}, "
-               f"{st['screen']['bootstrap95_over_towers'][1]:+.2f}]"),
-              ("dim", "ret", "Tower embedding dimension (size proxy)", "Table retention of its tower",
-               f"Bigger towers distill worse\nSpearman {rho_dim:+.2f}")]
+               f"{st['screen']['bootstrap95_over_towers'][1]:+.2f}]")]
     for ax, (xk, yk, xl, yl, title) in zip(axes, panels):
         for k, (n, c) in enumerate(rows.items()):
             color = C["stella"] if n == "stella-400M-v5" else C["muted"]
-            # Deterministic horizontal jitter on the dimension axis so equal dims do not overlap.
-            x = c[xk] * (1 + 0.03 * (k % 7 - 3) / 3) if xk == "dim" else c[xk]
-            ax.scatter(x, c[yk], s=30, zorder=3, color="white" if c["x"] else color,
+            ax.scatter(c[xk], c[yk], s=30, zorder=3, color="white" if c["x"] else color,
                        edgecolor=color, linewidth=1.3)
         s_ = rows["stella-400M-v5"]
         ax.annotate("stella", (s_[xk], s_[yk]), textcoords="offset points", xytext=(5, 2),
@@ -127,8 +120,6 @@ def f3_towers():
         ax.set_xlabel(xl)
         ax.set_ylabel(yl)
         ax.set_title(title, fontsize=8.5, loc="left")
-    axes[2].set_xscale("log", base=2)
-    axes[2].set_xticks([384, 768, 1024], ["384", "768", "1024"])
     save(fig, "f3_towers")
 
 

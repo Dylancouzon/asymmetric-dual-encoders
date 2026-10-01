@@ -53,7 +53,7 @@ Fertility feature cost: 0.018 ms.
 
 **Label:** registered (E8; lambdas frozen before the six sets were scored). **Source:** `results/m15_e8_towers.json`, `results/m15_e8_frozen_lambdas.json`, `m15/e8_exposure.json`
 
-**Claim.** Across ten checkpoints the tower's own six-set score and its closed-form table's six-set score are uncorrelated (Spearman -0.09), while the table's dev-forum score predicts its six-set rank (+0.90).
+**Claim.** Across ten checkpoints the tower's own six-set score and its closed-form table's six-set score are weakly associated (Spearman -0.09), while the table's dev-forum score predicts its six-set rank (+0.90).
 
 | config | dim | readout | lambda | dev table | dev tower | six table | six tower | retention | clean-4 table |
 |---|---|---|---|---|---|---|---|---|---|
@@ -118,11 +118,11 @@ Stopped at the convergence gate: ['arctic-embed-m-v1']. Leave one family out (re
 
 **Cannot show.** A cause; recipes other than the closed-form table.
 
-## C4. Three mechanisms that do not explain C3
+## C4. Three candidate proxies for table quality
 
 **Label:** exploratory (E11, E11b). **Source:** `results/m15_e11_mechanism.json`, `results/m15_e11b_margin.json`
 
-**Claim.** How additive a tower is, how much it reads word order, and how its table's error compares with its ranking margins do not predict its table's quality.
+**Claim.** How additive a tower is, how much it reads word order, and how its table's error compares with its ranking margins did not reliably rank table quality in this comparison.
 
 | config | additivity | order cosine | mean of per-set median 1st-10th gaps | mean of per-set RMS error / median gap | six table | retention |
 |---|---|---|---|---|---|---|
@@ -167,11 +167,11 @@ Oracle frontier (Nano share: macro nDCG@10): 0.00: 0.4524, 0.05: 0.4818, 0.10: 0
 
 **Cannot show.** A router that reaches the oracle.
 
-## C6. Prefixes cost every tier the same share
+## C6. Synthetic prefix retention by query tier
 
 **Label:** registered (E4, E7 folded in). **Source:** `results/m15_e4_prefix.json`
 
-**Claim.** At every word cut the three dense tiers keep the same share of their own full-query nDCG@10 within 0.02 (macro over three sets).
+**Claim.** The dense tiers retain descriptively similar shares of their own full-query nDCG@10 on synthetic prefixes; this is not an equivalence test.
 
 | dataset | cut | stella-query | nano | zero | bm25 |
 |---|---|---|---|---|---|
@@ -244,7 +244,7 @@ Oracle frontier (Nano share: macro nDCG@10): 0.00: 0.4524, 0.05: 0.4818, 0.10: 0
 
 **Label:** registered (E10). **Source:** `results/m15_e10_router.json`
 
-**Claim.** See the paper, Section 7.1.
+**Claim.** See the paper, Appendix C.
 
 | feature | budget | Nano share | router | random | oracle | router - random |
 |---|---|---|---|---|---|---|
@@ -338,11 +338,11 @@ Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-qu
 
 **Cannot show.** Full-corpus MS MARCO, multi-client throughput, memory limits.
 
-## C12. The table loses where the tower reads word order
+## C12. The table's gap concentrates on shuffle-sensitive queries
 
 **Label:** exploratory (E12, E12b). **Source:** `results/m15_e12_failure_modes.json`, `results/m15_e12b_fragility.json`
 
-**Claim.** On 3727 queries of six sets, the Stella-minus-Zero gap tracks order dependence (Stella's drop when words are shuffled), not fertility or fragility.
+**Claim.** On 3727 queries of six sets, the Stella-minus-Zero gap tracks shuffle sensitivity (Stella's drop when words are shuffled). The random-noise control is one isotropic vector perturbation, not a general test of query fragility.
 
 | association (Spearman) | value |
 |---|---|
@@ -360,13 +360,13 @@ Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-qu
 
 Order-dependent share 0.405; gap there 0.210 against 0.015. Mean drop from shuffling 0.0473, from a random move of equal cosine 0.0088. Gap by fertility tercile: [0.071, 0.078, 0.133].
 
-**Cannot show.** A cause; that shuffling isolates word order from other query properties.
+**Cannot show.** A cause; shuffling does not isolate word order. Both gaps share Stella's full score; broad score bins do not remove all coupling. Equal-distance isotropic noise need not match the ranking-relevant direction of language perturbations.
 
 ## C11. The one-shot held-out test
 
 **Label:** registered (spent 2026-09-19). **Source:** `results/m13_reserved_run.json`
 
-**Claim.** The four held-out datasets, reported in full; contrasts in the paper, Section 8.
+**Claim.** The four held-out datasets, reported in full; contrasts in the paper, Appendix B.
 
 | system | fever | dbpedia-entity | cqadup-android | cqadup-english |
 |---|---|---|---|---|
@@ -380,3 +380,33 @@ Order-dependent share 0.405; gap there 0.210 against 0.015. Mean drop from shuff
 | nano+bm25 dbsf@100 | 0.6879 | 0.4296 | 0.4750 | 0.4323 |
 
 **Cannot show.** Anything decided on these sets after the test.
+
+## C13. Teacher-choice consequences and component build costs
+
+**Label:** exploratory (E15). **Source:** `results/m15_e15_decision_audit.json`; input hashes in its receipt
+
+**Claim.** The table screen changes teacher selection materially under the fixed recipe, with target-dependent regret. Nano's final training loop is affordable at the recorded rate; this is not the complete cost of reproducing the research.
+
+| roster | screen choice | strongest teacher | screen table | teacher-choice table | difference | clean-4 regret | dimension / absolute table | dimension / retention |
+|---|---|---|---|---|---|---|---|---|
+| registered ten | stella-400M-v5 | gte-large-en-v1.5 | 0.3974 | 0.2455 | +0.1519 | 0.0048 | -0.497 | -0.569 |
+| pooled 26 | stella-400M-v5 | gte-large-en-v1.5 | 0.3974 | 0.2455 | +0.1519 | 0.0278 | -0.442 | -0.762 |
+
+Pooled-roster per-dataset sensitivity:
+
+| dataset | screen rank | best table | screen regret |
+|---|---|---|---|
+| scifact | 5 | arctic-embed-s | 0.0051 |
+| nfcorpus | 3 | arctic-embed-l | 0.0079 |
+| fiqa | 1 | stella-400M-v5 | 0.0000 |
+| arguana | 1 | stella-400M-v5 | 0.0000 |
+| scidocs | 1 | stella-400M-v5 | 0.0000 |
+| trec-covid | 11 | arctic-embed-xs | 0.1431 |
+
+Nano: 199,999,721 example presentations in 206171.92 seconds (57.270 hours) on NVIDIA A100-SXM4-80GB; at the recorded historical $1.663611 per hour, priced training time is $95.27. Accounting: training duration multiplied by the recorded rental rate; not a separately itemized invoice or complete project cost. Excludes data collection and generation, teacher-target preparation, recipe search, failed runs, evaluation, model export, engineering time.
+
+Zero: 20 minutes retraining and 8-12 hours target preparation; approximate planning estimates in m7/LEDGER.md, not measured end-to-end timings or a dollar quote.
+
+Screen timing: coarse historical intervals between output files, not an isolated cold-start benchmark. Excludes model downloads, data preparation, full document-index construction; Stella reuses cached fit-query vectors.
+
+**Cannot show.** The strongest public teacher is a hindsight selection rule, not a prospectively tested model-card recommendation.; The screen chooses closed-form tables, not the trained Zero recipe or transformer students.; All-six and clean-four targets differ; checkpoint selection is task dependent.; Dimension and retention share a teacher-quality confound; no causal size claim.; No new training or evaluation access; only published aggregate receipts were read.

@@ -20,6 +20,10 @@ The paper now gives an engineer a credible sequence to repeat, but it deliberate
 
 No other essential reader issue found. The existing limitations cover the model/data mismatch, post hoc 16-tower extension, one-index serving study, and tier-relative quality targets.
 
+## Final Disposition (Focused Abstract Re-Read)
+
+**Resolved.** The revised abstract now separates the frozen-Stella build and serving study from teacher choice before indexing. It says the 0.3974-versus-0.2455 comparison uses closed-form tables over their respective indexes on the same six datasets, and explicitly calls the comparison retrospective, workload-dependent, and unvalidated for other student recipes. This closes my only essential v11 reader finding. No further reader review was performed.
+
 ## Paths Read
 
 Root: `/Users/dylanc/Documents/GitHub/asymetric-dual-encoders`. For this focused pass, `m15/PAPER.md` v11 and the previously read `instructions-m15.md`, `CLAUDE.md`, `m15/HANDOFF.md`, `m15/LOG.md` (last two entries), `m15/NOVELTY.md`, `m15/EVIDENCE.md`, and `m15/REVIEWS/2026-10-01-owner-reader.md`. No protected results, reserved qrels, `work/m9reserve`, or raw M18 confirmation were opened.

@@ -82,7 +82,7 @@ def towers():
     return card("C3. Tower quality does not predict the table; a dev screen does",
                 "registered (E8; lambdas frozen before the six sets were scored)",
                 "Across ten checkpoints the tower's own six-set score and its closed-form table's "
-                "six-set score are uncorrelated (Spearman "
+                "six-set score are weakly associated (Spearman "
                 f"{rho['six_ceiling_vs_six_table_all6']:+.2f}), while the table's dev-forum score "
                 f"predicts its six-set rank ({rho['primary_dev_table_vs_six_table_all6']:+.2f}).",
                 body, "`results/m15_e8_towers.json`, `results/m15_e8_frozen_lambdas.json`, "
@@ -97,9 +97,9 @@ def mechanisms():
              f4(b["configs"][n]["median_gap_six"]), f"{b['configs'][n]['error_to_margin_six']:.2f}",
              f4(c["six_table"]), f3(c["retention_all6"])] for n, c in a["configs"].items()]
     rho = {**a["spearman"], **b["spearman"]}
-    return card("C4. Three mechanisms that do not explain C3", "exploratory (E11, E11b)",
+    return card("C4. Three candidate proxies for table quality", "exploratory (E11, E11b)",
                 "How additive a tower is, how much it reads word order, and how its table's error "
-                "compares with its ranking margins do not predict its table's quality.",
+                "compares with its ranking margins did not reliably rank table quality in this comparison.",
                 table(["config", "additivity", "order cosine", "mean of per-set median 1st-10th gaps",
                        "mean of per-set RMS error / median gap", "six table", "retention"], rows)
                 + "\n\nSpearman over the 10 checkpoints: "
@@ -134,9 +134,9 @@ def prefixes():
                                    f"[{v['systems'][s][c]['retention_ci95'][0]:.3f}, "
                                    f"{v['systems'][s][c]['retention_ci95'][1]:.3f}]"
                                    for s in systems])
-    return card("C6. Prefixes cost every tier the same share", "registered (E4, E7 folded in)",
-                "At every word cut the three dense tiers keep the same share of their own "
-                "full-query nDCG@10 within 0.02 (macro over three sets).",
+    return card("C6. Synthetic prefix retention by query tier", "registered (E4, E7 folded in)",
+                "The dense tiers retain descriptively similar shares of their own full-query "
+                "nDCG@10 on synthetic prefixes; this is not an equivalence test.",
                 table(["dataset", "cut", *systems], rows), "`results/m15_e4_prefix.json`",
                 "Real search-as-you-type sessions.")
 
@@ -159,7 +159,7 @@ def routers():
                  f4(v["oracle_same_fraction"]), f"{v['router_minus_random']:+.4f}"]
                 for k, bs in e10["macro"].items() for b, v in bs.items() if b != "datasets"]
         out += "\n" + card("C8. Routers on Zero's own signals", "registered (E10)",
-                           "See the paper, Section 7.1.",
+                           "See the paper, Appendix C.",
                            table(["feature", "budget", "Nano share", "router", "random", "oracle",
                                   "router - random"], rows),
                            "`results/m15_e10_router.json`", "Features beyond the five tested.")
@@ -215,9 +215,10 @@ def failure_modes():
             for k, v in a["rho_within_stella_score_bins"].items()},
             "gap vs fragility": b["rho_gap_fragility"],
             "gap vs order, controlling for fragility": b["partial_rho_gap_order_given_fragility"]}.items()]
-    return card("C12. The table loses where the tower reads word order", "exploratory (E12, E12b)",
-                f"On {a['n_queries']} queries of six sets, the Stella-minus-Zero gap tracks order "
-                f"dependence (Stella's drop when words are shuffled), not fertility or fragility.",
+    return card("C12. The table's gap concentrates on shuffle-sensitive queries", "exploratory (E12, E12b)",
+                f"On {a['n_queries']} queries of six sets, the Stella-minus-Zero gap tracks shuffle "
+                "sensitivity (Stella's drop when words are shuffled). The random-noise control is "
+                "one isotropic vector perturbation, not a general test of query fragility.",
                 table(["association (Spearman)", "value"], rows)
                 + f"\n\nOrder-dependent share {a['share_order_dependent']:.3f}; gap there "
                   f"{a['stella_gap_order_dependent']:.3f} against {a['stella_gap_order_free']:.3f}. "
@@ -225,7 +226,9 @@ def failure_modes():
                   f"cosine {b['mean_noise_drop']:.4f}. Gap by fertility tercile: "
                   f"{[round(x, 3) for x in a['stella_gap_by_fertility_tercile']]}.",
                 "`results/m15_e12_failure_modes.json`, `results/m15_e12b_fragility.json`",
-                "A cause; that shuffling isolates word order from other query properties.")
+                "A cause; shuffling does not isolate word order. Both gaps share Stella's full score; "
+                "broad score bins do not remove all coupling. Equal-distance isotropic noise need not "
+                "match the ranking-relevant direction of language perturbations.")
 
 
 def towers_extended():
@@ -257,9 +260,45 @@ def heldout():
     rows = [[n] + [f4(v[k]) for k in ("fever", "dbpedia-entity", "cqadup-android",
                                       "cqadup-english")] for n, v in s.items()]
     return card("C11. The one-shot held-out test", "registered (spent 2026-09-19)",
-                "The four held-out datasets, reported in full; contrasts in the paper, Section 8.",
+                "The four held-out datasets, reported in full; contrasts in the paper, Appendix B.",
                 table(["system", "fever", "dbpedia-entity", "cqadup-android", "cqadup-english"], rows),
                 "`results/m13_reserved_run.json`", "Anything decided on these sets after the test.")
+
+
+def decision_audit():
+    d = R("m15_e15_decision_audit.json")
+    rows = []
+    for label, key in (("registered ten", "selection_registered_ten"),
+                       ("pooled 26", "selection_pooled_26")):
+        v = d[key]
+        rows.append([label, v["dev_screen_choice"], v["best_public_teacher"],
+                     f4(v["screen_table_macro"]), f4(v["teacher_choice_table_macro"]),
+                     f"{v['screen_minus_teacher_choice']:+.4f}", f4(v["screen_regret_clean4"]),
+                     f"{v['dimension_vs_absolute_table_rho']:+.3f}",
+                     f"{v['dimension_vs_retention_rho']:+.3f}"])
+    v = d["selection_pooled_26"]
+    task_rows = [[ds, x["screen_choice_rank"], x["best_table"], f4(x["screen_choice_regret"])]
+                 for ds, x in v["per_dataset"].items()]
+    n, z = d["nano_build"], d["zero_build_historical_estimate"]
+    cost = (f"Nano: {n['training_examples']:,} example presentations in "
+            f"{n['training_seconds']:.2f} seconds ({n['training_hours']:.3f} hours) on "
+            f"{n['gpu']}; at the recorded historical ${n['historical_total_rental_usd_per_hour']:.6f} "
+            f"per hour, priced training time is ${n['training_time_priced_usd']:.2f}. "
+            f"Accounting: {n['cost_kind']}. Excludes {n['exclusions']}.\n\n"
+            f"Zero: {z['retraining_minutes']} minutes retraining and "
+            f"{z['teacher_target_hours'][0]}-{z['teacher_target_hours'][1]} hours target preparation; "
+            f"{z['kind']}.\n\nScreen timing: {d['screen_timing']['kind']}. "
+            f"Excludes {d['screen_timing']['exclusions']}.")
+    return card("C13. Teacher-choice consequences and component build costs", "exploratory (E15)",
+                "The table screen changes teacher selection materially under the fixed recipe, "
+                "with target-dependent regret. Nano's final training loop is affordable at the "
+                "recorded rate; this is not the complete cost of reproducing the research.",
+                table(["roster", "screen choice", "strongest teacher", "screen table", "teacher-choice table",
+                       "difference", "clean-4 regret", "dimension / absolute table", "dimension / retention"], rows)
+                + "\n\nPooled-roster per-dataset sensitivity:\n\n"
+                + table(["dataset", "screen rank", "best table", "screen regret"], task_rows)
+                + "\n\n" + cost, "`results/m15_e15_decision_audit.json`; input hashes in its receipt",
+                "; ".join(d["limits"]))
 
 
 if __name__ == "__main__":
@@ -268,6 +307,6 @@ if __name__ == "__main__":
              "states one claim of the paper, whether it was registered before observation or is "
              "exploratory, the numbers, the file that holds them, and what the result cannot show.\n",
              beir(), latency(), towers(), towers_extended(), mechanisms(), oracle(), prefixes(), routers(), blend(),
-             system(), failure_modes(), heldout()]
+             system(), failure_modes(), heldout(), decision_audit()]
     OUT.write_text("\n".join(p for p in parts if p))
     print("wrote", OUT.relative_to(REPO))
