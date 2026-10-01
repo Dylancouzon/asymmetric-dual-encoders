@@ -450,3 +450,42 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Rebuilt and visually inspected the 18-page PDF, kept the quality caption/table together and
   precision figure before the construction section. No overflow/missing-glyph warnings;
   git diff --check passes. Existing result JSONs and evidence numbers remain unchanged.
+
+
+### V15: full-history selection and an empirical whitepaper
+
+- Owner rejects v14's unclear purpose, verbosity, unfamiliar “search service,” and internal repo
+  file citations; asks whether the draft overlooks findings outside this branch. Owner requests
+  a durable synthesis of all potential milestone learnings, explicitly permits subagents/Astra,
+  defines reader value as interesting/applicable/shareable/production usefulness, and reiterates
+  **whitepaper, not tutorial**. Recorded in OWNER_PREFERENCES.md; mandate and roadmap updated.
+- Three independent named-file audits cover M0–M8, M9–M14, and M17–M21. Root covers M15/M16,
+  project state, and M22–M23. LEARNINGS.md contains 33 candidates with evidence, decisions,
+  strength/limits, coverage table, selection, and research gaps. Astra's synthesis review catches
+  an omitted post-hoc linear alignment negative; L33 added. Existing-index selection and new
+  teacher/index construction are explicitly different questions. Catalog committed/pushed first.
+- Rewrote the manuscript around empirical findings. Main fixed-index quality/encoding and ANN
+  evidence precedes fusion/adaptation and then teacher/build evidence. Added older fusion-depth
+  reversal and actual caller/device counterexamples. Removed long absorption/prefix/shuffle/router
+  inventories and repeated instructional prompts. The paper remains a selective empirical study;
+  the full learning catalog retains omitted findings.
+- File-level provenance moved to PAPER_EVIDENCE_MAP.md; manuscript has normal literature citations
+  and artifact availability, with no internal file-path citations. Removed an overlooked audit-path
+  line from the bibliography. Twenty primary references retain their prior verification.
+- Sol reader requests a clearly hypothetical absolute quality/time example, moving teacher choice
+  after fixed-index evidence, and cutting the underexplained internal patch anecdote. All resolved.
+  Astra requests bm25s/Lucene attribution and fixed convex weight .8 for the depth table; resolved.
+  Focused closures verify example, original Zero/Holm/clean-four rows, and exact Nano dose. Root
+  owns later genre wording changes, which preserve numeric/scientific claims. Reviews are not owner
+  acceptance or a publication-readiness certificate.
+- Checked M12 tier1 depth_curve directly: table values and differences match rounding. All internal
+  evidence links exist; unavailable historical depth log link removed in favor of its committed
+  JSON receipt. Generated EVIDENCE.md changes only its introductory description, not numbers.
+- Final main text: **3,281 words**, roughly 44% below v14's approximately 5,900. Final PDF: **11 pages**,
+  down from18, with two figures. Rebuilt source/PDF, rendered and inspected every page (unchanged
+  opening plus final affected pages), fixed figure interruption and held-out table splitting,
+  checked caption/table placement and glyphs. No overflow, underflow, missing-character, or build
+  error warning; git diff --check passes.
+- No new scientific run, training, teacher/document encoding, cloud rental, or protected-data read.
+  Immutable results untouched; M15 historical cloud spend remains $22.79. Commit/push preserves
+  the catalog, audits, manuscript, evidence map, rendered artifact, and dispositions.

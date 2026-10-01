@@ -20,30 +20,29 @@ pandoc paper.md -s -o paper.tex --from markdown+tex_math_dollars+pipe_tables \
   -V documentclass=article -V fontsize=10pt -V geometry:margin=1in -V colorlinks=true \
   -V author="Dylan Couzon (Qdrant)" -V date="October 2026" \
   --metadata title="$paper_title"
-# Let repository evidence paths break at separators rather than extending into the margin.
+# Keep compact tables and their captions together, and figures within their research sections.
 python3 - <<'PY'
 import re
 from pathlib import Path
 p = Path("paper.tex")
-s = re.sub(r"\\texttt\{([^{}\s]*/[^{}\s]*)\}",
-           lambda m: r"\path{" + m.group(1).replace(r"\_", "_") + "}", p.read_text())
+s = p.read_text()
 s = s.replace(r"\usepackage{longtable,booktabs,array}",
               r"\usepackage{longtable,booktabs,array}" + "\n" + r"\usepackage{needspace,placeins}")
-# Keep the compact setup table intact and the quality table together with its caption.
-s = s.replace(r"{\def\LTcaptype{none}",
-              r"\Needspace{18\baselineskip}" + "\n" + r"{\def\LTcaptype{none}", 1)
-s = s.replace(r"\textbf{Table 3.}", r"\Needspace{16\baselineskip}" + "\n" + r"\textbf{Table 3.}")
-s = s.replace(r"\textbf{Table 1.}", r"\Needspace{14\baselineskip}" + "\n" + r"\textbf{Table 1.}")
-# Keep the precision figure in its research section before construction starts.
-s = s.replace(r"\subsection{5. Building compatible query",
-              r"\FloatBarrier" + "\n" + r"\subsection{5. Building compatible query")
-s = s.replace("The originally held-out four,", r"\Needspace{20\baselineskip}" + "\n" +
-              "The originally held-out four,")
-# Keep the five-row router comparison intact when the expanded main text shifts it.
-router_start = s.index(r"\subsubsection{C.2 Frozen routers}")
-s = s[:router_start] + s[router_start:].replace(
-    r"{\def\LTcaptype{none}",
-    r"\Needspace{18\baselineskip}" + "\n" + r"{\def\LTcaptype{none}", 1)
+# Captions include the method; reserve enough room for them and each compact table.
+for number, lines in ((1, 16), (2, 14), (3, 13)):
+    caption = rf"\textbf{{Table {number}.}}"
+    s = s.replace(caption, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + caption)
+for heading in ("4. Lexical fusion", "6. Serving compatibility"):
+    needle = r"\subsection{" + heading
+    s = s.replace(needle, r"\FloatBarrier" + "\n" + needle)
+s = s.replace(r"\subsubsection{3.2 Query precision", r"\FloatBarrier" + "\n" +
+              r"\subsubsection{3.2 Query precision")
+s = s.replace("The strongest registered teacher,", r"\FloatBarrier" + "\n" +
+              "The strongest registered teacher,")
+s = s.replace("Our results establish four findings:",
+              r"\Needspace{8\baselineskip}" + "\n" + "Our results establish four findings:")
+s = s.replace("The originally reserved four,", r"\Needspace{20\baselineskip}" + "\n" +
+              "The originally reserved four,")
 p.write_text(s)
 PY
 tectonic -X compile paper.tex --keep-logs > build.log 2>&1 || { tail -30 build.log; exit 1; }

@@ -1,10 +1,10 @@
 # M15 contribution and prior-art boundaries
 
-Updated 2026-10-01 for v14 after the owner challenged the earlier cost/teacher emphasis and proposed quantization. Earlier maps remain in git history. Primary-source audits: `REVIEWS/2026-10-01-owner-literature.md`, `REVIEWS/2026-10-01-followup-literature.md`, and `REVIEWS/2026-10-01-quantization-semantics.md`.
+Updated 2026-10-01 for v15 after a full-history audit and the owner's reader-value and whitepaper-genre corrections. Earlier maps remain in git history. Primary-source audits: `REVIEWS/2026-10-01-owner-literature.md`, `REVIEWS/2026-10-01-followup-literature.md`, and `REVIEWS/2026-10-01-quantization-semantics.md`.
 
 ## The research question
 
-What does selectable query computation buy when document vectors remain fixed, and what limits the saving? Constella supplies a token table, compact transformer, and original teacher query path aligned to the same Stella document space. The paper measures quality, encoding, graph-search effort, and query precision; teacher choice and build costs explain construction decisions.
+What does selectable query computation buy when document vectors remain fixed, and what limits the saving? Constella supplies a token table, compact transformer, and original teacher query path aligned to the same Stella document space. The paper measures quality, encoding, and graph-search effort, with a bounded precision control. Fusion depth, failed adaptive policies, and actual serving-path failures connect the wider research history to the deployment tradeoff. Teacher choice is a separate pre-index construction question. The full candidate inventory is LEARNINGS.md; manuscript provenance is PAPER_EVIDENCE_MAP.md.
 
 ## What is established prior work
 
@@ -28,6 +28,10 @@ E18 uses exhaustive candidate scoring and an expected tie treatment, not native 
 
 NanoVDR's positive teacher-quality association varies datasets for one teacher, not teachers. Shuffle sensitivity is diagnostic, routing is bounded by a label-aware oracle, and blending is a measured negative result. These observations remain scoped and mostly in appendices.
 
-## Judgment
+## Current judgment and editorial boundary
 
-V14 is a coherent applied research paper for search engineers, with a useful fixed-index systems finding and a controlled precision follow-up. It is not an architectural breakthrough. A matched-quality native remedy would strengthen it; more checkpoints or undirected precision sweeps would mostly add bulk. The focused reader and correctness reviews are `REVIEWS/2026-10-01-v14-*.md`. The narration makes the unit of replication explicit and uses external targets as selected context, not a comprehensive frontier. OWNER_PREFERENCES.md records the intended audience and scientific expectations.
+V15 is an empirical whitepaper about the quality and systems tradeoffs of query-side distillation. Its strongest findings are the shared-index encoding/search distinction and the consequential teacher/table reversal under a controlled recipe. Fusion-depth behavior and actual-runtime failures add production relevance from the wider project. They are supporting observations, not a new architecture or universal production prescription.
+
+The main text is about 3,300 words, compared with roughly 5,900 in v14, with two figures rather than four. Internal file citations, long diagnostic appendices, and repeated instructional prompts were removed. The owner explicitly wants a whitepaper, not a tutorial; implications remain discussion of measured findings. The hypothetical absolute-quality/time example interprets measured rows and is not an optimized or registered policy.
+
+Independent reviews are REVIEWS/2026-10-01-learning-synthesis-review.md and the v15 reader/correctness files. Their findings were resolved; this is not owner acceptance or a publication-readiness certificate. The full-history catalog retains omitted construction, patching, evaluation, and engineering lessons for future selection. A cost-qualified native remedy would strengthen the main deployment finding; additional model spaces would strengthen its reach. Neither exists yet.

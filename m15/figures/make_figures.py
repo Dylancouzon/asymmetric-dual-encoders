@@ -94,9 +94,9 @@ def f3_towers():
         c["ret"] = c["six_table_macro_all6"] / c["six_ceiling_macro_all6"]
     st = e8x["stats"]
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4))
-    panels = [("six_ceiling_macro_all6", "six_table_macro_all6", "Tower's own nDCG@10, six sets",
+    panels = [("six_ceiling_macro_all6", "six_table_macro_all6", "Teacher's own nDCG@10, six sets",
                "Table nDCG@10, six sets",
-               f"Tower quality: Spearman {st['tower']['spearman']:+.2f}\n"
+               f"Teacher quality: Spearman {st['tower']['spearman']:+.2f}\n"
                f"95% [{st['tower']['bootstrap95_over_towers'][0]:+.2f}, "
                f"{st['tower']['bootstrap95_over_towers'][1]:+.2f}]"),
               ("dev_table", "six_table_macro_all6", "Table nDCG@10, two dev forums",
@@ -139,9 +139,9 @@ def f4_system():
                     label={"zero": "Zero", "nano": "Nano", "stella-query": "Stella query"}[enc])
             ax.axhline(e2["exact"][enc], color=C[key], linewidth=0.8, linestyle=":")
         ax.set_xscale("log")
-        ax.set_xlabel("End-to-end p50 (ms): encode + search")
+        ax.set_xlabel("Encode + search p50 (ms)")
         ax.set_ylabel("nDCG@10 under approximate search")
-        ax.set_title({"msmarco1m": "1M MS MARCO subset", "fiqa": "FiQA"}[ds], fontsize=9, loc="left")
+        ax.set_title({"msmarco1m": "1M MS MARCO diagnostic", "fiqa": "FiQA"}[ds], fontsize=9, loc="left")
         ax.legend(frameon=False, fontsize=7.5)
     save(fig, "f4_system")
 
