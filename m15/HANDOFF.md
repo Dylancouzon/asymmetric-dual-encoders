@@ -1,7 +1,7 @@
 # M15 handoff (2026-10-01)
 
 Start here in a fresh session on branch `m15-whitepaper`. The paper's goals and success criteria are in
-`instructions-m15.md`, "Goals and success criteria". Then read `m15/LOG.md` (last two entries), `m15/REVIEWS/2026-10-01-v13-synthesis.md`, and
+`instructions-m15.md`, "Goals and success criteria". Then read `m15/OWNER_PREFERENCES.md`, `m15/LOG.md` (last two entries), `m15/REVIEWS/2026-10-01-v13-synthesis.md`, and
 `m15/PAPER.md`.
 
 ## State

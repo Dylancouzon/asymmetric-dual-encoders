@@ -43,6 +43,14 @@ what the design makes possible and measure its consequences; prior art is not a 
 useful capability. Keep “zero latency” distinct from no transformer inference and warmed encoding,
 and distinguish compatible encoder selection from timed model loading or production failover.
 
+## Persistent owner direction
+
+Read `m15/OWNER_PREFERENCES.md` before each paper revision. It records the owner's audience,
+readability requirements, research constraints, tentative ideas, and auditability preferences.
+Update it when the owner gives new direction; do not record agent recommendations as owner
+endorsements. In particular, define models at first use, narrate experiments before giving settings,
+and distinguish generalizable conclusions from recipe-specific observations and diagnostics.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
