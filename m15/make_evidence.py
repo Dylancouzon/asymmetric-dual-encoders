@@ -197,13 +197,40 @@ def system():
         rows = [[n, e, v["quant"], v["hnsw_ef"], v["oversampling"], f"{v['e2e_p50_ms']:.2f}",
                  f"{v['search_p50_ms']:.2f}", f4(v["ann_ndcg10"])]
                 for n, d in e2["decision"].items() for e, v in d.items() if v]
+        shared = ""
+        if ds == "msmarco1m":
+            fixed_rows = []
+            for quant in ("none", "binary1"):
+                for encoder in ("zero", "nano", "stella-query"):
+                    eligible = [r for r in e2["rows"] if r["quant"] == quant
+                                and r["encoder"] == encoder
+                                and r["ann_ndcg10"] >= 0.99 * e2["exact"][encoder]]
+                    best = min(eligible, key=lambda r: r["e2e_p50_ms"])
+                    fixed_rows.append([quant, encoder, best["hnsw_ef"], best["oversampling"],
+                                       f4(best["ann_ndcg10"]), f"{best['e2e_p50_ms']:.3f}"])
+            fused = e2["fused"]["zero+qdrant_bm25_dbsf@100"]
+            shared = ("\n\n**Exploratory shared-index illustration, 2026-10-01:** restrict the "
+                      "registered sweep to one quantization and choose the fastest recorded request "
+                      "setting within 1% of each tier's own exact quality. All three encoders query "
+                      "the same populated collection per quantization, in batches with precomputed "
+                      "vectors, without a collection rebuild between encoder batches. The targets "
+                      "do not equate absolute retrieval quality.\n\n"
+                      + table(["fixed quant", "encoder", "ef", "oversampling", "ANN nDCG@10",
+                               "encode + search p50 (ms)"], fixed_rows)
+                      + f"\n\nZero + server-side BM25, DBSF@100, on a separate unquantized "
+                        f"dense-plus-sparse collection: {f4(fused['ndcg10'])} nDCG@10, "
+                        f"{fused['e2e_p50_ms']:.3f} ms encode + search. This quality belongs to "
+                        "the positive-preserving diagnostic, not BEIR-15.\n\nLatency sums per-query "
+                        "encode and search times measured in separate phases; it excludes encoder "
+                        "loading and application dispatch. No interleaving, concurrent failover, "
+                        "all-tier resident memory, or switch overhead was measured.")
         out.append(card(f"C10. Does the saving survive the search ({ds})", "registered (E2)",
                         "For each encoder, the cheapest setting within each loss target of its own "
                         "exact nDCG@10.",
                         table(["encoder", "target", "quant", "ef", "oversampling", "e2e p50 (ms)",
                                "search p50 (ms)", "ANN nDCG@10"], rows)
                         + f"\n\nExact nDCG@10: {e2['exact']}. Saving survives: "
-                          f"{e2['saving_survives']}.",
+                          f"{e2['saving_survives']}." + shared,
                         f"`results/m15_e2_ann_{ds}.json`",
                         "Full-corpus MS MARCO, multi-client throughput, memory limits."))
     return "\n".join(out)

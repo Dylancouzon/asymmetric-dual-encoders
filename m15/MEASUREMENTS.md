@@ -207,6 +207,16 @@ index, and whether Zero's queries need more search effort. **What it cannot show
 MARCO performance, multi-client throughput, or memory-limited behavior (not measured; Docker is not
 used).
 
+**E2 presentation audit, 2026-10-01 (exploratory, after observation).** For the broader Constella
+paper, restrict the committed MS MARCO 1M sweep to binary quantization, then show the lowest
+encode-plus-search p50 within 1% of each tier's own exact nDCG@10. Repeat that restriction for
+the unquantized collection to illustrate how search configuration changes the remaining saving.
+These are selections of existing receipt rows, not new measurements or equal-quality contrasts.
+`m15/make_evidence.py` regenerates the selections in C10. The source shows all three precomputed
+query-vector batches searching each populated collection without a rebuild between encoders;
+it does not time model loading or a concurrent request dispatcher. The fusion example uses its
+separate dense-plus-sparse collection. This note does not alter E2's original decision rule.
+
 ## E7
 
 Folded into E4 as the shuffled-word control. No separate run.

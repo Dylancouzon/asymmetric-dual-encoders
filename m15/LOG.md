@@ -339,3 +339,24 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   quality, ANN effort, routing limits, teacher learnability, and component build costs. No new
   quality experiment or protected access is required. The existing inference quickstart belongs
   in the reproducibility story; it is distinct from a future standalone training tool.
+
+### V12 revision and verification
+
+- Retitled the paper "Constella: Choosing Query Compute without Rebuilding the Index". The
+  abstract and introduction lead with the family, compatible encoder choice, no-transformer
+  path, and the measured effect of query representation on ANN work. The encoding frontier is
+  in the body. Teacher screening supports design-stage choices; costs support construction.
+- Added existing receipt rows for one literal shared binary collection, the unquantized
+  counterexample, and the actual cost of Zero + BM25. C10's evidence generator reproduces those
+  selections, explicitly exploratory. No new measurement was used in the rewrite.
+- Defined hot-swappable encoder choice over a compatible index; separated available model
+  selection from loading, concurrency, and failover. Updated the old swap audit with E2's actual
+  populated-collection evidence, preserving the historical observations and limitations.
+- Both independent reviewers passed v12's changed claims and broader reader direction. Rebuilt
+  and rendered the 13-page PDF, inspected all pages, and removed a missing Greek-unit glyph.
+  Four figures remain, three in the main body. The build keeps the held-out aggregate table
+  together rather than leaving its final row alone on a new page.
+- Owner additionally authorizes justified research/compute without full-model retraining and
+  suggests quantization. Literature and design reviews distinguish established OOD/quantization
+  work from the compatible-query-tier question. A local paired same-graph pilot is next; no
+  cloud rental or new model training is needed for it.

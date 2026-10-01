@@ -33,6 +33,8 @@ s = s.replace(r"\usepackage{longtable,booktabs,array}",
 s = s.replace(r"{\def\LTcaptype{none}",
               r"\Needspace{18\baselineskip}" + "\n" + r"{\def\LTcaptype{none}", 1)
 s = s.replace(r"\textbf{Table 3.}", r"\Needspace{16\baselineskip}" + "\n" + r"\textbf{Table 3.}")
+s = s.replace("The originally held-out four,", r"\Needspace{20\baselineskip}" + "\n" +
+              "The originally held-out four,")
 p.write_text(s)
 PY
 tectonic -X compile paper.tex --keep-logs > build.log 2>&1 || { tail -30 build.log; exit 1; }

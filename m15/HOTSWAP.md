@@ -1,5 +1,15 @@
 # What is measured about the swap, and what is only asserted
 
+> **Current evidence, 2026-10-01.** E2 closes the large-populated-collection gap described in the
+> historical audit below: all three query paths search one unchanged disk-backed collection per
+> quantization, in one server lifetime, on FiQA (57,638 documents) and the 1M MS MARCO diagnostic.
+> See `results/m15_e2_ann_fiqa.json`, `results/m15_e2_ann_msmarco1m.json`, and the hash-bound source
+> `m15src/e2_ann.py`. Query vectors were precomputed and searched in encoder batches. This is not
+> a measured model-loading, request-interleaving, concurrency, or failover test. Per-request choice
+> among available aligned encoders is supported by the common vector-query interface. The v12
+> paper foregrounds this capability with a literal one-binary-index example; independent fastest
+> settings across quantizations are a broader configuration comparison, not one physical index.
+
 > **2026-09-30.** The "proposed fix" below is now measurement E2 in `m15/PLAN.md`, narrowed by Astra's
 > review: the live swap covers Zero, Nano and the Stella query path on one Stella collection, and the
 > interleaving check is a reproducibility check, not a result. The edge numbers cited here came from a

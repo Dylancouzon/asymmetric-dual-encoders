@@ -336,6 +336,21 @@ Exact nDCG@10: {'zero': 0.3727623009067084, 'nano': 0.47776539081203656, 'stella
 
 Exact nDCG@10: {'zero': 0.61692827812624, 'nano': 0.6962535170435831, 'stella-query': 0.729302244648976}. Saving survives: {'0.01': {'zero_e2e_p50_ms': 1.112645521061495, 'nano_e2e_p50_ms': 2.484062992152758, 'nano_over_zero': 2.2325735781355522, 'saving_survives': True}, '0.02': {'zero_e2e_p50_ms': 0.8802509837551042, 'nano_e2e_p50_ms': 2.286146002006717, 'nano_over_zero': 2.5971524533311383, 'saving_survives': True}, '0.05': {'zero_e2e_p50_ms': 0.7101249939296395, 'nano_e2e_p50_ms': 2.215062515460886, 'nano_over_zero': 3.1192572214693217, 'saving_survives': True}}.
 
+**Exploratory shared-index illustration, 2026-10-01:** restrict the registered sweep to one quantization and choose the fastest recorded request setting within 1% of each tier's own exact quality. All three encoders query the same populated collection per quantization, in batches with precomputed vectors, without a collection rebuild between encoder batches. The targets do not equate absolute retrieval quality.
+
+| fixed quant | encoder | ef | oversampling | ANN nDCG@10 | encode + search p50 (ms) |
+|---|---|---|---|---|---|
+| none | zero | 512 | None | 0.6124 | 3.613 |
+| none | nano | 256 | None | 0.6917 | 3.847 |
+| none | stella-query | 128 | None | 0.7240 | 22.229 |
+| binary1 | zero | 512 | 2.0 | 0.6116 | 1.113 |
+| binary1 | nano | 256 | 4.0 | 0.6893 | 2.484 |
+| binary1 | stella-query | 128 | 1.0 | 0.7226 | 21.335 |
+
+Zero + server-side BM25, DBSF@100, on a separate unquantized dense-plus-sparse collection: 0.6183 nDCG@10, 4.712 ms encode + search. This quality belongs to the positive-preserving diagnostic, not BEIR-15.
+
+Latency sums per-query encode and search times measured in separate phases; it excludes encoder loading and application dispatch. No interleaving, concurrent failover, all-tier resident memory, or switch overhead was measured.
+
 **Cannot show.** Full-corpus MS MARCO, multi-client throughput, memory limits.
 
 ## C12. The table's gap concentrates on shuffle-sensitive queries
