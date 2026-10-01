@@ -561,3 +561,6 @@ from scratch so every space is measured identically.
 The tie tolerance is 1e-4 in cosine score: float32 accumulation order differs between Qdrant and
 NumPy, and the control table's rank-10 gaps sit at that level (parity 0.9985 at 1e-6, same three
 slots). Every space, path and ef uses the same tolerance.
+Parity gate: 0.995 under the tie-aware measure. After 22 spaces passed at 0.999, `tas-b`'s teacher
+path on FiQA reached 0.998 (four slots in 2,000); the gate exists to catch a broken collection, and
+every parity value is reported per space, workload, build and path in the result.

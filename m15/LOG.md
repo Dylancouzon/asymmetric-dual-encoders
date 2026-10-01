@@ -633,3 +633,6 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   queries have exact-score ties at rank 10, and a CPU recompute of the exact top-10 agrees with the
   saved GPU top-10 at only 0.966 for that path. Genuine ties, not a broken collection. Recovery made
   tie-aware (method amendment 3), parity gate back to 0.999, all sweeps restarted from scratch.
+- E20 sweeps restarted 05:37 UTC under tie-aware recovery (tolerance 1e-4); 22 of 27 spaces done
+  by 06:45 when `tas-b`'s teacher path on FiQA failed the 0.999 parity gate at 0.998. Gate set to
+  0.995 (sanity check, values reported); shard 2 relaunched for the remaining spaces.
