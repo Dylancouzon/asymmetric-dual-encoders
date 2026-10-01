@@ -16,6 +16,8 @@ previous agent passes are not owner acceptance.
 - **PAPER_EVIDENCE_MAP.md:** file-level provenance for the current manuscript. Internal repository
   paths are removed from the manuscript; normal literature references and artifact availability
   remain. EVIDENCE.md retains all numerical cards, including material omitted editorially.
+- **AUTHORS.json:** provisional owner-supplied author order, Qdrant affiliation, and all four emails.
+  The PDF build reads this roster. Query/encoding/loading latency uses ms consistently.
 - **latex/paper.tex / paper.pdf:** build with `sh m15/latex/build.sh` (pandoc/tectonic installed).
   Figures use scientific Matplotlib, not brand diagrams. Regenerate only changed figure functions
   with `.venv-mac/bin/python`; the main figures are f4_system and f3_towers, printed as Figures 1/2.
@@ -69,7 +71,7 @@ none certifies owner acceptance, publication readiness, or a breakthrough.
    at matched recovery/relevance and measured cost has the clearest deployment value. Account for
    collection rebuild/graph variation. Another teacher space would test reach beyond Stella.
    FOLLOWUP.md preserves these options. No full retraining is authorized or needed by this plan.
-3. Before actual publication, verify author/affiliation and release/licence state. No public paper
+3. Before actual publication, reconfirm the provisional roster only if it changes, and verify release/licence state. No public paper
    publication happened during this rewrite. Twenty literature references retain their existing
    primary-source audits in RELATED_WORK.md.
 

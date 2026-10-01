@@ -79,6 +79,7 @@
 \@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
 \makeatother
 \hypersetup{
+  pdfauthor={Dylan Couzon, Evgeniya Sukhodolskaya, Kumar Shivendu, Andrey Vasnetsov},
   pdftitle={Constella: Lower-Cost Queries over a Fixed Document Index},
   colorlinks=true,
   linkcolor={Maroon},
@@ -88,7 +89,14 @@
   pdfcreator={LaTeX via pandoc}}
 
 \title{Constella: Lower-Cost Queries over a Fixed Document Index}
-\author{Dylan Couzon (Qdrant)}
+\author{\begin{tabular}{cc}
+\begin{tabular}{c}Dylan Couzon\\
+{\small\href{mailto:dylan.couzon@qdrant.com}{\nolinkurl{dylan.couzon@qdrant.com}}}\end{tabular} & \begin{tabular}{c}Evgeniya Sukhodolskaya\\
+{\small\href{mailto:jenny@qdrant.com}{\nolinkurl{jenny@qdrant.com}}}\end{tabular}\\[0.8em]
+\begin{tabular}{c}Kumar Shivendu\\
+{\small\href{mailto:kumar.shivendu@qdrant.com}{\nolinkurl{kumar.shivendu@qdrant.com}}}\end{tabular} & \begin{tabular}{c}Andrey Vasnetsov\\
+{\small\href{mailto:andrey@qdrant.com}{\nolinkurl{andrey@qdrant.com}}}\end{tabular}
+\end{tabular}\\[0.6em]Qdrant}
 \date{October 2026}
 
 \begin{document}
@@ -102,7 +110,7 @@ pretrained 400-million-parameter embedding model: the original encoder,
 Nano, a 34.5-million-parameter transformer, and Zero, a token lookup
 table. Across 15 BEIR datasets, Nano and Zero retain 90.5\% and 81.4\%
 of Stella's exact-search score. On a laptop CPU, their median warmed
-encoding times are 2.25 ms and 44 microseconds, versus Stella's 31.6 ms.
+encoding times are 2.25 ms and 0.044 ms, versus Stella's 31.6 ms.
 
 We study the quality and systems tradeoffs behind these encoding
 savings. Zero requires more approximate-search effort on the two
@@ -245,7 +253,7 @@ Nano keeps about nine tenths of Stella's score at one fourteenth of its
 encoding time. Zero keeps about four fifths at one seven-hundredth.
 These are different relevance budgets, not equal-quality speedups.
 Zero's warmed encoding is small, but tokenization, asset loading,
-memory, and retrieval remain. Its measured load time is 0.215 s; the
+memory, and retrieval remain. Its measured load time is 215 ms; the
 first query takes 0.208 ms.
 
 Keeping the index is the reason to consider this family. In a new-index
@@ -680,6 +688,7 @@ registered descriptive \\
 \end{longtable}
 }
 
+\Needspace{17\baselineskip}
 The original Zero tests used a Holm multiplicity rule across the
 confirmatory family. The table preserves their raw reporting intervals;
 these alone are not the decision rule.
@@ -777,6 +786,7 @@ zero. This weaker replication prevents a general static-model
 quantization claim. Native rescoring also changes cross-segment
 candidate merging, so it is not a rerank of an identical global pool.
 
+\Needspace{16\baselineskip}
 The graph-free precision control uses exactly the same queries, vectors,
 and targets. It scores all fixed document sign codes, with global
 candidate budgets 10/40/100 and 40 primary. Expected coverage averages

@@ -489,3 +489,18 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - No new scientific run, training, teacher/document encoding, cloud rental, or protected-data read.
   Immutable results untouched; M15 historical cloud spend remains $22.79. Commit/push preserves
   the catalog, audits, manuscript, evidence map, rendered artifact, and dispositions.
+
+
+### Author roster and consistent latency units
+
+- Owner supplies Dylan Couzon's email and additional provisional authors: Evgeniya Sukhodolskaya,
+  Kumar Shivendu, Andrey Vasnetsov. AUTHORS.json records names/emails in the supplied order, with
+  Qdrant affiliation; the build uses this single roster for a two-column contact block and PDF
+  author metadata. Updated owner preferences and handoff so later iterations retain it.
+- Standardized manuscript latency/loading values to ms: abstract Zero 44 microseconds →0.044 ms,
+  load 0.215 s →215 ms. Query/search tables and main figure already used ms. Training durations
+  remain in minutes/hours as a separate cost metric. Source result payloads remain unchanged.
+- Rebuilt the 11-page PDF; checked all four names/emails in extracted text and its author metadata,
+  checked latency units, inspected the title page and all-page render contacts, and rechecked the
+  affected appendix pages after keeping the Zero/precision tables with their explanations.
+  No overflow/underflow/missing-character or build error warnings; git diff --check passes.

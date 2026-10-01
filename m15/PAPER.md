@@ -4,7 +4,7 @@
 
 ## Abstract
 
-Can we reduce query computation while keeping an existing dense document index? Constella provides three compatible query encoders for Stella, a pretrained 400-million-parameter embedding model: the original encoder, Nano, a 34.5-million-parameter transformer, and Zero, a token lookup table. Across 15 BEIR datasets, Nano and Zero retain 90.5% and 81.4% of Stella's exact-search score. On a laptop CPU, their median warmed encoding times are 2.25 ms and 44 microseconds, versus Stella's 31.6 ms.
+Can we reduce query computation while keeping an existing dense document index? Constella provides three compatible query encoders for Stella, a pretrained 400-million-parameter embedding model: the original encoder, Nano, a 34.5-million-parameter transformer, and Zero, a token lookup table. Across 15 BEIR datasets, Nano and Zero retain 90.5% and 81.4% of Stella's exact-search score. On a laptop CPU, their median warmed encoding times are 2.25 ms and 0.044 ms, versus Stella's 31.6 ms.
 
 We study the quality and systems tradeoffs behind these encoding savings. Zero requires more approximate-search effort on the two measured collections; on a million-passage diagnostic, a roughly 62-fold encoding advantage over Nano becomes 2.2-fold after retrieval, at different absolute quality levels. A 26-checkpoint table-fitting study shows why choosing a teacher by its own retrieval score can select a poor student. Earlier experiments show that fusion-operator ordering changes with candidate depth and that checkpoint alignment does not alone certify serving compatibility. Simple routing and vector blending do not deliver the gains their apparent headroom suggests. The contribution is an empirical study of cheaper query paths over fixed document vectors, with findings spanning construction, retrieval, and deployment, and their limits kept visible.
 
@@ -47,7 +47,7 @@ We use **nDCG@10**, which rewards relevant documents near the top of the first t
 | Nano | 0.5081 | 90.5% | 2.25 ms | 132.3 MiB |
 | Zero | 0.4572 | 81.4% | 0.044 ms | 90.1 MiB |
 
-Nano keeps about nine tenths of Stella's score at one fourteenth of its encoding time. Zero keeps about four fifths at one seven-hundredth. These are different relevance budgets, not equal-quality speedups. Zero's warmed encoding is small, but tokenization, asset loading, memory, and retrieval remain. Its measured load time is 0.215 s; the first query takes 0.208 ms.
+Nano keeps about nine tenths of Stella's score at one fourteenth of its encoding time. Zero keeps about four fifths at one seven-hundredth. These are different relevance budgets, not equal-quality speedups. Zero's warmed encoding is small, but tokenization, asset loading, memory, and retrieval remain. Its measured load time is 215 ms; the first query takes 0.208 ms.
 
 Keeping the index is the reason to consider this family. In a new-index decision, alternatives deserve their own evaluation. Nano's BEIR-15 score is below the selected bge-small and LEAF references, which use their own document representations (Appendix A). BM25 and inference-free sparse retrieval also offer cheap queries. Constella is not a comprehensive small-model ranking.
 

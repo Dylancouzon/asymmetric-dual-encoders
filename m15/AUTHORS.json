@@ -1,0 +1,9 @@
+{
+  "affiliation": "Qdrant",
+  "authors": [
+    {"name": "Dylan Couzon", "email": "dylan.couzon@qdrant.com"},
+    {"name": "Evgeniya Sukhodolskaya", "email": "jenny@qdrant.com"},
+    {"name": "Kumar Shivendu", "email": "kumar.shivendu@qdrant.com"},
+    {"name": "Andrey Vasnetsov", "email": "andrey@qdrant.com"}
+  ]
+}

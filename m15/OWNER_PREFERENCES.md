@@ -12,6 +12,11 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 - **The manuscript must stand alone.** Internal repository filenames are not suitable citations or explanations in the paper. Keep detailed file-level provenance in the accompanying evidence package; use normal references and an artifact-availability statement in the manuscript.
 - **Make the reader's benefit explicit.** The ultimate goal is for a search engineer to find the paper interesting, applicable, worth sharing, and useful for improving a production system. A verbose inventory without a clear lesson does not meet that goal.
 - **Keep the genre a whitepaper.** The owner explicitly reiterates that this is a whitepaper, not a tutorial. Lead with research questions, methods, findings, and interpretation. Production relevance does not require repeated instructions, deployment checklists, or a how-to structure.
+- **Keep units consistent.** The owner flags milliseconds mixed with microseconds. Use milliseconds consistently for query timing throughout the manuscript and figures.
+
+## Authors
+
+- The provisional author list, in the order supplied by the owner, is Dylan Couzon, Evgeniya Sukhodolskaya, Kumar Shivendu, and Andrey Vasnetsov, with Qdrant affiliation. Names and the supplied contact emails are maintained in `AUTHORS.json` and used by the PDF build.
 
 ## Editorial freedom and research scope
 
@@ -73,3 +78,4 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner requests a persistent synthesis of all potential milestone learnings for editorial selection and explicitly authorizes subagents and an Astra reviewer.
 - Owner defines the ultimate reader outcome: interesting, applicable, worth sharing, and value for a production system. No current draft is endorsed by this instruction.
 - Owner reiterates that the deliverable is a whitepaper, not a tutorial; practical value must stay within an empirical research narrative.
+- Owner provides Dylan's email and three additional authors with their emails, for now; recorded in AUTHORS.json. Owner flags inconsistent ms/microsecond units.
