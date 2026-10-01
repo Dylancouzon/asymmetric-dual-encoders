@@ -140,3 +140,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
   is deliberate; the body keeps the third-person contract.
 - **2026-10-01, round 10, title.** Owner chose "Your Index Is Fine, Your Query Encoder Is Not: Query
   Distillation over Frozen Indexes" (no semicolon; supersedes round 9).
+- **2026-10-02, final round, authority.** Owner ends his part of the session: "Consult with Astra,
+  work together to get the best paper based on the goals ... Do the best version possible and do all
+  of the gates ... The rule of thumb is that I trust you and Astra to make the best decision." The
+  balance he named: interesting, useful, applicable, something people want to share, still a serious
+  paper. Astra holds narration authority, Fable technical authority, as equals; the two settle the
+  cut list and the final text without a further owner round. Everything is logged, committed, and
+  pushed before the session closes; open forks are reported to him at the end.

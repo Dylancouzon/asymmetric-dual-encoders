@@ -832,3 +832,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Paper, Table C labels, Appendix B roster (new row), Figure 1, card C22, NOVELTY, evidence map,
   HANDOFF, REVIEW_GUIDE updated; PDF rebuilt. Fable's cut list (about 1,000 words) is held with
   Astra's for the owner.
+
+### 2026-10-02: v18, cuts and final gates
+
+- Owner closes his part of the session and delegates the final text to Astra (narration) and
+  Fable (technical) as equals (`OWNER_PREFERENCES.md`, final round). Cuts applied as recorded in
+  `REVISION_PLAN_V17.md` ("Cut decisions"); main-text prose 4,115 words. Draft banner v18.
+- Astra narration round 1 launched on v18 (`REVIEWS/briefs-2026-10-02/v18-astra-round1.md`).

@@ -141,3 +141,17 @@ does it cost, and what about the index decides the cost?
 
 Section plan from the v17 shape stands with RQ1 and RQ2 renamed as above; the introduction opens
 on the frozen index (39.9 h re-encode, downstream consumers) and poses the two questions.
+
+## Cut decisions (2026-10-02, v18, under the owner's final-round authority)
+
+Both complete-draft reviews (`REVIEWS/2026-10-02-astra-complete-v17.md`, `-fable-complete-v17.md`)
+ranked cuts by words saved per claim lost. Taken, where the two agreed: Section 6 merged into three
+paragraphs around Tables 1 and 2 (per-dataset detail to Appendix A, typing/pause/submit sentence
+removed as a model-card capability); the introduction's numbers paragraph replaced by two sentences
+without numbers; the 4.4 paragraph that restated Table C replaced by the reading; the 5.5 timing,
+"not in dispute", and caveat sentences folded into one. Taken from Fable: 5.4 folded into the end of
+5.2 (method stays in Appendix C); Table F cut to the two ratio rows, all-features, and baseline,
+with all nine features in Appendix C; the abstract leads with the width finding; the fp16 sentence
+moved to Appendix A. Not taken: Astra's 180-word abstract cut (the abstract is what gets cited) and
+the relocation of 4.2's definitions (a reader checking Table B needs them in place). "We" is kept.
+Main-text prose about 4,100 words from 5,100; every claim and disclosure retained.
