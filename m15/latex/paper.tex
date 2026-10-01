@@ -141,27 +141,32 @@ together.
 
 \subsection{1. Introduction}\label{introduction}
 
-In a production retrieval system the document index is the component
-that is hardest to change. Re-encoding is the smaller part of the cost
-and already substantial: the 23.7 million documents of the BEIR-15
-collection took a measured 39.9 hours with a 400-million-parameter
-encoder on one consumer GPU, and production corpora and encoders are
-larger. The larger part is everything built on the vectors: the graph,
-its quantization, and every consumer that stores, caches, or joins
-against them. The query encoder is the opposite: it runs once per
-request, it can be replaced between requests, and nothing stored depends
-on it, as long as its output lands in the index's space.
+In a production retrieval system, reducing query compute by replacing
+the embedding model can turn an optimization into an index migration.
+Changing the document representation requires re-embedding the corpus
+and rebuilding the vector index. Downtime can be avoided, but keeping
+retrieval available during the transition can require old and new vector
+indexes to coexist and ingestion to keep both representations current
+until traffic switches {[}Index migration{]}. Backfill and index
+construction then add compute, storage, and I/O demands alongside live
+queries and updates. The migration also needs relevance validation, a
+coordinated query-encoder switch, and a rollback path. Its duration and
+cost depend on corpus token volume, encoding throughput, index-building
+capacity, and the rate of incoming updates. Replacing only the query
+encoder with a compatible student preserves the stored document vectors
+and avoids that migration; its effects on retrieval quality and search
+effort still need to be measured.
 
-\textbf{Query-side distillation} makes that condition hold. A student
-encoder is trained to reproduce the frozen encoder's query vectors and
-then searches the frozen document vectors directly {[}QED, EmbedDistill,
-LEAF{]}. Static variants fit a token table instead of a transformer, so
-a query costs a table lookup and a sum {[}pyNIFE, LightRetriever{]}.
-Query-side distillation is established, but comparisons across different
-models and evaluation protocols do not isolate its quality cost relative
-to joint training {[}LightRetriever{]}. What is not established is what
-the frozen-index version costs over a given index, and whether the cost
-can be predicted from the index before anything is built.
+\textbf{Query-side distillation} trains a student encoder to reproduce
+the frozen encoder's query vectors and search the frozen document
+vectors directly {[}QED, EmbedDistill, LEAF{]}. Static variants fit a
+token table instead of a transformer, so a query costs a table lookup
+and a sum {[}pyNIFE, LightRetriever{]}. Query-side distillation is
+established, but comparisons across different models and evaluation
+protocols do not isolate its quality cost relative to joint training
+{[}LightRetriever{]}. What is not established is what the frozen-index
+version costs over a given index, and whether the cost can be predicted
+from the index before anything is built.
 
 Two properties of a frozen index are fixed by the encoder that built it
 and cannot be changed without rebuilding: the width of its stored
@@ -1500,6 +1505,11 @@ query performance prediction remain {[}Arabzadeh et al., QPP{]}.
   {[}BEIR{]} BEIR contributors. BEIR retrieval benchmark, datasets, and
   evaluation software.
   \href{https://github.com/beir-cellar/beir}{Repository}.
+\item
+  {[}Index migration{]} Qdrant contributors. Migrate to a New Embedding
+  Model with Zero Downtime in Qdrant. Qdrant documentation.
+  \href{https://qdrant.tech/documentation/tutorials-operations/embedding-model-migration/}{Migration
+  procedures}.
 \end{itemize}
 
 \end{document}

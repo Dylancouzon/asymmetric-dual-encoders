@@ -870,3 +870,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Verified the abstract against Sections 3 to 6 and evidence cards C18 to C22; rebuilt the PDF,
   checked extracted opening text and visually inspected pages 1 and 2. `git diff --check` passed.
   Build warnings concern the existing Appendix B roster table, outside the edited abstract.
+
+### 2026-10-02: owner reading feedback, production motivation
+
+- Owner asks for a critical IR-research collaborator and rejects the BEIR encoding-duration
+  illustration as representative of production. Recorded both directions in OWNER_PREFERENCES.md.
+- Replaced the introduction's first paragraph with the migration burden: re-embedding, index
+  construction, overlapping vector indexes, keeping incoming updates current, additional resource
+  demand, validation, query-encoder cutover, and rollback. Removed unsupported claims that
+  re-encoding is the smaller cost and that production corpora and encoders are generally larger.
+  Adjusted the following paragraph to define distillation without the removed antecedent.
+- Checked current primary migration procedures and added the reference plus explanatory notes
+  in RELATED_WORK.md; updated PAPER_EVIDENCE_MAP.md. Availability can be preserved during
+  migration; no mandatory outage, production cost estimate, or measured risk reduction is claimed.
+  A numerical scenario would need explicit corpus length, throughput, build capacity, update load,
+  and pricing assumptions. Historical M20 measurement records remain unchanged.
+- PDF rebuilt; opening pages and new reference visually inspected, and `git diff --check` passed.
