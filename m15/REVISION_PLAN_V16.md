@@ -45,3 +45,24 @@ Recover and archive the cleaned 337,981-query fit list and the 1M sampled-ID lis
 ## Logging
 
 Every decision in this plan is dated in `OWNER_PREFERENCES.md` (owner direction) or `LOG.md` (work record). Experiment methods go to `MEASUREMENTS.md` as E19 (A) and E20 (B) before scoring; receipts to `results/m15_e19_*.json` and `results/m15_e20_*.json`; cards to `EVIDENCE.md`.
+
+## Post-experiment claim wording (Astra + Fable, 2026-10-01, after E19 and E20)
+
+- **Finding A.** Across 26 checkpoints, teacher retrieval quality was a poor standalone guide to
+  student quality under either tested recipe. Teacher rankings transferred only moderately between
+  recipes, while each recipe's own dev screen tracked its evaluation ranking. Screen candidates using
+  the intended student recipe. Lead with the concrete consequence: the head screen's choice scored
+  0.325 against 0.223 for the strongest registered teacher. Width is a qualifier beside A: retention
+  falls with teacher width under both recipes and within one width band teacher quality tracks head
+  quality; hypothesis, not mechanism; width covaries with family and quality.
+- **Finding B.** Under the tested uncompressed HNSW configuration, table queries recovered fewer of
+  their own exact neighbors at ef=64 in all 25 included spaces on FiQA and TREC-COVID; matching
+  teacher recovery required a median 4x ef over reached spaces, censoring shown. The gap was smaller
+  on SCIDOCS. Matching relative nDCG loss gave a consistent penalty on FiQA and mixed results
+  elsewhere. Both pre-specified measures reported, loss first, with the 50-query explanation as a
+  plausible reason, not a dismissal. Each path keeps its own exact baseline. 4x ef is not 4x latency.
+  Corpus size is a possible explanation, not an identified cause. The head shows the same recovery
+  deficit (secondary). Geometry: "the two measured geometry summaries showed no consistent
+  association with the recovery penalty across workloads", one sentence in the body.
+- Title and outline unchanged; abstract emphasises recipe-specific teacher screening and recurring
+  ANN recovery penalties with workload-dependent relevance effects.

@@ -654,3 +654,13 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   nearly saturates every path). The recipe-2 head shows the same gap (24/25 and 23/25). Geometry
   deltas do not predict the gap size across spaces (Spearman 0.00 FiQA, −0.34 TREC-COVID, intervals
   span zero). Stella's teacher path agrees with E2 at every ef. Evidence card C17 regenerated.
+- Astra's reading of E19/E20 (`REVIEWS/2026-10-01-astra-e19-e20-reading.md`), accepted by Fable
+  in full: narrow finding A to "teacher retrieval quality was a poor standalone guide under either
+  recipe; rankings transfer only moderately; each recipe's own dev screen tracks its evaluation
+  ranking; screen with the intended student recipe" and lead with 0.325 versus 0.223; width is a
+  qualifier on A, not causal; finding B is a recurring exact-neighbor recovery penalty (25/25 on
+  FiQA and TREC-COVID, median 4x ef over reached spaces, censoring visible), with relevance-loss
+  results consistent on FiQA and mixed elsewhere; both pre-specified measures reported, loss first;
+  geometry summaries "showed no consistent association", one sentence in the body; tas-b's
+  exclusion trigger is the SCIDOCS head parity 0.994; title and outline unchanged, abstract
+  re-emphasised. Next: the v16 draft.
