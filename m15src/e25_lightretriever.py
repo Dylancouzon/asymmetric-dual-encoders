@@ -134,6 +134,8 @@ def vectors(ds):
     dv = encode_last_token(tok, model, doc_ids_for(tok, data["doc_texts"]))
     meta["timing"]["docs_seconds"] = time.time() - t0
     np.save(out / f"{ds}-docs.npy", dv.astype(np.float16))
+    # Exact references use the stored fp16 representation, the same vectors the sweep indexes.
+    dv = np.load(out / f"{ds}-docs.npy").astype(np.float32)
     (out / f"{ds}-doc-ids.json").write_text(json.dumps(data["doc_ids"]))
     tables = {}
     for name, instr in (("websearch", INSTRUCTIONS["websearch"]), ("task", INSTRUCTIONS[ds])):
@@ -242,8 +244,11 @@ def assemble():
              "timing": meta["timing"], "exact_parity": sw["exact_parity"], "builds": sw["builds"], "contrasts": {}}
         for instr in ("websearch", "task"):
             lk, fl = f"lookup_{instr}", f"full_{instr}"
-            c = {"loss_multiplier_builds": [multiplier(sw["rows"], ds, b, lk, fl, "ann_ndcg_loss_rel") for b in range(E20.BUILDS)],
-                 "recovery_multiplier_builds": [multiplier(sw["rows"], ds, b, lk, fl, "ann_recovery_at10") for b in range(E20.BUILDS)]}
+            lm = [multiplier(sw["rows"], ds, b, lk, fl, "ann_ndcg_loss_rel") for b in range(E20.BUILDS)]
+            rm = [multiplier(sw["rows"], ds, b, lk, fl, "ann_recovery_at10") for b in range(E20.BUILDS)]
+            agg = lambda v: None if any(x is None for x in v) else float(np.mean(v))   # E20 rule: censored if any build is
+            c = {"loss_multiplier_builds": lm, "loss_multiplier": agg(lm),
+                 "recovery_multiplier_builds": rm, "recovery_multiplier": agg(rm)}
             gaps, pq = [], []
             for b in range(E20.BUILDS):
                 rl = next(r for r in sw["rows"] if r["build"] == b and r["path"] == lk and r["hnsw_ef"] == E20.REF_EF)
