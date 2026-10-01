@@ -222,7 +222,62 @@ def f6_precision():
     plt.close(fig)
 
 
+def f7_recipes():
+    """E19: the second student recipe against the teacher's own score and against recipe 1."""
+    d = R("m15_e19_head_screen.json")
+    cfg = {n: c for n, c in d["configs"].items() if n != "arctic-embed-l-mean"}
+    reg = set(d["rosters"]["registered_ten"]["names"])
+    s = d["spearman"]["pooled"]
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4))
+    panels = [("teacher_six_macro_all6", "Teacher's own nDCG@10, six sets",
+               "recipe2_vs_teacher_all6", "Teacher quality"),
+              ("recipe1_six_table_macro_all6", "Table (recipe 1) nDCG@10, six sets",
+               "recipe2_vs_recipe1_all6", "Table ranking")]
+    for ax, (xk, xl, sk, label) in zip(axes, panels):
+        for n, c in cfg.items():
+            color = C["stella"] if n == "stella-400M-v5" else C["muted"]
+            marker = "x" if n == "bge-small-en-v1.5" else "o"
+            ax.scatter(c[xk], c["six_head_macro_all6"], s=30, zorder=3, marker=marker,
+                       color="white" if (n not in reg and marker == "o") else color,
+                       edgecolor=color, linewidth=1.3)
+        for n, dx, dy in (("stella-400M-v5", 5, 2), ("gte-large-en-v1.5", 5, -9),
+                          ("bge-base-en-v1.5", 5, 2), ("bge-small-en-v1.5", 5, -9)):
+            c = cfg[n]
+            ax.annotate(n.replace("-en-v1.5", "").replace("-400M-v5", ""), (c[xk], c["six_head_macro_all6"]),
+                        textcoords="offset points", xytext=(dx, dy), fontsize=7.5,
+                        color=C["stella"] if n == "stella-400M-v5" else C["ink"])
+        ax.set_xlabel(xl)
+        ax.set_ylabel("Head (recipe 2) nDCG@10, six sets")
+        ax.set_title(f"{label}: Spearman {s[sk]['spearman']:+.2f}\n95% "
+                     f"[{s[sk]['bootstrap95_over_checkpoints'][0]:+.2f}, "
+                     f"{s[sk]['bootstrap95_over_checkpoints'][1]:+.2f}]", fontsize=8.5, loc="left")
+    save(fig, "f7_recipes")
+
+
+def f8_spaces():
+    """E20: table-minus-teacher exact-neighbor recovery at ef=64, per space, three workloads."""
+    d = R("m15_e20_ann_spaces.json")
+    sp = {n: v for n, v in d["spaces"].items() if n != "arctic-embed-l-mean"}
+    gap = lambda n, ds: 100 * float(np.mean(sp[n]["workloads"][ds]["table_minus_teacher_recovery_at_ref_ef"]))
+    order = sorted(sp, key=lambda n: gap(n, "fiqa"))
+    fig, ax = plt.subplots(figsize=(6.4, 6.2))
+    colors = {"fiqa": C["zero"], "scidocs": C["ref"], "trec-covid": C["nano"]}
+    labels = {"fiqa": "FiQA (57k docs)", "scidocs": "SCIDOCS (25k docs)", "trec-covid": "TREC-COVID (171k docs)"}
+    for ds in ("scidocs", "trec-covid", "fiqa"):
+        ax.scatter([gap(n, ds) for n in order], range(len(order)), s=28, zorder=3, color=colors[ds],
+                   label=labels[ds], alpha=0.9)
+    ax.axvline(0, color=C["ink"], linewidth=0.8)
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels(order, fontsize=7.5)
+    ax.set_xlabel("Table minus teacher exact-neighbor recovery@10 at ef=64 (percentage points)")
+    ax.legend(loc="center left", fontsize=8, frameon=False)
+    ax.set_title(f"{len(order)} teacher spaces, own uncompressed HNSW index, two builds averaged",
+                 fontsize=8.5, loc="left")
+    save(fig, "f8_spaces")
+
+
 if __name__ == "__main__":
-    for f in (f1_frontier, f2_per_dataset, f3_towers, f4_system, f5_routing, f6_precision):
+    for f in (f1_frontier, f2_per_dataset, f3_towers, f4_system, f5_routing, f6_precision, f7_recipes,
+              f8_spaces):
         f()
         print("wrote", f.__name__)
