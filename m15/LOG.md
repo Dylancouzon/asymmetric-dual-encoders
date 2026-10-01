@@ -599,3 +599,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Launched `work/m15/e_chain.sh` (E19 all, then E20 qdrant and vectors per teacher) and
   `work/m15/e20_sweeps.sh` (sweeps as each space's vectors land, then assemble), both nohup, logs
   in `work/m15/e_chain.log` and `work/m15/e20_sweeps.log` on the pod.
+- Batch committed and pushed as `9355caa` under the owner's standing commit/push approval. The pod
+  cannot fetch GitHub (its deploy key lives on the lost container disk) and its worktree was not
+  switched during the run to avoid rewriting the live `m7/SIX_ACCESS.log`; the commit was pushed to
+  the pod repository as branch `m15-sync`. Pod driver files equal the committed ones by sha256
+  (`e19_head_screen.py` 76d3ead2…, `e20_ann_spaces.py` f47f5966…), so receipts showing
+  `ed0af15f3` plus dirty source refer to exactly this committed code.
