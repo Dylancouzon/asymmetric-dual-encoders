@@ -8,6 +8,9 @@ For coworker review, start at **REVIEW_GUIDE.md**. **BRANCH_INVENTORY.md / BRANC
 the baseline tracked content; **PROVENANCE_AUDIT.md** resolves exact source versions and states
 which inputs are external/unavailable. A fresh clone supports substantive review, not every exact
 rerun. EVIDENCE_INDEX.md is explicitly superseded historical discovery material.
+**EDITORIAL_RATIONALE.md** explains the current choice, its strongest objection, the revision
+history, and eight alternative directions with evidence, limitations, and what could change the
+choice. It is an agent recommendation for coauthor discussion, not owner acceptance.
 
 ## Current deliverables
 

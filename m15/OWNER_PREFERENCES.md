@@ -49,6 +49,7 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 - **Do not turn agent judgments into owner decisions.** For example, calling v13 a good applied study or recommending native precision validation is an agent assessment. It is not an owner endorsement of the draft or approval of a final thesis.
 - **Make coworker review easy.** Coworkers have repository access and Codex. The owner wants them to have the paper, all relevant evidence, and a clear inventory of the branch, with a place for comments and discussion. A Google Doc with a reviewer evidence appendix is the owner's suggested collaboration surface; accepted work must remain auditable in Git.
 - **Create the collaboration Doc when feasible.** The owner permits installing a plugin or MCP if necessary and offers Codex desktop as a fallback. The connected Google Drive plugin is available; no installation is needed. This is not authorization to email invitations or publish the draft publicly.
+- **Explain the editorial choice and expose alternatives.** Reviewers need the reasoning behind the current direction and other approaches considered, so they can question the selection, emphasize a different finding, or recommend another thesis. The rationale is supporting review material, not a requirement for coauthors to endorse the current direction.
 
 ## Checks before the next draft
 
@@ -83,3 +84,4 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner provides Dylan's email and three additional authors with their emails, for now; recorded in AUTHORS.json. Owner flags inconsistent ms/microsecond units.
 - Owner asks whether coworkers have all evidence, requests easy collaborative review with comments/back-and-forth, and suggests a Google Doc containing the paper and evidence/branch inventory appendix. Coworkers have Codex and repository access.
 - Owner permits plugin/MCP installation to create the Doc, with Codex desktop as a fallback if needed.
+- Owner asks for the direction's rationale and alternative approaches to be available to reviewers, enabling them to make their own informed editorial decisions.

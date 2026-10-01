@@ -25,7 +25,7 @@ Some experiments would need artifact recovery or reconstruction before an exact 
 |---|---|---|
 | Is this clear, interesting, and useful for a production search engineer? | [PAPER.md](PAPER.md) | [Owner expectations](OWNER_PREFERENCES.md), [all potential learnings](LEARNINGS.md) |
 | Does a particular claim follow from the experiment? | [Current evidence map](PAPER_EVIDENCE_MAP.md) | [Numerical cards](EVIDENCE.md), the source result named in that row, [methods](MEASUREMENTS.md) |
-| Did we choose the right findings from the whole project? | [LEARNINGS.md](LEARNINGS.md) | Its milestone coverage table and named historical FINDINGS/STATUS files |
+| Did we choose the right direction and findings from the whole project? | [Editorial rationale and alternatives](EDITORIAL_RATIONALE.md) | [LEARNINGS.md](LEARNINGS.md), its milestone coverage table and named historical FINDINGS/STATUS files |
 | Are confirmatory outcomes and unfavorable comparisons visible? | Paper Appendix A | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published reserved aggregate](../results/m13_reserved_run.json), [canonical benchmarks](../m21/BENCHMARKS.md) |
 | How strong are the ANN and query-precision conclusions? | Paper §3 and Appendix B | [C10/C14/C15 cards](EVIDENCE.md), E2/E16–E18 in [methods](MEASUREMENTS.md), [follow-up options](FOLLOWUP.md) |
 | What did earlier reviewers find, and what was fixed? | [V15 dispositions](REVIEWS/2026-10-01-v15-synthesis.md) | [Reader review](REVIEWS/2026-10-01-v15-reader.md), [correctness review](REVIEWS/2026-10-01-v15-correctness.md), [LOG.md](LOG.md) |
@@ -71,7 +71,8 @@ The following prompt is a starting point; replace the focus with the question un
 > Review the Constella v15 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
 > instructions-m15.md, m15/REVIEW_GUIDE.md, m15/OWNER_PREFERENCES.md, and the relevant section of
 > m15/PAPER.md. Use m15/PAPER_EVIDENCE_MAP.md to select exact result/method files. Use
-> m15/LEARNINGS.md if challenging the paper's selection across the whole history. Distinguish
+> m15/EDITORIAL_RATIONALE.md and m15/LEARNINGS.md if challenging the direction or selection across
+> the whole history. Distinguish
 > scientific evidence from prior agent opinions. Report consequential findings with the claim,
 > evidence, effect on the conclusion, and a concrete proposed fix. This is a whitepaper, not a
 > tutorial or Qdrant sales piece. Do not run experiments or alter existing result files for this review.

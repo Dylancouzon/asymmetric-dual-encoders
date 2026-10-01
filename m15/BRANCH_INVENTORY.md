@@ -2,7 +2,10 @@
 
 Tracked baseline snapshot: [41d436c2](https://github.com/Dylancouzon/asymmetric-dual-encoders/tree/41d436c2a7508204f5dd64bce251cd07fd93a112) on `m15-whitepaper` before this reviewer package was added. **1,841 tracked files.** [BRANCH_FILES.tsv](BRANCH_FILES.tsv) lists every baseline path, Git blob identity, and byte size from tree metadata; it does not read file contents.
 
-The new reviewer package adds README.md, REVIEW_GUIDE.md, BRANCH_INVENTORY.md, BRANCH_FILES.tsv, and PROVENANCE_AUDIT.md under m15/. Later collaboration receipts/links are recorded in HANDOFF.md and LOG.md. Use `git ls-files` for the checkout you are reviewing if it differs from the pinned snapshot.
+The new reviewer package adds README.md, REVIEW_GUIDE.md, BRANCH_INVENTORY.md, BRANCH_FILES.tsv,
+PROVENANCE_AUDIT.md, EDITORIAL_RATIONALE.md, and REVIEW_APPENDIX.md under m15/. Later collaboration
+receipts/links are recorded in HANDOFF.md and LOG.md. Use `git ls-files` for the checkout you are
+reviewing if it differs from the pinned snapshot.
 
 ## Material by purpose
 

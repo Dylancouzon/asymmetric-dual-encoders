@@ -529,3 +529,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Fixed stale CLAUDE.md guidance that described completed M20 evaluations as running. Marked the
   old EVIDENCE_INDEX.md clearly superseded while retaining its historical text. Current results,
   manuscript, and scientific figures remain unchanged. No experiment or protected raw read.
+
+### Editorial rationale for coauthor review
+
+- Owner asks that reviewers see why this direction was chosen and alternative approaches, so they
+  can recommend a different emphasis or thesis. Added EDITORIAL_RATIONALE.md: current reasoning,
+  strongest objection, chronology of changed judgments, eight alternative directions, existing
+  evidence, reasons for scoping/omission, and what could reopen each choice. It explicitly permits
+  narrowing/splitting/replacing the thesis and distinguishes unrun work from measured results.
+- Sol independently checks the editorial options against current paper/catalog and named earlier
+  reviews. The response supports the present choice for the stated audience while emphasizing
+  the strongest criticism: potentially stitched local studies, one teacher/engine, sampled workload,
+  unequal quality, and a separate pre-index teacher question. Root incorporates those objections
+  and the broader sparse/own-index comparison alternative. No claim of coauthor/owner consensus.
+- Reviewer guide, folder README, inventory and handoff link the rationale. The Google Doc reviewer
+  appendix includes its summary and full memo link; its source will be pinned after this commit.
+  No manuscript numbers or underlying result payloads changed.
