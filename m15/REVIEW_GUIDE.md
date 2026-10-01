@@ -38,6 +38,10 @@ remain in history. The current map and synthesis govern how those historical res
 
 ## Recommended collaboration workflow
 
+**Creation is deferred.** Dylan will review with Astra in a separate session before creating the
+Google Doc. [GOOGLE_DOC_HANDOFF.md](GOOGLE_DOC_HANDOFF.md) records the future creation instructions;
+[REVIEW_APPENDIX.md](REVIEW_APPENDIX.md) is its current reviewer-material source. No Doc exists yet.
+
 Use **one Google Doc as the discussion copy**, containing the paper with its existing scientific
 appendices, followed by a clearly marked reviewer appendix with evidence links and a repository
 index. Google Doc comments and suggestions keep the discussion attached to the text. Git keeps

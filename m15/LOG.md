@@ -545,3 +545,23 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Reviewer guide, folder README, inventory and handoff link the rationale. The Google Doc reviewer
   appendix includes its summary and full memo link; its source will be pinned after this commit.
   No manuscript numbers or underlying result payloads changed.
+
+### Google Doc deferred; review handoff finalized
+
+- Latest owner direction: do not create the Google Doc yet. Finish instructions/logging, leave the
+  branch clean, and let the owner review the paper with Astra in a separate session first. This
+  supersedes immediate Doc creation and is recorded in OWNER_PREFERENCES.md and HANDOFF.md.
+- GOOGLE_DOC_HANDOFF.md gives the later creation sequence: incorporate the separate review, pin
+  the accepted repository snapshot, include the complete paper/figures/tables and a separate reviewer
+  appendix, verify native/readback/rendered content, record the actual URL/source/sharing state,
+  and retain anchored discussion during later updates. Creation/sharing awaits owner instruction.
+- REVIEW_APPENDIX.md contains all 23 current evidence-map entries, all 17 numerical evidence-card
+  links, direction/alternative summary, provenance/availability limits, full-history learning links,
+  and repository navigation, pinned to 5ce1ced. It is a starting source to refresh after the review,
+  not an assertion that a Doc exists or the draft has been accepted.
+- A temporary local DOCX was prepared with the paper and reviewer appendix; it was never imported,
+  uploaded, shared, or visually certified. Discarded that staging and its temporary Python environment.
+  The only Google action was a read-only search establishing the connected Drive capability.
+- No manuscript, scientific figure, or result payload changed in this collaboration pass. Root
+  checks reviewer-package links, pinned Git targets, source-commit ancestry, and diff whitespace;
+  all final documentation is committed/pushed. No experiment, rental, retraining, or protected read.

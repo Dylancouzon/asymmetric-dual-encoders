@@ -11,6 +11,11 @@ rerun. EVIDENCE_INDEX.md is explicitly superseded historical discovery material.
 **EDITORIAL_RATIONALE.md** explains the current choice, its strongest objection, the revision
 history, and eight alternative directions with evidence, limitations, and what could change the
 choice. It is an agent recommendation for coauthor discussion, not owner acceptance.
+**Google Doc creation is deferred by the owner** until after a separate Astra review.
+**GOOGLE_DOC_HANDOFF.md** has future creation/verification/collaboration instructions;
+**REVIEW_APPENDIX.md** has the current discussion appendix source, pinned to `5ce1ced`.
+No native Doc was created/uploaded. Refresh its content/links after the separate review before
+using it for a new collaboration document.
 
 ## Current deliverables
 
