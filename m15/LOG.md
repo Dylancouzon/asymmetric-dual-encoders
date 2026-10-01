@@ -360,3 +360,20 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   suggests quantization. Literature and design reviews distinguish established OOD/quantization
   work from the compatible-query-tier question. A local paired same-graph pilot is next; no
   cloud rental or new model training is needed for it.
+
+### E16 local quantization pilot
+
+- Implemented and committed the method/source before execution. One fixed FiQA binary graph,
+  192 query IDs selected by deterministic hash, three query tiers, ef16/64/256, and four native
+  precision/rescoring treatments. Encoders and document vectors are cached; no training/rental.
+- Completed in about 45 seconds including encoding and index construction. Exact-original
+  top10 parity is 1.0 for every tier; collection configuration/counts are unchanged. Receipt
+  source matches the committed script, with `m15src_dirty=false`. The public FiQA access helper
+  appended its normal entry to `m7/SIX_ACCESS.log`.
+- At ef64, binary-rescore1 versus original scoring loses 11.67/5.10/2.29 percentage points of
+  neighbor recovery for Zero/Nano/Stella. Paired extra Zero penalties have query intervals
+  excluding zero, and persist at ef16/256. Oversampling4 helps. These are native request effects,
+  not isolated exhaustive quantization error or a claim that recovery loss equals relevance loss.
+- Astra reviewed source and result, found no essential control defect, and recommends a second
+  scale before a broader claim. The hypothesis, values, caveats, and next sequence are in
+  `FOLLOWUP.md`; the new result has not yet been added to the paper.
