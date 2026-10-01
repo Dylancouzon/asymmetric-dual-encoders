@@ -639,3 +639,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - `tas-b` failed the parity gate again (0.994, head path on SCIDOCS). Its FiQA rank-10 score gaps
   sit at float32 precision (median 8e-4; 17 of 200 queries under 1e-4). Amendment 4: such a space
   is excluded and listed rather than stopping the run; assemble skips it. Shards relaunched.
+- 07:01 UTC: `contriever`'s TREC-COVID build 1 died on a network-volume stale file handle (Qdrant
+  Gridstore IO error 116), the known mfs behaviour. Qdrant scratch storage moved to container disk
+  via `E20_STORAGE`; shard 0 relaunched for that space. `contriever-msmarco` reran under the
+  exclusion rule on shard 1. 25 of 27 spaces complete, `tas-b` excluded by amendment 4.

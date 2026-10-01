@@ -91,7 +91,10 @@ def fetch_qdrant():
 
 
 def start_qdrant(tag):
-    storage = QDRANT_DIR / f"storage-{tag}"
+    # E20_STORAGE: container-local disk on the pod; the network volume gave a stale file handle
+    # mid-build (contriever, TREC-COVID build 1). Storage is scratch; results do not live there.
+    storage = Path(os.environ.get("E20_STORAGE", str(QDRANT_DIR))) / f"storage-{tag}"
+    storage.parent.mkdir(parents=True, exist_ok=True)
     log = open(QDRANT_DIR / f"qdrant-{tag}.log", "w")
     proc = subprocess.Popen([str(QDRANT_DIR / "qdrant")], cwd=QDRANT_DIR, stdout=log, stderr=log,
                             env={"QDRANT__STORAGE__STORAGE_PATH": str(storage),
