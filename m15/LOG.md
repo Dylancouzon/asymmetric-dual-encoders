@@ -664,3 +664,14 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   geometry summaries "showed no consistent association", one sentence in the body; tas-b's
   exclusion trigger is the SCIDOCS head parity 0.994; title and outline unchanged, abstract
   re-emphasised. Next: the v16 draft.
+- **v16 draft** written and committed (`bb2287a`), 3,509 main-text words. Gates run: Andrey
+  (`REVIEWS/2026-10-01-andrey-review-v16.md`: ten uncited references, a dead DBSF link, "search
+  budget" meaning ef, f2 legend, three framing clauses; all applied, `6f676e6`); Astra correctness
+  (`REVIEWS/2026-10-01-astra-correctness-v16.md`: seven essentials, all applied: NDO-3 named,
+  exploratory labels on E19/E20/shared-binary/precision, loss-based E20 result reported first and in
+  full including TREC-COVID's mixed outcome, Nano decision bounds and Zero clean-four intervals
+  restored, three shuffle correlates and their coupling, the "search dominates" sentence corrected,
+  MS MARCO licence role); Sol reader (`REVIEWS/2026-10-01-sol-reader-v16.md`: mechanism recast as
+  hypothesis, "independent student" to "second student representation", universal "no single best
+  teacher" dropped, Section 5 compressed with numbers moved to Appendix D, precision numbers
+  shortened, fidelity observations to Appendix B; figure-level suggestions recorded as P2 debt).
