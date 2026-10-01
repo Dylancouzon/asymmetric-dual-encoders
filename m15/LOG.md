@@ -741,3 +741,6 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Limitations; per-dataset retention figure moved to Appendix A; prefix-retention line added to
   Appendix C. Prose now 3,943 words. Owner's hot-swap and task-specific points answered in chat:
   capability described, not claimed as a finding.
+- Owner round 6: cost paragraph and Table 2 (CPU hours per million queries from registered medians:
+  Stella 9.2 h, Nano 1.2 h, Zero 1.0 h) added to Section 6; construction costs restated there;
+  hot-swap noted for the M22 model card (`instructions-m22.md`); inclusion philosophy recorded.

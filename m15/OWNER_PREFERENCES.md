@@ -125,3 +125,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
   student recovers from a frozen index and which index properties predict it; RQ2 how much more
   search effort it needs over the index's graph and whether that is predictable. Constella is the
   worked instance.
+- **2026-10-01, round 6.** (3) Owner wants the low construction cost and the recurring query-side
+  compute saving made explicit, without re-ingestion or downtime; implemented as a measured-cost
+  paragraph and a CPU-hours-per-million-queries table in Section 6, no dollar-per-month claim
+  because no price or QPS was measured. (4) Hot-swappability is a product capability to showcase in
+  the official model card (M22), not a paper finding. (5) Philosophy: include everything that may be
+  valuable and meets the criteria; reviewers decide cuts together, unless inclusion harms coherence.
+  Material cut from the body stays in appendices rather than being dropped.

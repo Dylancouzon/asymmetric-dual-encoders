@@ -163,7 +163,10 @@ We study the question over 26 public encoder spaces. Because the
 students are fitted by a single linear solve in minutes rather than
 trained, the same recipe can be applied to every space under one
 protocol, which turns a one-model demonstration into a comparison across
-spaces. Two questions organize the paper.
+spaces. The same cheapness is what makes the substitution worth
+considering in production: a student is built in minutes to hours of GPU
+time, the index is not touched, and the saving recurs on every query
+(Section 6). Two questions organize the paper.
 
 \begin{itemize}
 \tightlist
@@ -675,6 +678,62 @@ paths retain similar fractions of their full-query quality on truncated
 queries, and no cascade was timed end to end. Three attempts to
 specialize a student to one workload over the same index did not produce
 an improved encoder (Section 7).
+
+\textbf{What the substitution costs to build and what it saves.}
+Building a table student for an existing index took four to seven
+minutes of A100 time per encoder in the screen, target encoding
+included; the head student's features took 43 seconds for the fit list
+and its fit 14 seconds per encoder; Nano, a trained transformer student,
+took 57.3 A100 hours for its final optimization, about \$95 at the
+recorded rental rate, excluding data preparation, recipe search, and
+failed runs (Appendix B). None of these touched the index: no document
+was re-encoded and no collection was rebuilt, so the new path was added
+to the live collections and verified against them without downtime. On
+the query side the saving recurs. Table 2 converts the measured medians
+into CPU time per million queries on the measurement laptop, encoding at
+batch one with four threads plus search at each path's within-1\%
+setting on the uncompressed million-passage collection; it is arithmetic
+on registered medians, not a throughput measurement, and a production
+system would see different absolute times.
+
+\Needspace{14\baselineskip}
+\textbf{Table 2.} CPU time per million queries on the measurement
+laptop, from the medians in Table 1 and Appendix C.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1579}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Query path
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Encoding
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Search, within 1\% of own exact
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Total
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Share of Stella
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Stella query encoder & 8.78 h & 0.43 h (\texttt{ef=128}) & 9.2 h &
+reference \\
+Nano & 0.63 h & 0.61 h (\texttt{ef=256}) & 1.2 h & 13\% \\
+Zero & 0.01 h & 0.99 h (\texttt{ef=512}) & 1.0 h & 11\% \\
+\end{longtable}
+}
+
+After search, Nano and Zero cost about the same per million queries on
+this collection, because Zero's encoding saving is spent on the extra
+\texttt{ef} that RQ2 measures; both are about a ninth of the full
+encoder's cost, at 90.5\% and 81.4\% of its quality.
 
 The instance also shows RQ2's cost in time. On the uncompressed
 million-passage diagnostic, search time at a fixed \texttt{ef} is the

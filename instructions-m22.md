@@ -41,3 +41,8 @@ BEIR-15 complete. No new measurement, no training, no protected access.
 Standing `CLAUDE.md` rules. Comparator per-dataset absolutes remain unpublished on cards unless the
 owner rules otherwise (2026-09-15 decision); the whitepaper (M15) carries the full comparator table.
 Descriptive rows are labelled as such; unresolved superiority is never written as equivalence.
+
+**Owner note (2026-10-01).** Showcase hot-swappability in the official model cards: all three query
+paths (Stella, Nano, Zero) verified against the same populated Qdrant collections with no rebuild
+between encoder batches, so a request can select any path; cite the M15 E2 receipts. Describe it as a
+capability (compatible encoder selection), not timed model loading or failover.
