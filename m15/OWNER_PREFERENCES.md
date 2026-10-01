@@ -132,3 +132,6 @@ These checks operationalize the owner's readability and evidence concerns; they 
   the official model card (M22), not a paper finding. (5) Philosophy: include everything that may be
   valuable and meets the criteria; reviewers decide cuts together, unless inclusion harms coherence.
   Material cut from the body stays in appendices rather than being dropped.
+- **2026-10-01, round 8, title.** Owner wanted a hook that still reads as a paper and chose
+  "The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document
+  Vectors". Supersedes "Reducing Query Cost over a Frozen Document Index: What the Index Decides".

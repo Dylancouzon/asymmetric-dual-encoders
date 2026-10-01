@@ -757,3 +757,6 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   goal: not disproving joint-training methods but showing ours is more efficient end to end and
   drop-in on an existing pipeline; the paper claims drop-in and encoding-plus-search efficiency,
   never quality superiority.
+- Title changed on owner decision to "The Index Is Fine; the Query Encoder Is the Cost: Query-Side
+  Distillation over Frozen Document Vectors" in PAPER.md, REVISION_PLAN_V17.md, REVIEW_GUIDE.md,
+  HANDOFF.md; PDF rebuilt.
