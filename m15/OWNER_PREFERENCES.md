@@ -8,11 +8,15 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 - **Aim for a paper people find worth reading.** The research preview has attracted some search-engineering attention. The paper should have a clear purpose, an interesting finding, and a reason for that audience to care.
 - **Write for a seasoned search engineer, not a project insider.** Do not assume familiarity with every embedding model, technique, or prior paper. Define models such as Stella at first use, including in the standalone abstract, and explain their roles before comparing numbers.
 - **Readability matters even in a whitepaper.** The owner finds the current narration hard to read and jargon heavy. A narration pass must improve the flow and explanations, not merely expand acronyms or add a glossary.
+- **Use the field's language.** The owner specifically rejects “search service” as unfamiliar terminology. Prefer concrete descriptions of query encoding, retrieval, indexes, and production systems.
+- **The manuscript must stand alone.** Internal repository filenames are not suitable citations or explanations in the paper. Keep detailed file-level provenance in the accompanying evidence package; use normal references and an artifact-availability statement in the manuscript.
+- **Make the reader's benefit explicit.** The ultimate goal is for a search engineer to find the paper interesting, applicable, worth sharing, and useful for improving a production system. A verbose inventory without a clear lesson does not meet that goal.
 
 ## Editorial freedom and research scope
 
 - **Existing content is expendable.** The owner is not attached to the current thesis, sections, or findings. Remove material with little relevance or importance; challenge assumptions and ideas.
 - **Review the whole project before settling on an angle.** The owner challenges an emphasis on one aspect that hides the rest of Constella. Its interchangeable query paths and minimal-compute option should be considered for their actual relevance to the paper.
+- **Maintain a synthesis of all milestone learnings.** This branch must contain a file covering potential lessons from the entire research history, including evidence and limits, so the owner and agents can choose paper content during subsequent reviews. This is broader than the findings added on the paper branch.
 - **Independent research is authorized.** The owner gives broad discretion to improve the paper and permits cheaper subagents for research.
 - **Additional work is welcome when justified.** There is no major publication rush. Some compute is acceptable if it materially strengthens a finding or makes the paper more interesting.
 - **Do not retrain the whole models.** Additional analysis, inference, or bounded experiments should respect this constraint.
@@ -46,6 +50,8 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 4. Are exact retrieval quality, candidate coverage, encoding time, and full search cost kept distinct?
 5. Does each main conclusion state its reach: capability, repeated observation within this family, recipe-specific result, or exploratory diagnostic?
 6. Does the main narrative lead with a useful question and findings, with implementation inventories and project identifiers subordinate to the explanation?
+7. What can a search engineer decide or do differently after reading it, and which evidence supports that advice?
+8. Was the selection checked against the full milestone synthesis, and can the manuscript be read without opening repository files?
 
 These checks operationalize the owner's readability and evidence concerns; they do not add an approval gate or authorize new experiments by themselves.
 
@@ -62,3 +68,6 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - Owner says the paper is generally hard to read and jargon heavy, then challenges anecdotal evidence and asks for some generalizability under skeptical reading.
 - Owner questions the relevance and balance of the selected bge-small/LEAF comparators, and the feasibility of rerunning a much broader roster.
 - Owner requests this persistent record to prevent repeated mistakes.
+- Owner rejects “search service,” internal file references, verbosity, and an unclear goal in v14; challenges whether the draft draws on the entire repository rather than this branch alone.
+- Owner requests a persistent synthesis of all potential milestone learnings for editorial selection and explicitly authorizes subagents and an Astra reviewer.
+- Owner defines the ultimate reader outcome: interesting, applicable, worth sharing, and value for a production system. No current draft is endorsed by this instruction.
