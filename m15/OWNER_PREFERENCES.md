@@ -1,6 +1,6 @@
 # Owner decisions and preferences for the paper
 
-Updated 2026-10-01. This is the durable record of Dylan's instructions for iterations on the M15 paper. Read it with `instructions-m15.md` and `HANDOFF.md` before revising. Entries below paraphrase the owner's messages; tentative ideas remain tentative. Agent recommendations and scientific conclusions belong in reviews and evidence, not in this record.
+Updated 2026-10-02. This is the durable record of Dylan's instructions for iterations on the M15 paper. Read it with `instructions-m15.md` and `HANDOFF.md` before revising. Entries below paraphrase the owner's messages; tentative ideas remain tentative. Agent recommendations and scientific conclusions belong in reviews and evidence, not in this record.
 
 ## Purpose and audience
 
@@ -66,6 +66,10 @@ Updated 2026-10-01. This is the durable record of Dylan's instructions for itera
 These checks operationalize the owner's readability and evidence concerns; they do not add an approval gate or authorize new experiments by themselves.
 
 ## Dated changes
+
+### 2026-10-02, owner reading feedback
+
+- Owner finds v18's abstract impossible to understand without first reading the paper. It must answer why the reader should care and stand alone. Owner requests the rewrite after discussion of a problem-first abstract that explains the question, study, findings, and practical implication with fewer numerical details.
 
 ### 2026-10-01
 

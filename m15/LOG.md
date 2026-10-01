@@ -854,3 +854,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   "rather than" constructions rewritten. Voice contract: 4,195 words, see `REVISION_PLAN_V17.md`.
 - PDF rebuilt; status files (`PROJECT_STATUS.md`, `ROADMAP.md`, `m15/README.md`, `HANDOFF.md`,
   `REVIEW_GUIDE.md`) moved to v18. Pods stopped; session spend about $11.
+
+### 2026-10-02: owner reading feedback, abstract
+
+- Owner finds the abstract unreadable without first reading the paper and asks that it answer why
+  the reader should care. Rewritten in problem/question, study/finding, and implication order:
+  recurring query cost and index preservation first; both student constructions explained before
+  their results; coefficient and correlation inventories removed from the abstract.
+- Retained the width-conditioned prediction, prospective uncertainty, own-path exact-neighbor
+  reference, corpus-dependent relevance result, LightRetriever replication, and Constella's
+  exact BEIR-15 retention. Separate timing observations remain separate from those quality scores;
+  graph-search budget is not described as latency. Detailed evidence stays in the body and tables.
+- Recorded owner direction in OWNER_PREFERENCES.md. Kept the draft at v18 during the owner's
+  reading pass; prior reviewer sign-offs apply to their recorded snapshot, not this new wording.
+- Verified the abstract against Sections 3 to 6 and evidence cards C18 to C22; rebuilt the PDF,
+  checked extracted opening text and visually inspected pages 1 and 2. `git diff --check` passed.
+  Build warnings concern the existing Appendix B roster table, outside the edited abstract.
