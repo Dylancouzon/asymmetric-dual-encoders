@@ -60,7 +60,8 @@ lookup path needs four times the ef of its full encoder to match exact-neighbour
 FiQA and SCIDOCS indexes. This supports the paper's claim that query-encoding speedups measured alone
 overstate the saving, without disputing the cited paper's retention or speedup figures.
 
-**E22 to E24 (2026-10-01).** RQ1 is prospective (seven never-seen spaces, predictions hashed before
-scoring, 0.89 / 0.71 against 0.32 / 0.39 for teacher score alone). RQ2 has a predictor (the
+**E22 to E24 (2026-10-01).** RQ1 is prospective (never-seen spaces, predictions hashed before
+scoring: head 0.86 over eight, table 0.71 over seven, against 0.26 / 0.39 for teacher score alone;
+E24 amendment 1 restored the head point the first assembly dropped). RQ2 has a predictor (the
 query-to-document distance ratio ranks the penalty across 75 points and predicts held-out families)
 and a size explanation for most of its attenuation. Nothing pending.

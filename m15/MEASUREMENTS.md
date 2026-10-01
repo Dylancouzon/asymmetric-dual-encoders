@@ -675,6 +675,16 @@ counts over the full document support including zeros; bootstrap intervals resam
 their three workload rows together and are reported within each workload as well; the held-out
 baseline is each training fold's mean, reported beside every held-out model.
 
+**E24 amendment 1 (2026-10-02, after the first assembly; review finding, disclosed).** The method
+excludes a checkpoint only for a tokenizer failure. The first assembly as coded also dropped a
+checkpoint from both recipes when either six-set file was missing, so `e5-base-unsupervised`, whose
+table fit stopped at the convergence gate while its head fit completed, left the head row as well
+(n=7 in both rows, `results/m15_e24_prospective.json`, kept). The rule is restated to what the
+method says: a recipe whose fit stopped at its gate is absent from that recipe's row only. The
+amended assembly writes `results/m15_e24_prospective_amend1.json` from the same committed
+predictions and the same student files: head row n=8, table row n=7. The paper reports the amended
+file; the first assembly stays in git as the pre-amendment number.
+
 ## E25, LightRetriever's own lookup path under graph search (exploratory, pre-specified 2026-10-01, before any encoding)
 
 Owner-approved (round 7). RQ2 found that a lookup-table query path needs more HNSW effort than the

@@ -297,9 +297,9 @@ def f9_width():
                         xytext=(dx, dy), fontsize=7.5, color=C["ink"])
         ax.set_xlabel("Index's own nDCG@10, six sets")
         ax.set_ylabel(yl)
-    p24 = REPO / "results" / "m15_e24_prospective.json"
-    if p24.exists():                       # prospective seven as triangles
-        rows = R("m15_e24_prospective.json")["rows"]
+    p24 = REPO / "results" / "m15_e24_prospective_amend1.json"
+    if p24.exists():                       # prospective spaces as triangles (E24 amendment 1)
+        rows = R("m15_e24_prospective_amend1.json")["rows"]
         for ax, yk in zip(axes, ("table", "head")):
             for n, r in rows.items():
                 if r[yk] is not None:

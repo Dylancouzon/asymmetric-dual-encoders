@@ -599,10 +599,10 @@ def corpus_size():
 
 
 def prospective():
-    p = REPO / "results" / "m15_e24_prospective.json"
+    p = REPO / "results" / "m15_e24_prospective_amend1.json"
     if not p.exists():
         return ""
-    d = R("m15_e24_prospective.json")
+    d = R("m15_e24_prospective_amend1.json")
     st = [[r, v["n"], f"{v['spearman_pred_vs_actual']:+.2f}",
            f"[{v['spearman_pred_vs_actual_bootstrap95'][0]:+.2f}, {v['spearman_pred_vs_actual_bootstrap95'][1]:+.2f}]",
            f"{v['spearman_teacher_vs_actual']:+.2f}", f"{v['spearman_dev_vs_actual']:+.2f}", f4(v["mae"]),
@@ -614,13 +614,14 @@ def prospective():
             for n, r in sorted(d["rows"].items(), key=lambda kv: -kv[1]["teacher_six_macro_all6"])]
     return card("C22. Prospective test of the width model", "exploratory (E24, predictions committed by hash before scoring)",
                 f"Predictions written at {d['predictions_written_utc']} (sha256 {d['predictions_committed_sha256'][:12]}...) from the "
-                "space-quality + width model fitted on the 26 rank seven never-seen encoders far better than the space's own score does.",
+                "space-quality + width model fitted on the 26 rank never-seen encoders (eight for the head, seven for the table) better than the space's own score does.",
                 table(["student", "n", "Spearman pred vs actual", "checkpoint bootstrap95", "space quality alone", "dev screen", "MAE",
                        "regret: strongest space", "regret: model pick", "regret: dev screen"], st)
                 + "\n\n" + table(["encoder", "width", "own nDCG@10", "table actual / predicted", "head actual / predicted"], rows)
                 + "\n\nExcluded by tokenizer check: " + (", ".join(d["preflight"]["excluded"]) or "none") + ". One table fit (e5-base-unsupervised) "
-                  "stopped at the convergence gate and is listed, not replaced.",
-                "`results/m15_e24_prospective.json`", "Seven points; the table interval includes zero; related checkpoints; transfer to trained students.")
+                  "stopped at the convergence gate and is listed, not replaced; its head fit completed. The first assembly (`results/m15_e24_prospective.json`, n=7 in both rows) "
+                  "dropped it from both rows; E24 amendment 1 restates the rule to the method's and keeps its head point.",
+                "`results/m15_e24_prospective_amend1.json`", "Eight head points and seven table points; the table interval includes zero; related checkpoints; transfer to trained students.")
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ TABLE_DIR = OUT_DIR / "table"
 HEAD_DIR = OUT_DIR / "head"
 PREDICTIONS = OUT_DIR / "predictions.json"
 COMMIT = OUT_DIR / "predictions.sha256.json"
-RESULT = REPO / "results" / "m15_e24_prospective.json"
+RESULT = REPO / "results" / os.environ.get("E24_RESULT", "m15_e24_prospective.json")
 E21 = REPO / "results" / "m15_e21_width_model.json"
 E19_RESULT = REPO / "results" / "m15_e19_head_screen.json"
 STELLA_VOCAB = E8X.STELLA_VOCAB
@@ -171,18 +171,25 @@ def assemble():
     from scipy.stats import spearmanr
     recorded = _require_predictions()
     pred = json.loads(PREDICTIONS.read_text())
+    # E24 amendment 1 (2026-10-02): an encoder enters the rows when either student's six-set file
+    # exists; a recipe whose fit stopped at its gate is None in that row only, so the other recipe
+    # keeps its point. The first assembly (results/m15_e24_prospective.json) required both files.
     names = [n for n in E19.eligible() if (TABLE_DIR / f"six-{n}.json").exists()
-             and (HEAD_DIR / f"six-{n}.json").exists()]
+             or (HEAD_DIR / f"six-{n}.json").exists()]
     rows = {}
+
+    def _six(path):
+        if not path.exists():
+            return None
+        r = json.loads(path.read_text())
+        return float(np.mean([r["table"][d] for d in E8.SIX])) if r["status"] == "COMPLETE" else None
     for n in names:
         t = json.loads((OUT_DIR / f"teacher-{n}.json").read_text())
-        tab = json.loads((TABLE_DIR / f"six-{n}.json").read_text())
-        hd = json.loads((HEAD_DIR / f"six-{n}.json").read_text())
         tdev = json.loads((TABLE_DIR / f"dev-{n}.json").read_text())
         hdev = json.loads((HEAD_DIR / f"dev-{n}.json").read_text())
         rows[n] = {"dim": t["dim"], "teacher_six_macro_all6": t["six_macro_all6"],
-                   "table": float(np.mean([tab["table"][d] for d in E8.SIX])) if tab["status"] == "COMPLETE" else None,
-                   "head": float(np.mean([hd["table"][d] for d in E8.SIX])) if hd["status"] == "COMPLETE" else None,
+                   "table": _six(TABLE_DIR / f"six-{n}.json"),
+                   "head": _six(HEAD_DIR / f"six-{n}.json"),
                    "table_dev": tdev.get("best_dev_macro_2"), "head_dev": hdev.get("best_dev_macro_2"),
                    "predicted_table": pred["predictions"][n]["predicted"]["table"],
                    "predicted_head": pred["predictions"][n]["predicted"]["head"]}
@@ -207,6 +214,8 @@ def assemble():
         "status": "COMPLETE", "measurement": "E24 (exploratory, pre-specified; predictions committed before scoring)",
         "scope": "eight pre-declared checkpoints never scored before; the E21 fit on 26 predicts them; "
                  "tokenizer-incompatible checkpoints excluded, not replaced",
+        "assembly_rule": "E24 amendment 1: a recipe whose fit stopped at its gate is None in that row only; "
+                         "each recipe's statistics use the encoders with a completed fit under that recipe",
         "predictions_sha256": sha_file(PREDICTIONS), "predictions_committed_sha256": recorded,
         "predictions_committed_utc": json.loads(COMMIT.read_text())["committed_utc"],
         "predictions_written_utc": pred["written_utc"],

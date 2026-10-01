@@ -118,18 +118,15 @@ adversarial correctness reviewer, per mandate and owner permission.
 - **PAPER.md is v17**, "Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes":
   research questions and hypotheses first, RQ1 (width-conditioned retention, E21) and RQ2
   (cross-space search effort, E20), Constella as the worked instance with build cost and CPU hours
-  per million queries, four appendices. Prose about 4,200 words with tables. Three blocks are marked
-  [pending] for E22, E23, E24. Plan, voice contract, and agreed claims: `REVISION_PLAN_V17.md`.
+  per million queries, four appendices. Complete: E22 to E25 are in; prose about 5,100 words against
+  the contract's 4,000, with two reviewers' cut lists held for the owner. Plan, voice contract, and
+  agreed claims: `REVISION_PLAN_V17.md`.
   Reviews run on v16 and v17 are listed in `REVIEW_GUIDE.md`; dispositions in `LOG.md`.
-- **New results:** E19 (`results/m15_e19_head_screen.json`, cross-recipe screen), E20
-  (`results/m15_e20_ann_spaces.json`, 25-space ANN effort), E21 (`results/m15_e21_width_model.json`,
-  the width model). Cards C16 to C18 in EVIDENCE.md. New figures f7, f8, f9.
-- **Pending:** E22 (gap predictors), E23 (FiQA 25k), E24 (prospective eight encoders). Drivers
-  `m15src/e22_gap_predictors.py`, `e23_fiqa25k.py`, `e24_prospective.py`; roster pinned in
-  `m7src/encoders.py`; reviewed and fixed (`REVIEWS/2026-10-01-astra-e22-e24-*.md`). Launch on the
-  pod: `e24_prospective.py all` (GPU), `e22_gap_predictors.py all` (GPU for the cached fit-query
-  read), `e23_fiqa25k.py all` with `E20_PORT` set per shard. Then fill the three [pending] blocks,
-  regenerate EVIDENCE.md and figures, rebuild the PDF, rerun the voice-contract check.
+- **New results:** E19 to E25 (`results/m15_e19_*` to `m15_e25_*`). E24 is reported from
+  `m15_e24_prospective_amend1.json` (head n=8, table n=7; the first assembly with n=7 in both rows is
+  kept, see E24 amendment 1 in `MEASUREMENTS.md`). Cards C16 to C22 in EVIDENCE.md. Figures f7, f8, f9.
+- **Open:** the owner's decision on the merged cut list (`LOG.md`, 2026-10-02); then humanizer,
+  PDF rebuild, voice-contract recheck.
 - **Pod:** `k3aee2m68765em` holds the fit list and all caches; its host had no free GPU from 16:27
   local on 2026-10-01; `work/m15/podwait/k3aee2.log` records the retry loop. The venv on container
   disk must be rebuilt after each restart (`m13/cloud_requirements.txt`, uv with

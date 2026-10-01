@@ -816,3 +816,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   numbers. Its cut list (about 1,100 words) is held for the owner's decision with the Fable list.
   Astra would not sign as written over mechanism and latency overreach; those sentences are now
   removed.
+- Fable (`REVIEWS/2026-10-02-fable-complete-v17.md`): most number findings were already closed by
+  the Astra pass; applied the rest. Abstract and §1 now state the relevance-loss result per corpus
+  (holds on FiQA and SCIDOCS, mixed on TREC-COVID) and the recovery multipliers per corpus (4, 2,
+  4), matching §5.2 and Table D; the LightRetriever sentence gives Table E's range (0.7 to 3.6
+  points, two to four times); Table A 384-d table minimum 0.290; §5.3 names the top-1 cosine and
+  margin differences instead of "the two Section 5.2 geometry summaries" (also Appendix C) and
+  states the leave-workload-out error (2.55 against 2.33, worse than the fold mean); §6 gives Nano
+  an eighth and Zero a ninth. Its sign-off blocker was real: `assemble()` required both students'
+  six-set files, so e5-base-unsupervised's completed head fit left the head row with its stopped
+  table fit, a rule the method never stated. **E24 amendment 1** (dated, in `MEASUREMENTS.md`):
+  a recipe whose fit stopped is absent from that row only; `results/m15_e24_prospective_amend1.json`
+  assembled from the same committed predictions and student files (head n=8: +0.86 [+0.33, +1.00],
+  MAE 0.039, space score alone +0.26, regret unchanged; table n=7 unchanged). First assembly kept.
+  Paper, Table C labels, Appendix B roster (new row), Figure 1, card C22, NOVELTY, evidence map,
+  HANDOFF, REVIEW_GUIDE updated; PDF rebuilt. Fable's cut list (about 1,000 words) is held with
+  Astra's for the owner.

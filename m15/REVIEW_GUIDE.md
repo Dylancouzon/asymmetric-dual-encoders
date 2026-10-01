@@ -112,6 +112,6 @@ and `-astra-voice-v17.md` (voice contract), `-fable-register-v16.md` and `-astra
 (why v16 read as an article), `-astra-correctness-v16.md`, `-sol-reader-v16.md`,
 `-andrey-review-v16.md`, `-astra-e19-e20-reading.md`, `-astra-fable-plan-rounds.md`, and the
 pre-spend reviews `-astra-e19-e20-prespend.md`, `-astra-e22-e24-prespend.md`,
-`-astra-e22-e24-rereview.md`. New results: E19 (`results/m15_e19_head_screen.json`), E20
-(`results/m15_e20_ann_spaces.json`), E21 (`results/m15_e21_width_model.json`), cards C16 to C18.
-Pending: E22, E23, E24 (methods in `MEASUREMENTS.md`; drivers in `m15src/`).
+`-astra-e22-e24-rereview.md`, `-astra-e25-prespend.md`; complete-draft reviews
+`2026-10-02-astra-complete-v17.md` and `-fable-complete-v17.md`. New results: E19 to E25
+(`results/m15_e19_*` to `m15_e25_*`; E24 reported from `m15_e24_prospective_amend1.json`), cards C16 to C22.
