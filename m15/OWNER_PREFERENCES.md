@@ -135,3 +135,6 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - **2026-10-01, round 8, title.** Owner wanted a hook that still reads as a paper and chose
   "The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document
   Vectors". Supersedes "Reducing Query Cost over a Frozen Document Index: What the Index Decides".
+- **2026-10-01, round 9, title.** Owner chose "Your Index Is Fine; the Query Encoder Is the Cost:
+  Query Distillation over Frozen Indexes" (supersedes the round-8 title). Second person in the title
+  is deliberate; the body keeps the third-person contract.

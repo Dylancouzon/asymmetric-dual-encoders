@@ -1,4 +1,4 @@
-# The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document Vectors
+# Your Index Is Fine; the Query Encoder Is the Cost: Query Distillation over Frozen Indexes
 
 **Draft v17, 2026-10-01. Not for circulation. Sections marked [pending] await E22, E23, and E24.**
 

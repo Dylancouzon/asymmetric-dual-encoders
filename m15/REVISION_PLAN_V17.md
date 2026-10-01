@@ -120,7 +120,7 @@ The final draft is checked against these by both reviewers before it goes to the
 
 ## Reframing adopted (owner, round 5, 2026-10-01)
 
-**Title:** The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document Vectors.
+**Title:** Your Index Is Fine; the Query Encoder Is the Cost: Query Distillation over Frozen Indexes.
 
 **Question:** an index that cannot or will not be rebuilt; a cheaper query encoder over it. What
 does it cost, and what about the index decides the cost?

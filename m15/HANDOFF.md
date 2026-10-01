@@ -115,7 +115,7 @@ adversarial correctness reviewer, per mandate and owner permission.
 
 ## Update 2026-10-01 (owner rounds 4 to 6): v17 and pending experiments
 
-- **PAPER.md is v17**, "The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document Vectors":
+- **PAPER.md is v17**, "Your Index Is Fine; the Query Encoder Is the Cost: Query Distillation over Frozen Indexes":
   research questions and hypotheses first, RQ1 (width-conditioned retention, E21) and RQ2
   (cross-space search effort, E20), Constella as the worked instance with build cost and CPU hours
   per million queries, four appendices. Prose about 4,200 words with tables. Three blocks are marked

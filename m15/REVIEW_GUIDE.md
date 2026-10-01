@@ -2,7 +2,7 @@
 
 ## What is ready to review
 
-The current manuscript is **v17, The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document Vectors** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
+The current manuscript is **v17, Your Index Is Fine; the Query Encoder Is the Cost: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
 frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.

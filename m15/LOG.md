@@ -774,3 +774,5 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   the live access log and result payloads), venv rebuilt, musl Qdrant present. E24, E22, and E23
   launched concurrently at about 19:02 UTC (E23 on port 6733 with container-disk storage); logs in
   `work/m15/e24.log`, `e22.log`, `e23.log` on the pod.
+- Title changed on owner decision to "Your Index Is Fine; the Query Encoder Is the Cost: Query
+  Distillation over Frozen Indexes" in every file that carried it; PDF rebuilt.
