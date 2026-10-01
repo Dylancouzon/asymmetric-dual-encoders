@@ -107,38 +107,36 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-A large document encoder's cost can be spread across many searches using
-the same stored embeddings. Query encoding incurs a cost on every
-uncached query. Replacing the document encoder requires re-embedding the
-corpus and rebuilding its index; query-side distillation instead trains
-a smaller query encoder to search the existing document embeddings. We
-study what determines this smaller encoder's retrieval quality and the
-combined cost of encoding and search.
+Document embeddings are reused across searches, allowing the cost of a
+large document encoder to be amortized, while every uncached query
+incurs an encoding cost. This asymmetry motivates replacing the query
+encoder with a smaller model that searches the existing document
+embeddings. Such a replacement can reduce query compute while avoiding
+the re-embedding and index migration required by a change of document
+encoder. We examine how the existing index shapes the retrieval quality
+and search cost of this replacement.
 
-We compare two student query encoders across 26 embedding models: a
-table that sums learned token vectors, and a small frozen transformer
-with a learned linear projection. At the same embedding dimensionality,
-stronger original models tend to yield stronger students. After
-accounting for original-model quality, higher dimensionality predicts
-lower student quality. Using both properties improves predictions for
-held-out models. A prospective test supports the transformer student's
-predicted ranking; the token-table result remains uncertain.
+We fit two types of smaller query encoder (students) across 26 embedding
+models: a learned token-vector table and a small frozen transformer with
+a learned projection. Their retrieval quality is associated with both
+the original model's quality and its embedding dimensionality. At a
+given dimensionality, stronger original models tend to yield stronger
+students; after accounting for original-model quality, higher
+dimensionality predicts weaker students. Together, these properties
+predict student quality on held-out models better than original-model
+quality alone.
 
-Reducing query-encoding cost can increase the work required during
-approximate search. The token-table students need more graph-search
-effort to recover their exact nearest neighbors than the original
-encoders need to recover theirs. The effect on retrieval relevance
-varies by corpus. The neighbor-recovery penalty also appears in a
-separately trained lookup model.
-
-Constella provides a worked example: a compact transformer and a
-token-table query encoder search an unchanged index built with the
-Stella embedding model. They retain 90.5\% and 81.4\% of Stella's
-exact-search nDCG@10 on BEIR-15. Separate timing measurements show that
-additional search reduces their encoding savings. The results connect
-the choice of a smaller query encoder to two properties of the existing
-embeddings, and show why its value must be assessed through encoding and
-search together.
+The encoding savings also depend on how the student's queries interact
+with approximate search. Token-table students require more graph-search
+effort to recover their exact nearest neighbors, with a corpus-dependent
+effect on retrieval relevance. Constella illustrates the combined
+trade-off: its compact transformer and token-table query encoders search
+the unchanged document index of the Stella embedding model, retaining
+90.5\% and 81.4\% of Stella's exact-search nDCG@10 on BEIR-15. Separate
+timing measurements show that additional search work reduces their
+encoding savings. The existing index therefore shapes both the quality a
+smaller query encoder can achieve and how much of its encoding advantage
+translates into cheaper retrieval.
 
 \subsection{1. Introduction}\label{introduction}
 

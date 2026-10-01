@@ -944,3 +944,18 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Rebuilt the 19-page PDF and inspected the opening page plus all page contact sheets. Verified
   unchanged numerical-token set, unchanged table data after terminology substitution, preserved
   manuscript links, and clean whitespace. No new measurements or independent sign-off.
+
+### 2026-10-02: owner reading feedback, continuous abstract argument
+
+- Owner finds the abstract a collection of unrelated sentences. Logged the instruction to
+  build a continuous argument; earlier rewrites remain unaccepted owner-reading drafts.
+- Recast the abstract around one connection: document reuse motivates query-only replacement;
+  the frozen embedding space predicts the quality attainable by smaller query encoders; graph
+  search can consume part of the encoding saving. Constella now illustrates that combined
+  trade-off within the search paragraph instead of entering as an independent fourth summary.
+- Removed the prospective-test detail and lookup-model replication from the abstract. Both remain
+  unchanged in the body, including uncertainty and protocol boundaries. Conditional dimensionality
+  associations, held-out prediction, corpus-dependent relevance effects, the exact-quality
+  percentages, and separate timing measurements remain. No causal mechanism is claimed.
+- Verified that the body, appendices, tables, and references are byte-for-byte unchanged. Rebuilt
+  and visually checked the PDF; whitespace checks passed. No experiments or new reviewer sign-off.
