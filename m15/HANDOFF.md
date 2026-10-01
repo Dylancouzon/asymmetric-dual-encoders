@@ -134,3 +134,13 @@ adversarial correctness reviewer, per mandate and owner permission.
 - **Owner decisions this day:** standing commit/push approval; $150 budget; science-first title;
   frozen-index frame; hot-swap goes to the M22 model card; include everything valuable, reviewers
   cut together. Session pod spend so far about $6.
+
+## Update 2026-10-02 (owner's final round): v18 signed
+
+- **PAPER.md is v18.** Both reviewers signed: Fable's sign-off blocker (E24 head row) is closed by
+  E24 amendment 1; Astra signed at round 3 after the comparative-scope corrections. Cuts and
+  gates are recorded in `REVISION_PLAN_V17.md` and `REVIEW_GUIDE.md`; dispositions in `LOG.md`.
+- **Open before circulation:** archive the cleaned fit list and the one-million-passage identifier
+  list (identified by hash in the artifact statement); the owner reads the PDF; author roster and
+  contact details in `latex/build.sh`.
+- **Pods:** both stopped; session spend about $11; nothing running.

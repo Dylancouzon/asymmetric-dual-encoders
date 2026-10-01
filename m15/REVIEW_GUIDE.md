@@ -2,7 +2,7 @@
 
 ## What is ready to review
 
-The current manuscript is **v17, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
+The current manuscript is **v18, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
 frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
@@ -115,3 +115,13 @@ pre-spend reviews `-astra-e19-e20-prespend.md`, `-astra-e22-e24-prespend.md`,
 `-astra-e22-e24-rereview.md`, `-astra-e25-prespend.md`; complete-draft reviews
 `2026-10-02-astra-complete-v17.md` and `-fable-complete-v17.md`. New results: E19 to E25
 (`results/m15_e19_*` to `m15_e25_*`; E24 reported from `m15_e24_prospective_amend1.json`), cards C16 to C22.
+
+## Added 2026-10-02: v18, cuts, and final gates
+
+v18 applies the cuts both complete-draft reviewers agreed on (`REVISION_PLAN_V17.md`, "Cut
+decisions") and E24 amendment 1 (`MEASUREMENTS.md`; head row n=8). Gates run on v18, in order:
+Andrey review (links, figures, claims; nothing essential), Astra narration rounds 1 to 3
+(`REVIEWS/2026-10-02-astra-v18-rounds.md`; signed at round 3), Sol reader pass
+(`REVIEWS/2026-10-02-sol-reader-v18.md`; four rewrites, number set unchanged), humanizer, and the
+voice-contract check (4,195 main-text prose words; both reviewers judged no further cut essential).
+A coworker review starts at the PDF and `LOG.md` "2026-10-02: v18, cuts and final gates".

@@ -48,6 +48,6 @@ files; reusable checks and component boundaries are mapped in `HARNESS.md`.
 
 ## M15 state (2026-10-01)
 
-Draft v17 of the whitepaper is on `m15-whitepaper` (frozen-index frame, two research questions).
+Draft v18 of the whitepaper is on `m15-whitepaper` (frozen-index frame, two research questions); all experiments are in, both reviewers signed on 2026-10-02, and the final gates ran. Next: pre-circulation archive of the fit list and the 1M identifier list, then the owner's read of the PDF.
 Results E1 to E21 are committed with receipts; E22 to E24 are pre-specified, reviewed, and waiting on
 the E8 pod's host for a GPU. Entry points: `m15/HANDOFF.md`, `m15/REVISION_PLAN_V17.md`, `m15/LOG.md`.

@@ -839,3 +839,18 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   Fable (technical) as equals (`OWNER_PREFERENCES.md`, final round). Cuts applied as recorded in
   `REVISION_PLAN_V17.md` ("Cut decisions"); main-text prose 4,115 words. Draft banner v18.
 - Astra narration round 1 launched on v18 (`REVIEWS/briefs-2026-10-02/v18-astra-round1.md`).
+- Astra narration rounds 1 to 3 (`REVIEWS/2026-10-02-astra-v18-rounds.md`): round 1 found five
+  scope errors in the cut text, all applied (the abstract had said students recover fewer of the
+  encoder's neighbors; the protocol measures each path against its own exact top-10), and four
+  narration changes, all applied with the abstract hook merged into its wording; round 2 separated
+  the extrapolated time on the million-passage collection from the exact BEIR-15 quality and
+  removed the "ceiling" claim; round 3 signed as coauthor. 5.5 renumbered 5.4; the head deficit
+  counts (24 of 25 FiQA, 23 of 25 TREC-COVID) verified from `results/m15_e20_ann_spaces.json`.
+- Andrey gate: all 20 reference URLs resolve; figures 44K to 196K; the precision-control pointer
+  now says Appendix C; `[Qdrant 1.19.1]` and `[BEIR]` cited in 3.4 and 3.3. Nothing essential.
+- Sol reader pass (`REVIEWS/2026-10-02-sol-reader-v18.md`, gpt-6-sol, calibrated to clarity only):
+  four rewrites applied; the set of numbers and identifiers in the main text is identical before
+  and after (scratch diff). Humanizer: one vocabulary hit, in a reference title (kept); two
+  "rather than" constructions rewritten. Voice contract: 4,195 words, see `REVISION_PLAN_V17.md`.
+- PDF rebuilt; status files (`PROJECT_STATUS.md`, `ROADMAP.md`, `m15/README.md`, `HANDOFF.md`,
+  `REVIEW_GUIDE.md`) moved to v18. Pods stopped; session spend about $11.

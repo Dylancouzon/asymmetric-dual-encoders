@@ -155,3 +155,16 @@ with all nine features in Appendix C; the abstract leads with the width finding;
 moved to Appendix A. Not taken: Astra's 180-word abstract cut (the abstract is what gets cited) and
 the relocation of 4.2's definitions (a reader checking Table B needs them in place). "We" is kept.
 Main-text prose about 4,100 words from 5,100; every claim and disclosure retained.
+
+## Final rounds (2026-10-02, v18)
+
+Astra round 1: five scope corrections (recovery target is each path's own exact top-10; medians;
+RQ1 under exact search; width "predicts the student's loss"; extrapolated time; subsample wording)
+and four narration changes (abstract opener as a predictive claim with the effect sizes; related-work
+contrast no longer attributes the retention gap to freezing; the heuristic attributed to the
+project; abstract ends with the 13% and 11% time result). Round 2: separate the extrapolated time
+(million-passage collection) from exact BEIR-15 quality; no "ceiling" claim; "The results reject the
+project's strongest-space selection heuristic." Round 3: signed. Sol reader: four rewrites, number
+set identical before and after. Humanizer: two "rather than" constructions rewritten; no vocabulary
+hits in the body. Length 4,195 against the 4,000 contract; both reviewers judged no further cut
+essential, so the contract's length rule is recorded as met by reviewer judgment.

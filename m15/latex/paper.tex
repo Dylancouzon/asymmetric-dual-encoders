@@ -105,40 +105,39 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-A dense document index is often the one component of a retrieval system
-that cannot be rebuilt: re-encoding is expensive, and every downstream
-consumer depends on the stored vectors. The query encoder has no such
-constraint. Query-side distillation trains a cheap student to emit
-queries in the frozen index's space, so the index stays and only the
-query path changes. This paper asks what that substitution costs and
-what properties of the index decide the cost. Two properties of a frozen
-index are fixed by the encoder that built it: the width of its vectors
-and the retrieval quality of its space. We fit query students to 26
-public encoder spaces under two student representations, each fitted by
-a single linear solve with no gradient training (closed form) and ask,
-first, how much retrieval quality the student recovers and what predicts
-it. The space's own retrieval quality predicts the student's quality
-only once width is held fixed: standardized effects of +0.69 for quality
-and −0.83 for width under a frozen-backbone head student (+0.63 and
-−0.64 under a token-table student), and a two-variable model fitted on
-ten spaces ranks 16 held-out spaces at Spearman 0.85 and 0.70 and, with
-predictions committed before scoring, never-seen spaces at 0.86 (eight
-spaces) and 0.71 (seven). The strongest space yields the weakest
-registered table student. Second, we ask what the student costs at
-search time over the index's unchanged HNSW graph: by exact-neighbor
-recovery its queries fall short of the encoder's own at equal effort in
-all 25 measured spaces on two of three corpora, and matching the
-encoder's recovery takes four times the search budget on two corpora and
-twice on the third (medians); by the pre-specified relevance-loss
-measure the penalty holds on two corpora (25 and 17 of 25 spaces) and is
-mixed on the third (12 of 25). The same penalty appears in a jointly
-trained model: over LightRetriever's own index, its lookup query path
-recovers 0.7 to 3.6 points fewer exact neighbors than its full encoder
-at equal effort across two corpora and two prompts, and needs two to
-four times the search budget to match it. Query-encoding speedups
-measured alone therefore overstate what a cheap query path saves.
-Constella, three compatible query encoders over one frozen Stella index,
-is the worked instance.
+Across 26 frozen encoder spaces, wider vectors predict weaker
+closed-form query students once each space's own retrieval quality is
+held fixed. The standardized effects are −0.83 for width and +0.69 for
+quality under a frozen-backbone head student, and −0.64 and +0.63 under
+a token-table student; the strongest registered space yields the weakest
+registered table student. The setting is the common one in which the
+document index cannot be rebuilt and only the query path can change:
+query-side distillation fits a cheap student to emit queries in the
+frozen space, and this paper asks what that substitution costs and what
+properties of the index decide the cost. Two closed-form students, each
+fitted by a single linear solve, are fitted to all 26 spaces under one
+protocol. A two-variable model of space quality and width, fitted on ten
+spaces, ranks 16 held-out spaces at Spearman 0.85 and 0.70 and, with
+predictions committed by hash before scoring, never-seen spaces at 0.86
+(eight) and 0.71 (seven); the space's own score alone ranks the held-out
+16 at 0.37 and 0.16. At search time over the index's unchanged HNSW
+graph, each path is measured against its own exact top-10: the student's
+queries recover fewer of their own exact neighbors at equal effort than
+the encoder's queries do in all 25 measured spaces on two of three
+corpora, and matching the encoder's recovery takes a median four times
+the search budget on two corpora and twice on the third; the
+pre-specified relevance-loss measure holds on two corpora and is mixed
+on the third. The same penalty appears in a jointly trained model: over
+LightRetriever's own index, its lookup query path recovers 0.7 to 3.6
+points fewer of its own exact neighbors than its full encoder at equal
+effort and needs two to four times the search budget to match it. In
+Constella, Nano and Zero need about 13\% and 11\% of Stella's
+extrapolated encoding-plus-search time on a million-passage collection,
+at search settings within 1\% of each path's own exact score, and
+separately retain 90.5\% and 81.4\% of its exact-search quality on
+BEIR-15; query-encoding speedups measured alone therefore overstate what
+a cheap query path saves. Constella, three compatible query encoders
+over one frozen Stella index, is the worked instance.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -157,24 +156,21 @@ on it, as long as its output lands in the index's space.
 encoder is trained to reproduce the frozen encoder's query vectors and
 then searches the frozen document vectors directly {[}QED, EmbedDistill,
 LEAF{]}. Static variants fit a token table instead of a transformer, so
-a query costs a table lookup and a sum {[}pyNIFE, LightRetriever{]}. The
-capability is established; so is its ceiling, since methods that
-co-train the document tower retain more {[}LightRetriever{]}. What is
-not established is what the frozen-index version costs over a given
-index, and whether the cost can be predicted from the index before
-anything is built.
+a query costs a table lookup and a sum {[}pyNIFE, LightRetriever{]}.
+Query-side distillation is established, but comparisons across different
+models and evaluation protocols do not isolate its quality cost relative
+to joint training {[}LightRetriever{]}. What is not established is what
+the frozen-index version costs over a given index, and whether the cost
+can be predicted from the index before anything is built.
 
 Two properties of a frozen index are fixed by the encoder that built it
 and cannot be changed without rebuilding: the width of its stored
 vectors and the retrieval quality of the space those vectors come from.
 We study the question over 26 public encoder spaces. Because the
-students are fitted by a single linear solve in minutes rather than
-trained, the same recipe can be applied to every space under one
-protocol, which turns a one-model demonstration into a comparison across
-spaces. The same cheapness is what makes the substitution worth
-considering in production: a student is built in minutes to hours of GPU
-time, the index is not touched, and the saving recurs on every query
-(Section 6). Two questions organize the paper.
+students are fitted by a single linear solve in minutes, with no
+gradient training, the same recipe can be applied to every space under
+one protocol, which turns a one-model demonstration into a comparison
+across spaces. Two questions organize the paper.
 
 \begin{itemize}
 \tightlist
@@ -182,9 +178,9 @@ time, the index is not touched, and the saving recurs on every query
   \textbf{RQ1, retention.} How much retrieval quality can a closed-form
   query student recover from a frozen index, and do the two
   encoder-fixed properties, width and the space's own quality, predict
-  it? The field's working assumption, which we take as the hypothesis to
-  test, is that a better space yields a better student. RQ1 is a
-  property of the space; the corpus and the graph do not enter it.
+  it? The hypothesis under test is the heuristic the project itself used
+  before the screen: a better space yields a better student. RQ1 is
+  measured under exact search; the graph does not enter it.
 \item
   \textbf{RQ2, search effort.} Over the index's unchanged
   approximate-search graph, how much more search effort does the
@@ -192,24 +188,16 @@ time, the index is not touched, and the saving recurs on every query
   effort predictable?
 \end{itemize}
 
-Against RQ1, the space's own retrieval quality predicts the student's
-quality only once width is held fixed; width works against the student,
-and because stronger spaces are usually wider the two effects cancel in
-a pooled comparison. A two-variable model fitted on ten spaces ranks 16
-others at Spearman 0.85 and 0.70 under the two representations, against
-0.37 and 0.16 for the space's own score alone, and a prospective test on
-further spaces, with predictions committed by hash before any student
-was fitted, ranks them at 0.86 (eight spaces) and 0.71 (seven). Against
-RQ2, by exact-neighbor recovery the student's queries fall short of the
-encoder's own at equal HNSW effort in all 25 measured spaces on two of
-three corpora, with median recovery multipliers of four, two, and four;
-the pre-specified relevance-loss measure agrees on two corpora and is
-mixed on the third. A single property of the space, how far its queries
-sit from their nearest documents relative to document spacing, ranks
-that penalty across spaces, and corpus size explains most of its
-attenuation on the smallest corpus. The penalty is not an artifact of
-fitting students after the fact: LightRetriever's jointly trained lookup
-path pays it over its own index (Section 5.5).
+The results reject the project's strongest-space selection heuristic.
+The space's own quality predicts the student only once width is held
+fixed, and width works against the student, so the two effects cancel in
+a pooled comparison and a two-variable model predicts held-out and
+never-seen spaces where the space's score alone does not (Section 4).
+Over the unchanged graph the student pays a search-effort penalty in
+every measured space on two of three corpora; a single placement
+property of the space ranks that penalty, and LightRetriever's jointly
+trained lookup path pays the same penalty over its own index, so it is
+not an artifact of fitting students after the fact (Section 5).
 
 \textbf{Constella} is the worked instance: a frozen Stella index
 {[}Stella{]} with three compatible query paths, Stella's own encoder, a
@@ -235,14 +223,14 @@ fits a static token table to a frozen teacher {[}pyNIFE{]};
 LightRetriever trains a lookup query side jointly with a document tower
 {[}LightRetriever{]}; static sentence embeddings, Model2Vec, and NanoVDR
 are related compact representations {[}StaticEmb, Model2Vec, NanoVDR{]}.
-Methods that train both towers at once retain more: LightRetriever's
-lookup query side keeps about 95\% of its co-trained document tower's
-BEIR score, against 81.4\% for Zero over a frozen Stella. That gap is
-the price of the frozen index: joint training re-encodes every document,
-which is the operation this paper assumes is not available. Section 5.5
-measures LightRetriever's released model under RQ2's protocol. None of
-these works compares students across many teachers under one recipe,
-which is the comparison RQ1 needs.
+LightRetriever reports about 95\% retention for a lookup query side
+trained jointly with its document tower; Zero retains 81.4\% over frozen
+Stella under this paper's protocol. The two figures come from different
+models and protocols and do not isolate the quality cost of freezing the
+index; what query-side distillation buys is that the existing document
+representation stays. Section 5.4 measures LightRetriever's released
+model under RQ2's protocol. None of these works compares students across
+many teachers under one recipe, which is the comparison RQ1 needs.
 
 That stronger teachers can produce weaker students is known in
 distillation generally {[}Cho and Hariharan 2019{]} and in dense
@@ -258,7 +246,7 @@ that use query samples to mitigate it {[}OOD-DiskANN, RoarGraph{]}. RQ2
 measures that effect for queries produced by a student of the same
 index, which are near the index's distribution but not on it.
 Query-aware decoding of binary sketches is the precedent for the
-precision control in Section 5 {[}QA-Cos{]}.
+precision control in Appendix C {[}QA-Cos{]}.
 
 \subsection{3. Experimental setup}\label{experimental-setup}
 
@@ -347,30 +335,31 @@ encoded by each index's own query path with its published prompt. The
 ridge penalty is chosen per index on two development forums (CQADupStack
 physics and programmers) and frozen before any public dataset is scored.
 Retrieval is scored by exact search, nDCG@10 with the registered
-self-hit drop, on six public BEIR datasets: NFCorpus, SCIDOCS, SciFact,
-TREC-COVID, FiQA, and ArguAna. The six-set macro is the outcome; the
-four sets without disclosed exposure for the Stella instance (the first
-four) are a sensitivity outcome. Each index is scored once per set.
+self-hit drop, on six public BEIR datasets {[}BEIR{]}: NFCorpus,
+SCIDOCS, SciFact, TREC-COVID, FiQA, and ArguAna. The six-set macro is
+the outcome; the four sets without disclosed exposure for the Stella
+instance (the first four) are a sensitivity outcome. Each index is
+scored once per set.
 
 \subsubsection{3.4 Approximate-search
 protocol}\label{approximate-search-protocol}
 
-RQ2 uses Qdrant 1.19.1 with HNSW m=16, ef\_construct=100, cosine
-distance, no quantization. For each encoder space and each of three
-workloads, FiQA (57,638 documents), SCIDOCS (25,657), and TREC-COVID
-(171,332), two graphs are built with different seeded insertion orders
-over the encoder's document vectors, and \texttt{ef} is swept over 16 to
-512 for the encoder's own queries and both students' queries, each path
-measured against its own exact top-10. The pre-specified primary
-quantity is the relative-nDCG-loss multiplier: with the encoder's own
-path at \texttt{ef=64} as the reference, the smallest \texttt{ef} at
-which the student path reaches the same relative loss, divided by 64,
-averaged over builds; a space whose student never reaches the reference
-by \texttt{ef=512} in a build is reported as censored, meaning its
-multiplier is at least eight and otherwise unknown. The secondary
-quantity is the same multiplier on tie-aware recovery@10, and the
-recovery gap at \texttt{ef=64}. Parity checks, the tie rule, and the one
-excluded encoder (tas-b) are in Appendix C.
+RQ2 uses Qdrant 1.19.1 {[}Qdrant 1.19.1{]} with HNSW m=16,
+ef\_construct=100, cosine distance, no quantization. For each encoder
+space and each of three workloads, FiQA (57,638 documents), SCIDOCS
+(25,657), and TREC-COVID (171,332), two graphs are built with different
+seeded insertion orders over the encoder's document vectors, and
+\texttt{ef} is swept over 16 to 512 for the encoder's own queries and
+both students' queries, each path measured against its own exact top-10.
+The pre-specified primary quantity is the relative-nDCG-loss multiplier:
+with the encoder's own path at \texttt{ef=64} as the reference, the
+smallest \texttt{ef} at which the student path reaches the same relative
+loss, divided by 64, averaged over builds; a space whose student never
+reaches the reference by \texttt{ef=512} in a build is reported as
+censored, meaning its multiplier is at least eight and otherwise
+unknown. The secondary quantity is the same multiplier on tie-aware
+recovery@10, and the recovery gap at \texttt{ef=64}. Parity checks, the
+tie rule, and the one excluded encoder (tas-b) are in Appendix C.
 
 \subsubsection{3.5 The instance}\label{the-instance}
 
@@ -405,11 +394,11 @@ directly in Section 4.4.
 
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the space's own quality for the table (left) and head (right) students, colored by width. Filled points are registered spaces; triangles are the prospective spaces of E24 (eight for the head, seven for the table).3.}]{figures/f9_width.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Student quality against the space's own quality for the table (left) and head (right) students, colored by width. Filled points are registered spaces; triangles are the prospective spaces of E24 (eight for the head, seven for the table).}]{figures/f9_width.pdf}}
 \caption{Student quality against the space's own quality for the table
 (left) and head (right) students, colored by width. Filled points are
 registered spaces; triangles are the prospective spaces of E24 (eight
-for the head, seven for the table).3.}
+for the head, seven for the table).}
 \end{figure}
 
 \subsubsection{4.2 Width as the competing
@@ -422,9 +411,9 @@ or if the two-variable model predicts held-out families no better than
 the index's score alone. Figure 1 suggests the structure: within each
 width level student quality rises with index quality, and across levels
 wider indexes yield weaker students. Table B fits it. The outcome is the
-student's absolute six-set score, so that retention, the student's score
-divided by the index's, is a derived quantity rather than the modelled
-one; the predictors are the space's own score and log2 width;
+student's absolute six-set score, so retention, the student's score
+divided by the index's, is derived from it and is not the modelled
+quantity; the predictors are the space's own score and log2 width;
 coefficients are standardized, so each is the change in student quality,
 in standard deviations, per standard deviation of the predictor;
 intervals come from 10,000 resamples of the 26 checkpoints; held-out
@@ -483,24 +472,24 @@ size (−0.64 and +0.63), and the intervals do not separate them.
 prediction}\label{held-out-and-prospective-prediction}
 
 The prediction: a two-variable model fitted on part of the roster ranks
-the rest better than the space's own score does. The roster's own
-history supplies the test. The two-variable model fitted on the ten
-registered spaces, scored first, ranks the 16 spaces scored later at
-Spearman 0.85 {[}0.53, 0.99{]} for the head and 0.70 {[}0.20, 0.96{]}
-for the table; the space's own score alone ranks them at 0.37 and 0.16.
-The hypothesis in Table B was formed after all 26 were seen, so this is
-a held-out fit rather than a prospective test. The prospective test
-followed: eight further BERT-vocabulary encoders that had never been
-scored, chosen to span the three widths, with the model fitted on the 26
-and its predictions written and hashed before any student was fitted
-(Appendix B). One encoder's table fit stopped at the convergence gate
-and is listed, not replaced, so the table row has seven points and the
-head row eight. The committed predictions rank the eight at Spearman
-+0.86 (checkpoint interval +0.33 to +1.00) for the head and the seven at
-+0.71 (−0.12 to +1.00) for the table; the space's own score alone ranks
-them at +0.26 and +0.39. Mean absolute error of the predicted six-set
-score is 0.039 (head) and 0.032 (table). With seven points the table's
-interval does not exclude zero; the head's does.
+the rest better than the space's own score does. The two-variable model
+fitted on the ten registered spaces, scored first, ranks the 16 spaces
+scored later at Spearman 0.85 {[}0.53, 0.99{]} for the head and 0.70
+{[}0.20, 0.96{]} for the table; the space's own score alone ranks them
+at 0.37 and 0.16. Because the hypothesis in Table B was formed after all
+26 spaces were seen, this is a held-out fit; the prospective test
+followed. The prospective test followed: eight further BERT-vocabulary
+encoders that had never been scored, chosen to span the three widths,
+with the model fitted on the 26 and its predictions written and hashed
+before any student was fitted (Appendix B). One encoder's table fit
+stopped at the convergence gate and is listed, not replaced, so the
+table row has seven points and the head row eight. The committed
+predictions rank the eight at Spearman +0.86 (checkpoint interval +0.33
+to +1.00) for the head and the seven at +0.71 (−0.12 to +1.00) for the
+table; the space's own score alone ranks them at +0.26 and +0.39. Mean
+absolute error of the predicted six-set score is 0.039 (head) and 0.032
+(table). With seven points the table's interval does not exclude zero;
+the head's does.
 
 \subsubsection{4.4 Corollary: choosing an index before it
 exists}\label{corollary-choosing-an-index-before-it-exists}
@@ -543,17 +532,17 @@ Prospective spaces: dev screen & 0.000 & 0.043 \\
 \end{longtable}
 }
 
-The strongest-space rule loses 0.285 and 0.152 on the roster and 0.086
-and 0.107 on the prospective spaces. The two-variable model's
-leave-one-out pick loses 0.249 and 0.107 on the roster, where it ranks
-the field but misses its top; on the prospective spaces its committed
-pick loses nothing for the head and 0.043 for the table, the same as the
-dev screen. The student's own development screen, two forums scored with
-the fitted student, predicts the six-set rank at Spearman 0.84 (head)
-and 0.88 (table), makes the best or near-best pick, and when added to
-the two-variable model carries the largest standardized coefficient
-(+0.71 {[}+0.36, +0.99{]} for the head) and raises leave-one-family-out
-prediction to 0.77 and 0.80.
+The strongest-space rule is the worst of the three on the roster and on
+the prospective spaces. The two-variable model ranks the field but
+misses its top on the roster; on the prospective spaces its committed
+pick matches the dev screen's. The student's own development screen, two
+forums scored with the fitted student, makes the best or near-best pick
+under both representations, predicts the six-set rank at Spearman 0.84
+(head) and 0.88 (table), and when added to the two-variable model
+carries the largest standardized coefficient (+0.71 {[}+0.36, +0.99{]}
+for the head) and raises leave-one-family-out prediction to 0.77 and
+0.80. The index's width predicts the student's loss; a screen with the
+fitted student makes the pick.
 
 One caveat governs Section 4: 26 related spaces at three width levels
 support a hypothesis about what a closed-form student pays for width,
@@ -630,14 +619,23 @@ TREC-COVID & 171,332 & 12 / 13 & 8 & 0.25 & −3.9 pp (25 of 25) & 4.0 \\
 workloads, two builds averaged.}
 \end{figure}
 
-By the primary measure that holds on FiQA (25 of 25, median four over
-the 21 reached, four censored in at least one build) and on SCIDOCS (17
-of 25), and it is mixed on TREC-COVID (12 of 25), where the index's own
-path loses only 0.2\% of nDCG at \texttt{ef=64} over 50 queries, so a
-relative-loss threshold there is sensitive to differences smaller than
-its noise. By the secondary measure it holds on every workload (Table
-D), and the head student shows the same recovery deficit in 24 and 23 of
-25 spaces.
+The primary measure holds on FiQA (25 of 25, median four over the 21
+reached, four censored in at least one build) and on SCIDOCS (17 of 25).
+It is mixed on TREC-COVID (12 of 25): over 50 queries, the index's own
+path loses only 0.2\% of nDCG at \texttt{ef=64}, so the relative-loss
+threshold there is sensitive to differences smaller than its noise. By
+the secondary measure it holds on every workload (Table D), and the head
+student shows the same recovery deficit in 24 of 25 spaces on FiQA and
+23 of 25 on TREC-COVID.
+
+H2c predicts that SCIDOCS's smaller gap is an effect of corpus size. On
+FiQA subsampled to SCIDOCS's 25,657 documents, with the same queries and
+two rebuilt graphs per space (exploratory, pre-specified; Appendix C),
+the recovery gap at \texttt{ef=64} moves from −2.9 points to −1.2, a
+paired change of +1.8 points (95\% interval over spaces +1.3 to +2.3),
+and remains 0.4 points larger than SCIDOCS's (−0.9 to −0.1). Subsampling
+FiQA reproduces most, but not all, of SCIDOCS's smaller gap; the
+residual is not attributed here.
 
 \subsubsection{5.3 Is the effort
 predictable?}\label{is-the-effort-predictable}
@@ -648,8 +646,8 @@ declared nine placement features and two covariates before computing any
 of them (exploratory, pre-specified; Appendix C) and correlated each
 with the recovery gap at \texttt{ef=64} over the 75 space-by-workload
 points, with intervals from resampling spaces together with their three
-rows. Table F gives the eight that carry the argument; the full set is
-in the evidence package. The held-out test fits a ridge model on all
+rows. Table F gives the rows that carry the argument; the other seven
+features are in Appendix C. The held-out test fits a ridge model on all
 families but one and predicts the left-out family.
 
 \textbf{Table F.} Predictors of the recovery gap over 75 points (25
@@ -683,19 +681,7 @@ Query-to-document distance ratio, encoder's queries & −0.64 & {[}−0.75,
 −0.48{]} & −0.80 / −0.32 / −0.83 & +0.64, 1.26 \\
 Query-to-document distance ratio, student's queries & −0.63 & {[}−0.74,
 −0.46{]} & −0.77 / −0.45 / −0.69 & +0.56, 1.79 \\
-Student minus encoder ratio & −0.23 & {[}−0.42, −0.03{]} & −0.37 / −0.44
-/ +0.17 & −0.15, 2.23 \\
-Hubness of the student's top-10, minus the encoder's & +0.40 & {[}+0.20,
-+0.57{]} & +0.12 / −0.20 / −0.15 & +0.14, 2.11 \\
-Student-encoder top-10 overlap & +0.37 & {[}+0.14, +0.60{]} & −0.01 /
-+0.43 / +0.28 & +0.11, 2.29 \\
-Effective rank of the encoder's fit-query cloud & −0.17 & {[}−0.40,
-+0.11{]} & −0.28 / −0.34 / −0.05 & −0.53, 2.38 \\
-Top-1 cosine, student minus encoder & −0.05 & {[}−0.30, +0.20{]} & 0.00
-/ +0.23 / −0.34 & −0.55, 2.28 \\
-Margin, student minus encoder & −0.28 & {[}−0.48, −0.05{]} & −0.19 /
-−0.05 / −0.37 & −0.11, 2.15 \\
-All features & & & & +0.73, 1.40 \\
+All nine features and two covariates & & & & +0.73, 1.40 \\
 Training-fold mean (baseline) & & & & 2.22 \\
 \end{longtable}
 }
@@ -711,31 +697,13 @@ student's do, so what predicts the penalty is how the space places
 queries against documents in general, not how far the student moves
 them. The student-minus-encoder differences, including the top-1 cosine
 and margin differences from the search sweep, correlate weakly with the
-gap and do not predict held-out families. Magnitude does not transfer
-across workloads: a model fitted on two workloads ranks the third at
-+0.50 but predicts its gaps worse than the fold mean (mean error 2.55
-against 2.33 points), so the ratio says which spaces will pay more, not
-how much.
+gap and do not predict held-out families (Appendix C). Magnitude does
+not transfer across workloads: a model fitted on two workloads ranks the
+third at +0.50 but predicts its gaps worse than the fold mean (mean
+error 2.55 against 2.33 points), so the ratio says which spaces will pay
+more, not how much.
 
-\subsubsection{5.4 Corpus size}\label{corpus-size}
-
-H2c predicts that the smaller gap on SCIDOCS is an effect of corpus
-size: on FiQA subsampled to SCIDOCS's size, with the same queries, the
-gap should shrink toward SCIDOCS's value. We drew 25,657 of FiQA's
-57,638 documents uniformly with a fixed seed, keeping every document
-judged relevant to a test query, rebuilt two graphs per space, and
-repeated the sweep for the encoder and table paths (exploratory,
-pre-specified). Across the 25 spaces the recovery gap at \texttt{ef=64}
-moves from −2.9 points on the full corpus to −1.2 on the subsample, a
-paired change of +1.8 points (95\% interval over spaces +1.3 to +2.3),
-and the subsample's gap is still 0.4 points larger than SCIDOCS's (−0.9
-to −0.1). On the subsample no 384-wide space shows a gap beyond 0.02
-points: at that corpus size and \texttt{ef=64} both paths recover nearly
-all of their neighbors. In this one subsample, corpus size accounts for
-most of the attenuation and not all of it; the residual is consistent
-with domain or query form and is not attributed here.
-
-\subsubsection{5.5 The penalty in a jointly trained
+\subsubsection{5.4 The penalty in a jointly trained
 model}\label{the-penalty-in-a-jointly-trained-model}
 
 \textbf{H2d.} If the deficit comes from where lookup queries sit against
@@ -797,10 +765,9 @@ under the primary prompt on SCIDOCS. The relevance-loss multiplier
 agrees on FiQA (two to four) and is uninformative on SCIDOCS, where both
 paths lose under 0.1\% of nDCG at \texttt{ef=64}. On the pod GPU the
 lookup path encoded a query in 0.10 ms against 0.90 ms for the full
-path; whether the extra \texttt{ef} consumes that gap in wall-clock time
-was not measured. Neither the model's published retention nor its
-encoding-speedup figure is in dispute; the measurement shows that the
-figure is taken before the step where the cheap path pays.
+path, the kind of speedup the model's release reports; that figure is
+taken before the step where the cheap path pays, and whether the extra
+\texttt{ef} consumes it in wall-clock time was not measured.
 
 One caveat governs Section 5: a multiplier on \texttt{ef} is a
 multiplier on graph effort, not on latency, and a recovery deficit is a
@@ -832,51 +799,39 @@ Zero (token table) & 0.4572 & 81.4\% & 0.044 ms & 90.1 MiB \\
 
 The three paths differ in what they compute, and therefore in where each
 loses. Zero reads one learned vector per token and sums them, so it
-cannot use word order or context: two queries with the same tokens in a
-different order get the same vector. Its retention is lowest on topical
-and scientific sets (0.67 on TREC-COVID and FiQA) and highest where the
-query is a short entity or a near-duplicate of a document (0.95 on
-Quora, 0.96 on climate-fever), and in an internal domain-jargon workload
-it fell below BM25. Nano reads three layers of a small transformer over
-the query, so it sees context at one fourteenth of Stella's encoding
-time; its retention is flat across datasets (0.85 to 0.99 except FEVER,
-which was in Zero's training pool and not in Nano's), and on BEIR-15 it
-is below two small models that use their own indexes (Appendix A).
-Stella's own encoder is the reference and costs 31.6 ms per query.
-Per-dataset retention is in Appendix A.
+cannot use word order or context; its retention is lowest on topical and
+scientific sets and highest where the query is a short entity or a
+near-duplicate of a document (0.67 on TREC-COVID and FiQA against 0.95
+on Quora), and in one internal domain-jargon workload it fell below
+BM25. Nano reads three layers of a small transformer over the query at
+one fourteenth of Stella's encoding time, and its retention is flat
+across datasets (0.85 to 0.99 except FEVER, which was in Zero's training
+pool and not in Nano's). Per-dataset retention, and Nano's position
+below two small models that use their own indexes on BEIR-15, are in
+Appendix A. All three were verified against the same populated
+collections with no rebuild between encoder batches, so a request can
+use any of them; three attempts to specialize a student to one workload
+over the same index did not produce an improved encoder (Section 7).
 
-Because all three were verified against the same populated collections
-with no rebuild between encoder batches, a request can use any of them,
-and an application can match the path to the moment: a table lookup
-while the user is typing, the small transformer when typing pauses, and
-the full encoder on submit. This is a capability of the design, not a
-measured result; the prefix experiment in Appendix C shows the dense
-paths retain similar fractions of their full-query quality on truncated
-queries, and no cascade was timed end to end. Three attempts to
-specialize a student to one workload over the same index did not produce
-an improved encoder (Section 7).
-
-\textbf{What the substitution costs to build and what it saves.}
-Building a table student for an existing index took four to seven
-minutes of A100 time per encoder in the screen, including query encoding
-except for Stella's cached targets; the head student's features took 43
-seconds for the fit list and its fit 14 seconds per encoder; Nano, a
-trained transformer student, took 57.3 A100 hours for its final
-optimization, about \$95 at the recorded rental rate, excluding data
-preparation, recipe search, and failed runs (Appendix B). None of these
-touched the index: no document was re-encoded and no collection was
-rebuilt, so the new path was added to the live collections and verified
-against them without downtime. On the query side the saving recurs.
-Table 2 converts the measured medians into CPU time per million queries
-on the measurement laptop, encoding at batch one with four threads plus
-search at each path's within-1\% setting on the uncompressed
-million-passage collection; it is arithmetic on registered medians, not
-a throughput measurement, and a production system would see different
-absolute times.
+\textbf{Build cost and query cost.} Building a table student for an
+existing index took four to seven minutes of A100 time per encoder in
+the screen, including query encoding except for Stella's cached targets;
+the head student's features took 43 seconds for the fit list and its fit
+14 seconds per encoder; Nano, a trained transformer student, took 57.3
+A100 hours for its final optimization, about \$95 at the recorded rental
+rate, excluding data preparation, recipe search, and failed runs
+(Appendix B). None of these touched the index: no document was
+re-encoded and no collection was rebuilt. Table 2 extrapolates the
+measured medians to encoding-plus-search time per million queries on the
+measurement laptop, encoding at batch one with four threads plus search
+at each path's within-1\% setting on the uncompressed million-passage
+collection; it is arithmetic on registered medians, not a throughput
+measurement.
 
 \Needspace{14\baselineskip}
-\textbf{Table 2.} CPU time per million queries on the measurement
-laptop, from the medians in Table 1 and Appendix C.
+\textbf{Table 2.} Extrapolated encoding-plus-search time per million
+queries on the measurement laptop, from the medians in Table 1 and
+Appendix C.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
@@ -908,26 +863,20 @@ Zero & 0.01 h & 0.99 h (\texttt{ef=512}) & 1.0 h & 11\% \\
 \end{longtable}
 }
 
-After search, Nano and Zero cost about the same per million queries on
-this collection, because Zero's encoding saving is spent on the extra
-\texttt{ef} that RQ2 measures; Nano about an eighth and Zero about a
-ninth of the full encoder's cost, at 90.5\% and 81.4\% of its quality.
-Section 5.5 shows the same search-effort penalty for a jointly trained
-lookup path over its own index; its time accounting was not measured.
-
-The instance also shows RQ2's cost in time. On the uncompressed
-million-passage diagnostic, search time at a fixed \texttt{ef} is the
-same for all three paths within 5\%, and the paths differ in the
-\texttt{ef} they need: to stay within 1\% of their own exact score,
-Stella needs \texttt{ef=128}, Nano 256, and Zero 512, with search
-medians of 1.53, 2.18, and 3.58 ms. On one binary-quantized collection
-the fastest setting within 1\% gives Zero 0.6116 at 1.11 ms, Nano 0.6893
-at 2.48 ms, and Stella 0.7226 at 21.3 ms: on that collection's query
-sample the encoding gap between Zero and Nano is 63-fold (51-fold on
-Table 1's sample) and becomes 2.2-fold after search, at different
-quality levels. Figure 3 gives the registered sweep. Lexical fusion,
-per-query routing, and a query-precision control over the same index are
-reported in Appendices C and D.
+Search time at a fixed \texttt{ef} is the same for all three paths
+within 5\%; the paths differ in the \texttt{ef} each needs to stay
+within 1\% of its own exact score (Stella 128, Nano 256, Zero 512),
+which is RQ2's penalty in time. After search, Nano and Zero cost about
+the same per million queries, because Zero's encoding saving is spent on
+the extra \texttt{ef}: Nano about an eighth and Zero about a ninth of
+the full encoder's extrapolated time on this collection, at Table 1's
+90.5\% and 81.4\% of its exact BEIR-15 quality. On one binary-quantized
+collection the encoding gap between Zero and Nano is 63-fold and becomes
+2.2-fold after search, at different quality levels (Figure 3). Section
+5.4 shows the same search-effort penalty for a jointly trained lookup
+path over its own index. Lexical fusion, per-query routing, and a
+query-precision control over the same index are reported in Appendices C
+and D.
 
 \begin{figure}
 \centering
@@ -961,10 +910,7 @@ The companion repository holds inference examples, build configurations,
 methods with their dated amendments, immutable result receipts,
 per-dataset tables, and the full research history including negative
 results. The released artifacts are Constella Zero, Constella Nano, and
-the Stella document encoder on the Hugging Face Hub. All released paths
-run in fp32 through the published loader; a candidate fp16 export passed
-CPU parity and failed on CUDA (minimum cosine 0.662), which is why
-qualification runs through the actual loader and device. Two inputs are
+the Stella document encoder on the Hugging Face Hub. Two inputs are
 identified by hash but not yet archived in the repository: the cleaned
 337,981-query fit list and the sampled one-million-passage identifier
 list.
@@ -1117,6 +1063,11 @@ Zero + BM25 & 0.7559 & 0.4030 & 0.4629 & 0.4016 \\
 Nano + BM25 & 0.6879 & 0.4296 & 0.4750 & 0.4323 \\
 \end{longtable}
 }
+
+\textbf{Precision.} All released paths run in fp32 through the published
+loader; a candidate fp16 export passed CPU parity and failed on CUDA
+(minimum cosine 0.662), which is why qualification runs through the
+actual loader and device.
 
 \subsection{Appendix B. Construction
 details}\label{appendix-b.-construction-details}
@@ -1339,7 +1290,47 @@ the student's to the encoder's workload-query effective rank; the
 student-minus-encoder top-1 cosine and margin recorded by the search
 sweep; log2 width and log10 corpus size as covariates. Ridge with unit
 penalty on standardized features; the baseline is each training fold's
-mean.
+mean. The seven features not in Table F, same columns:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Feature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Spearman, 75 points
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+95\% interval
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FiQA / SCIDOCS / TREC-COVID
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Leave-one-family-out Spearman, MAE (pp)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Student minus encoder ratio & −0.23 & {[}−0.42, −0.03{]} & −0.37 / −0.44
+/ +0.17 & −0.15, 2.23 \\
+Hubness of the student's top-10, minus the encoder's & +0.40 & {[}+0.20,
++0.57{]} & +0.12 / −0.20 / −0.15 & +0.14, 2.11 \\
+Student-encoder top-10 overlap & +0.37 & {[}+0.14, +0.60{]} & −0.01 /
++0.43 / +0.28 & +0.11, 2.29 \\
+Effective rank of the encoder's fit-query cloud & −0.17 & {[}−0.40,
++0.11{]} & −0.28 / −0.34 / −0.05 & −0.53, 2.38 \\
+Ratio of the student's to the encoder's workload-query effective rank &
++0.18 & {[}−0.06, +0.41{]} & +0.16 / −0.48 / +0.32 & −0.30, 2.17 \\
+Top-1 cosine, student minus encoder & −0.05 & {[}−0.30, +0.20{]} & 0.00
+/ +0.23 / −0.34 & −0.55, 2.28 \\
+Margin, student minus encoder & −0.28 & {[}−0.48, −0.05{]} & −0.19 /
+−0.05 / −0.37 & −0.11, 2.15 \\
+\end{longtable}
+}
 
 \textbf{Corpus-size subsample (E23).} FiQA documents drawn uniformly
 with seed 20260930 to 25,657, keeping every document with a positive
