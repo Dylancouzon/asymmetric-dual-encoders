@@ -769,3 +769,8 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   retains 85.5% / 86.0% (web search) and 86.5% / 90.1% (task) of the full path's exact nDCG@10;
   GPU encoding 0.10 ms lookup versus 0.90 ms full. Written into the paper as §5.5 and Table E,
   the abstract, §1, §2, §6, §7; card C19; evidence map, FOLLOWUP, NOVELTY updated.
+- 18:52 UTC: pod `k3aee2m68765em` started on the 41st retry (host GPU freed). Volume intact (27
+  E20 vector sets, E19 features, fit list `da0f208e`). Tracked tree pushed by git archive (excluding
+  the live access log and result payloads), venv rebuilt, musl Qdrant present. E24, E22, and E23
+  launched concurrently at about 19:02 UTC (E23 on port 6733 with container-disk storage); logs in
+  `work/m15/e24.log`, `e22.log`, `e23.log` on the pod.
