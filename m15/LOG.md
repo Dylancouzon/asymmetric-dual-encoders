@@ -679,3 +679,28 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   is in a cited title), no em dashes or curly quotes, no negative-parallel openers; 18 sentences
   over 40 words split into two or three; four remain, two of them tables. Numbers, identifiers,
   and claim boundaries unchanged.
+
+### Owner round 4: "reads like an article, not scientifically exciting" (2026-10-01)
+
+- Owner verdict on v16: article register, not exciting enough; the abstract's "retain 100%" for
+  Stella against itself is absurd. Two independent reviews launched on one brief
+  (`REVIEWS/briefs-2026-10-01/v16-scientific-register.md`): a fresh Fable agent and Astra.
+- Local exploratory analysis on the committed E19 data while they run (n = 26, control excluded):
+  student quality ~ teacher quality alone, R2 0.12 (head) and 0.14 (table); adding log2(width),
+  R2 0.70 and 0.48 with standardized betas teacher +0.69 / width −0.83 (head) and +0.63 / −0.64
+  (table); adding nine family dummies, R2 0.91 and 0.81. Partial Spearman student~teacher given
+  width +0.58 (head), +0.45 (table). Teacher quality and width correlate +0.61, which is why the
+  pooled correlation is near zero. Leave-one-out prediction of head quality from teacher + width
+  reaches Spearman 0.73 against the dev screen's 0.84. Candidate reframing of Finding A: the
+  strongest-teacher heuristic fails because the strongest teachers are the widest, and a cheap
+  student pays a width penalty that cancels the quality signal. Not yet in the paper; needs a
+  script and receipt before it is cited.
+- Both register reviews in (`REVIEWS/2026-10-01-fable-register-v16.md`,
+  `REVIEWS/2026-10-01-astra-register-v16.md`). E21 pre-specified and run on existing data
+  (`results/m15_e21_width_model.json`): teacher + width model, head std betas +0.69 / −0.83,
+  table +0.63 / −0.64, intervals excluding zero; ten-registered fit ranks the 16 exploratory
+  checkpoints at 0.85 (head) and 0.70 (table) against 0.37 and 0.16 for teacher alone; dev screen
+  still makes the best pick (regret 0.035 / 0.000 versus 0.285 / 0.152 for the strongest teacher).
+  Abstract's "100%" sentence replaced. Methods E22 to E24 pre-specified. `REVISION_PLAN_V17.md`
+  written: research-paper structure, width as the result, predictor table, title fork, three
+  experiments awaiting owner approval and a pre-spend review.

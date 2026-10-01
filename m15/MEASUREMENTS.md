@@ -572,3 +572,95 @@ case: `tas-b` on FiQA has a median rank-10-to-11 exact score gap of 8e-4 and 17 
 queries under 1e-4, so its exact top-10 is undefined at float32 precision and recall against it
 is not measurable. Completed spaces are unaffected; the roster size in the result is the included
 count.
+
+## E21, conditional teacher-selection analysis (exploratory, pre-specified 2026-10-01, existing data only)
+
+Owner round 4 asks for scientific weight rather than observed rankings. E8/E8x and E19 give, for
+26 checkpoints and two student recipes, the teacher's six-set score, the student's six-set score,
+the student's dev-forum score, the teacher's width, and its model family. E21 asks whether student
+quality is predictable from teacher properties once width and family are accounted for, and whether
+the recipe-specific dev screen adds predictive value beyond them. No new encoding or scoring.
+
+- **Units:** the 26 pooled checkpoints (control `arctic-embed-l-mean` excluded), two recipes.
+  Family labels: arctic, bge, e5, gte, minilm (four MiniLM variants), mxbai, stella, contriever
+  (two), tas-b. Width is log2 of the teacher's output dimension (384, 768, 1024).
+- **Outcome:** absolute student six-set macro nDCG@10 (not retention, whose denominator is the
+  teacher score). Clean-four macro is a sensitivity outcome.
+- **Nested linear models, fit by least squares:** M0 intercept; M1 teacher score; M2 teacher score
+  + width; M3 teacher score + width + family dummies; M4 M2 + the recipe's dev-forum score; M5 M3 +
+  dev score. Standardized coefficients reported with a 10,000-draw checkpoint bootstrap interval.
+- **Validation:** leave-one-family-out prediction (fit on the other families, predict the held-out
+  family), reporting Spearman between predicted and actual over all 26 held-out predictions and
+  mean absolute error. Models with family dummies cannot predict a held-out family and are reported
+  only in-sample. Leave-one-checkpoint-out is a secondary display.
+- **Selection regret:** for each rule (teacher score; teacher score within the widest band; M2
+  prediction fitted leave-one-out; dev screen), the six-set gap between the rule's pick and the best
+  student, over the registered ten and the pooled 26.
+- **Partial association:** Spearman between student and teacher score after linearly removing
+  width from both; the same within each width band (384 n=9, 768 n=10, 1024 n=7).
+- **Reading:** a large negative width coefficient with a positive teacher coefficient, and
+  held-out prediction well above the pooled correlation, means the pooled near-zero association is
+  two opposing effects; the dev screen earns its place if M4/M5 beat M2/M3 out of sample. Twenty-six
+  related checkpoints and three width levels support a hypothesis about what cheap students pay for
+  width, not a mechanism; the backbone-affinity checkpoint (bge-small-en-v1.5) is reported with and
+  without.
+- **Output:** immutable `results/m15_e21_width_model.json` from `m15src/e21_width_model.py`.
+
+## E22, predictors of the cross-space recovery gap (exploratory, pre-specified 2026-10-01, cached vectors)
+
+- **Question:** is the table-minus-teacher recovery gap at ef=64 (E20, two builds averaged)
+  predictable from properties of query placement computable before building a graph?
+- **Units:** the 25 included spaces by three workloads, 75 points; held-out validation leaves one
+  family out, and separately one workload out.
+- **Declared features, per space and workload, from the E20 cached vectors and saved exact
+  top-100 ids and scores.** (1) Mean ratio of a table query's distance to its nearest document to
+  the mean nearest-neighbour distance among documents (document NN distances from a 5,000-document
+  sample); the same for teacher queries; and their difference. (2) Hubness of the table's exact
+  top-10: the Gini coefficient of document occurrence counts across queries, minus the teacher's.
+  (3) Overlap between the table's and the teacher's exact top-10 per query, averaged. (4) Effective
+  rank (participation ratio of the covariance spectrum) of the teacher's cached fit-query cloud and
+  of the table's fit-query cloud, and their ratio. (5) The two E20 geometry summaries, as controls.
+  (6) log2 width and corpus size, as covariates.
+- **Analysis:** Spearman of each feature with the gap over 75 points and within each workload,
+  with 10,000-draw bootstrap intervals over spaces; a ridge model on standardized features with
+  leave-one-family-out and leave-one-workload-out prediction, compared with the constant predictor
+  by Spearman and MAE. Features are declared here before any is computed.
+- **Reading:** a feature that beats the constant predictor out of sample makes RQ2 a predictive
+  finding; none does, and RQ2 is reported as a measured regularity with the predictor table.
+- **Output:** `results/m15_e22_gap_predictors.json` from `m15src/e22_gap_predictors.py`.
+
+## E23, corpus-size deconfound (exploratory, pre-specified 2026-10-01)
+
+- **Question:** does the smaller recovery gap on SCIDOCS (25,657 documents) come from corpus size?
+- **Design:** subsample FiQA's 57,638 documents to 25,657 by a seeded uniform draw that keeps every
+  document judged relevant to a test query; rebuild the uncompressed HNSW index per space with the
+  E20 parameters and two builds; rerun the E20 sweep for the teacher and table paths on the same
+  648 queries, each path against its own exact top-10 over the subsampled corpus.
+- **Analysis:** per-space recovery gap at ef=64 on FiQA-25k versus FiQA-57k and versus SCIDOCS;
+  paired across spaces with a bootstrap interval over spaces.
+- **Reading:** a gap that shrinks toward the SCIDOCS value supports size; a gap that persists at
+  25k points to domain or query form.
+- **Output:** `results/m15_e23_fiqa25k.json` from `m15src/e23_fiqa25k.py`.
+
+## E24, prospective teacher-selection test (exploratory, pre-specified 2026-10-01)
+
+- **Question:** does the E21 rule, fitted on the 26 scored checkpoints, rank checkpoints it has
+  never seen?
+- **Roster, fixed here before any encoding:** eight BERT-WordPiece-compatible checkpoints not in
+  E8/E8x, spanning widths: `intfloat/e5-large` (1024), `BAAI/bge-large-en` (v1, 1024),
+  `intfloat/e5-base-unsupervised` (768), `nomic-ai/nomic-embed-text-v1` (768),
+  `sentence-transformers/msmarco-bert-base-dot-v5` (768),
+  `sentence-transformers/msmarco-distilbert-base-v4` (768),
+  `sentence-transformers/all-MiniLM-L12-v1` (384), `sentence-transformers/paraphrase-MiniLM-L6-v2`
+  (384). The E8 tokenizer check applies; a checkpoint that fails it is reported and excluded,
+  not replaced.
+- **Predictions written before scoring:** for each recipe, the teacher + width model fitted on the
+  26 predicts each new checkpoint's six-set student score from its six-set teacher score and width.
+  The teacher score is measured first (it is an input), then the prediction file is committed with
+  its hash, then the students are fitted and scored under the E8 and E19 recipes and selection order.
+- **Endpoints:** Spearman between predicted and actual over the eight, with a checkpoint bootstrap
+  interval, against teacher-only prediction; selection regret of the strongest-teacher rule, the
+  model pick, and the dev screen over the eight.
+- **Reading:** prediction above teacher-only with an interval excluding zero makes RQ1 prospective;
+  failure keeps the held-out fit and drops the prospective claim.
+- **Output:** `results/m15_e24_prospective.json` from `m15src/e24_prospective.py`.
