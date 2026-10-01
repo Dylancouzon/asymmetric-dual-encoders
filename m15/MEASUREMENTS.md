@@ -439,3 +439,25 @@ Read the native source check in `REVIEWS/2026-10-01-quantization-semantics.md`: 
 rescoring can change collection-level candidate selection through segment merging; rescore/no-rescore
 is not a fixed global candidate-pool experiment. This replication tests the native option interaction,
 not an exhaustive quantized-score decomposition or an identified geometric mechanism.
+
+## E18, controlled query-precision candidate scoring (exploratory, 2026-10-01)
+
+After E16/E17 and tagged-source verification of sign-coded query defaults, hold document sign codes
+fixed and compare exhaustive scores from sign(q)·sign(d) with normalized original q·sign(d). Positive
+components map to+1, others−1, matching the tagged one-bit threshold. Each tier's original-vector
+exact top10 and deterministic 192 query IDs come from its immutable E16/E17 receipt; freshly encoded
+query vectors must match those recorded hashes. Use both FiQA and the 1M validation-only diagnostic.
+
+Global candidate budgets are10,40,100;40 is the primary display. For quantized-score ties at the cutoff,
+report expected original-top10 inclusion under uniform tie selection: a target strictly above the
+cutoff has probability1; at the cutoff its probability is(C−number strictly above)/number tied.
+This equals expected exact-neighbor recovery after original-target reranking of that candidate pool,
+but neither measures relevance nDCG nor native search latency. Report paired float-minus-sign gains
+and Zero-minus-other-tier gain differences, with query-bootstrap intervals. Show all budgets/results.
+
+No graph is used; document codes, original target and query vectors are unchanged between precision
+conditions. The float-query scorer is an explicitly defined magnitude-preserving control, not native
+Qdrant scalar8, an ANN remedy, or a guaranteed upper bound. Global candidate budgets are not native
+per-segment oversampling. No new encoding of documents, training, cloud rental, protected access or
+query selection occurs. Source:`m15src/e18_query_precision.py`; immutable output:
+`results/m15_e18_query_precision.json`.
