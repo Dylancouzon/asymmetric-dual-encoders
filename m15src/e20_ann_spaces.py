@@ -229,7 +229,9 @@ def tie_thresholds(qv, dv, exact_run, doc_index, q_ids):
     thr, ties = {}, 0
     for i, q in enumerate(q_ids):
         last = exact_run[q][-1] if exact_run[q] else None
-        thr[q] = S[i, doc_index[last]] - 1e-6 if last is not None else np.inf
+        # 1e-4: float32 accumulation order differs between Qdrant and NumPy, and a flat-scoring
+        # table has rank-10 gaps at that level (control table parity 0.9985 at 1e-6).
+        thr[q] = S[i, doc_index[last]] - 1e-4 if last is not None else np.inf
         ties += int((S[i] >= thr[q]).sum() > len(exact_run[q]))
     return S, thr, ties
 

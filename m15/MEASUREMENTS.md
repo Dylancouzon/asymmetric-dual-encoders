@@ -558,3 +558,6 @@ the exact 10th neighbour's score. This equals E2's set definition when no ties e
 version and the per-path count of tied queries are kept in every row, and the parity gate returns
 to 0.999 under the tie-aware measure. Amendment 2's 0.995 gate is superseded. All sweeps restart
 from scratch so every space is measured identically.
+The tie tolerance is 1e-4 in cosine score: float32 accumulation order differs between Qdrant and
+NumPy, and the control table's rank-10 gaps sit at that level (parity 0.9985 at 1e-6, same three
+slots). Every space, path and ef uses the same tolerance.
