@@ -147,7 +147,7 @@ on the frozen index (39.9 h re-encode, downstream consumers) and poses the two q
 Both complete-draft reviews (`REVIEWS/2026-10-02-astra-complete-v17.md`, `-fable-complete-v17.md`)
 ranked cuts by words saved per claim lost. Taken, where the two agreed: Section 6 merged into three
 paragraphs around Tables 1 and 2 (per-dataset detail to Appendix A, typing/pause/submit sentence
-removed as a model-card capability); the introduction's numbers paragraph replaced by two sentences
+removed as a model-card capability; superseded 2026-10-02, see OWNER_PREFERENCES.md "Settled answers"); the introduction's numbers paragraph replaced by two sentences
 without numbers; the 4.4 paragraph that restated Table C replaced by the reading; the 5.5 timing,
 "not in dispute", and caveat sentences folded into one. Taken from Fable: 5.4 folded into the end of
 5.2 (method stays in Appendix C); Table F cut to the two ratio rows, all-features, and baseline,

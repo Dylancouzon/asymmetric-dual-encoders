@@ -14,6 +14,12 @@ Updated 2026-10-02. This is the durable record of Dylan's instructions for itera
 - **Keep the genre a whitepaper.** The owner explicitly reiterates that this is a whitepaper, not a tutorial. Lead with research questions, methods, findings, and interpretation. Production relevance does not require repeated instructions, deployment checklists, or a how-to structure.
 - **Keep units consistent.** The owner flags milliseconds mixed with microseconds. Use milliseconds consistently for query timing throughout the manuscript and figures.
 
+## Settled answers: do not reopen
+
+The owner has given these answers several times. Agents and reviewers must not raise them again as open questions. To disagree, state the disagreement once to the owner with new evidence; do not re-propose it in a review or plan.
+
+- **Why keep the index instead of re-embedding with bge-small or LEAF (2026-10-02, owner, repeated).** One shared index lets each request choose its query compute. In e-commerce search, for example, Zero encodes while the user types, Nano when typing stops, and Stella when the user submits. bge-small and LEAF each need their own document index, so the same choice would need several indexes and ingestion pipelines. The paper gives this answer wherever the re-embedding comparison comes up, and the registered bge-small/LEAF contrasts stay reported in full in the appendix. Evidence boundary: per-path quality and encoding cost are measured (Table 1), and all three paths were verified against the same populated collections; no typeahead or e-commerce workload was evaluated, so the example describes an operating policy, not a measured result. This supersedes, for this purpose, round 6 item (4) and the v18 cut of the typing/pause/submit sentence: timed loading and failover stay model-card material, but per-request choice of query path is the paper's reason to keep the index.
+
 ## Authors
 
 - The provisional author list, in the order supplied by the owner, is Dylan Couzon, Evgeniya Sukhodolskaya, Kumar Shivendu, and Andrey Vasnetsov, with Qdrant affiliation. Names and the supplied contact emails are maintained in `AUTHORS.json` and used by the PDF build.
@@ -143,7 +149,8 @@ These checks operationalize the owner's readability and evidence concerns; they 
   compute saving made explicit, without re-ingestion or downtime; implemented as a measured-cost
   paragraph and a CPU-hours-per-million-queries table in Section 6, no dollar-per-month claim
   because no price or QPS was measured. (4) Hot-swappability is a product capability to showcase in
-  the official model card (M22), not a paper finding. (5) Philosophy: include everything that may be
+  the official model card (M22), not a paper finding. (Superseded in part 2026-10-02: per-request choice of query
+  path is the paper's answer to re-embedding; see "Settled answers".) (5) Philosophy: include everything that may be
   valuable and meets the criteria; reviewers decide cuts together, unless inclusion harms coherence.
   Material cut from the body stays in appendices rather than being dropped.
 - **2026-10-01, round 8, title.** Owner wanted a hook that still reads as a paper and chose

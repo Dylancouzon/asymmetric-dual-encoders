@@ -1014,3 +1014,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 
 - Owner approves the proposed narration/jargon recommendations. Recorded in OWNER_PREFERENCES.md: preserve surprising results while simplifying their explanation, lead findings with significance, name measured quantities consistently, keep qualifications local, define useful IR shorthand, and reduce internal experiment labels in reader-facing prose.
 - Preferences-only update; manuscript and PDF remain v20 unchanged. These recommendations are now owner-approved guidance for future revisions.
+
+### 2026-10-02: settled answer, why keep the index
+
+- Owner, repeated across sessions: the answer to "why not re-embed with bge-small or LEAF" is per-request choice of query compute over one index (e-commerce example: Zero while typing, Nano when typing stops, Stella on submit). Recorded under "Settled answers: do not reopen" in OWNER_PREFERENCES.md.
+- Root cause of the repetition: round 6 item (4) (hot swapping to the model card) and the v18 cut of the typing/pause/submit sentence read as excluding the argument, so later reviews re-raised the re-embedding question. Both records now point to the settled answer.
+- Context: raised during the v20 target-reader review with GPT-6.1-Sol (two rounds, reports not yet committed). Preferences-only update; manuscript unchanged.
+
