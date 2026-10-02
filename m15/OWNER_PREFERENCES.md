@@ -179,6 +179,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - **2026-10-02, training-cost visibility.** Owner explicitly requests that both released models' training/construction costs remain visible in the main paper, linked to the possibility of amortizing one-time construction over recurring query-compute savings. Keep this practical motivation in subsequent revisions. Distinguish measured Nano optimization from historical Zero/target-preparation estimates and screening fits; preserve full-build exclusions and retained-relevance requirements. Owner authorizes the balanced framing discussed in this session, not an automatic-payback claim.
 
+### 2026-10-02, review proposals read as benchmark expansion
+
+- Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
+
 ### 2026-10-02, narration and terminology
 
 Owner approves the following recommendations for subsequent revisions:
