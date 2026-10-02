@@ -1073,3 +1073,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 
 - Owner: the two teaser panels felt out of place, unrelated to the surrounding text and to each other. Panel (a) duplicated Figure 2 and was dropped. Figure 1 is now one panel showing where each encoder's time goes on one unchanged binary-quantized index (encoding plus search stacked; Stella almost all encoding, Zero almost all search at four times Stella's ef), placed directly after the introduction paragraph that presents the three encoders over one index. Components sum to the e2e medians (20.66 + 0.67, 1.61 + 0.87, 0.03 + 1.09 ms). Astra: no essential issue.
 
+### 2026-10-02: v22 cohesion and writing pass (Astra)
+
+- Owner: the abstract uses "table" and "head" before defining them and its order is not coherent; asked for a full Astra pass on cohesion and writing quality. Fresh GPT-6-Astra session (wording in scope, claims and numbers fixed); report in REVIEWS/2026-10-02-astra-v22-cohesion.md.
+- Agreed and applied by Astra: abstract defines student, table student, and transformer student before the findings; "head student" renamed "transformer student" everywhere; introduction states the study before Constella; Section 4 transition from prediction to selection; Section 6 reordered (quality, fusion, search cost, construction cost, request-context choice, routing) with clearer timing transitions; Discussion opens with interpretation; sentence repairs.
+- Claude's modifications to Astra's proposals: kept the 31.6 ms to 0.044 ms hook in the abstract; kept a vivid contribution headline ("Replacement queries need a wider search over the unchanged graph"); kept the Discussion's three consequences. Claude then fixed four leftovers (a dangling "that choice", a repeated "consumes" claim, a repeated "binary-quantized collection", and the dropped selection claim in the first consequence, checked against the v20 selection gaps 0.035 versus 0.285).
+- Numbers unchanged; no em dashes; PDF 17 pages.
+

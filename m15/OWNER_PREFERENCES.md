@@ -183,6 +183,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, push approval for the session
+
+- Owner grants standing push approval for the rest of this session (2026-10-02): push coherent commits on m15-whitepaper without asking each time. Force-push and pushes to main still need an explicit ask.
+
 ### 2026-10-02, v22 direction
 
 - v21.1 is correct but not exciting enough to be discussed or shared. Fix it without turning the paper into an article (owner rejected a puzzle hook and a product-first order as article devices): keep the research order; the excitement comes from findings stated at full strength with effect sizes, a contributions list, and a page-1 teaser figure. Keep the goals in view: interesting, not a benchmark reading.
