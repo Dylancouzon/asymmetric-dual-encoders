@@ -204,3 +204,30 @@ The diff follows the approved v22 plan. Numbers and evidence labels match the ch
 The teaser’s data selection and rendered figure agree: panel (a) shows the ten registered models; panel (b) selects the fastest qualifying binary settings and correctly labels latency and relevance. Its caption supplies the required workload and timing distinctions.
 
 No required content is lost in the supplied diff.
+## v22 abstract check
+
+1. **P1: The search-breadth claim generalizes corpus medians to cheaper queries generally.**
+
+   > “Cheaper queries need two to four times the search breadth…”
+
+   Section 5 reports **corpus-specific medians for fitted table students**, not a two-to-four range applying to every replacement.
+
+   **Fix:** “In the exploratory comparison, fitted tables need median search-breadth multipliers of two to four to match the original encoder’s exact-neighbor recovery.”
+
+2. **P2: The opening overstates encoding frequency.**
+
+   > “A dense index is encoded once; its query encoder runs on every search.”
+
+   Documents can be added or updated, and cached queries need not be encoded again. V22 correctly scoped the recurring cost to uncached queries.
+
+   **Fix:** “Document vectors are encoded and reused; every uncached query pays for encoding.”
+
+3. **P2: The encoding figures have lost their measured statistic.**
+
+   > “Can cut per-query encoding from 31.6 ms to 0.044 ms.”
+
+   These are measured CPU **medians**, not per-query guarantees (`m15/EVIDENCE.md`, C2).
+
+   **Fix:** “Can cut measured median CPU encoding time from 31.6 ms to 0.044 ms.”
+
+The preserved assets, distance-ratio interpretation, Stella’s approximately 400-million-parameter description, and remaining numbers are supported.

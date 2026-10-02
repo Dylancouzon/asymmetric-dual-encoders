@@ -1065,3 +1065,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Claude added the page-1 teaser f0_teaser (make_figures.py, from m15_e19_head_screen.json and m15_e2_ann_msmarco1m.json binary rows), with finding titles on both panels, and moved it so it floats to the top of page 2. Figures renumbered.
 - Checks: new numbers only the latencies and nDCG values, recomputed by Claude from the receipt; Astra found no essential issue; no em dashes; PDF 16 pages.
 
+### 2026-10-02: v22 abstract with a research hook
+
+- Owner: drop "we fit"; the abstract needs a strong hook instead of opening on the registered comparison. Claude drafted a claim-first opening (each document encoded once, the query encoder on every uncached search; replacing only the query encoder keeps the stored vectors, graph, and quantized codes and cuts median CPU encoding from 31.6 ms to 0.044 ms). Sol's polish flattened the opening, so Claude merged Claude's opening with Sol's middle. Astra: one P1 (the two-to-four multiplier is a median for fitted tables, not all cheap queries) and two P2s (uncached queries; medians), all fixed. Hook kept.
+

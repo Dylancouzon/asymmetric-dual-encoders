@@ -107,33 +107,31 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-Document embeddings are stored and reused across searches, amortizing
-their encoding cost, while every uncached query pays for encoding.
-Choosing the query encoder independently could reduce recurring cost
-while preserving an existing index.
+A dense index encodes each document once; its query encoder runs on
+every uncached search. Replacing only the query encoder keeps the stored
+vectors, graph, and quantized codes, and can cut median CPU
+query-encoding time from 31.6 ms to 0.044 ms. How much quality survives,
+and what the replacement costs at search time, depends on the index it
+inherits.
 
-We fit small query encoders, called students, to reproduce a model's
-query vectors across 26 embedding models. In our registered comparison,
-the best-retrieving model produces the worst token-table student; both
-it and the best table's model use 1024 dimensions. Embedding
-dimensionality and the model's measured retrieval score jointly predict
-student quality in an exploratory analysis; a prospective test supports
-this for the transformer student. Cheaper queries also cost more graph
-search: in the exploratory comparison, table students need a median two
-to four times the graph-search breadth to match the model's own
-exact-neighbor recovery. The deficit recurs in a jointly trained lookup
-model.
+Among ten registered embedding models, the best retriever produced the
+worst token-table student, a smaller query encoder fitted to reproduce
+the model's own query vectors. Across 26 models, embedding
+dimensionality and measured retrieval score jointly predict student
+quality, and a prospective test supports this for a transformer student.
+Over unchanged HNSW graphs, fitted token tables need a median two to
+four times the search breadth to recover the same fraction of their own
+exact neighbors. The deficit recurs in a jointly trained lookup model,
+and the index's own queries flag where it is largest.
 
-Constella adds the compact transformer Nano and token table Zero to the
-index of Stella, a pretrained English embedding model, without document
-re-encoding or collection rebuilding. They retain 90.5\% and 81.4\% of
-Stella's exact BEIR-15 nDCG@10 in the registered evaluation. An
-exploratory selection on a binary-quantized million-passage diagnostic
-reduces encoding plus search from 21.3 ms for Stella to 1.11 ms for Zero
-at unequal relevance. Nano's final optimization took 57.3 A100 hours.
-One-time construction can be amortized over recurring savings when
-retained relevance meets the workload's requirements, with query compute
-chosen per request.
+On the index of Stella, a 400-million-parameter English embedding model,
+two students were added without re-encoding a document: the
+34.5-million-parameter transformer Nano and the token table Zero. They
+retain 90.5\% and 81.4\% of Stella's BEIR-15 nDCG@10. In an exploratory
+selection on one binary-quantized collection, they bring encoding plus
+search from 21.3 ms to 2.48 ms and 1.11 ms, at lower relevance. Nano's
+final optimization took 57.3 A100 hours, and the same index then lets
+each request choose its encoder.
 
 \subsection{1. Introduction}\label{introduction}
 
