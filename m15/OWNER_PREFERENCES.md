@@ -171,3 +171,14 @@ These checks operationalize the owner's readability and evidence concerns; they 
 - **2026-10-02, v20 direction.** Owner explicitly keeps the current title after the full-paper reviews and authorizes implementing their changes. Preserve an interesting, value-dense research paper: foreground surprising and useful findings, strengthen their connections, and trim secondary detail. Do not make accuracy improvements into a bland inventory or repeated defensive qualifications. Title reconsideration is closed unless the owner reopens it.
 
 - **2026-10-02, training-cost visibility.** Owner explicitly requests that both released models' training/construction costs remain visible in the main paper, linked to the possibility of amortizing one-time construction over recurring query-compute savings. Keep this practical motivation in subsequent revisions. Distinguish measured Nano optimization from historical Zero/target-preparation estimates and screening fits; preserve full-build exclusions and retained-relevance requirements. Owner authorizes the balanced framing discussed in this session, not an automatic-payback claim.
+
+### 2026-10-02, narration and terminology
+
+Owner approves the following recommendations for subsequent revisions:
+
+- **Preserve the surprising result, simplify the machinery around it.** Let concrete, consequential findings carry the argument; explain their surprise and scope without burying them in procedural detail. Maintain scientific substance and value density.
+- Lead findings passages with the finding and why it matters. Introduce methods and settings where they help the reader assess the evidence; retain the detail needed for reproducibility in the appropriate methods or appendix location.
+- Use consistent names for measured quantities. Avoid alternating among “space quality,” “index quality,” and “encoder quality” when the intended quantity is the original query path's measured retrieval score.
+- Put concise qualifications beside the claims they constrain, and develop their implications in the discussion. Avoid repeatedly restating defensive caveats; retain adverse results and material uncertainty.
+- Keep established IR terms such as nDCG, distillation, ridge regression, and HNSW. Define compressed shorthand such as recovery gap, held-out prediction, and loss multiplier at first use, then use it consistently.
+- Scrutinize internal experiment labels such as E24, H2d, and NDO-3 in reader-facing prose. Prefer meaningful descriptions where labels provide only project navigation; preserve identifiers in evidence records and where they materially help traceability.

@@ -1009,3 +1009,8 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - §6 now presents measured Nano final optimization (57.3 A100 hours, about $95 at recorded rate) alongside historical Zero estimates (20 minutes with prepared targets, plus 8–12 hours for new-space target encoding). The separate screening fits move out of this comparison to the existing Appendix B accounting.
 - Connects one-time construction to recurring encoding-plus-search costs, conditional on retained relevance meeting application needs. Preserves preparation/search/evaluation/engineering exclusions; no complete-build price, GPU/CPU payback conversion, or production return claim. Existing evidence only, no experiments or result edits. Remains v20 as a focused reading revision.
 - Validation: manuscript changes confined to the cost paragraph; all scientific tables unchanged. Rebuilt the 22-page PDF, visually checked the revised section and page layouts, reduced excess Table 2 space reservation to keep the cost argument and table together, and passed shell syntax/whitespace checks with no TeX warnings.
+
+### 2026-10-02: accepted narration and terminology preferences
+
+- Owner approves the proposed narration/jargon recommendations. Recorded in OWNER_PREFERENCES.md: preserve surprising results while simplifying their explanation, lead findings with significance, name measured quantities consistently, keep qualifications local, define useful IR shorthand, and reduce internal experiment labels in reader-facing prose.
+- Preferences-only update; manuscript and PDF remain v20 unchanged. These recommendations are now owner-approved guidance for future revisions.
