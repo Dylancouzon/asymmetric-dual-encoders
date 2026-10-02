@@ -183,6 +183,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, FastEmbed availability assumption
+
+- If the paper references the FastEmbed integration, assume the PyPI release containing the Constella registrations ships by the paper's release date (owner). Verify the released version before publication.
+
 ### 2026-10-02, gap review decisions
 
 - **Talk about what the work found and built, not what it did not do or what did not work.** The owner declined the failed static-projection shortcut (L33) for this reason. Discretionary failure narratives and unrun alternatives stay out of the paper. Registered unfavorable outcomes remain reported in full where CLAUDE.md requires them (the registered contrasts, the held-out four, Zero's failed Holm BM25 test).
