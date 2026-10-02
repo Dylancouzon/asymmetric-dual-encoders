@@ -2,12 +2,12 @@
 
 ## What is ready to review
 
-The current manuscript is **v18, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
+The current manuscript is **v19, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
 frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
 
-The owner is reading and revising v18 on 2026-10-02. The abstract, production motivation, and
+The owner is reading and revising v19 on 2026-10-02. The abstract, production motivation, and
 narration have changed since the recorded reviewer sign-offs. Use the latest commit for the text
 under discussion; [LOG.md](LOG.md) records these revisions and their checks.
 
@@ -76,7 +76,7 @@ Coworkers who want to change the repo should use individual branches and PRs bas
 
 The following prompt is a starting point; replace the focus with the question under discussion.
 
-> Review the Constella v15 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
+> Review the Constella v19 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
 > instructions-m15.md, m15/REVIEW_GUIDE.md, m15/OWNER_PREFERENCES.md, and the relevant section of
 > m15/PAPER.md. Use m15/PAPER_EVIDENCE_MAP.md to select exact result/method files. Use
 > m15/EDITORIAL_RATIONALE.md and m15/LEARNINGS.md if challenging the direction or selection across
@@ -129,3 +129,7 @@ Andrey review (links, figures, claims; nothing essential), Astra narration round
 (`REVIEWS/2026-10-02-sol-reader-v18.md`; four rewrites, number set unchanged), humanizer, and the
 voice-contract check (4,195 main-text prose words; both reviewers judged no further cut essential).
 A coworker review starts at the PDF and `LOG.md` "2026-10-02: v18, cuts and final gates".
+
+## Added 2026-10-02: v19 full-paper independent reviews
+
+Current v19 includes owner-directed architecture/training exposition, introduction framing and clarity/table revisions. Parallel GPT-6-Astra and GPT-6.1-Sol reports and synthesis are in [v19 synthesis](REVIEWS/2026-10-02-v19-full-synthesis.md). Both distinguish a coherent experiment from an under-explained narrative; recommendations remain pending. The manuscript snapshot is 68509e7, not the subsequently committed review-document snapshot. Prior v18 sign-offs do not certify v19.

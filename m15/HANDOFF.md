@@ -177,3 +177,9 @@ adversarial correctness reviewer, per mandate and owner permission.
 - PAPER.md is now draft v19 after owner-directed clarity work. §4.4/Table C separates candidate pools, explains the score gap and three selection rules, and distinguishes ranking from top-choice success. Chosen names remain in Appendix B.
 - Tables use shorter labels; Table D separates relevance and neighbor recovery. Table F's within-workload correlations remain in Appendix C. Preserve the data and readable column widths rather than reverting to text-heavy combined cells. Search measures and validation splits are explained before results.
 - This is a prose/layout revision with no new experiments or whole-paper sign-off. The older signed v18 snapshot is distinct; current preferences and detailed dispositions are in OWNER_PREFERENCES.md and LOG.md.
+
+## Update 2026-10-02: independent v19 full-paper reviews
+
+- Parallel fresh-context GPT-6-Astra and GPT-6.1-Sol read the entire v19 at 68509e7. Reports and synthesis: REVIEWS/2026-10-02-{astra,sol61}-v19-full.md and REVIEWS/2026-10-02-v19-full-synthesis.md.
+- Both find a coherent research object but want clearer synthesis and Constella's illustrative role. Outcome/scope mismatches and omitted 1M diagnostic explanation need repair. Optional cuts and a title disagreement remain proposals, not owner decisions.
+- Manuscript/PDF unchanged by review. Await reading discussion before implementing the recommended revision; no new experiment requirement or publication sign-off.
