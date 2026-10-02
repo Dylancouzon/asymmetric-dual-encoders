@@ -161,3 +161,5 @@ These checks operationalize the owner's readability and evidence concerns; they 
   paper. Astra holds narration authority, Fable technical authority, as equals; the two settle the
   cut list and the final text without a further owner round. Everything is logged, committed, and
   pushed before the session closes; open forks are reported to him at the end.
+
+- **2026-10-02, introduction framing.** Owner approves opening with the different computational roles of query and document encoders and the question of choosing a query encoder independently of the document representation. Do not assume the reader already plans to reduce query cost or migrate an index. Keep migration as a concise practical consequence after the research motivation, rather than the opening premise. Query efficiency remains central; no claim of universal applicability.

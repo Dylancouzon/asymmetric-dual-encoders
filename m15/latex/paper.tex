@@ -140,21 +140,23 @@ translates into cheaper retrieval.
 
 \subsection{1. Introduction}\label{introduction}
 
-In a production retrieval system, reducing query compute by replacing
-the embedding model can turn an optimization into an index migration.
-Changing the document representation requires re-embedding the corpus
-and rebuilding the vector index. Downtime can be avoided, but keeping
-retrieval available during the transition can require old and new vector
-indexes to coexist and ingestion to keep both representations current
-until traffic switches {[}Index migration{]}. Backfill and index
-construction then add compute, storage, and I/O demands alongside live
-queries and updates. The migration also needs relevance validation, a
-coordinated query-encoder switch, and a rollback path. Its duration and
-cost depend on corpus token volume, encoding throughput, index-building
-capacity, and the rate of incoming updates. Replacing only the query
-encoder with a compatible student preserves the stored document vectors
-and avoids that migration; its effects on retrieval quality and search
-effort still need to be measured.
+The query and document encoders in dense retrieval serve different
+computational roles. Document embeddings are stored and reused across
+searches; query embeddings are computed as requests arrive. A smaller
+query encoder could exploit this asymmetry while searching the same
+document vectors. Its usefulness depends on both the retrieval quality
+it preserves and the search effort its embeddings require.
+
+An existing document index constrains this choice: a replacement query
+encoder must produce vectors compatible with the stored document
+embeddings. Changing the document representation instead requires corpus
+re-embedding and index rebuilding; keeping retrieval available during
+the transition can require parallel indexes and ingestion pipelines,
+additional infrastructure load, relevance validation, and a rollback
+path {[}Index migration{]}. Query-only replacement preserves the stored
+vectors, making it possible to study how independently the query encoder
+can be chosen and what properties of the index govern the resulting
+trade-off.
 
 \textbf{Query-side distillation} trains a student encoder to reproduce
 the frozen encoder's query vectors and search the frozen document

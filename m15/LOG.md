@@ -969,3 +969,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Counts and training settings checked against named M7 and M13 receipts; generation and screening details checked against M10 source. Evidence links are recorded in PAPER_EVIDENCE_MAP.md. Prepared raw training corpora are not bundled: source/file manifests describe them, while fitted-screen inputs still require archival work.
 - No retraining, experiments, protected raw reads, result changes, or publication. Owner preferences recorded durably. PDF build and visual inspection are the final validation for this prose batch.
 - Final validation: rebuilt the 21-page PDF, inspected all page contact sheets and full-size revised methods/objective pages, verified unchanged abstract and scientific tables, and passed git diff --check.
+
+### 2026-10-02: owner reading feedback, introduction premise
+
+- Owner questions whether the opening assumes an immediate query-cost or reindexing concern. Approved reframing around the computational asymmetry and how independently the query encoder can be chosen from the document representation.
+- Introduction now motivates quality and search effort before introducing the existing-index constraint. Migration mechanics are compressed to one cited sentence; the research motivation precedes the operational use case. Abstract, methods, findings, scientific tables and references are unchanged. Durable preference recorded.
+- Validated that only the introduction opening changed in the manuscript; rebuilt the 21-page PDF and inspected all pages plus the opening at full size. Whitespace checks passed. Still draft v18, with post-sign-off revisions identified by git commits. No experiment or result edits.

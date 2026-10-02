@@ -167,3 +167,7 @@ adversarial correctness reviewer, per mandate and owner permission.
 - Read OWNER_PREFERENCES.md before further writing. Fresh-context GPT-6-Astra, explicitly selected after Fable proved unavailable, reviewed the construction prose; bounded scope and dispositions are in REVIEWS/2026-10-02-astra-construction-writing.md. This does not renew a whole-paper sign-off.
 - Corrected fitted-table pooling and initialization against code. Zero's real two-phase objective supersedes the historical L2 description for manuscript purposes. A separate future release-card correction is needed in m11/release/MODEL_CARD.md; no model card was changed or published in this batch.
 - Prepared training texts are described by source/file manifests, not bundled. Fit-list and timing-passage identifier archival work remains open before circulation. No new measurements or result payload changes.
+
+## Update 2026-10-02: introduction premise
+
+- Owner-approved introduction now starts with query/document computational roles and independent query-encoder choice. Migration is concise supporting context after the scientific motivation. Preserve this order in future iterations; OWNER_PREFERENCES.md records the direction.
