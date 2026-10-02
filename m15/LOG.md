@@ -1039,3 +1039,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Removed repeated statements only: the shared-index claim kept in the abstract, introduction, Section 6, and the Discussion's settled answer; the Discussion findings recap, related-work previews, duplicated recipe-difference paragraph, Section 5 transitions, and repeated Section 6 timing caveats cut. Round 8 restored Table 1's interpretation, the figure and table references, Section 6's capability sentence, and the Discussion premises that the first cut dropped. The abstract defines "student" once.
 - Main-text prose 3,800 to about 3,165 words; PDF 14 pages. Checks: no number added or dropped relative to v21 with Astra's fixes; all six Astra fixes present; registered/exploratory labels intact; humanizer scan clean; no em dashes. No new Astra round: the pass removed text and changed no claim.
 
+### 2026-10-02: v21.1 redone by sentence deletion
+
+- Owner: Sol's leaning pass (afd7f48) compressed sentences until they were barely English ("We fit students, small query..."); the request was to remove duplication, not half of each sentence. Claude had checked numbers and labels but not readability before committing.
+- Redone from 4b29847 (v21 with Astra's fixes) by deleting whole repeated sentences and one recap paragraph only, plus the two requested rewrites (the awkward strongest/weakest sentence and the abstract's definition of "student") and figure/table references. Every remaining sentence keeps its v21 wording.
+- Main-text prose about 3,800 to 3,470 words. Numbers and appendices unchanged from 4b29847; Astra fixes intact.
+- Lesson for later passes: a leaning pass removes repeated sentences; it never compresses the sentences that remain.
+
