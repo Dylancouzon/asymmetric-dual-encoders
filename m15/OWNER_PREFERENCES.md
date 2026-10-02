@@ -183,6 +183,13 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, restoring cut material and review order
+
+- **Restore only what adds.** When reviewing material cut from earlier drafts, restore an idea only if it adds to the paper for the reader; "if something doesn't necessarily add to the paper, it doesn't have to be put back." Owner kept four restorations from the v20 cut list: static-embedding prior art (required), Zero's word-order and per-dataset failure pattern, the retention context of methods that train their own document tower, and the bge-small backbone overlap. Declined: development-screen correlations, hybrid latency, head fit times, and the margin router.
+- **Static-embedding prior art stays.** Model2Vec and static sentence embeddings are cited beside pyNIFE in Related work.
+- **Plain, concrete wording in openings.** The owner flagged "The strongest original query path need not yield the strongest cheap student" as weirdly formulated. In the abstract and section openings, state the concrete result in ordinary words (the embedding model that retrieves best with its own query encoder) instead of project shorthand ("original query path", "cheap student") or hedged negations ("need not").
+- **Correctness review after a rewrite.** After a Codex-written revision, the owner asked for a separate GPT-6-Astra correctness review; the writer's sign-off does not count as independent.
+
 ### 2026-10-02, leaning means removing duplication
 
 - Owner rejected a leaning pass that compressed sentences until they were barely English. "Leaner" means deleting repeated statements; the sentences that remain keep complete, readable grammar. Read the result as prose, not only for numbers and labels, before accepting a cut.
