@@ -136,3 +136,16 @@ The required clean-four/all-six contrasts, held-out four, failed Holm BM25 test,
 6. **Fixed.** “At most 0.005” includes the smaller query-length routing gains without changing the conclusion.
 
 **No fix introduced a new correctness error.** This assessment covers the supplied diff against the previously reviewed text and receipts.
+## Focused check after the v21.1 changes
+
+**P2: The restored gte-small retention has an ambiguous subject and denominator.**
+
+> “Its head student retains 1.008 of bge-small’s original retrieval score, and gte-small, nearly a linear image of the backbone, retains 0.978.”
+
+The second ratio describes **gte-small’s fitted head student relative to gte-small’s own retrieval score**, not gte-small relative to bge-small. The preceding explicit bge-small denominator makes the compressed continuation ambiguous.
+
+Evidence: `m15/EVIDENCE.md`, C16, reports gte-small head nDCG@10 of 0.4733 against its own 0.4838, giving 0.978 retention.
+
+**Fix:** “The bge-small head student retains 1.008 of bge-small’s own retrieval score; the gte-small head student retains 0.978 of gte-small’s own score.”
+
+Otherwise, I found nothing essential in the supplied changes. The restored numbers match v20 and the checked receipts; the terminology replacements preserve the measured references; removing the retrospective validation does not remove a required test. Required disclosures and the six previous fixes remain intact.

@@ -183,6 +183,12 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, gap review decisions
+
+- **Talk about what the work found and built, not what it did not do or what did not work.** The owner declined the failed static-projection shortcut (L33) for this reason. Discretionary failure narratives and unrun alternatives stay out of the paper. Registered unfavorable outcomes remain reported in full where CLAUDE.md requires them (the registered contrasts, the held-out four, Zero's failed Holm BM25 test).
+- Approved: remove the retrospective ten-to-16 validation from Section 4; the hash-committed prospective test carries the forecast claim. Not approved: the inference-free sparse Related work sentence, the fusion candidate-depth reversal.
+- **Terminology pass without jargon.** Replace project shorthand with plain words (for example, the model's own query encoder instead of "original query path"); never compress sentences and never introduce new specialist terms.
+
 ### 2026-10-02, restoring cut material and review order
 
 - **Restore only what adds.** When reviewing material cut from earlier drafts, restore an idea only if it adds to the paper for the reader; "if something doesn't necessarily add to the paper, it doesn't have to be put back." Owner kept four restorations from the v20 cut list: static-embedding prior art (required), Zero's word-order and per-dataset failure pattern, the retention context of methods that train their own document tower, and the bge-small backbone overlap. Declined: development-screen correlations, hybrid latency, head fit times, and the margin router.

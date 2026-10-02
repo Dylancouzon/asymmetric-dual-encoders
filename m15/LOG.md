@@ -1052,3 +1052,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Owner declined to restore: development-screen correlations, hybrid latency, head-student fit times, and the margin router. They add nothing the paper's argument needs.
 - Sol wrote the four additions; Claude read them as prose and fixed placement and two sentences. All numbers from v20. Main-text prose about 3,620 words; PDF rebuilt.
 
+### 2026-10-02: v21.1, gap review and terminology pass
+
+- Owner asked for a full review against everything unused. Fresh GPT-6.1-Sol review and Claude's own pass covered L01 to L35 and the editorial alternatives (Sol report in scratch, summarized here). Owner decisions: remove the retrospective ten-to-16 validation (done by sentence deletion); decline the static-projection shortcut (owner prefers not to discuss what was not done or did not work), the inference-free sparse sentence, and the fusion depth reversal. Preferences logged in OWNER_PREFERENCES.md.
+- Terminology pass by Sol under owner rules (no new jargon, no compression, sentence count unchanged at 215): space to embedding model or index, original query path to the model's own query encoder, roster to model list, six-set and checkpoint resamples to plain words. Claude smoothed ten mechanical swaps and the Table 1 caption.
+- Astra focused check of all changes since 4b29847: one P2 (ambiguous denominator in the restored gte-small retention sentence), fixed; nothing else essential. Numbers unchanged against v20; PDF rebuilt.
+
