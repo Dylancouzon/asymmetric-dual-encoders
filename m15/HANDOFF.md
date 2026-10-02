@@ -189,3 +189,7 @@ adversarial correctness reviewer, per mandate and owner permission.
 - Owner keeps the title and authorizes review fixes while preserving interest and value density. Title remains unchanged; do not reopen absent new owner direction.
 - v20 connects exact-quality and graph-search studies, gives Constella its separate trained-illustration role and ends with a result-based discussion. RQ/predictor outcomes now align. MS MARCO diagnostic scope and clean-four sensitivity are explicit.
 - Table A is now Appendix B's Table B1; all scientific table data preserved. Secondary selection regressions moved, disconnected fragments trimmed. Complete dispositions: REVIEWS/2026-10-02-v20-dispositions.md. This is an implemented prose revision, not a new full-paper sign-off. Existing archival/input limitations remain.
+
+## Update 2026-10-02: construction-cost visibility
+
+- Owner wants both released models' construction costs in the main narrative, linked to amortizing construction over recurring query savings. §6 now pairs measured Nano optimization with estimated Zero retraining and new-space target encoding; full-build exclusions and relevance condition remain. Read the durable preference before trimming this argument. Focused revision within v20; no new measurements.

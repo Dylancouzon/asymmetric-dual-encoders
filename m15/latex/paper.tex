@@ -881,13 +881,15 @@ collections, allowing each request to choose a compatible encoder.
 Appendix A gives the per-dataset results and selected-reference
 comparisons.
 
-\textbf{Construction cost.} The cross-space table screening fit took
-four to seven A100 minutes per encoder, including query encoding except
-for Stella's cached targets. Released Zero uses the additional training
-phases in Section 3.5. Nano's final optimization took 57.3 A100 hours,
-about \$95 at the recorded rental rate, excluding data preparation,
-recipe search, failed runs, and evaluation. Appendix B gives the
-component costs.
+\textbf{Training cost and recurring savings.} Nano's final optimization
+took a measured 57.3 A100 hours, about \$95 at the recorded rental rate.
+Zero's retraining was estimated at 20 minutes with prepared targets,
+plus 8 to 12 hours for target encoding in a new space. Preparation,
+recipe search, failed runs, evaluation, and engineering add to the full
+build. These one-time costs can be amortized over recurring query
+savings when retained relevance meets application requirements. Table 2
+reports encoding-plus-search costs; Appendix B separates release
+construction from the four-to-seven-minute screening fits.
 
 Table 2 combines separate timing measurements on the same laptop:
 encoding the 100 medium-length queries from Table 1, and searching a
@@ -899,7 +901,7 @@ vectors at settings within 1\% of each path's own exact score. Summing
 the medians and scaling to one million queries gives the component costs
 below.
 
-\Needspace{14\baselineskip}
+\Needspace{11\baselineskip}
 \textbf{Table 2.} Encoding-plus-search hours per million queries on the
 measurement laptop, extrapolated from Table 1 and Appendix C medians.
 Search settings keep each path within 1\% of its own exact score.
