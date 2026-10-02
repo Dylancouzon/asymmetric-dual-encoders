@@ -1058,3 +1058,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Terminology pass by Sol under owner rules (no new jargon, no compression, sentence count unchanged at 215): space to embedding model or index, original query path to the model's own query encoder, roster to model list, six-set and checkpoint resamples to plain words. Claude smoothed ten mechanical swaps and the Table 1 caption.
 - Astra focused check of all changes since 4b29847: one P2 (ambiguous denominator in the restored gte-small retention sentence), fixed; nothing else essential. Numbers unchanged against v20; PDF rebuilt.
 
+### 2026-10-02: v22, findings-first with the existing-index framing
+
+- Owner: v21.1 correct but not exciting; stay a whitepaper, not an article; bring back the v17/v18 existing-index framing (lower cost and higher speed without re-ingesting). Plan agreed with Astra (REVISION_PLAN_V22.md).
+- Sol wrote v22 (rounds 11 and 12): findings-first abstract and introduction, changeability sentence, a three-item contributions list with finding headlines and one qualifier each, Section 4 framed as what an existing index predicts, Section 6 restoring the no-re-encoding/no-rebuild statement and the binary-collection latencies (21.3, 2.48, 1.11 ms at nDCG@10 0.7226, 0.6893, 0.6116; exploratory selection, unequal relevance), FastEmbed in the artifact statement. Round 12 removed the defensive qualifier stacking from the abstract and contributions.
+- Claude added the page-1 teaser f0_teaser (make_figures.py, from m15_e19_head_screen.json and m15_e2_ann_msmarco1m.json binary rows), with finding titles on both panels, and moved it so it floats to the top of page 2. Figures renumbered.
+- Checks: new numbers only the latencies and nDCG values, recomputed by Claude from the receipt; Astra found no essential issue; no em dashes; PDF 16 pages.
+

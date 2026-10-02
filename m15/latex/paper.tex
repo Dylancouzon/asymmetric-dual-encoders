@@ -107,31 +107,33 @@ over Frozen Indexes}
 
 \subsection{Abstract}\label{abstract}
 
-Document embeddings are reused across searches, amortizing
-document-encoding cost, while every uncached query pays for encoding.
-Choosing a cheaper query encoder independently of the stored document
-representation could reduce that recurring cost.
+Document embeddings are stored and reused across searches, amortizing
+their encoding cost, while every uncached query pays for encoding.
+Choosing the query encoder independently could reduce recurring cost
+while preserving an existing index.
 
-We fit two kinds of replacement query encoder, which we call students,
-across 26 embedding models: a table that averages learned token vectors,
-and a frozen transformer with a learned projection. In our registered
-comparison, the embedding model that retrieves best with its own query
-encoder produces the worst token-table student. The models' own
-retrieval scores alone scarcely rank the students; after accounting for
-embedding dimensionality, the expected positive association returns,
-while higher dimensionality predicts weaker students. Cheap query
-vectors also change search: table students need median graph-effort
-multipliers of two to four to recover the same fraction of their own
-exact neighbors. The deficit recurs in a jointly trained lookup model.
+We fit small query encoders, called students, to reproduce a model's
+query vectors across 26 embedding models. In our registered comparison,
+the best-retrieving model produces the worst token-table student; both
+it and the best table's model use 1024 dimensions. Embedding
+dimensionality and the model's measured retrieval score jointly predict
+student quality in an exploratory analysis; a prospective test supports
+this for the transformer student. Cheaper queries also cost more graph
+search: in the exploratory comparison, table students need a median two
+to four times the graph-search breadth to match the model's own
+exact-neighbor recovery. The deficit recurs in a jointly trained lookup
+model.
 
-Constella demonstrates the payoff over the frozen document index of
-Stella, a pretrained English embedding model. Its compact transformer
-Nano and token table Zero retain 90.5\% and 81.4\% of Stella's
-exact-search nDCG@10 on BEIR-15, with separately measured CPU encoding
-medians of 2.25 ms and 0.044 ms. Nano's final optimization took 57.3
-A100 hours. This one-time construction can be amortized over recurring
-savings when retained relevance suffices, while the shared index makes
-query compute selectable per request.
+Constella adds the compact transformer Nano and token table Zero to the
+index of Stella, a pretrained English embedding model, without document
+re-encoding or collection rebuilding. They retain 90.5\% and 81.4\% of
+Stella's exact BEIR-15 nDCG@10 in the registered evaluation. An
+exploratory selection on a binary-quantized million-passage diagnostic
+reduces encoding plus search from 21.3 ms for Stella to 1.11 ms for Zero
+at unequal relevance. Nano's final optimization took 57.3 A100 hours.
+One-time construction can be amortized over recurring savings when
+retained relevance meets the workload's requirements, with query compute
+chosen per request.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -145,6 +147,28 @@ vectors remain compatible with the documents {[}QED, EmbedDistill,
 LEAF{]}, separating the representation retained in the index from the
 computation used to search it.
 
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={(a) Among the ten registered models, gte-large retrieves best with its own query encoder but produces the worst token table, while Stella produces the best table; both use 1024 dimensions. (b) Encoding plus search medians for Stella, Nano, and Zero on one binary-quantized, positive-preserving one-million-passage MS MARCO diagnostic, at the fastest setting within 1\% of each encoder's own exact score. The settings are an exploratory selection from the registered sweep. Encoding and search were measured in separate phases, and absolute relevance is unequal.}]{figures/f0_teaser.pdf}}
+\caption{(a) Among the ten registered models, gte-large retrieves best
+with its own query encoder but produces the worst token table, while
+Stella produces the best table; both use 1024 dimensions. (b) Encoding
+plus search medians for Stella, Nano, and Zero on one binary-quantized,
+positive-preserving one-million-passage MS MARCO diagnostic, at the
+fastest setting within 1\% of each encoder's own exact score. The
+settings are an exploratory selection from the registered sweep.
+Encoding and search were measured in separate phases, and absolute
+relevance is unequal.}
+\end{figure}
+
+The stored document vectors support the graph, quantized
+representations, and downstream uses of those vectors. A compatible
+replacement query encoder can search these assets without changing them.
+Changing document encoders requires corpus re-embedding and index
+rebuilding; maintaining availability during migration can require
+parallel indexes and ingestion pipelines, extra infrastructure load,
+relevance validation, and rollback {[}Index migration{]}.
+
 \textbf{Constella} makes that choice concrete. It consists of two query
 encoders aligned to the 1024-dimensional document embeddings of
 \textbf{Stella}, the pretrained English model stella\_en\_400M\_v5
@@ -155,35 +179,47 @@ provide three query-compute budgets over identical document vectors. A
 request can select an encoder without changing the document
 representation.
 
-We study what this separation gives and what it costs through two
-empirical questions and a demonstrated capability. First, what
-exact-search quality can a linearly fitted query student recover from a
-frozen index, and which properties predict it? Second, how much
-additional graph-search effort does query replacement require, and can
-that penalty be predicted? The study across embedding models fits
-inexpensive students, evaluates their relevance by exact search, then
-searches their queries over unchanged graphs. Constella combines the
-resulting considerations with separately trained encoders: their
-construction costs and their recurring encoding and search costs.
+We fit two kinds of student across 26 embedding models: a table that
+averages learned token vectors, and a frozen transformer with a learned
+projection. Each model retains its own document index. We measure what
+the existing document representation and the model's baseline retrieval
+predict about student quality, then measure the search consequences over
+unchanged graphs. Constella demonstrates the resulting choices with
+separately trained encoders, accounting for their construction costs and
+recurring encoding and search costs.
 
-In our registered comparison, gte-large-en-v1.5 has the highest
-retrieval score with its own query encoder but the lowest fitted-table
-score. Across the broader model list, accounting for dimensionality
-reveals the positive quality association hidden in the pooled
-comparison. That improves prediction across held-out families, although
-directly measuring student development retrieval makes a better
-selection from the original model list. Query replacement also changes
-graph search: token-table queries recover fewer exact neighbors at fixed
-effort for every measured model on two of three corpora, and the deficit
-recurs in a lookup query encoder trained jointly with its document
-tower.
+The study establishes three findings:
 
-Keeping the document vectors preserves an asset that would otherwise
-need replacement. Changing document encoders requires corpus
-re-embedding and index rebuilding; maintaining availability during
-migration can require parallel indexes and ingestion pipelines, extra
-infrastructure load, relevance validation, and rollback {[}Index
-migration{]}.
+\begin{itemize}
+\tightlist
+\item
+  \textbf{The best retriever can produce the worst cheap query encoder.}
+  In the ten-model registered comparison, the best-retrieving gte-large
+  produces the worst table and Stella the best, both at 1024 dimensions.
+  The exploratory analysis finds that dimensionality and measured
+  benchmark score jointly predict fitted-student quality before a
+  candidate is fitted. A prospective test with predictions committed
+  before fitting supports this for the transformer student (+0.86
+  {[}+0.33, +1.00{]}); the table result is uncertain.
+\item
+  \textbf{Cheaper queries make the unchanged graph work harder.} In the
+  exploratory comparison, fitted tables need a median two to four times
+  the graph-search breadth (\texttt{ef}) to match the model's own
+  exact-neighbor recovery. A distance ratio computed from the model's
+  own queries predicts recovery deficits at fixed effort without
+  relevance labels or a fitted student. The deficit also recurs in
+  LightRetriever's jointly trained lookup query encoder.
+\item
+  \textbf{An existing index can serve three query budgets without
+  re-ingestion.} Nano and Zero were added to Stella's populated
+  collections without document re-encoding or collection rebuilding. On
+  one binary-quantized million-passage MS MARCO diagnostic, encoding
+  plus search takes 21.3 ms for Stella, 2.48 ms for Nano, and 1.11 ms
+  for Zero, at nDCG@10 of 0.7226, 0.6893, and 0.6116, respectively, an
+  exploratory selection at each encoder's fastest setting within 1\% of
+  its own exact score (Figure 1). Nano's final optimization took 57.3
+  A100 hours; the fitted screens take minutes.
+\end{itemize}
 
 \subsection{2. Related work}\label{related-work}
 
@@ -303,16 +339,18 @@ hypothesis was developed after seeing the original 26 embedding models;
 its prospective test committed predictions by hash before fitting new
 students.
 
-\subsection{4. Quality: what the document embedding model
-predicts}\label{quality-what-the-document-embedding-model-predicts}
+\subsection{4. Quality: what an existing index
+predicts}\label{quality-what-an-existing-index-predicts}
 
-The initial hypothesis was that stronger retrieval with the model's own
-query encoder would produce stronger fitted students, so that the
+An existing index fixes the document representation, while its
+dimensionality and the model's measured baseline retrieval are available
+before any student is fitted. We initially hypothesized that stronger
+baseline retrieval would predict stronger fitted students, so that the
 best-retrieving embedding model would yield the best student. The
 registered comparison reverses that selection rule: gte-large-en-v1.5
 scores 0.5970 but yields the weakest registered table at 0.2455; Stella
 scores 0.5745 and yields the strongest registered table at 0.3974.
-Across all 26 embedding models (Figure 1), retrieval scores of the
+Across all 26 embedding models (Figure 2), retrieval scores of the
 models' own query encoders and their students have rank correlation
 +0.09 for both representations, with 95\% intervals from resampling the
 models of {[}−0.39, +0.52{]} for the table and {[}−0.36, +0.51{]} for
@@ -328,15 +366,15 @@ are prospective embedding models, eight for the head and seven for the
 table.}
 \end{figure}
 
-The competing hypothesis conditions on dimensionality: at a given
-embedding size, stronger embedding models should favor stronger
-students, while higher dimensionality should predict weaker students
-after accounting for the model's own retrieval quality. We model
-absolute student nDCG@10 from the model's own retrieval quality and log2
-dimensionality (Table 1). Standardized coefficients express changes in
-standard deviations of student retrieval scores per predictor standard
-deviation. Intervals use 10,000 resamples of the models; held-out
-prediction fits on eight families and predicts the ninth.
+The competing hypothesis uses both properties available for the existing
+index: at a given embedding size, higher baseline retrieval scores
+should favor stronger students, while higher dimensionality should
+predict weaker students after accounting for baseline retrieval quality.
+We model absolute student nDCG@10 from the model's own retrieval quality
+and log2 dimensionality (Table 1). Standardized coefficients express
+changes in standard deviations of student retrieval scores per predictor
+standard deviation. Intervals use 10,000 resamples of the models;
+held-out prediction fits on eight families and predicts the ninth.
 
 \Needspace{16\baselineskip}
 \textbf{Table 1.} Conditional prediction of student nDCG@10 on the six
@@ -427,7 +465,7 @@ query encoders and measures 25 models after the parity exclusion
 described in Appendix B.
 
 At \texttt{ef=64}, table students recover fewer exact neighbors (Figure
-2) for all 25 models on FiQA and TREC-COVID, and in 17 of 25 on SCIDOCS.
+3) for all 25 models on FiQA and TREC-COVID, and in 17 of 25 on SCIDOCS.
 Mean recovery gaps between students and the models' own query encoders
 are −2.9, −3.9, and −0.8 percentage points, respectively. Median
 recovery-effort multipliers are four on FiQA and TREC-COVID and two on
@@ -504,9 +542,12 @@ budgets}\label{one-index-several-query-budgets}
 
 Constella turns query-side separation into a family: Stella, Nano, and
 Zero search the same populated document collections, while providing
-different relevance and compute budgets. The family preserves the stored
-representation across these choices, so the operating policy can choose
-an encoder for each request.
+different relevance and compute budgets. Nano and Zero were added
+without document re-encoding or collection rebuilding between encoder
+batches, and all three encoders were verified against those same
+populated collections. The family preserves the stored representation
+across these choices, so the operating policy can choose an encoder for
+each request.
 
 The registered descriptive BEIR-15 evaluation measures exact quality.
 Encoding is measured separately on an Apple M5 Pro CPU with four
@@ -553,7 +594,7 @@ compatible query encoder can amortize that one-time cost through
 recurring savings, provided its retained relevance meets the workload's
 requirements.
 
-Search narrows the difference between the cheap encoders (Figure 3). On
+Search narrows the difference between the cheap encoders (Figure 4). On
 the one-million-passage MS MARCO diagnostic, with 6,980 development
 queries, uncompressed search reaches within 1\% of each encoder's own
 exact nDCG at \texttt{ef=128} for Stella, 256 for Nano, and 512 for
@@ -581,11 +622,15 @@ Dotted lines are each encoder's exact score.}
 \end{figure}
 
 The frontier depends on the collection configuration as well as the
-encoder. In an exploratory selection on one binary-quantized collection
-of the million-passage diagnostic, using that diagnostic's own encoding
-timings and the fastest settings within 1\% of each encoder's exact
-score, Zero's 63-fold encoding advantage over Nano becomes 2.2-fold
-after search, at different quality levels.
+encoder. In an exploratory selection from the registered sweep on one
+binary-quantized collection of the million-passage diagnostic, the
+fastest settings within 1\% of each encoder's own exact score give
+encoding plus search medians of 21.3 ms for Stella, 2.48 ms for Nano,
+and 1.11 ms for Zero, at nDCG@10 of 0.7226, 0.6893, and 0.6116,
+respectively. These sums use the diagnostic's own encoding timings,
+measured separately from search, and differ from the uncompressed
+extrapolated time shares above. Zero is 2.2-fold faster than Nano
+including search at these unequal quality levels.
 
 A request-context policy can select among these choices. In an
 e-commerce example, Zero could serve searches while a user types, Nano
@@ -676,7 +721,8 @@ models are \href{https://huggingface.co/Qdrant/constella-zero}{Constella
 Zero}, \href{https://huggingface.co/Qdrant/constella-nano}{Constella
 Nano}, and the
 \href{https://huggingface.co/Qdrant/stella-en-400M-v5-doc-onnx}{Stella
-document encoder}. The cleaned 337,981-query fit list and the
+document encoder}. The three encoders are available through FastEmbed,
+Qdrant's embedding library. The cleaned 337,981-query fit list and the
 one-million-passage identifier list are identified by hash but not yet
 archived. Prepared training corpora are described by source and file
 manifests.

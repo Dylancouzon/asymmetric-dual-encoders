@@ -195,3 +195,12 @@ Answer under 600 words, numbered by proposal:
 7. **Keep.** FastEmbed availability follows the owner’s publication assumption; verify the released version before publication. Link the demo externally, while retaining the paper’s settled per-request-choice explanation.
 
 Preserve the four restored passages, registered tests, disclosures, Zero’s construction estimate, and full-build exclusions. **Strongest objection:** presenting benchmark retrieval quality as an intrinsic index property would turn a bounded predictive finding into an unsupported universal claim.
+## v22 correctness check
+
+No essential P0/P1/P2 issues found.
+
+The diff follows the approved v22 plan. Numbers and evidence labels match the checked receipts; the prospective claim remains limited to the transformer student, and the binary latency comparison preserves unequal relevance and its exploratory status.
+
+The teaser’s data selection and rendered figure agree: panel (a) shows the ten registered models; panel (b) selects the fastest qualifying binary settings and correctly labels latency and relevance. Its caption supplies the required workload and timing distinctions.
+
+No required content is lost in the supplied diff.
