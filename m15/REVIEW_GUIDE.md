@@ -2,7 +2,7 @@
 
 ## What is ready to review
 
-The current manuscript is **v20, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
+The current manuscript is **v21, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
 frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
@@ -137,3 +137,7 @@ Current v19 includes owner-directed architecture/training exposition, introducti
 ## Added 2026-10-02: v20 implementation
 
 Owner keeps the title and authorizes the v19 review changes, with explicit emphasis on interest and value density. [v20 dispositions](REVIEWS/2026-10-02-v20-dispositions.md) records changes, relocations and cuts. The paper now connects the paired studies and trained illustration, aligns outcomes/claims and explains the timing diagnostic. v19 reports remain opinions about their named snapshot; no new independent sign-off is claimed.
+
+## Added 2026-10-02: v21
+
+v21 is a structural rewrite co-written with GPT-6.1-Sol under owner direction: one question on three axes, two main tables, and curated appendices. Decisions: [REVISION_PLAN_V21.md](REVISION_PLAN_V21.md). Rounds: [v21 Sol rounds](REVIEWS/2026-10-02-v21-sol-rounds.md). Material moved out of the paper stays in its named receipts and in [EVIDENCE.md](EVIDENCE.md).

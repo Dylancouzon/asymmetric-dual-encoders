@@ -152,7 +152,7 @@ These checks operationalize the owner's readability and evidence concerns; they 
   the official model card (M22), not a paper finding. (Superseded in part 2026-10-02: per-request choice of query
   path is the paper's answer to re-embedding; see "Settled answers".) (5) Philosophy: include everything that may be
   valuable and meets the criteria; reviewers decide cuts together, unless inclusion harms coherence.
-  Material cut from the body stays in appendices rather than being dropped.
+  Material cut from the body stays in appendices rather than being dropped. (Superseded 2026-10-02, see "v21 direction".)
 - **2026-10-01, round 8, title.** Owner wanted a hook that still reads as a paper and chose
   "The Index Is Fine; the Query Encoder Is the Cost: Query-Side Distillation over Frozen Document
   Vectors". Supersedes "Reducing Query Cost over a Frozen Document Index: What the Index Decides".
@@ -182,6 +182,12 @@ These checks operationalize the owner's readability and evidence concerns; they 
 ### 2026-10-02, review proposals read as benchmark expansion
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
+
+### 2026-10-02, v21 direction
+
+- Appendices must not be a sea of random tables and data either. They hold what a reader needs to reproduce the work or check the registered test; other material lives in the companion repository named by the artifact statement. Supersedes round 6 item (5)'s "material cut from the body stays in appendices".
+- The paper is too narrow-sighted on one goal or aspect. A revision must not fix that by swapping in a different single aspect. The v17 voice contract's "one thread" rule is replaced for v21 by one question with several axes, each changing a production or research decision.
+- Keep the goals in mind throughout. Codex writes and narrates v21; Claude and Codex must agree on every decision before and after writing, with as few rounds as possible and as many as the best result needs.
 
 ### 2026-10-02, narration and terminology
 
