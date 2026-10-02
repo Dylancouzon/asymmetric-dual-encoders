@@ -145,20 +145,6 @@ vectors remain compatible with the documents {[}QED, EmbedDistill,
 LEAF{]}, separating the representation retained in the index from the
 computation used to search it.
 
-\begin{figure}
-\centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={(a) Among the ten registered models, gte-large retrieves best with its own query encoder but produces the worst token table, while Stella produces the best table; both use 1024 dimensions. (b) Encoding plus search medians for Stella, Nano, and Zero on one binary-quantized, positive-preserving one-million-passage MS MARCO diagnostic, at the fastest setting within 1\% of each encoder's own exact score. The settings are an exploratory selection from the registered sweep. Encoding and search were measured in separate phases, and absolute relevance is unequal.}]{figures/f0_teaser.pdf}}
-\caption{(a) Among the ten registered models, gte-large retrieves best
-with its own query encoder but produces the worst token table, while
-Stella produces the best table; both use 1024 dimensions. (b) Encoding
-plus search medians for Stella, Nano, and Zero on one binary-quantized,
-positive-preserving one-million-passage MS MARCO diagnostic, at the
-fastest setting within 1\% of each encoder's own exact score. The
-settings are an exploratory selection from the registered sweep.
-Encoding and search were measured in separate phases, and absolute
-relevance is unequal.}
-\end{figure}
-
 The stored document vectors support the graph, quantized
 representations, and downstream uses of those vectors. A compatible
 replacement query encoder can search these assets without changing them.
@@ -176,6 +162,20 @@ token-vector table. Together with Stella's own query encoder, they
 provide three query-compute budgets over identical document vectors. A
 request can select an encoder without changing the document
 representation.
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Where query time goes when three encoders search one unchanged index. Solid bars are query encoding and hatched bars are graph search, for each encoder at its fastest setting within 1\% of its own exact score on one binary-quantized, positive-preserving one-million-passage MS MARCO diagnostic. Stella's time is almost all encoding; Zero's is almost all search, at four times Stella's ef. The values are medians on the diagnostic's own queries, with encoding and search measured separately, from an exploratory selection of the registered sweep at unequal relevance.}]{figures/f0_teaser.pdf}}
+\caption{Where query time goes when three encoders search one unchanged
+index. Solid bars are query encoding and hatched bars are graph search,
+for each encoder at its fastest setting within 1\% of its own exact
+score on one binary-quantized, positive-preserving one-million-passage
+MS MARCO diagnostic. Stella's time is almost all encoding; Zero's is
+almost all search, at four times Stella's \protect\texttt{ef}. The
+values are medians on the diagnostic's own queries, with encoding and
+search measured separately, from an exploratory selection of the
+registered sweep at unequal relevance.}
+\end{figure}
 
 We fit two kinds of student across 26 embedding models: a table that
 averages learned token vectors, and a frozen transformer with a learned

@@ -37,39 +37,28 @@ def beir_macros():
 
 
 def f0_teaser():
-    """Page-1 teaser: (a) registered reversal, (b) encode+search on one binary collection."""
-    d = R("m15_e19_head_screen.json")
-    cfg = d["configs"]
-    reg = d["rosters"]["registered_ten"]["names"]
-    fig, (a, b) = plt.subplots(1, 2, figsize=(7.2, 3.0), gridspec_kw={"width_ratios": [1, 1.15]})
-    for n in reg:
-        c = cfg[n]
-        hi = n in ("stella-400M-v5", "gte-large-en-v1.5")
-        a.scatter(c["teacher_six_macro_all6"], c["recipe1_six_table_macro_all6"], s=46 if hi else 30,
-                  zorder=3, color=C["stella"] if hi else "white", edgecolor=C["stella"], linewidth=1.3)
-    for n, label, dx, dy in (("stella-400M-v5", "Stella", -36, 4), ("gte-large-en-v1.5", "gte-large", -52, -4)):
-        c = cfg[n]
-        a.annotate(label, (c["teacher_six_macro_all6"], c["recipe1_six_table_macro_all6"]),
-                   textcoords="offset points", xytext=(dx, dy), fontsize=8, color=C["ink"])
-    a.set_xlabel("Model's own nDCG@10, six datasets")
-    a.set_ylabel("Token-table student nDCG@10")
-    a.set_title("(a) The best retriever gives the worst table", fontsize=8.5, loc="left")
-    # (b) fastest setting within 1% of each encoder's own exact score on the binary collection
+    """Page-1 figure: where each encoder's time goes on one unchanged binary collection."""
     m = R("m15_e2_ann_msmarco1m.json")
     names = (("stella-query", "Stella", "stella"), ("nano", "Nano", "nano"), ("zero", "Zero", "zero"))
+    fig, ax = plt.subplots(figsize=(6.4, 2.3))
     for i, (enc, label, key) in enumerate(names):
         ok = [r for r in m["rows"] if r["encoder"] == enc and r["quant"] == "binary1"
               and r["ann_ndcg10"] >= 0.99 * m["exact"][enc]]
         r = min(ok, key=lambda r: r["e2e_p50_ms"])
-        b.barh(i, r["e2e_p50_ms"], color=C[key], height=0.6)
-        b.text(r["e2e_p50_ms"] + 0.4, i, f"{r['e2e_p50_ms']:.2f} ms, nDCG@10 {r['ann_ndcg10']:.4f}",
-               va="center", fontsize=7.5, color=C["ink"])
-    b.set_yticks(range(3), [n[1] for n in names])
-    b.invert_yaxis()
-    b.set_xlim(0, 34)
-    b.grid(axis="y", visible=False)
-    b.set_xlabel("Encode + search p50 (ms), same binary collection")
-    b.set_title("(b) One unchanged index, three query encoders", fontsize=8.5, loc="left")
+        e, sr = m["encode_ms"][enc]["p50"], r["search_p50_ms"]
+        ax.barh(i, e, color=C[key], height=0.6)
+        ax.barh(i, sr, left=e, color="white", edgecolor=C[key], hatch="////", height=0.6, linewidth=1.0)
+        ax.text(e + sr + 0.35, i, f"{e:.2f} + {sr:.2f} ms (ef={r['hnsw_ef']}), nDCG@10 {r['ann_ndcg10']:.3f}",
+                va="center", fontsize=7.5, color=C["ink"])
+    ax.set_yticks(range(3), [n[1] for n in names])
+    ax.invert_yaxis()
+    ax.set_xlim(0, 36)
+    ax.grid(axis="y", visible=False)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(facecolor=C["muted"], label="query encoding"),
+                       Patch(facecolor="white", edgecolor=C["muted"], hatch="////", label="graph search")],
+              frameon=False, fontsize=7.5, loc="lower right")
+    ax.set_xlabel("Median time per query (ms), one binary-quantized index")
     save(fig, "f0_teaser")
 
 

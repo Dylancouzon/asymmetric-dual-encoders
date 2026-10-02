@@ -1069,3 +1069,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 
 - Owner: drop "we fit"; the abstract needs a strong hook instead of opening on the registered comparison. Claude drafted a claim-first opening (each document encoded once, the query encoder on every uncached search; replacing only the query encoder keeps the stored vectors, graph, and quantized codes and cuts median CPU encoding from 31.6 ms to 0.044 ms). Sol's polish flattened the opening, so Claude merged Claude's opening with Sol's middle. Astra: one P1 (the two-to-four multiplier is a median for fitted tables, not all cheap queries) and two P2s (uncached queries; medians), all fixed. Hook kept.
 
+### 2026-10-02: Figure 1 redesigned and placed by its text
+
+- Owner: the two teaser panels felt out of place, unrelated to the surrounding text and to each other. Panel (a) duplicated Figure 2 and was dropped. Figure 1 is now one panel showing where each encoder's time goes on one unchanged binary-quantized index (encoding plus search stacked; Stella almost all encoding, Zero almost all search at four times Stella's ef), placed directly after the introduction paragraph that presents the three encoders over one index. Components sum to the e2e medians (20.66 + 0.67, 1.61 + 0.87, 0.03 + 1.09 ms). Astra: no essential issue.
+

@@ -231,3 +231,10 @@ No required content is lost in the supplied diff.
    **Fix:** “Can cut measured median CPU encoding time from 31.6 ms to 0.044 ms.”
 
 The preserved assets, distance-ratio interpretation, Stella’s approximately 400-million-parameter description, and remaining numbers are supported.
+## Figure 1 redesign check
+
+No essential P0/P1/P2 issues found.
+
+The figure correctly stacks the separately measured encoding and search medians, with explicit component labels and a caption identifying the separate phases. Their sum is not mathematically the median of per-query totals, but the figure does not claim that identity.
+
+“Four times Stella’s `ef`” is correct: Zero uses 512 versus Stella’s 128. The component timings support “almost all encoding” for Stella and “almost all search” for Zero. The selected settings, relevance labels, and exploratory status agree with the receipts.
