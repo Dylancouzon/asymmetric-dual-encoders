@@ -183,6 +183,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, leaning means removing duplication
+
+- Owner rejected a leaning pass that compressed sentences until they were barely English. "Leaner" means deleting repeated statements; the sentences that remain keep complete, readable grammar. Read the result as prose, not only for numbers and labels, before accepting a cut.
+
 ### 2026-10-02, v21 direction
 
 - Appendices must not be a sea of random tables and data either. They hold what a reader needs to reproduce the work or check the registered test; other material lives in the companion repository named by the artifact statement. Supersedes round 6 item (5)'s "material cut from the body stays in appendices".
