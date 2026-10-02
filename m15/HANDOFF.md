@@ -160,3 +160,10 @@ adversarial correctness reviewer, per mandate and owner permission.
   removed and its argument rewritten in four paragraphs. Manuscript terminology is now embedding
   dimensionality, defined in the introduction. This revision is logged; the owner has not accepted
   the abstract merely because it was rewritten.
+
+## Update 2026-10-02: architecture and training exposition
+
+- Main methods distinguish both closed-form screen students from released Zero and Nano; Appendix B supplies their full recipes before the long encoder roster. Abstract remains the three-paragraph continuous-argument revision from commit 16de036; the older four-paragraph note above is historical.
+- Read OWNER_PREFERENCES.md before further writing. Fresh-context GPT-6-Astra, explicitly selected after Fable proved unavailable, reviewed the construction prose; bounded scope and dispositions are in REVIEWS/2026-10-02-astra-construction-writing.md. This does not renew a whole-paper sign-off.
+- Corrected fitted-table pooling and initialization against code. Zero's real two-phase objective supersedes the historical L2 description for manuscript purposes. A separate future release-card correction is needed in m11/release/MODEL_CARD.md; no model card was changed or published in this batch.
+- Prepared training texts are described by source/file manifests, not bundled. Fit-list and timing-passage identifier archival work remains open before circulation. No new measurements or result payload changes.

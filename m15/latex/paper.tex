@@ -290,27 +290,36 @@ analyses. The arctic-embed-l mean-pooling control is excluded from
 roster statistics; its published CLS pooling is used for the roster
 entry.
 
-\subsubsection{3.2 Student
-representations}\label{student-representations}
+\subsubsection{3.2 Closed-form query
+students}\label{closed-form-query-students}
 
-Two closed-form students, fitted by linear solves, produce query vectors
-at each index's dimensionality.
+The cross-model comparison uses two student representations fitted by
+ridge regression to the original encoder's query vectors. This gives
+each space the same inexpensive fitting procedure while comparing a
+static token representation with contextual transformer features. The
+original encoders and document vectors stay frozen throughout.
 
-\textbf{Table student.} Ridge regression fits one vector per WordPiece
-token to reproduce the original encoder's query vectors. At query time,
-token vectors are summed with square-root token-count weights and the
-result is normalized. Encoding costs a tokenizer pass and a vector sum.
-Initialization and solver details are in Appendix B.
+\textbf{Table student.} A 30,522-row table assigns one learned vector to
+each WordPiece token. A query is represented by the mean of its token
+vectors, including repeated tokens, followed by L2 normalization. Ridge
+regression fits the rows jointly, with a penalty toward vectors obtained
+by running individual tokens through the original encoder. Only the
+table is fitted; query encoding then consists of tokenization, lookups,
+and pooling.
 
-\textbf{Head student.} The small bge-small transformer provides frozen
-query features: the masked-mean states of layers 12, 8, and 4,
-concatenated into 1,152 dimensions plus a bias. A ridge head maps these
-features into the index's space and normalizes the output. This second
-representation tests whether the findings extend beyond the token table;
-Nano uses the same feature path.
+\textbf{Head student.} The pretrained bge-small transformer {[}BGE{]}
+provides contextual features. We mean-pool the token states from layers
+12, 8, and 4 using the attention mask and concatenate them into a
+1,152-dimensional vector. A learned linear projection with bias maps
+this vector to the document embedding dimensionality, then L2
+normalization produces the query vector. The backbone stays frozen, so
+fitting learns only the projection. Appendix B specifies both regression
+objectives and their solvers.
 
-These fits provide inexpensive baselines for the two representations.
-Section 6 evaluates the separately trained Zero and Nano models.
+These fitted students support the comparison across encoder spaces. The
+released Zero and Nano models use additional optimization and different
+training data, described below; their measured performance is reported
+in Section 6.
 
 \subsubsection{3.3 Fit data, selection, and
 scoring}\label{fit-data-selection-and-scoring}
@@ -348,14 +357,48 @@ fraction of exact neighbors recovered, and the recovery gap at
 \texttt{ef=64}. Appendix C gives the parity checks, tie rule, and tas-b
 exclusion.
 
-\subsubsection{3.5 The instance}\label{the-instance}
+\subsubsection{3.5 Constella: separately trained query encoders for one
+index}\label{constella-separately-trained-query-encoders-for-one-index}
 
-Constella is built around Stella, the \texttt{stella\_en\_400M\_v5}
-encoder, whose 1024-dimensional normalized document vectors are frozen
-throughout; Zero is a trained table student and Nano a
-34.5-million-parameter transformer on the head student's feature path,
-both trained against Stella's query vectors and evaluated on BEIR-15 by
-exact search (Section 6, Appendix A).
+Constella supplies two query encoders for the 1024-dimensional document
+embeddings of \texttt{stella\_en\_400M\_v5} {[}Stella{]}. Stella
+supplies fixed training targets and encodes the documents used for
+retrieval. Zero and Nano learn different query representations
+compatible with that space.
+
+\textbf{Zero: a trained token table.} Zero learns one vector and one
+scalar weight per WordPiece token. Its first training phase combines
+agreement with Stella's query vectors and matching Stella's score
+distribution over candidate documents. A second, contrastive phase
+trains the query vectors to rank relevant documents above negatives,
+using frozen Stella document vectors. At export, scalar weights are
+folded into the table rows and the rows are quantized to int8. The
+served encoder pools token vectors with square-root count weights: a
+token occurring \(c\) times contributes \(\sqrt{c}\) times its stored
+vector. The pooled vector is L2-normalized. This representation gives
+each token the same vector in every query, trading contextual
+computation for lookup and pooling.
+
+\textbf{Nano: a jointly optimized transformer and projection.} Nano
+starts from the 12-layer bge-small transformer and concatenates the
+384-dimensional token states from layers 12, 8, and 4. A linear
+projection with bias maps the resulting 1,152 features to Stella's 1,024
+dimensions; attention-masked mean pooling and L2 normalization produce
+the query vector. The projection is initialized by ridge regression,
+then the backbone and projection are trained together to minimize
+squared L2 error against normalized Stella embeddings. Training
+alternates three query batches with one document batch. Queries use
+Stella's query targets and documents use its document targets; retrieval
+uses Stella's stored document vectors. The resulting model has 34.5
+million parameters.
+
+Both models were selected through development evaluations before their
+benchmark results were scored. Their training sources, objectives,
+optimization settings, and selection procedures are specified in
+Appendix B. Zero's learned weights, contrastive training, and served
+pooling differ from the fitted table; Nano updates the backbone that the
+fitted head keeps frozen. These differences define the scope of the
+cross-model findings and the separate Constella evaluation.
 
 \subsection{4. RQ1: what the index decides about
 retention}\label{rq1-what-the-index-decides-about-retention}
@@ -775,10 +818,7 @@ Zero (token table) & 0.4572 & 81.4\% & 0.044 ms & 90.1 MiB \\
 \end{longtable}
 }
 
-Zero sums learned token vectors; Nano uses contextual features from
-three layers of a small transformer. Both reduce encoding time while
-preserving a different share of Stella's exact retrieval quality (Table
-1). All three query paths were verified against the same populated
+All three query paths were verified against the same populated
 collections, allowing each request to choose a compatible encoder.
 Appendix A gives the per-dataset results and selected-reference
 comparisons.
@@ -884,7 +924,8 @@ results. The released artifacts are Constella Zero, Constella Nano, and
 the Stella document encoder on the Hugging Face Hub. Two inputs are
 identified by hash but not yet archived in the repository: the cleaned
 337,981-query fit list and the sampled one-million-passage identifier
-list.
+list. Prepared Zero and Nano training corpora are described by source
+and file manifests rather than bundled as raw text.
 
 \FloatBarrier
 \setcounter{figure}{0}
@@ -895,9 +936,7 @@ instance}\label{appendix-a.-registered-evaluations-of-the-instance}
 \textbf{Serving configuration.} Stella is pinned to revision
 \texttt{ffeb2b7e}, with its \texttt{s2p\_query} prompt, fp32 encoding,
 normalized output, fp16 stored document vectors, and cosine similarity;
-maximum sequence length 512. Nano uses bge-small layers 12, 8, and 4
-concatenated to 1152 dimensions before projection; batches mix 75\%
-queries and 25\% documents. Zero's training pool includes FEVER-train
+maximum sequence length 512. Zero's training pool includes FEVER-train
 and HotpotQA; Nano excludes FEVER. MS MARCO is licensed for
 non-commercial use, so it was validation-only in our distillation: it
 supplied no training targets, negatives, or generation seeds, although
@@ -1052,6 +1091,159 @@ actual loader and device.
 \subsection{Appendix B. Construction
 details}\label{appendix-b.-construction-details}
 
+\textbf{Fitted table: objective and preprocessing.} Let \(X\) contain
+each query's token counts divided by its token count, \(Y\) the original
+encoder's query vectors, and \(W_0\) its normalized outputs for
+individual tokens encoded between the tokenizer's special tokens. We fit
+the table \(W\) by
+
+\[
+\min_W \|XW-Y\|_F^2 + \lambda\|W-W_0\|_F^2.
+\]
+
+The initialization and regularization anchor therefore use the encoder's
+complete pooling and output projection. Tokenization includes special
+tokens, uses no student query prefix, and truncates at 512 tokens. The
+student mean-pools table rows and L2-normalizes the result. Block
+conjugate gradient solves the normal equations; every output column must
+pass the relative-residual tolerance (1e-6 in fp32, 1e-8 in fp64). The
+penalty grid is 1e-4 to 1e-1, extended by one decade once when the best
+development value is at an edge. The chosen value maximizes exact-search
+nDCG@10 on the two development forums and is frozen before six-set
+scoring. The fit list was cleaned after an earlier version had 1.31\%
+held-out-query overlap. One expanded-roster checkpoint failed the
+convergence gate and is excluded. Registered checkpoint exposure is
+documented; the exploratory expansion was not individually audited.
+
+\textbf{Fitted head: objective and features.} Frozen bge-small at
+revision \texttt{5c38ec7c} supplies attention-masked mean states from
+layers 12, 8, and 4. Concatenating them with a constant bias feature
+gives the design matrix \(F\) with 1,153 columns. A dense solve fits
+\(A\) to the same targets \(Y\):
+
+\[
+\min_A \|FA-Y\|_F^2 + \lambda\frac{\operatorname{tr}(F^\top F)}{1153}\|A\|_F^2.
+\]
+
+The bias is regularized along with the other coefficients, and the
+prediction \(FA\) is L2-normalized for retrieval. The penalty grid,
+development criterion, and selection order match the table's. The
+backbone stays fixed throughout. bge-small-en-v1.5 is also an index in
+the roster and shares the backbone, and gte-small is nearly its linear
+image (retention 1.008 and 0.978); correlations without the backbone are
++0.09 against the index and +0.46 against the table.
+
+\textbf{Released Zero: data and initialization.} Zero's training uses
+338,076 usable query-document pairs plus 220,632 query-only rows from
+Amazon ESCI, FEVER-train, HotpotQA-train, SQuAD-train, Mr.~TyDi English,
+NQ Open, and TriviaQA. These are distinct from the cleaned 337,981-query
+list used for the fitted students. The distillation phase also uses
+924,704 short spans drawn from the document pool as pseudo-queries. Each
+of the 30,522 table rows starts from Stella's normalized output for that
+token in a short context; a learned scalar token weight starts from
+inverse document frequency. Stella's weights, query targets, and
+document vectors stay frozen, while table rows and token weights are
+optimized.
+
+\textbf{Zero's two training phases.} The first phase runs for 16,000
+steps with batches of 512 and ordinary count pooling. Half of each batch
+is drawn from the combined query-only and pseudo-query pool and receives
+cosine alignment loss. The paired-query half combines cosine alignment
+with KL divergence from Stella's softmax score distribution over a
+positive document and 31 distractors sampled from a document-vector
+bank. The extra-text cosine mean is added separately to the paired-query
+loss. The cosine and KL weights are 1 and the score temperature is 0.02.
+Adam uses learning rates 3e-3 for rows and 1e-2 for token weights. A row
+penalty of 1e-3 pulls toward initialization, divided by one plus that
+row's update count.
+
+The second phase starts from that checkpoint and runs 2,500 contrastive
+steps on the paired queries. InfoNCE scores the positive against 32,768
+sampled bank negatives plus dataset-provided negatives, at temperature
+0.02. Known positives are masked from the negatives; Stella also masks a
+candidate whose score exceeds the positive's score minus 0.02. Adam uses
+peak learning rates 1e-3 for rows and 1e-2 for weights, with 200 warmup
+steps followed by linear decay to a tenth of those rates. The row
+penalty is anchored to the starting checkpoint and both phases use seed
+0. The bank contains 2,000,000 frozen document vectors.
+
+\textbf{Zero's selection and served representation.} Development
+retrieval selected the final two-phase recipe and, after training with
+mean pooling, selected square-root count pooling for the unchanged
+table. Export folds the learned scalar weights into the rows and applies
+per-row absolute-maximum int8 quantization with fp32 scales. At
+inference, a token occurring \(c\) times contributes \(\sqrt{c}\) times
+its dequantized row before L2 normalization. Rows never updated in
+either phase remain at their initialization. The development suite
+comprises NQ, HotpotQA, two CQADupStack forums, and two held-out
+training-source slices; it was reused during recipe selection. Its
+training-adjacent components and adaptive reuse motivate reporting the
+benchmark evaluations separately (Appendix A).
+
+\textbf{Released Nano: data and objective.} Nano's deduplicated pool
+contains 3,486,034 query texts: 403,443 real queries from ESCI,
+HotpotQA, Mr.~TyDi, NQ Open, SQuAD, and TriviaQA; 999,744 PAQ questions;
+1,248,385 harvested texts; and 834,462 generated queries. Harvested
+claims, titles, and keywords are drawn from Wikipedia, arXiv metadata,
+and the licensed document pool. Queries are sampled with replacement to
+give equal presentation shares to 12 forms: factoid, how-to, claim,
+argument, finance, title, keyword, health, product, comparison, yes/no,
+and conversational. The 6,070,049 eligible training documents are
+replayed in reshuffled epochs. FEVER is excluded from both pools.
+Queries have no student prefix and document examples receive
+\texttt{passage:}; targets use Stella's corresponding query or document
+encoding. The training objective is mean squared L2 distance between
+normalized student and target vectors, with three query batches followed
+by one document batch. The document examples train Nano, while Stella
+remains the document encoder used at retrieval.
+
+\textbf{Nano's generated queries and filtering.} The generation recipe
+uses Qwen3-8B-AWQ at revision \texttt{4da05a8e}, with thinking disabled,
+temperature 0.8, top-p 0.95, and request seeds derived from passage
+identifiers. The seven generated forms are how-to, argument, finance,
+health, comparison, yes/no, and conversational. Finance and health
+queries use Wikipedia body passages; the other five forms use passages
+from the HotpotQA corpus. Form-specific prompts request five queries per
+passage; the reply must parse as a JSON list, with one retry on failure.
+Token budgets are 60 per requested query, or 400 for argument and
+conversational forms. Assembly applies form-length checks, exact
+deduplication, document-based hold-out exclusions, query and document
+overlap screens, and rejection of copied spans of five words. Forms with
+a near-duplicate rate above 25\% retain only representative queries; a
+form with fewer than 50,000 survivors is dropped. A seeded uniform
+sample caps each generated form at 143,000 queries before corpus-wide
+deduplication. The companion repository provides the prompts, source
+revisions, filtering rules, and manifests identifying the resulting
+texts.
+
+\textbf{Nano's initialization, optimization, and selection.} The
+bge-small backbone is pinned to revision \texttt{5c38ec7c}. Its layers
+12, 8, and 4 supply 1,152 features per token to a biased linear
+projection into 1,024 dimensions, followed by masked mean pooling and
+normalization. A ridge warm start fits the projection on 60,000 training
+queries (seed 21), using a 50,000/10,000 split to select the penalty by
+normalized squared L2 error from 1e-6 to 1; the selected penalty is
+0.001 and the projection is refitted on all 60,000 queries. A linear
+projection commutes with mean pooling, so this pooled-feature
+initialization gives the same query computation as applying the
+projection before pooling in the served model.
+
+The backbone and projection then train jointly with AdamW: batch 32,
+seed 0, betas (0.9, 0.999), epsilon 1e-8, weight decay 0.01 on matrices
+and zero on one-dimensional parameters, and gradient clipping at norm 1.
+CUDA forward passes use bf16 and the loss uses fp32. Three cycles decay
+linearly from 1e-4 to 1e-5, with a 64,000-example warmup in the first
+cycle. The released model is the third cycle-end checkpoint, after
+199,999,721 example presentations. Recipe screening and scheduled
+monitoring use a development relevance macro that weights four families
+equally: six BRIGHT slices, MedicalQARetrieval, LEDGER, and the
+LegalBench CorporateLobbying and ConsumerContractsQA datasets. Scores
+are averaged within each family first. Registered screening rules
+selected the recipe, retaining defaults when comparisons were
+unresolved. The companion repository records the data manifests,
+generation prompts, source revisions, selection rules, and released
+artifact hashes.
+
 \textbf{The roster.} The 26 encoder spaces of Section 3.1, by
 dimensionality and own six-set score.
 
@@ -1120,25 +1312,6 @@ gte-large & 1024 & mean & 0.5129 & 0.2481 & 0.2249 & exploratory \\
 e5-large-v2 & 1024 & mean & 0.4735 & 0.2585 & 0.1743 & registered \\
 \end{longtable}
 }
-
-\textbf{Table student.} Ridge regression from WordPiece token counts to
-the index's query vectors, initialized from the index's own token
-embeddings, solved by block conjugate gradient with a convergence gate;
-penalty grid 1e-4 to 1e-1 with one decade of extension at an edge,
-chosen on the two development forums and frozen before six-set scoring.
-The fit list was cleaned after an earlier version had 1.31\%
-held-out-query overlap. One checkpoint failed the convergence gate and
-is excluded. Registered checkpoint exposure is documented; the
-exploratory expansion was not individually audited.
-
-\textbf{Head student.} Frozen bge-small at the Nano build's pinned
-revision; masked-mean-pooled hidden states of layers 12, 8, and 4
-concatenated with a bias column; dense ridge with penalty scaled by the
-feature Gram trace, same grid, same selection order, same freeze; output
-normalized. bge-small-en-v1.5 is also an index in the roster and shares
-the backbone, and gte-small is nearly its linear image (retention 1.008
-and 0.978); correlations without the backbone are +0.09 against the
-index and +0.46 against the table.
 
 \textbf{Family-adjusted quality model.} Adding eight family indicators
 to the quality-and-dimensionality model raises in-sample R² to 0.91
@@ -1406,7 +1579,10 @@ query performance prediction remain {[}Arabzadeh et al., QPP{]}.
 \subsection{References}\label{references}
 
 \begin{itemize}
-\tightlist
+\item
+  {[}BGE{]} BAAI. bge-small-en-v1.5. Model card and pretrained model.
+  \href{https://huggingface.co/BAAI/bge-small-en-v1.5}{Model
+  repository}.
 \item
   {[}QED{]} Yuxuan Wang and Hong Lyu. Query Encoder Distillation via
   Embedding Alignment is a Strong Baseline Method to Boost Dense

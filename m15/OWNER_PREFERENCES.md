@@ -69,6 +69,8 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 ### 2026-10-02, owner reading feedback
 
+- Owner authorizes adding a coherent architecture and training account for the fitted students and released Zero/Nano models, with concise main-text explanations and reproducible appendix recipes. Original encoders need identities, relevant properties, and references. Owner requests a fresh-context Fable collaborator with all preferences; Fable is unavailable in the sub-agent tool, and owner explicitly chooses GPT-6-Astra as the replacement.
+
 - Owner says the rewritten abstract feels like unrelated sentences. The abstract needs a continuous argument connecting motivation, evidence, and implication; grouping result summaries into paragraphs is insufficient. This is continued criticism of the draft, not acceptance of earlier rewrites.
 
 - Owner finds the abstract still awkward and hard to parse after the narration pass, flags its rhetorical question about encoding savings and approximate search as a poor fit, and questions “vector width” as unfamiliar terminology. Revise the abstract as a standalone argument and prefer established embedding terminology; do not treat sentence-level shortening as sufficient evidence of readability.

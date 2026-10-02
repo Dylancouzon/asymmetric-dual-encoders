@@ -959,3 +959,13 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   percentages, and separate timing measurements remain. No causal mechanism is claimed.
 - Verified that the body, appendices, tables, and references are byte-for-byte unchanged. Rebuilt
   and visually checked the PDF; whitespace checks passed. No experiments or new reviewer sign-off.
+
+### 2026-10-02: owner reading feedback, architectures and training
+
+- Owner authorized a coherent explanation of the student architectures and training, with concise main methods and reproducible appendix detail. Fresh-context Fable was unavailable; the owner explicitly selected GPT-6-Astra. Its bounded writing review and dispositions are in REVIEWS/2026-10-02-astra-construction-writing.md. Earlier whole-paper sign-offs remain snapshot-specific.
+- §3.2 now explains both closed-form students through representation, fitted components, targets, and output. §3.5 explains separately trained Zero and Nano, frozen document targets, and their training objectives. Appendix B places methods before the encoder roster and records objectives, preparation, initialization, optimization, generation/filtering, selection and artifact scope. Removed repeated architecture detail from serving/results prose. The abstract and scientific tables are unchanged.
+- Corrected two historical methods errors against code: the fitted table uses ordinary count means, and its regularization anchor uses contextual teacher outputs for single tokens. Zero trains with mean pooling and adopts square-root pooling for serving. Its selected recipe uses a cosine/KL phase followed by contrastive ranking. Nano jointly trains backbone and projection with normalized squared-L2 targets.
+- The historical m11/release/MODEL_CARD.md describes Zero as L2 regression; this conflicts with the selected-run receipts and loss code. The manuscript follows those receipts. The historical card was left untouched; correcting the released card is a separate future task.
+- Counts and training settings checked against named M7 and M13 receipts; generation and screening details checked against M10 source. Evidence links are recorded in PAPER_EVIDENCE_MAP.md. Prepared raw training corpora are not bundled: source/file manifests describe them, while fitted-screen inputs still require archival work.
+- No retraining, experiments, protected raw reads, result changes, or publication. Owner preferences recorded durably. PDF build and visual inspection are the final validation for this prose batch.
+- Final validation: rebuilt the 21-page PDF, inspected all page contact sheets and full-size revised methods/objective pages, verified unchanged abstract and scientific tables, and passed git diff --check.

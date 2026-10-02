@@ -97,3 +97,16 @@ remain in Appendix C. Scientific tables and the whole manuscript's numeric-token
 unchanged. Claim wording now emphasizes predictive associations and the distinction between
 the screen's fitted baselines and the separately trained release models. E24 assembly history
 remains in MEASUREMENTS.md and the evidence cards; the manuscript gives the completed-fit rule.
+
+## Architecture and training exposition (2026-10-02)
+
+| Manuscript location / claim | Source of record | Method and scope |
+|---|---|---|
+| §3.2, Appendix B fitted table objective, mean pooling, contextual teacher-output anchor | [screen implementation](../m15src/e8_towers.py), [count matrix and ridge objective](../m7src/stage0_ridge.py), [contextual initialization](../m8src/init_m8.py), [query preprocessing](../m7src/table.py), [E8 methods](MEASUREMENTS.md) | Corrects former square-root pooling and input-token-embedding descriptions; measurements unchanged. Fitted table learns rows only |
+| §3.2, Appendix B frozen-feature head and trace-scaled ridge | [head screen implementation](../m15src/e19_head_screen.py), [E19 result](../results/m15_e19_head_screen.json) | Frozen bge-small features, biased projection, same fit list and selection order as table |
+| §3.5, Appendix B released Zero architecture, two objectives, data, optimization, export | [selected recipe](../m7/RECIPE.md), [distillation phase receipt](../results/m7_run_p35b-2m.json), [contrastive phase receipt](../results/m7_run_p35w-2m-s2500.json), [training implementation](../m7src/train.py), [pooling selection](../results/m7_lever4_pooling_p35w-2m-s2500.json), [release identity](../m11/STATUS.md), [usable pair count](../m7/LEDGER.md) | Frozen Stella targets; learned rows and weights; mean pooling in training, square-root count pooling adopted afterwards. The historical release card's L2-only summary is incomplete; receipts and code govern this exposition |
+| §3.5, Appendix B released Nano architecture, data counts, trainable backbone, dose and selected checkpoint | [build record](../results/m13_build_record.json), [build configuration](../m13/build_config.json), [architecture and objectives](../m10src/nano10.py), [trainer](../m10src/trainer10.py), [corpus sampler](../m10src/corpus_loader.py), [recipe selection](../results/m10_screen_verdicts.json), [development estimator](../m10src/cov_macro.py), [generation recipe](../m10src/gen.py), [generation driver](../scripts/m10_gen_build.py), [filtering](../m10src/assemble10.py), [data provenance](../results/m10_data_manifest.json) | Three-layer linear head, ridge warm start, joint squared-L2 optimization; query/document targets remain Stella's. Exact dose is example presentations, not distinct texts. Registered screening defaults do not prove a benefit for each component |
+
+No experiment, immutable result, release artifact, or protected raw evaluation was changed or
+reopened. The 26 original encoders remain identified by their roster properties and source
+configuration; the expanded recipes concern the students fitted or trained in this project.
