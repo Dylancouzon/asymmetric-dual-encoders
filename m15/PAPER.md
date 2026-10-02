@@ -24,7 +24,8 @@ Keeping the document vectors preserves an asset that would otherwise need replac
 
 ## 2. Related work
 
-Query-side distillation over a frozen document encoder is established. QED aligns a compact query encoder with an existing dense retriever [QED]; EmbedDistill studies geometric distillation against frozen document representations [EmbedDistill]; and LEAF provides teacher-aligned compact representations [LEAF]. pyNIFE fits a static token table against a frozen teacher [pyNIFE]. LightRetriever trains a lookup query path jointly with a document tower [LightRetriever]. Our contribution is a common-recipe comparison across spaces and a study of the search consequences of substituting queries over unchanged graphs.
+Query-side distillation over a frozen document encoder is established. QED aligns a compact query encoder with an existing dense retriever [QED]; EmbedDistill studies geometric distillation against frozen document representations [EmbedDistill]; and LEAF provides teacher-aligned compact representations [LEAF]. pyNIFE fits a static token table against a frozen teacher [pyNIFE]. Model2Vec and static sentence embeddings average token vectors [Model2Vec, StaticEmb], placing Zero within a broader family of static representations. LightRetriever trains a lookup query path jointly with a document tower [LightRetriever]. Our contribution is a common-recipe comparison across spaces and a study of the search consequences of substituting queries over unchanged graphs.
+QED reports 92.5% retention of a dense retriever's BEIR score with a two-layer student, and LEAF reports 97.7% retention at 4.7-fold compression [QED, LEAF]. LightRetriever reports about 95% retention for its jointly trained lookup path, which requires its own document index, compared with Zero's 81.4% over frozen Stella here; the different models and evaluation protocols leave the quality cost of freezing the document index unresolved [LightRetriever].
 
 Stronger teachers can produce weaker students in general distillation [Cho and Hariharan 2019] and dense retrieval [PROD]. Those studies discuss capacity gaps between teacher and student. We test embedding dimensionality as a predictive property across spaces, alongside the original query path's measured relevance.
 
@@ -114,6 +115,8 @@ The registered descriptive BEIR-15 evaluation measures exact quality. Encoding i
 | Stella | 0.5614 | reference | 31.6 ms | 1669.6 MiB |
 | Nano | 0.5081 | 90.5% | 2.25 ms | 132.3 MiB |
 | Zero | 0.4572 | 81.4% | 0.044 ms | 90.1 MiB |
+
+Zero's sum of token vectors is insensitive to word order and context. Its retention of Stella's score is 0.67 on TREC-COVID and FiQA, compared with 0.95 on Quora (Figure A1). Nano's retention ranges from 0.85 to 0.99 except on FEVER, which was in Zero's training pool and excluded from Nano's. The choice between them therefore depends on the type of query as well as on the compute budget.
 
 **Construction and recurring cost.** Nano's final optimization took a measured 57.3 A100 hours, about $95 at the recorded rental rate. Zero's retraining was historically estimated at 20 minutes with prepared targets, plus 8 to 12 hours of target encoding for a new space. Preparation, data generation, recipe search, failed runs, evaluation, and engineering add to the full build. The four-to-seven-minute fitted screens answer a cheaper construction question than producing these optimized models. Once constructed, a compatible query encoder can amortize that one-time cost through recurring savings, provided its retained relevance meets the workload's requirements.
 
@@ -218,7 +221,7 @@ $$
 \min_A \|FA-Y\|_F^2 + \lambda\frac{\operatorname{tr}(F^\top F)}{1153}\|A\|_F^2.
 $$
 
-The bias is regularized; predictions are normalized. Penalty selection matches the table. bge-small is itself a roster entry sharing this backbone. The original query path's prompts apply to targets, while students have no query prefix.
+The bias is regularized; predictions are normalized. Penalty selection matches the table. bge-small is itself a roster entry sharing this backbone. Its head student retains 1.008 of bge-small's original retrieval score, and gte-small, nearly a linear image of the backbone, retains 0.978. Removing bge-small changes the selection score gaps reported in Section 4 by less than 0.06. The original query path's prompts apply to targets, while students have no query prefix.
 
 **Zero: data and distillation.** The pool has 338,076 usable query-document pairs and 220,632 query-only rows from Amazon ESCI, FEVER-train, HotpotQA-train, SQuAD-train, Mr. TyDi English, NQ Open, and TriviaQA. Training sources permit commercial derived weights, with attribution where required. The distillation phase also uses 924,704 short document spans as pseudo-queries. Table rows start from Stella's normalized token-in-context outputs; scalar weights start from inverse document frequency. Stella targets and document vectors stay frozen.
 
@@ -299,6 +302,8 @@ The registered instance sweep checks exact parity against NumPy and measures war
 - [EmbedDistill] Seungyeon Kim, Ankit Singh Rawat, Manzil Zaheer, et al. EmbedDistill: A Geometric Knowledge Distillation for Information Retrieval. 2023. [arXiv:2301.12005](https://arxiv.org/abs/2301.12005).
 - [LEAF] Robin Vujanic and Thomas Rueckstiess. LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations. 2025, revised 2026. [arXiv:2509.12539](https://arxiv.org/abs/2509.12539).
 - [LightRetriever] Guangyuan Ma, Yongliang Ma, Xuanrui Gou, Zhenpeng Su, Ming Zhou, and Songlin Hu. LightRetriever: A LLM-based Text Retrieval Architecture with Extremely Faster Query Inference. ICLR, 2026. [arXiv:2505.12260](https://arxiv.org/abs/2505.12260).
+- [Model2Vec] MinishLab. Model2Vec: Fast State-of-the-Art Static Embeddings. Software. [Repository](https://github.com/MinishLab/model2vec).
+- [StaticEmb] Tom Aarsen. Train 400x faster Static Embedding Models with Sentence Transformers. Hugging Face, 15 January 2025. [Blog post](https://huggingface.co/blog/static-embeddings).
 - [pyNIFE] Stephan Tulkens. pyNIFE: Nearly Inference Free Embeddings in Python. Software, 2025. [Repository](https://github.com/stephantul/pynife).
 - [Cho and Hariharan 2019] Jang Hyun Cho and Bharath Hariharan. On the Efficacy of Knowledge Distillation. ICCV, 2019. [Proceedings](https://openaccess.thecvf.com/content_ICCV_2019/html/Cho_On_the_Efficacy_of_Knowledge_Distillation_ICCV_2019_paper.html).
 - [PROD] Zhenghao Lin, Yeyun Gong, Xiao Liu, et al. PROD: Progressive Distillation for Dense Retrieval. WWW, 2023. [arXiv:2209.13335](https://arxiv.org/abs/2209.13335).

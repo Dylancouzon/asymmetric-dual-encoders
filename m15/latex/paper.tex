@@ -191,11 +191,20 @@ QED aligns a compact query encoder with an existing dense retriever
 {[}QED{]}; EmbedDistill studies geometric distillation against frozen
 document representations {[}EmbedDistill{]}; and LEAF provides
 teacher-aligned compact representations {[}LEAF{]}. pyNIFE fits a static
-token table against a frozen teacher {[}pyNIFE{]}. LightRetriever trains
-a lookup query path jointly with a document tower {[}LightRetriever{]}.
-Our contribution is a common-recipe comparison across spaces and a study
-of the search consequences of substituting queries over unchanged
-graphs.
+token table against a frozen teacher {[}pyNIFE{]}. Model2Vec and static
+sentence embeddings average token vectors {[}Model2Vec, StaticEmb{]},
+placing Zero within a broader family of static representations.
+LightRetriever trains a lookup query path jointly with a document tower
+{[}LightRetriever{]}. Our contribution is a common-recipe comparison
+across spaces and a study of the search consequences of substituting
+queries over unchanged graphs. QED reports 92.5\% retention of a dense
+retriever's BEIR score with a two-layer student, and LEAF reports 97.7\%
+retention at 4.7-fold compression {[}QED, LEAF{]}. LightRetriever
+reports about 95\% retention for its jointly trained lookup path, which
+requires its own document index, compared with Zero's 81.4\% over frozen
+Stella here; the different models and evaluation protocols leave the
+quality cost of freezing the document index unresolved
+{[}LightRetriever{]}.
 
 Stronger teachers can produce weaker students in general distillation
 {[}Cho and Hariharan 2019{]} and dense retrieval {[}PROD{]}. Those
@@ -514,6 +523,13 @@ Zero & 0.4572 & 81.4\% & 0.044 ms & 90.1 MiB \\
 \end{longtable}
 }
 
+Zero's sum of token vectors is insensitive to word order and context.
+Its retention of Stella's score is 0.67 on TREC-COVID and FiQA, compared
+with 0.95 on Quora (Figure A1). Nano's retention ranges from 0.85 to
+0.99 except on FEVER, which was in Zero's training pool and excluded
+from Nano's. The choice between them therefore depends on the type of
+query as well as on the compute budget.
+
 \textbf{Construction and recurring cost.} Nano's final optimization took
 a measured 57.3 A100 hours, about \$95 at the recorded rental rate.
 Zero's retraining was historically estimated at 20 minutes with prepared
@@ -830,8 +846,11 @@ bias feature yields \(F\) with 1,153 columns. A dense solve fits
 
 The bias is regularized; predictions are normalized. Penalty selection
 matches the table. bge-small is itself a roster entry sharing this
-backbone. The original query path's prompts apply to targets, while
-students have no query prefix.
+backbone. Its head student retains 1.008 of bge-small's original
+retrieval score, and gte-small, nearly a linear image of the backbone,
+retains 0.978. Removing bge-small changes the selection score gaps
+reported in Section 4 by less than 0.06. The original query path's
+prompts apply to targets, while students have no query prefix.
 
 \textbf{Zero: data and distillation.} The pool has 338,076 usable
 query-document pairs and 220,632 query-only rows from Amazon ESCI,
@@ -1069,6 +1088,14 @@ paraphrase-MiniLM-L6-v2 & 384 & 0.3001 & 0.2566 / 0.2738 & 0.2447 /
   Su, Ming Zhou, and Songlin Hu. LightRetriever: A LLM-based Text
   Retrieval Architecture with Extremely Faster Query Inference. ICLR,
   2026. \href{https://arxiv.org/abs/2505.12260}{arXiv:2505.12260}.
+\item
+  {[}Model2Vec{]} MinishLab. Model2Vec: Fast State-of-the-Art Static
+  Embeddings. Software.
+  \href{https://github.com/MinishLab/model2vec}{Repository}.
+\item
+  {[}StaticEmb{]} Tom Aarsen. Train 400x faster Static Embedding Models
+  with Sentence Transformers. Hugging Face, 15 January 2025.
+  \href{https://huggingface.co/blog/static-embeddings}{Blog post}.
 \item
   {[}pyNIFE{]} Stephan Tulkens. pyNIFE: Nearly Inference Free Embeddings
   in Python. Software, 2025.

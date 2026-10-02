@@ -1046,3 +1046,9 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Main-text prose about 3,800 to 3,470 words. Numbers and appendices unchanged from 4b29847; Astra fixes intact.
 - Lesson for later passes: a leaning pass removes repeated sentences; it never compresses the sentences that remain.
 
+### 2026-10-02: v21.1, four ideas restored
+
+- Owner reviewed the list of ideas cut from v20 and kept: static-embedding prior art (Model2Vec, static sentence embeddings, with their references), Zero's failure pattern (word order and context; 0.67 on TREC-COVID and FiQA against 0.95 on Quora; Nano 0.85 to 0.99), retention context (QED 92.5%, LEAF 97.7% at 4.7-fold, LightRetriever about 95% with its own document index; freezing cost unresolved), and the bge-small backbone overlap in Appendix B (1.008, 0.978; selection gaps change by less than 0.06).
+- Owner declined to restore: development-screen correlations, hybrid latency, head-student fit times, and the margin router. They add nothing the paper's argument needs.
+- Sol wrote the four additions; Claude read them as prose and fixed placement and two sentences. All numbers from v20. Main-text prose about 3,620 words; PDF rebuilt.
+
