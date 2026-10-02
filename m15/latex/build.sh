@@ -48,7 +48,7 @@ s = s.replace(r"\usepackage{longtable,booktabs,array}",
 s = s.replace(r"\begin{document}",
               r"\widowpenalty=10000" + "\n" + r"\clubpenalty=10000" + "\n" + r"\begin{document}")
 # Captions include the method; reserve enough room for them and each compact table.
-for number, lines in ((1, 16), (2, 14), (3, 13), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
+for number, lines in ((1, 16), (2, 14), (3, 13), ("B", 18), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
     caption = rf"\textbf{{Table {number}.}}"
     s = s.replace(caption, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + caption)
 s = s.replace(r"\subsection{Appendix A.",
@@ -69,7 +69,8 @@ s = s.replace("Our results establish four findings:",
               r"\Needspace{8\baselineskip}" + "\n" + "Our results establish four findings:")
 s = s.replace("The originally reserved four,", r"\Needspace{20\baselineskip}" + "\n" +
               "The originally reserved four,")
-for paragraph, lines in (("The original Zero tests used", 17),
+for paragraph, lines in (("For the other seven features,", 23),
+                         ("The original Zero tests used", 17),
                          ("The graph-free precision control uses", 16)):
     s = s.replace(paragraph, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + paragraph)
 p.write_text(s)

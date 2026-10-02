@@ -163,3 +163,5 @@ These checks operationalize the owner's readability and evidence concerns; they 
   pushed before the session closes; open forks are reported to him at the end.
 
 - **2026-10-02, introduction framing.** Owner approves opening with the different computational roles of query and document encoders and the question of choosing a query encoder independently of the document representation. Do not assume the reader already plans to reduce query cost or migrate an index. Keep migration as a concise practical consequence after the research motivation, rather than the opening premise. Query efficiency remains central; no claim of universal applicability.
+
+- **2026-10-02, clarity and tables.** Owner likes the paper overall so far, finds §4.4/Table C hard to read, and authorizes a paper-wide clarity pass. Tables overall need less text: shorten headers and labels, separate distinct comparisons, and explain definitions in surrounding prose. Preserve results and uncertainty. This is feedback on the reading so far, not whole-paper acceptance.

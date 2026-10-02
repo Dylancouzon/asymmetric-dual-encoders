@@ -110,3 +110,5 @@ remains in MEASUREMENTS.md and the evidence cards; the manuscript gives the comp
 No experiment, immutable result, release artifact, or protected raw evaluation was changed or
 reopened. The 26 original encoders remain identified by their roster properties and source
 configuration; the expanded recipes concern the students fitted or trained in this project.
+
+| v19 §4.4 / Table C panels and Appendix B chosen encoders | [E21 aggregate](../results/m15_e21_width_model.json), [E21 selector implementation](../m15src/e21_width_model.py), [E24 prospective aggregate](../results/m15_e24_prospective.json) | Absolute best-minus-selected score gap; E21 predictions leave each candidate out; E24 trains on the original 26. Layout and explanation changed, not results. |

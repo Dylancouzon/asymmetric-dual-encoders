@@ -171,3 +171,9 @@ adversarial correctness reviewer, per mandate and owner permission.
 ## Update 2026-10-02: introduction premise
 
 - Owner-approved introduction now starts with query/document computational roles and independent query-encoder choice. Migration is concise supporting context after the scientific motivation. Preserve this order in future iterations; OWNER_PREFERENCES.md records the direction.
+
+## Update 2026-10-02: v19 clarity and table pass
+
+- PAPER.md is now draft v19 after owner-directed clarity work. §4.4/Table C separates candidate pools, explains the score gap and three selection rules, and distinguishes ranking from top-choice success. Chosen names remain in Appendix B.
+- Tables use shorter labels; Table D separates relevance and neighbor recovery. Table F's within-workload correlations remain in Appendix C. Preserve the data and readable column widths rather than reverting to text-heavy combined cells. Search measures and validation splits are explained before results.
+- This is a prose/layout revision with no new experiments or whole-paper sign-off. The older signed v18 snapshot is distinct; current preferences and detailed dispositions are in OWNER_PREFERENCES.md and LOG.md.
