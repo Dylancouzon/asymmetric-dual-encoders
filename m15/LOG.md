@@ -1093,3 +1093,10 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 
 - Owner reconsidered the title and kept it (logged in OWNER_PREFERENCES.md). Added the v22 table to PAPER_EVIDENCE_MAP.md (earlier sections kept as the historical trail) and a current-state block to HANDOFF.md with open items. Working tree clean and pushed.
 
+
+### 2026-10-02: v22 internal review Google Doc
+
+- Owner authorized creation and Editor access for Evgeniya, Kumar, and Andrey, and specified Qdrant Drive. Created native [Google Doc](https://docs.google.com/document/d/1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA/edit) owned by dylan.couzon@qdrant.com in its ChatGPT folder. Verified those three writer permissions and absence of domain/public permission.
+- Manuscript source `540e2bb089a30c83225156945a76b1537beedcd3` stays unchanged. Refreshed the stale v15 reviewer appendix to the current v22 evidence map, all 24 evidence-card links, and pinned source URLs. All 66 pinned file targets exist at the source snapshot. Historical provenance links inside PROVENANCE_AUDIT.md remain untouched.
+- Native import readback finds all 610 source paragraphs, eight tables, five figure images, and ten equation elements. Google Docs PDF export is 19 pages including the reviewer appendix; inspected all pages in contact sheets and detailed equation/table views. No clipping or missing glyphs observed. Author byline and scholarly dates preserved as supplied.
+- Temporary DOCX import staging used the Documents skill; the local renderer required installing LibreOffice. Drive was connected throughout; the deliverable is native Google Docs. Updated reviewer guide, README, handoff and creation instructions; COLLABORATION_RECEIPT.json records hashes and verification. Accepted edits remain in Git with manual targeted Doc updates.

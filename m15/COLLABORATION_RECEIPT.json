@@ -1,0 +1,41 @@
+{
+  "created": "2026-10-02",
+  "document_id": "1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA",
+  "document_url": "https://docs.google.com/document/d/1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA/edit",
+  "mime_type": "application/vnd.google-apps.document",
+  "manuscript_version": "v22",
+  "manuscript_source_commit": "540e2bb089a30c83225156945a76b1537beedcd3",
+  "reviewer_appendix": "Refreshed from the v22 evidence map and all current evidence-card headings; tracked with this receipt. Links pinned to the manuscript snapshot.",
+  "owner": "dylan.couzon@qdrant.com",
+  "editors": [
+    "jenny@qdrant.com",
+    "kumar.shivendu@qdrant.com",
+    "andrey@qdrant.com"
+  ],
+  "sharing": "Explicit user permissions only; no anyone or domain permission observed.",
+  "folder_id": "1UhsB4HXR-nDYy0T4AWZC-gVe4St_E4vD",
+  "source_sha256": {
+    "m15/PAPER.md": "f61f375b158710b8a4ab60cd382a6d091bcc16474d80abed371eb945eeb42e85",
+    "m15/AUTHORS.json": "4a5f2e6d4d55ec63e67809ab0d95f78969cfd97ff6dfa186884f6991ebbbb677",
+    "m15/PAPER_EVIDENCE_MAP.md": "242da9b4deb0bc49ba5c04966906c293de441fac0489153b034ebbdab634d79b",
+    "m15/EVIDENCE.md": "4c713366bfb59f509eebb71cd06bca78449fb0fb0d8b95f91f9a252496ec77f8",
+    "m15/REVIEW_APPENDIX.md": "a319301b1ab078cda32ad00431feebfad3cd500c96f424e0eb0443de714df06d"
+  },
+  "import_docx_sha256": "449e02713fb04da2668dc4c1f560f6e675048b1b2e867b6d3f0aa3a6e8e049cd",
+  "verification": {
+    "source_paragraphs_checked": 610,
+    "missing_source_paragraphs": 0,
+    "tables": 8,
+    "figures": 5,
+    "native_equation_elements": 10,
+    "evidence_card_links": 24,
+    "stale_v15_snapshot_links": 0,
+    "pinned_appendix_targets_checked": 66,
+    "missing_pinned_targets": 0,
+    "google_docs_export_pages": 19,
+    "visual_check": "Inspected all 19 pages in contact sheets and detailed views of equations and dense tables; no clipping or missing glyphs observed.",
+    "source_manuscript": "Unchanged from source commit.",
+    "native_controls": "No protected controls detected. Author byline and scholarly dates preserved as supplied source text.",
+    "synchronization": "Manual targeted updates; repository remains source of accepted revisions."
+  }
+}

@@ -2,13 +2,9 @@
 
 ## Current instruction
 
-**Do not create the Google Doc yet.** Dylan will read the paper and review it with Astra in a
-separate session first. These are creation/handoff instructions for afterward, when the owner
-asks to proceed. No Google Doc has been created or uploaded by this collaboration pass.
+The owner authorized creation on 2026-10-02 after finishing drafting, and requested Editor access for the listed coauthors. [The v22 review Doc](https://docs.google.com/document/d/1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA/edit) is now created in the Qdrant account. [COLLABORATION_RECEIPT.json](COLLABORATION_RECEIPT.json) records the observed identity, permissions, source snapshot, and checks. The earlier deferral is superseded.
 
-Start the separate review at [REVIEW_GUIDE.md](REVIEW_GUIDE.md). Challenge the framing using
-[EDITORIAL_RATIONALE.md](EDITORIAL_RATIONALE.md) and the broader [LEARNINGS.md](LEARNINGS.md).
-The current draft and rationale are recommendations under review, not coauthor consensus.
+The instructions below describe the creation and ongoing collaboration workflow. The current draft and rationale remain open to coauthor discussion.
 
 ## Recommended arrangement
 
@@ -19,7 +15,7 @@ The future Doc should contain:
 
 1. The paper title, author roster from [AUTHORS.json](AUTHORS.json), draft/version label, and an
    exact repository source commit with a link. Use the post-review version, not a cached v15 export.
-2. The full [PAPER.md](PAPER.md), including both scientific appendices, references, all tables,
+2. The full [PAPER.md](PAPER.md), including all scientific appendices, references, all tables,
    and the figures actually referenced in that version. Use editable text and native tables,
    rather than screenshots of the PDF. Preserve measured values, signs, units, and qualifications.
 3. A separate **Reviewer appendix**, clearly excluded from the publication manuscript. The
@@ -39,8 +35,8 @@ belong in the reviewer appendix. Do not turn the whitepaper into a tutorial.
   and reasons in `LOG.md`; update owner preferences only for actual owner direction. Rebuild and
   check the paper PDF if the manuscript changes, then commit/push a coherent snapshot.
 - Choose that committed snapshot as the Doc's source. Refresh the reviewer appendix's map,
-  evidence-card list, rationale, and active snapshot URLs against it. Current appendix links are
-  pinned to `5ce1ced`; they must not silently accompany a different draft.
+  evidence-card list, rationale, and active snapshot URLs against it. The v22 appendix links are
+  pinned to `540e2bb`; refresh them deliberately when adopting a different manuscript snapshot.
 - Preserve deliberate historical source-version links in `PROVENANCE_AUDIT.md`. Those point to
   executed script/method bytes and must not be blanket-replaced with the newest commit.
 - Confirm the provisional authors from `AUTHORS.json`; use the supplied names/emails and current

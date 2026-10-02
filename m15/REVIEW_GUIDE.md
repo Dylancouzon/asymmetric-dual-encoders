@@ -7,9 +7,7 @@ frame, the voice contract, and the agreed claim wording). It is an empirical whi
 credible research that improves Qdrant's reputation in that community. The thesis and content remain
 open to challenge; the owner has not accepted this draft.
 
-The owner is reading and revising v20 on 2026-10-02. The abstract, production motivation, and
-narration have changed since the recorded reviewer sign-offs. Use the latest commit for the text
-under discussion; [LOG.md](LOG.md) records these revisions and their checks.
+The owner has finished drafting v22 and authorized the internal review Doc on 2026-10-02. Review the source snapshot identified in that Doc; [LOG.md](LOG.md) records revisions and checks. Earlier sign-offs apply to their named versions.
 
 The branch contains the current paper, its numerical result summaries, methods, experiment code,
 figures, original registered outcomes, negative findings, full-history synthesis, author preferences,
@@ -42,9 +40,7 @@ remain in history. The current map and synthesis govern how those historical res
 
 ## Recommended collaboration workflow
 
-**Creation is deferred.** Dylan will review with Astra in a separate session before creating the
-Google Doc. [GOOGLE_DOC_HANDOFF.md](GOOGLE_DOC_HANDOFF.md) records the future creation instructions;
-[REVIEW_APPENDIX.md](REVIEW_APPENDIX.md) is its current reviewer-material source. No Doc exists yet.
+**Internal review Doc created 2026-10-02:** [open the v22 Google Doc](https://docs.google.com/document/d/1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA/edit). It is owned by `dylan.couzon@qdrant.com`; Evgeniya, Kumar, and Andrey have Editor access. Manuscript source: `540e2bb0`. [COLLABORATION_RECEIPT.json](COLLABORATION_RECEIPT.json) records readback, source hashes, and sharing verification. [GOOGLE_DOC_HANDOFF.md](GOOGLE_DOC_HANDOFF.md) records the workflow; [REVIEW_APPENDIX.md](REVIEW_APPENDIX.md) is the refreshed appendix source.
 
 Use **one Google Doc as the discussion copy**, containing the paper with its existing scientific
 appendices, followed by a clearly marked reviewer appendix with evidence links and a repository
@@ -76,7 +72,7 @@ Coworkers who want to change the repo should use individual branches and PRs bas
 
 The following prompt is a starting point; replace the focus with the question under discussion.
 
-> Review the Constella v20 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
+> Review the Constella v22 whitepaper on m15-whitepaper for [specific focus]. Read CLAUDE.md,
 > instructions-m15.md, m15/REVIEW_GUIDE.md, m15/OWNER_PREFERENCES.md, and the relevant section of
 > m15/PAPER.md. Use m15/PAPER_EVIDENCE_MAP.md to select exact result/method files. Use
 > m15/EDITORIAL_RATIONALE.md and m15/LEARNINGS.md if challenging the direction or selection across

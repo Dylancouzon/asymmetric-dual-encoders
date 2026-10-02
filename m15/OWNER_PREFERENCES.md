@@ -233,3 +233,7 @@ Owner approves the following recommendations for subsequent revisions:
 - Put concise qualifications beside the claims they constrain, and develop their implications in the discussion. Avoid repeatedly restating defensive caveats; retain adverse results and material uncertainty.
 - Keep established IR terms such as nDCG, distillation, ridge regression, and HNSW. Define compressed shorthand such as recovery gap, held-out prediction, and loss multiplier at first use, then use it consistently.
 - Scrutinize internal experiment labels such as E24, H2d, and NDO-3 in reader-facing prose. Prefer meaningful descriptions where labels provide only project navigation; preserve identifiers in evidence records and where they materially help traceability.
+
+## 2026-10-02: internal review Doc
+
+Owner says drafting is done and authorizes the planned Google Doc creation. Use the Qdrant account, not personal Drive. Give the other three listed coauthors Editor access.

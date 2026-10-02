@@ -7,9 +7,9 @@ lives, what a fresh clone does and does not contain, and how to review with cowo
 - [Current manuscript evidence map](PAPER_EVIDENCE_MAP.md) and [numerical evidence cards](EVIDENCE.md)
 - [All milestone learnings](LEARNINGS.md), including findings omitted from the paper
 - [Paper direction and alternative approaches](EDITORIAL_RATIONALE.md)
-- [Future Google Doc instructions](GOOGLE_DOC_HANDOFF.md) and [reviewer appendix source](REVIEW_APPENDIX.md)
+- [Google Doc handoff instructions](GOOGLE_DOC_HANDOFF.md) and [reviewer appendix source](REVIEW_APPENDIX.md)
 - [Branch inventory](BRANCH_INVENTORY.md) and [provenance audit](PROVENANCE_AUDIT.md)
 - [Owner preferences](OWNER_PREFERENCES.md), [handoff](HANDOFF.md), and [revision log](LOG.md)
 
 This draft is under review. Previous agent reviews are not author acceptance or publication approval.
-Google Doc creation is deferred at the owner's request until after a separate Astra review.
+Internal review is open in [the v22 Google Doc](https://docs.google.com/document/d/1WL7YosAN4Am3gZSv76OOuypETV-MQJ3NAs30J4JGWcA/edit), owned by the Qdrant account. Evgeniya, Kumar, and Andrey have Editor access. Source snapshot and checks: [COLLABORATION_RECEIPT.json](COLLABORATION_RECEIPT.json).
