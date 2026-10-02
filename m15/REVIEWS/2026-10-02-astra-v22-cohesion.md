@@ -184,3 +184,12 @@ Claims, numbers, and evidence labels are preserved. Numeric, terminology, paragr
    > The Constella comparison measures how additional graph-search effort affects the encoding-time savings.
 
 The BM25 statement is supported by the BEIR-15 macro improvement. Both coefficient intervals exclude zero for both students in Table 1. The query-placement description fairly summarizes the distance ratio, which the next sentence defines.
+## Training-recipe sentences check
+
+1. **P2: “Nano needs no relevance labels” is broader than the evidence.** Its optimization uses only Stella-vector targets, but some query texts come from paired datasets, and development relevance scores inform recipe and checkpoint selection. Replace with:
+   > Nano’s optimization requires no relevance labels: it matches Stella’s vectors for 3,486,034 query texts, including 834,462 LLM-generated queries, and for document passages.
+
+2. **P2: “This training uses … plus query-only text and document spans” blurs Zero’s phases.** Those extra texts supply alignment in the first phase, not the final contrastive phase. Replace with:
+   > Zero’s training pool contains 338,076 usable query-document pairs. The first phase also uses query-only text and document spans for vector alignment.
+
+The receipts confirm all three counts. Zero’s final-phase ranking description is supported: InfoNCE favors the paired positive over sampled negatives using frozen document vectors.
