@@ -183,3 +183,9 @@ adversarial correctness reviewer, per mandate and owner permission.
 - Parallel fresh-context GPT-6-Astra and GPT-6.1-Sol read the entire v19 at 68509e7. Reports and synthesis: REVIEWS/2026-10-02-{astra,sol61}-v19-full.md and REVIEWS/2026-10-02-v19-full-synthesis.md.
 - Both find a coherent research object but want clearer synthesis and Constella's illustrative role. Outcome/scope mismatches and omitted 1M diagnostic explanation need repair. Optional cuts and a title disagreement remain proposals, not owner decisions.
 - Manuscript/PDF unchanged by review. Await reading discussion before implementing the recommended revision; no new experiment requirement or publication sign-off.
+
+## Update 2026-10-02: v20 coherence revision
+
+- Owner keeps the title and authorizes review fixes while preserving interest and value density. Title remains unchanged; do not reopen absent new owner direction.
+- v20 connects exact-quality and graph-search studies, gives Constella its separate trained-illustration role and ends with a result-based discussion. RQ/predictor outcomes now align. MS MARCO diagnostic scope and clean-four sensitivity are explicit.
+- Table A is now Appendix B's Table B1; all scientific table data preserved. Secondary selection regressions moved, disconnected fragments trimmed. Complete dispositions: REVIEWS/2026-10-02-v20-dispositions.md. This is an implemented prose revision, not a new full-paper sign-off. Existing archival/input limitations remain.

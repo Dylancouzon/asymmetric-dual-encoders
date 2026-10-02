@@ -112,3 +112,7 @@ reopened. The 26 original encoders remain identified by their roster properties 
 configuration; the expanded recipes concern the students fitted or trained in this project.
 
 | v19 §4.4 / Table C panels and Appendix B chosen encoders | [E21 aggregate](../results/m15_e21_width_model.json), [E21 selector implementation](../m15src/e21_width_model.py), [E24 prospective aggregate](../results/m15_e24_prospective.json) | Absolute best-minus-selected score gap; E21 predictions leave each candidate out; E24 trains on the original 26. Layout and explanation changed, not results. |
+
+| v20 §4.2/Appendix B clean-four sensitivity | [E21 aggregate](../results/m15_e21_width_model.json) pooled/table/clean4 | Quality coefficient interval slightly crosses zero; dimensionality interval remains negative. Development/public rank agreement .88 all-six versus .68 clean-four; partition sensitivity is not a causal exposure estimate. |
+| v20 §6 and Appendix C timing-workload scope | [E2 method](MEASUREMENTS.md), [MS MARCO diagnostic receipt](../results/m15_e2_ann_msmarco1m.json), [encoding receipt](../results/m15_e1_latency.json) | Positive-preserving 1M subset, 6,980 development queries; separate 100 medium-query encoding sample. Optimistic relevance relative to full corpus; no transfer of ANN magnitude/direction implied. |
+| v20 Appendix C precision-table endpoint | [E18 receipt](../results/m15_e18_query_precision.json) primary_candidate_budget=40 | Displayed coverage is at 40 candidates; 10/40/100 are the broader control sweep. |

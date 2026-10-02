@@ -28,3 +28,5 @@ Sol recommends moving Table A; Astra prioritizes keeping the scientific center a
 Two RQs and current sequence; prospective head validation and table uncertainty; unfavorable top-choice performance; mixed relevance versus consistent recovery effects; LightRetriever as bounded replication; complete adverse registered outcomes; standalone architecture/training exposition; precise measured-cost scope. No broad comparator frontier or causal mechanism invented.
 
 Fully trained cross-space transfer, causal dimensionality experiments, calibrated required-effort prediction and production-cost evidence would be additional research. They are not blockers for a clearly scoped empirical whitepaper. Manuscript remains v19 pending owner direction on implementation.
+
+Owner disposition: retain the title and implement a value-dense bounded revision. Applied changes are recorded in [v20 dispositions](2026-10-02-v20-dispositions.md); this report remains a review of the v19 snapshot.

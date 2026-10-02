@@ -3,7 +3,7 @@
 Start at **[REVIEW_GUIDE.md](REVIEW_GUIDE.md)**. It explains the current draft, where its evidence
 lives, what a fresh clone does and does not contain, and how to review with coworkers or Codex.
 
-- [Paper source](PAPER.md) (v18, owner-directed narration revisions 2026-10-02) and [rendered paper](latex/paper.pdf); [v17/v18 plan, voice contract, agreed claims, and cut decisions](REVISION_PLAN_V17.md). Earlier reviewer sign-offs apply to their recorded snapshots; current revisions are logged in [LOG.md](LOG.md).
+- [Paper source](PAPER.md) (v20, owner-directed coherence and scope revision 2026-10-02) and [rendered paper](latex/paper.pdf); [v17/v18 plan, voice contract, agreed claims, and cut decisions](REVISION_PLAN_V17.md). Earlier reviewer sign-offs apply to their recorded snapshots; current revisions are logged in [LOG.md](LOG.md).
 - [Current manuscript evidence map](PAPER_EVIDENCE_MAP.md) and [numerical evidence cards](EVIDENCE.md)
 - [All milestone learnings](LEARNINGS.md), including findings omitted from the paper
 - [Paper direction and alternative approaches](EDITORIAL_RATIONALE.md)

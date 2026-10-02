@@ -1,12 +1,12 @@
 # Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes
 
-**Draft v19, 2026-10-02. Not for circulation.**
+**Draft v20, 2026-10-02. Not for circulation.**
 
 ## Abstract
 
 Document embeddings are reused across searches, allowing the cost of a large document encoder to be amortized, while every uncached query incurs an encoding cost. This asymmetry motivates replacing the query encoder with a smaller model that searches the existing document embeddings. Such a replacement can reduce query compute while avoiding the re-embedding and index migration required by a change of document encoder. We examine how the existing index shapes the retrieval quality and search cost of this replacement.
 
-We fit two types of smaller query encoder (students) across 26 embedding models: a learned token-vector table and a small frozen transformer with a learned projection. Their retrieval quality is associated with both the original model's quality and its embedding dimensionality. At a given dimensionality, stronger original models tend to yield stronger students; after accounting for original-model quality, higher dimensionality predicts weaker students. Together, these properties predict student quality on held-out models better than original-model quality alone.
+We fit two query-student representations by linear regression across 26 embedding models: a learned token-vector table and a frozen transformer with a learned projection. Their absolute retrieval quality is associated with both the original query path's quality and the document embedding dimensionality. At a given dimensionality, stronger original models tend to yield stronger students; after accounting for original-model quality, higher dimensionality predicts weaker students. Together, these properties predict student quality on held-out models better than original-model quality alone.
 
 The encoding savings also depend on how the student's queries interact with approximate search. Token-table students require more graph-search effort to recover their exact nearest neighbors, with a corpus-dependent effect on retrieval relevance. Constella illustrates the combined trade-off: its compact transformer and token-table query encoders search the unchanged document index of the Stella embedding model, retaining 90.5% and 81.4% of Stella's exact-search nDCG@10 on BEIR-15. Separate timing measurements show that additional search work reduces their encoding savings. The existing index therefore shapes both the quality a smaller query encoder can achieve and how much of its encoding advantage translates into cheaper retrieval.
 
@@ -18,14 +18,14 @@ An existing document index constrains this choice: a replacement query encoder m
 
 **Query-side distillation** trains a student encoder to reproduce the frozen encoder's query vectors and search the frozen document vectors directly [QED, EmbedDistill, LEAF]. Static variants fit a token table, so a query costs a table lookup and a sum [pyNIFE, LightRetriever]. We study the retrieval quality and search effort of these replacements, and whether properties of the existing embedding space predict their performance.
 
-We examine two properties of the space: embedding dimensionality (the number of components in each vector) and the original encoder's retrieval quality. A frozen index inherits both from its document encoder. Fitting each student by a linear solve takes minutes, allowing the same recipe to be compared across 26 public encoder spaces. Two questions organize the paper.
+We compare two student representations across 26 public encoder spaces, using inexpensive linear fits to keep construction consistent. The study separates the effect of replacing the query representation from the additional loss introduced by approximate search: first we evaluate the fitted queries by exact retrieval, then search them over unchanged graphs. Two questions organize the paper.
 
-- **RQ1, retention.** How much retrieval quality can a query student fitted by a linear solve recover from a frozen index, and do embedding dimensionality and the space's own quality predict it? We test the project's initial heuristic that a better space yields a better student, using exact retrieval.
-- **RQ2, search effort.** Over the index's unchanged approximate-search graph, how much more search effort does the student's query path need than the index's own query path, and is that effort predictable?
+- **RQ1, student quality.** What exact-search retrieval quality can a linearly fitted query student achieve, and do embedding dimensionality (the number of vector components) and the original query path's measured quality predict it?
+- **RQ2, search effort.** How much graph-search effort does the student need relative to the original query path, and can query placement predict its exact-neighbor recovery deficit at fixed effort?
 
-Student quality follows two opposing associations: stronger spaces favor the student, while higher dimensionality predicts weaker students. A model using both properties predicts held-out and prospectively tested encoders (Section 4). The token-table students also need more graph effort to recover their exact neighbors in every measured space on two of three corpora. The distance between queries and documents predicts the size of that penalty, which also appears in LightRetriever's jointly trained lookup path (Section 5).
+Student quality follows two opposing associations: stronger original query paths favor the student, while higher dimensionality predicts weaker students. Combining them improves held-out prediction; a prospective test supports the head student's ranking, while the table result remains uncertain (Section 4). At fixed graph-search effort, token-table students recover fewer exact neighbors in every measured space on two of three corpora. The original queries' distance from documents predicts this recovery gap. LightRetriever's jointly trained lookup path also exhibits the deficit (Section 5).
 
-**Constella** is the worked instance: a frozen Stella index [Stella] with three compatible query paths, Stella's own encoder, a 34.5-million-parameter transformer student (Nano), and a token-table student (Zero), released with the registered evaluations that gated the release. Section 6 reports it.
+**Constella** supplies the practical illustration: Stella's frozen document index [Stella] can be searched by its own query encoder, a separately trained 34.5-million-parameter transformer (Nano), or a token table (Zero). Section 6 measures their quality and how encoding savings change after search.
 
 Throughout, "registered" marks the project's pre-registered evaluations, whose decision rules were fixed before any result was observed, and "exploratory" marks analyses added afterwards. The two index-wide screens that answer RQ1 and RQ2 are exploratory; their analyses were written down before scoring, and the prospective test of RQ1 commits its predictions before any student is fitted.
 
@@ -41,17 +41,9 @@ Graph-based approximate search over HNSW is sensitive to where queries sit relat
 
 ### 3.1 Encoder spaces
 
-The roster is 26 public English embedding encoders that share the 30,522-entry BERT WordPiece vocabulary, a requirement of the table student. Ten were registered before any result; 16 were added as an exploratory expansion under the same recipe and selection order. Each encoder defines one frozen space: its document vectors are frozen and its own query encoder is the reference path. Table A lists them by dimensionality.
+The roster is 26 public English embedding encoders that share the 30,522-entry BERT WordPiece vocabulary, a requirement of the table student. Ten were registered before any result; 16 were added as an exploratory expansion under the same recipe and selection order. Each encoder defines one frozen space: its document vectors are frozen and its own query encoder is the reference path. Appendix B gives the full roster and score ranges by dimensionality.
 
-**Table A.** The 26 encoder spaces by dimensionality (full roster in Appendix B). Score columns give the range of six-set nDCG@10 for the original query encoder and its two students (Sections 3.3 and 4).
-
-| Dimensions | Spaces (registered) | Original score | Table score | Head score |
-|---:|---:|---|---|---|
-| 384 | 9 (0) | 0.328 to 0.504 | 0.290 to 0.358 | 0.196 to 0.508 |
-| 768 | 10 (4) | 0.285 to 0.533 | 0.186 to 0.353 | 0.059 to 0.325 |
-| 1024 | 7 (6) | 0.474 to 0.597 | 0.246 to 0.397 | 0.156 to 0.268 |
-
-The roster spans nine related model families and three embedding sizes; several checkpoints are revisions of one another. We report checkpoint-resampling intervals alongside family-level sensitivity analyses. The arctic-embed-l mean-pooling control is excluded from roster statistics; its published CLS pooling is used for the roster entry.
+The roster spans nine related model families and three embedding sizes (384, 768, and 1024); several checkpoints are revisions of one another. We report checkpoint-resampling intervals alongside family-level sensitivity analyses. The arctic-embed-l mean-pooling control is excluded from roster statistics; its published CLS pooling is used for the roster entry.
 
 ### 3.2 Closed-form query students
 
@@ -59,7 +51,7 @@ The cross-model comparison uses two student representations fitted by ridge regr
 
 **Table student.** A 30,522-row table assigns one learned vector to each WordPiece token. A query is represented by the mean of its token vectors, including repeated tokens, followed by L2 normalization. Ridge regression fits the rows jointly, with a penalty toward vectors obtained by running individual tokens through the original encoder. Only the table is fitted; query encoding then consists of tokenization, lookups, and pooling.
 
-**Head student.** The pretrained bge-small transformer [BGE] provides contextual features. We mean-pool the token states from layers 12, 8, and 4 using the attention mask and concatenate them into a 1,152-dimensional vector. A learned linear projection with bias maps this vector to the document embedding dimensionality, then L2 normalization produces the query vector. The backbone stays frozen, so fitting learns only the projection. Appendix B specifies both regression objectives and their solvers.
+**Head student.** The pretrained bge-small transformer [BGE] provides contextual features. We mean-pool the token states from layers 12, 8, and 4 using the attention mask and concatenate them into a 1,152-dimensional vector. A learned linear projection with bias maps this vector to the document embedding dimensionality, then L2 normalization produces the query vector. The backbone stays frozen, so fitting learns only the projection. This makes construction inexpensive; query inference still runs the bge-small backbone. Appendix B specifies both regression objectives and their solvers.
 
 These fitted students support the comparison across encoder spaces. The released Zero and Nano models use additional optimization and different training data, described below; their measured performance is reported in Section 6.
 
@@ -85,7 +77,7 @@ Constella supplies two query encoders for Stella's 1024-dimensional document spa
 
 Both models were selected through development evaluations before their benchmark results were scored. Their training sources, objectives, optimization settings, and selection procedures are specified in Appendix B. Zero's learned weights, contrastive training, and served pooling differ from the fitted table; Nano updates the backbone that the fitted head keeps frozen. These differences define the scope of the cross-model findings and the separate Constella evaluation.
 
-## 4. RQ1: what the index decides about retention
+## 4. RQ1: what the space predicts about student quality
 
 ### 4.1 Hypothesis and the pooled result
 
@@ -101,7 +93,7 @@ H1 was the project's initial selection rule. The strongest registered space, gte
 
 **H1'.** At a given dimensionality, stronger spaces yield stronger students; after accounting for space quality, higher-dimensional embeddings predict weaker students. Support requires a dimensionality coefficient whose interval excludes zero and better held-out-family prediction than space quality alone.
 
-Table B models the student's absolute six-set score using the space's own score and log2 embedding dimensionality. Retention is the ratio of student to original-encoder scores. Standardized coefficients express the change in student quality, in standard deviations, per standard deviation of a predictor. Intervals use 10,000 checkpoint resamples. Leave-one-family-out prediction fits on eight model families and predicts the ninth.
+Table B models the student's absolute six-set score using the space's own score and log2 embedding dimensionality. Standardized coefficients express the change in student quality, in standard deviations, per standard deviation of a predictor. Intervals use 10,000 checkpoint resamples. Leave-one-family-out prediction fits on eight model families and predicts the ninth.
 
 **Table B.** Predicting student six-set nDCG@10 over 26 indexes (exploratory, analysis pre-specified). Each pair of rows compares a model using original-encoder quality alone with one that also uses dimensionality. $\beta$ denotes a standardized coefficient, with a 95% interval in brackets. R² measures in-sample fit; held-out $\rho$ is Spearman correlation across leave-one-family-out predictions.
 
@@ -112,7 +104,7 @@ Table B models the student's absolute six-set score using the space's own score 
 | Table | quality | +0.37 [−0.30, +0.72] | | 0.14 | −0.15 |
 | Table | quality + dimensions | +0.63 [+0.06, +0.89] | −0.64 [−0.95, −0.32] | 0.48 | +0.40 |
 
-Space quality and dimensionality correlate at +0.61 across the roster. Their opposing associations with student quality help explain the near-zero pooled rank correlation. Given dimensionality, the partial rank correlation between student and index quality is +0.58 for the head and +0.45 for the table. Table B shows a larger standardized coefficient for dimensionality under the head representation and coefficients of similar magnitude under the table representation. Family-adjusted fits and coefficient intervals are reported in Appendix B.
+Space quality and dimensionality correlate at +0.61 across the roster. Their opposing associations with student quality help explain the near-zero pooled rank correlation. Given dimensionality, the partial rank correlation between student and index quality is +0.58 for the head and +0.45 for the table. Table B shows a larger standardized coefficient for dimensionality under the head representation and coefficients of similar magnitude under the table representation. On the four datasets without disclosed Stella exposure, the dimensionality association persists, while the table student's original-quality coefficient interval slightly crosses zero. Appendix B gives this sensitivity and the family-adjusted fits.
 
 ### 4.3 Held-out and prospective prediction
 
@@ -152,17 +144,13 @@ Across the original 26 spaces, evaluating the student's development retrieval ma
 
 On the prospective candidates, the committed model and development screen choose the same spaces: the best head student and a table student 0.043 below the best. Selecting by original-encoder quality has the largest gap in both candidate pools. These results concern the two closed-form student recipes.
 
-The development scores also predict six-set student rank at Spearman 0.84 (head) and 0.88 (table). Adding development score to the quality-and-dimensionality model gives it the largest standardized coefficient (+0.71 [+0.36, +0.99] for the head) and raises leave-one-family-out prediction to 0.77 and 0.80.
-
-The head's backbone, bge-small-en-v1.5, is also a roster encoder. Removing it changes every statistic above by less than 0.06.
-
 ## 5. RQ2: what the index decides about search effort
 
 ### 5.1 Hypothesis
 
-**H2.** Over the index's unchanged HNSW graph, the student's query path needs more search effort than the index's own query path to recover the same fraction of its exact neighbors, because the student's queries sit differently against the indexed vectors.
+**H2.** Over an unchanged HNSW graph, the student's query path needs more effort than the original query path to recover the same fraction of its own exact neighbors.
 
-We first measure the effort penalty per index, then test whether query-placement features predict its size (Section 5.3).
+Section 4 measures exact retrieval quality. Here, we search the same fitted queries over each space's graph to measure the additional approximation loss. Query placement relative to documents motivates the hypothesis; Section 5.3 tests whether placement features predict the recovery deficit at fixed `ef=64`.
 
 ### 5.2 Effort across 25 indexes
 
@@ -194,7 +182,7 @@ The relevance-loss multiplier exceeds one on FiQA (25 of 25, median four over th
 
 We test whether corpus size contributes to the smaller deficit on SCIDOCS by subsampling FiQA to SCIDOCS's 25,657 documents. With the same queries and two rebuilt graphs per space (exploratory, pre-specified; Appendix C), the gap at `ef=64` moves from −2.9 points to −1.2, a paired change of +1.8 points (95% interval over spaces +1.3 to +2.3). It remains 0.4 points larger than SCIDOCS's (−0.9 to −0.1). The subsample reproduces much of SCIDOCS's attenuation, with a remaining difference between the corpora.
 
-### 5.3 Is the effort predictable?
+### 5.3 Can query placement predict the recovery gap?
 
 We next test whether measurements of query placement, computed before graph construction, predict the recovery gap across spaces. We declared nine features and two covariates before computing them (exploratory, pre-specified; Appendix C). Table F focuses on the query-to-document distance ratio: the distance from queries to their nearest documents, relative to the typical distance between neighboring documents. Correlations use 75 space-by-workload points, with intervals resampling each space together with its three workload rows. Held-out prediction fits a ridge model on all families except one and predicts that family.
 
@@ -207,13 +195,13 @@ We next test whether measurements of query placement, computed before graph cons
 | All features and covariates | | | +0.73 | 1.40 |
 | Training-fold mean | | | | 2.22 |
 
-Spaces with queries farther from documents tend to pay a larger recovery penalty. The ratio computed from the original encoder's queries predicts held-out families with lower absolute error than the all-feature model (Table F), so the existing query path already supplies a useful predictor. The association is clearest on FiQA and TREC-COVID; on SCIDOCS its interval includes zero. Appendix C gives correlations within each workload and the remaining features, including changes between student and original-encoder queries.
+Spaces with queries farther from documents tend to pay a larger recovery penalty. The ratio computed from the original encoder's queries predicts held-out families with lower absolute error than the all-feature model (Table F), so the existing query path already supplies a useful predictor. The change in distance ratio from original to student queries predicts poorly on held-out families (Appendix C). The original-query ratio therefore marks susceptibility of a space and workload to the deficit; the regression leaves its cause unresolved. The association is clearest on FiQA and TREC-COVID; on SCIDOCS its interval includes zero.
 
 Prediction across workloads is less precise. A model fitted on two workloads ranks the third at +0.50, but its mean error is 2.55 points against 2.33 for the training-fold mean. The ratio therefore supports relative ranking, with the magnitude of the penalty requiring calibration on the target workload.
 
 ### 5.4 The penalty in a jointly trained model
 
-**H2d.** If lookup-query placement relative to the indexed documents contributes to the recovery deficit, the deficit should also appear when the lookup side is trained jointly with the document tower. We tested the released LightRetriever model (Qwen2.5-1.5B with its published adapter) over its own FiQA and SCIDOCS document vectors, comparing its lookup query path with the same model's full query encoding under the Section 3.4 protocol, with the model's web-search instruction as the primary prompt and the task prompt as secondary. Predictions and quantities were fixed before encoding (exploratory, pre-specified).
+**H2d.** The lookup recovery deficit should recur when the lookup side is trained jointly with the document tower. This tests recurrence beyond the frozen-teacher fits. We tested the released LightRetriever model (Qwen2.5-1.5B with its published adapter) over its own FiQA and SCIDOCS document vectors, comparing its lookup query path with the same model's full query encoding under the Section 3.4 protocol, with the model's web-search instruction as the primary prompt and the task prompt as secondary. Predictions and quantities were fixed before encoding (exploratory, pre-specified).
 
 **Table E.** LightRetriever lookup versus full query encoding over its own index, two builds averaged. Exact scores are nDCG@10; effort columns are `ef` multipliers; gaps are lookup-minus-full recovery at `ef=64`, with query-resampling intervals.
 
@@ -230,7 +218,7 @@ The `ef` multipliers measure graph-search effort. Relevance loss and exact-neigh
 
 ## 6. The Constella instance
 
-Table 1 gives the three query paths over Stella's frozen index, by exact search over BEIR-15.
+The cross-space fits make a broad comparison possible at low construction cost. Constella illustrates compatible query paths optimized further for one space: its separately trained Zero and Nano models combine cheaper encoding with different quality and search requirements. Their distinct recipes make this an operating-cost illustration; transfer of the RQ1 predictor to fully trained students remains open. Table 1 reports exact retrieval over BEIR-15.
 
 **Table 1.** Three query paths over one frozen Stella index. Quality is the unweighted mean exact-search nDCG@10 across BEIR-15; share of Stella is the ratio to Stella's score. Encoding medians: 100 real 5-to-12-word queries, batch one, four CPU threads, Apple M5 Pro, registered protocol.
 
@@ -242,9 +230,9 @@ Table 1 gives the three query paths over Stella's frozen index, by exact search 
 
 All three query paths were verified against the same populated collections, allowing each request to choose a compatible encoder. Appendix A gives the per-dataset results and selected-reference comparisons.
 
-**Build cost and query cost.** Table-student fitting took four to seven minutes of A100 time per encoder, including query encoding except for Stella's cached targets. Nano's final optimization took 57.3 A100 hours, about $95 at the recorded rental rate, excluding data preparation, recipe search, and failed runs. Appendix B gives the component costs. Both constructions preserve the existing document index.
+**Construction cost.** The cross-space table screening fit took four to seven A100 minutes per encoder, including query encoding except for Stella's cached targets. Released Zero uses the additional training phases in Section 3.5. Nano's final optimization took 57.3 A100 hours, about $95 at the recorded rental rate, excluding data preparation, recipe search, failed runs, and evaluation. Appendix B gives the component costs.
 
-Table 2 extrapolates registered timing medians to encoding-plus-search time per million queries on the measurement laptop. Encoding uses batch one with four threads; search uses the uncompressed million-passage collection at each path's setting within 1% of its own exact score. These are sums of separately measured encoding and search times.
+Table 2 combines separate timing measurements on the same laptop: encoding the 100 medium-length queries from Table 1, and searching a one-million-passage MS MARCO diagnostic with 6,980 development queries. The diagnostic retains every judged-positive passage and samples the remaining documents; its reduced competition makes relevance optimistic relative to the full corpus (Appendix C). Search uses uncompressed vectors at settings within 1% of each path's own exact score. Summing the medians and scaling to one million queries gives the component costs below.
 
 **Table 2.** Encoding-plus-search hours per million queries on the measurement laptop, extrapolated from Table 1 and Appendix C medians. Search settings keep each path within 1% of its own exact score.
 
@@ -258,15 +246,21 @@ Search time at a fixed `ef` differs by less than 5% across paths. The extra work
 
 ![Measured quality and encoding-plus-search time for the three query paths on two collections](figures/f4_system.png)
 
-**Figure 3.** Quality under approximate search against encoding plus search time, registered sweep. Dotted lines are each path's exact score.
+**Figure 3.** Approximate-search quality against encoding plus search time on FiQA and the positive-preserving MS MARCO diagnostic, registered sweep. Dotted lines are each path's exact score.
 
-## 7. Limitations
+## 7. Discussion
+
+Document-encoder quality and student quality can favor different choices. The strongest original encoder produced the weakest registered table student. Accounting for dimensionality exposes the positive quality association hidden in the pooled comparison, yet directly evaluating a fitted student's retrieval gives the better selection on the original roster. The space properties provide a forecast; the student evaluation tests the actual choice.
+
+Replacing only the query encoder also changes the work needed to recover its exact neighbors. The recovery deficit recurs across spaces and in a jointly trained lookup model. Its relevance consequences depend on the workload. Constella makes the cost consequence concrete: Zero's much faster encoding brings only a small advantage over Nano after uncompressed search, alongside lower exact relevance. Compatible query encoders make different compute budgets possible over the same document vectors. Their value is determined jointly by relevance, encoding, and the search settings needed to recover their results.
+
+## 8. Limitations
 
 RQ1 covers two closed-form recipes over 26 related spaces at three embedding sizes. Dimensionality covaries with family and quality, making its association predictive rather than causal. Checkpoint-resampling intervals describe variation within this roster; family-level prediction tests transfer across its families. Transfer to fully trained students such as Zero and Nano remains an open question.
 
-RQ2 covers one engine, one graph configuration, and three workloads with different sizes and domains, including 50 queries on TREC-COVID. Its predictors establish associations with search effort; cross-space timing ran on a shared machine, so latency conclusions rely on the separate Constella sweep. The LightRetriever replication covers one released 1.5-billion-parameter model, our reproduction of its dense path, and two corpora.
+RQ2 covers one engine, one graph configuration, and three workloads with different sizes and domains, including 50 queries on TREC-COVID. Its predictors estimate recovery gaps at fixed effort; cross-space timing ran on a shared machine, so latency conclusions rely on the separate Constella sweep. The LightRetriever replication covers one released 1.5-billion-parameter model, our reproduction of its dense path, and two corpora.
 
-Constella's students use different training pools, including different FEVER exposure, and Stella discloses exposure on ArguAna, FiQA, and FEVER. Query intervals condition on the trained models. Three bounded specialization attempts on an internal workload produced no improved encoder; per-workload students remain a direction for future research.
+Constella's students use different training pools, including different FEVER exposure, and Stella discloses exposure on ArguAna, FiQA, and FEVER. Query intervals condition on the trained models.
 
 ## Artifact availability
 
@@ -323,7 +317,7 @@ The registered clean-four sensitivity is descriptive: −0.0443 [−0.0675, −0
 | Zero + BM25 | 0.7559 | 0.4030 | 0.4629 | 0.4016 |
 | Nano + BM25 | 0.6879 | 0.4296 | 0.4750 | 0.4323 |
 
-**Precision.** All released paths run in fp32 through the published loader; a candidate fp16 export passed CPU parity and failed on CUDA (minimum cosine 0.662), which is why qualification runs through the actual loader and device.
+**Precision.** All released paths run in fp32 through the published loader.
 
 ## Appendix B. Construction details
 
@@ -367,6 +361,18 @@ The backbone and projection then train jointly with AdamW: batch 32, seed 0, bet
 | Quality and dimensionality | arctic-embed-s | gte-small |
 | Student development score | gte-small | stella-400M-v5 |
 
+The development scores also predict six-set student rank at Spearman 0.84 (head) and 0.88 (table). Adding development score to the quality-and-dimensionality model gives it the largest standardized coefficient (+0.71 [+0.36, +0.99] for the head) and raises leave-one-family-out prediction to 0.77 and 0.80.
+
+The head's backbone, bge-small-en-v1.5, is also a roster encoder. Removing it changes the statistics reported in Section 4.4 by less than 0.06.
+
+**Table B1.** The 26 encoder spaces by dimensionality (full roster in Appendix B). Score columns give the range of six-set nDCG@10 for the original query encoder and its two students (Sections 3.3 and 4).
+
+| Dimensions | Spaces (registered) | Original score | Table score | Head score |
+|---:|---:|---|---|---|
+| 384 | 9 (0) | 0.328 to 0.504 | 0.290 to 0.358 | 0.196 to 0.508 |
+| 768 | 10 (4) | 0.285 to 0.533 | 0.186 to 0.353 | 0.059 to 0.325 |
+| 1024 | 7 (6) | 0.474 to 0.597 | 0.246 to 0.397 | 0.156 to 0.268 |
+
 **The roster.** The 26 spaces of Section 3.1, by dimensionality and original-encoder six-set score. All score columns are nDCG@10. Pool is document-vector pooling; status is registered (Reg.) or exploratory (Expl.).
 
 | Encoder | Dim. | Pool | Original | Table | Head | Status |
@@ -398,7 +404,7 @@ The backbone and projection then train jointly with AdamW: batch 32, seed 0, bet
 | gte-large | 1024 | mean | 0.5129 | 0.2481 | 0.2249 | Expl. |
 | e5-large-v2 | 1024 | mean | 0.4735 | 0.2585 | 0.1743 | Reg. |
 
-**Family-adjusted quality model.** Adding eight family indicators to the quality-and-dimensionality model raises in-sample R² to 0.91 (head) and 0.81 (table), preserving both coefficient signs. These models describe the observed families and are reported in sample. In Table B, the head's standardized dimensionality and quality coefficients are −0.83 and +0.69; the table's are −0.64 and +0.63. The table coefficient intervals overlap in magnitude.
+**Family-adjusted quality model.** Adding eight family indicators to the quality-and-dimensionality model raises in-sample R² to 0.91 (head) and 0.81 (table), preserving both coefficient signs. These models describe the observed families and are reported in sample. In Table B, the head's standardized dimensionality and quality coefficients are −0.83 and +0.69; the table's are −0.64 and +0.63. The table coefficient intervals overlap in magnitude. On the clean-four sensitivity outcome, the table's original-quality coefficient is +0.47 [−0.01, +0.78] and its dimensionality coefficient is −0.59 [−0.84, −0.22]. Development-to-public rank correlation falls from 0.88 on all six datasets to 0.68 on clean-four.
 
 **Published retention context.** LightRetriever reports about 95% retention for its jointly trained lookup path, while Zero retains 81.4% over frozen Stella here. These figures describe different models and evaluation protocols. Their comparison leaves the quality cost attributable to freezing the index unresolved.
 
@@ -425,11 +431,11 @@ msmarco-bert-base-dot-v5 is the teacher QED distilled from; its closed-form stud
 
 ## Appendix C. Search and precision controls
 
+**Instance workloads.** FiQA uses all 57,638 documents and 648 test queries. The MS MARCO diagnostic contains every passage judged relevant for its 6,980 development queries, plus passages drawn uniformly without replacement from the remainder of the 8,841,823-passage corpus to reach 1,000,000 (seed 20260930). Keeping positives while removing most competitors raises relevance relative to the full corpus; the ANN effect can also differ in magnitude or direction. MS MARCO is validation-only for distillation, with prior exposure in Nano's pretrained backbone. Encoding uses the separate 100-query sample in Table 1.
+
 **Instance sweep.** Qdrant 1.19.1, HNSW m=16, ef_construct=100, indexing threshold 1 KB so no segment is served by a plain scan, `ef` in 16 to 512, oversampling 1, 2, and 4 under compression, exact parity against NumPy on 200 queries per path. Timing is warmed and sequential with encoding and search measured in separate phases. At `ef=16` the uncompressed million-passage losses are 4.4%, 7.0%, and 16.3% for Stella, Nano, and Zero; under binary quantization without oversampling 6.1%, 9.2%, and 19.8%.
 
 **Cross-index sweep.** The same engine and graph parameters, uncompressed, two builds per index and workload differing in a seeded insertion order, 16 to 512 `ef`, limit 11 with the self-hit drop, tie-aware exact parity on 200 queries per path. Four amendments were recorded during the run, before any index's rows were analysed: SCIDOCS added as a third workload because TREC-COVID has 50 queries; the tie-aware measure; a 0.995 sanity gate on parity with all values reported; and the exclusion rule that removed tas-b (SCIDOCS head parity 0.994). Stella's own-path rows agree with the instance sweep at every `ef`. Loss-based censoring: four indexes on FiQA, eight on SCIDOCS, eight on TREC-COVID; recovery-based censoring: one per workload.
-
-**Truncated queries (registered).** On synthetic prefixes of SciFact, NFCorpus, and FiQA queries, the three dense paths retain descriptively similar shares of their own full-query nDCG@10 at each prefix length; this is not an equivalence test and no search-as-you-type session was measured.
 
 **Gap predictors (E22).** Features per space and workload, declared before computation: the mean cosine distance from a query to its nearest document divided by the mean nearest-neighbor distance among a 5,000-document sample (for the student's and the encoder's queries, and their difference); the Gini coefficient of document occurrence counts across the student's exact top-10 lists over the full document support, minus the encoder's; the mean overlap of the student's and encoder's exact top-10; the effective rank (participation ratio) of a seeded 20,000-row sample of the encoder's fit-query vectors and the ratio of the student's to the encoder's workload-query effective rank; the student-minus-encoder top-1 cosine and margin recorded by the search sweep; log2 dimensionality and log10 corpus size as covariates. Ridge with unit penalty on standardized features; the baseline is each training fold's mean. Associations within each workload for the two distance-ratio features in Table F are:
 
@@ -464,7 +470,7 @@ For the other seven features, association $\rho$ and its interval use all 75 poi
 
 **Native binary pilot and replication.** On one fixed binary collection per workload with 192 deterministically selected queries, binary scoring with rescoring at 1x oversampling loses 11.7, 5.1, and 2.3 percentage points of exact-neighbor recovery for Zero, Nano, and Stella on FiQA at `ef=64`; the million-passage replication loses 3.9, 3.1, and 2.2, and the extra Zero-versus-Nano interval includes zero. Native rescoring also changes cross-segment candidate merging.
 
-**Graph-free precision control.** The table reports exact-neighbor coverage with sign-only and full-precision query values. Same queries, vectors, and targets; all document sign codes scored exhaustively at global candidate budgets 10, 40, and 100; expected coverage averages uniform inclusion at tied boundaries.
+**Graph-free precision control.** The table reports exact-neighbor coverage at 40 candidates with sign-only and full-precision query values. Same queries, vectors, and targets; all document sign codes scored exhaustively at global candidate budgets 10, 40, and 100; expected coverage averages uniform inclusion at tied boundaries.
 
 | Workload | Encoder | Sign query | Full query | Gain (pp) |
 |---|---|---:|---:|---:|
@@ -480,8 +486,6 @@ The paired extra Zero gains over Nano are 4.46 points on FiQA (95% query interva
 ## Appendix D. Fusion and routing over the frozen index
 
 **Lexical fusion.** Fusing Zero with BM25 raises its BEIR-15 macro score from 0.4572 to 0.4933, 87.9% of Stella; Nano plus BM25 reaches 0.5110. The sign varies by workload: Zero on HotpotQA rises from 0.6127 to 0.7015, Nano on MS MARCO falls from 0.4063 to 0.3699. On the million-passage diagnostic a dense-plus-sparse collection takes 4.71 ms per query including Zero encoding against 1.11 ms for the dense binary example. These timings compare different collection configurations. The scores use distribution-based score fusion over 100 candidates per branch with a bm25s lexical branch [DBSF]; other lexical implementations need their own comparison because their score distributions enter the normalization. The operator ordering changes with candidate depth (Appendix A).
-
-**Internal workload.** Zero fell below BM25 on one internal domain-jargon workload. Three bounded attempts to specialize a student to that workload produced no improved encoder, as summarized in Section 7.
 
 **Routing and blending (registered).** On 12 datasets, an oracle choosing Zero or Nano per query with relevance labels scores 0.5473 against 0.5161 for always-Nano, and matches always-Nano by sending the most beneficial 15% of queries to Nano. Query length, subwords per word, and the pooled vector norm are weak selectors (0.002 to 0.005 over random routing at matched Nano share); Zero's post-search score margin recovers about a quarter of the oracle gain over random routing on six datasets and costs a second search for escalated queries. A development-selected 30% Zero contribution blended into Nano's vector lowers Nano's six-set score by 0.0051 (95% paired interval −0.0092 to −0.0011), consistent with how hard retrieval-strategy selection and query performance prediction remain [Arabzadeh et al., QPP].
 

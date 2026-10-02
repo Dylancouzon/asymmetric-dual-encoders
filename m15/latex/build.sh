@@ -48,7 +48,7 @@ s = s.replace(r"\usepackage{longtable,booktabs,array}",
 s = s.replace(r"\begin{document}",
               r"\widowpenalty=10000" + "\n" + r"\clubpenalty=10000" + "\n" + r"\begin{document}")
 # Captions include the method; reserve enough room for them and each compact table.
-for number, lines in ((1, 16), (2, 14), (3, 13), ("B", 18), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
+for number, lines in ((1, 16), (2, 14), (3, 13), ("B", 18), ("B1", 12), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
     caption = rf"\textbf{{Table {number}.}}"
     s = s.replace(caption, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + caption)
 s = s.replace(r"\subsection{Appendix A.",
@@ -56,7 +56,7 @@ s = s.replace(r"\subsection{Appendix A.",
               r"\renewcommand{\thefigure}{A\arabic{figure}}" + "\n" + r"\subsection{Appendix A.")
 s = s.replace(r"\subsection{Appendix B.", r"\FloatBarrier" + "\n" + r"\subsection{Appendix B.")
 for heading in (r"\subsubsection{5.3 Is the effort predictable?}",
-                r"\subsection{7. Limitations}", r"\textbf{Variation across datasets.}"):
+                r"\subsection{7. Discussion}", r"\subsection{8. Limitations}", r"\textbf{Variation across datasets.}"):
     s = s.replace(heading, r"\FloatBarrier" + "\n" + heading)
 for heading in ("4. Lexical fusion", "6. Serving compatibility"):
     needle = r"\subsection{" + heading
@@ -69,7 +69,8 @@ s = s.replace("Our results establish four findings:",
               r"\Needspace{8\baselineskip}" + "\n" + "Our results establish four findings:")
 s = s.replace("The originally reserved four,", r"\Needspace{20\baselineskip}" + "\n" +
               "The originally reserved four,")
-for paragraph, lines in (("For the other seven features,", 23),
+for paragraph, lines in ((r"\textbf{The held-out four}", 16),
+                         ("For the other seven features,", 23),
                          ("The original Zero tests used", 17),
                          ("The graph-free precision control uses", 16)):
     s = s.replace(paragraph, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + paragraph)
