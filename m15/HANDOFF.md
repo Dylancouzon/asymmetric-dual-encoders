@@ -1,5 +1,12 @@
 # M15 handoff (2026-10-01)
 
+## Current state (2026-10-02, end of session)
+
+- Manuscript: **v22** in PAPER.md and latex/paper.pdf (17 pages). Decisions: REVISION_PLAN_V21.md and REVISION_PLAN_V22.md. Evidence: the v22 table at the top of PAPER_EVIDENCE_MAP.md. Reviews: REVIEWS/2026-10-02-v21-sol-rounds.md, -astra-v21-correctness.md, -astra-v22-cohesion.md.
+- Process that worked: Codex (GPT-6.1-Sol) writes from decisions agreed with Claude; Claude reads every result as prose and checks numbers; a GPT-6-Astra correctness check follows each Codex-written revision.
+- Owner rulings this session are in OWNER_PREFERENCES.md (settled re-embedding answer, v21 and v22 direction, leaning without compression, restoring only what adds, no dwelling on what did not work, title kept after reconsideration).
+- Open items: verify the FastEmbed PyPI release before publication; archive the 337,981-query fit list and the one-million-passage identifier list; the typing-stage demo is proposed, not started; Google Doc creation remains deferred.
+
 Branch `m15-whitepaper`. Read **OWNER_PREFERENCES.md**, **LEARNINGS.md**, the last LOG.md entry,
 and **PAPER.md** before revising. The owner keeps challenging purpose, readability, and value;
 previous agent passes are not owner acceptance.

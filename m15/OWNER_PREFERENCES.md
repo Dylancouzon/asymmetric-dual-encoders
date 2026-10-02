@@ -183,6 +183,10 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, title reconsidered and kept
+
+- Owner reopened the title, considered findings-based and clickbait options ("The Best Embedding Model Can Make the Worst Cheap Query Encoder" and others), and kept "Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes". Title is closed again unless the owner reopens it.
+
 ### 2026-10-02, push approval for the session
 
 - Owner grants standing push approval for the rest of this session (2026-10-02): push coherent commits on m15-whitepaper without asking each time. Force-push and pushes to main still need an explicit ask.

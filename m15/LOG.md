@@ -1089,3 +1089,7 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 
 - Owner agreed to say more about how Zero and Nano were trained, limited to what a team needs to build one (no hyperparameters, no recipe history). Section 3.1 now states that Zero's final phase ranks each query's relevant document above negatives among the frozen stored vectors (tied to Section 4's vector-agreement finding) and uses 338,076 query-document pairs, and that Nano's optimization requires no relevance labels (Stella's vectors for 3,486,034 query texts, 834,462 LLM-generated, and document passages). The target-encoding cost point was not added because Section 6 already states it. Astra: two P2 scope fixes applied (optimization, not recipe selection, is label-free; alignment-only extra text belongs to Zero's first phase). All numbers from Appendix B.
 
+### 2026-10-02: session close
+
+- Owner reconsidered the title and kept it (logged in OWNER_PREFERENCES.md). Added the v22 table to PAPER_EVIDENCE_MAP.md (earlier sections kept as the historical trail) and a current-state block to HANDOFF.md with open items. Working tree clean and pushed.
+

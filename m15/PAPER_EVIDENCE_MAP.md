@@ -1,8 +1,34 @@
-# V15 manuscript evidence map
+# Manuscript evidence map
 
 2026-10-01. File-level provenance belongs here, outside the standalone manuscript. Existing result
 payloads were not changed for this rewrite. [EVIDENCE.md](EVIDENCE.md) gives numerical cards;
 [LEARNINGS.md](LEARNINGS.md) covers alternative lessons from the complete history.
+
+## Current manuscript: v22 (2026-10-02)
+
+This table governs v22. The sections that follow map earlier drafts and use their section and figure numbers; they remain the trail for any number v22 inherited.
+
+| v22 location / claim | Source of record | Label and scope |
+|---|---|---|
+| Abstract and §1 encoding medians 31.6, 2.25, 0.044 ms; Table 2 encoding | [real-query latency](../results/m15_e1_latency.json), evidence C2 | Registered timing; medium queries, batch one, four threads, Apple M5 Pro |
+| Figure 1; abstract, contribution 3, and §6 binary latencies 21.3, 2.48, 1.11 ms at nDCG@10 0.7226, 0.6893, 0.6116 | [1M search](../results/m15_e2_ann_msmarco1m.json), evidence C10; plotted by `f0_teaser` in [make_figures.py](figures/make_figures.py) | Exploratory selection from the registered sweep: binary1 rows, fastest setting within 1% of each encoder's own exact score; encoding on the diagnostic's own queries, measured separately from search |
+| Reversal (gte-large 0.5970/0.2455; Stella 0.5745/0.3974), 26-model correlation | [registered towers](../results/m15_e8_towers.json), [second recipe](../results/m15_e19_head_screen.json), evidence C3/C16 | Registered comparison; correlation over 26 is exploratory |
+| Table 1, quality-only baselines, clean-four sensitivity | [width model](../results/m15_e21_width_model.json), evidence C18 | Exploratory, analysis pre-specified |
+| Prospective test, Appendix C prospective table | [E24 amended](../results/m15_e24_prospective_amend1.json), evidence C22 | Predictions hash-committed before fitting; transformer student supported, table uncertain |
+| §4 selection gaps 0.249/0.107 and 0.035/0.000; prospective 0.043 | [width model](../results/m15_e21_width_model.json), [E24 amended](../results/m15_e24_prospective_amend1.json); method E21 in [MEASUREMENTS.md](MEASUREMENTS.md) | Leave-one-checkpoint-out predictions on the original 26 |
+| §4 fit times; vector-agreement counterexample | evidence C13, [vector diagnostics](../results/m15_e11_mechanism.json) | Component costs; descriptive diagnostic |
+| §5 recovery gaps, multipliers, censoring, tas-b exclusion, Figure 3 | [E20](../results/m15_e20_ann_spaces.json), evidence C17 | Exploratory, pre-specified, with dated amendments |
+| §5 corpus-size control | [E23](../results/m15_e23_fiqa25k.json), evidence C21 | Exploratory, pre-specified |
+| §5 distance ratio and cross-workload all-features model | [E22](../results/m15_e22_gap_predictors.json), evidence C20 | Exploratory, pre-specified; ratio is family-held-out; cross-workload numbers are the all-features model |
+| §5 LightRetriever recurrence | [E25](../results/m15_e25_lightretriever.json), evidence C19 | Exploratory, specified before encoding |
+| Table 2 quality, per-dataset retention, BM25 fusion 0.4933, bge-small/LEAF references | [BEIR-15 aggregate](../results/m20_beir15_run.json), evidence C1 | Registered descriptive evaluation |
+| §6 uncompressed ef settings, 13%/11% shares, fixed-ef spread at most 7% | [1M search](../results/m15_e2_ann_msmarco1m.json), [latency](../results/m15_e1_latency.json), evidence C10/C2 | Registered sweep; shares are extrapolated component sums |
+| §6 routing oracle 0.5473/0.5161, simple selectors at most 0.005 | [oracle](../results/m15_e5_oracle.json), [routers](../results/m15_e10_router.json), evidence C5/C8 | Registered |
+| §3.1 and Appendix B recipes, 338,076 pairs, 3,486,034 and 834,462 queries; §6 construction costs | Sources listed under "Architecture and training exposition" below; evidence C13 | Nano optimization measured; Zero retraining a historical estimate |
+| §2 retention context (QED 92.5%, LEAF 97.7%, LightRetriever about 95%) | [related-work notes](RELATED_WORK.md) | Published figures under other protocols |
+| Appendix A registered tests and held-out four | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published reserved aggregate](../results/m13_reserved_run.json), evidence C11 | Registered; reserved raw content not read |
+
+## V15 map (historical)
 
 | Manuscript location / claim | Source of record | Method and scope |
 |---|---|---|
