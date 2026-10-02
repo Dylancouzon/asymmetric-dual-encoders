@@ -183,6 +183,11 @@ These checks operationalize the owner's readability and evidence concerns; they 
 
 - Owner judges the v20 review proposals (full-request concurrency benchmark, a three-space trained-table bridge with seeds and matched baselines, Discussion additions on quantization, hybrid, memory, and serving regime) over-engineered: the paper already reads too close to a benchmark reading, and these would make it worse. Answer a reader's question with the paper's argument before adding a measurement. A proposal that adds tables, rows, or caveats must show it strengthens the story; repeats the round-4 oscillation warning.
 
+### 2026-10-02, v22 direction
+
+- v21.1 is correct but not exciting enough to be discussed or shared. Fix it without turning the paper into an article (owner rejected a puzzle hook and a product-first order as article devices): keep the research order; the excitement comes from findings stated at full strength with effect sizes, a contributions list, and a page-1 teaser figure. Keep the goals in view: interesting, not a benchmark reading.
+- Bring back the buried v17/v18 framing: reducing query cost and increasing speed over an existing index without re-ingesting. It must fit v22 without losing other content. Approved after consultation with Astra: the changeability point (stored vectors support the graph, quantization, and downstream uses; a compatible query encoder searches them without changing them), the existing-index predictors (dimensionality and measured benchmark score before any student is fitted; the distance ratio from the index's own queries without labels), no document re-encoding or collection rebuild, and the measured binary-collection latencies at stated quality levels.
+
 ### 2026-10-02, FastEmbed availability assumption
 
 - If the paper references the FastEmbed integration, assume the PyPI release containing the Constella registrations ships by the paper's release date (owner). Verify the released version before publication.

@@ -1,0 +1,16 @@
+# v22 decisions (Claude and GPT-6-Astra, owner approved 2026-10-02)
+
+Goal: v21.1 is correct but not exciting enough to be shared. Make the findings carry the excitement while staying a research whitepaper, and bring back the existing-index framing. Consultation record: `REVIEWS/2026-10-02-astra-v21-correctness.md` (v22 consultation section).
+
+1. Research order unchanged: setup, quality, search cost, the family.
+2. Introduction keeps the approved opening on computational roles and adds the changeability point: "The stored document vectors support the graph, quantized representations, and downstream uses of those vectors. A compatible replacement query encoder can search these assets without changing them." No universal "every consumer" claim; no 39.9-hour figure. The meta sentence on "two empirical questions and a demonstrated capability" is cut.
+3. Contributions list, stated as findings with scope:
+   - Quality: embedding dimensionality and the original encoder's measured benchmark score jointly predict fitted-student quality across the studied models; prospective support for the head (0.86 [0.33, 1.00]), table uncertain (0.71 [−0.12, 1.00]); the best-retrieving registered model gives the worst table at the same 1024 dimensions as the best table (0.5970 and 0.2455; Stella 0.5745 and 0.3974). Registered comparison; exploratory prediction. Predicts before any student is fitted, not before anything is built.
+   - Search: fitted tables need median ef multipliers of two to four to match the original encoder's exact-neighbor recovery (exploratory; ef is graph breadth, not runtime); the original-query distance ratio predicts recovery deficits at fixed effort without labels or a fitted replacement; recurs in LightRetriever.
+   - Cost and speed on Stella's index: two query encoders added with no document re-encoding or collection rebuild between encoder batches; on one binary-quantized one-million-passage diagnostic, encoding plus search takes 21.3, 2.48, and 1.11 ms at nDCG@10 0.7226, 0.6893, and 0.6116 (exploratory selection from the registered sweep; medians of separately measured phases; unequal absolute relevance; positive-preserving diagnostic). Nano final optimization 57.3 A100 hours; fitted screens take minutes. Per-request choice. "Without downtime" was not measured and is not claimed.
+4. Section 4 framed as what the existing document representation and its measured baseline retrieval predict; selection lesson and unfavorable gaps kept.
+5. Section 6 restores the no-re-encoding, no-rebuild statement and reports the binary latencies beside, and distinct from, the extrapolated 13% and 11% shares.
+6. Page-1 teaser figure `f0_teaser` (make_figures.py): (a) the registered reversal; (b) binary-collection encode-plus-search per encoder at its own 1% setting, with quality labels; caption names the exploratory selection and separate timing phases.
+7. Artifact availability names FastEmbed (PyPI release assumed by publication; verify). Demo linked outside the paper.
+
+Kept: everything in v21.1, including the restored passages, registered test, disclosures, training costs, the settled re-embedding answer, routing, and hybrid.

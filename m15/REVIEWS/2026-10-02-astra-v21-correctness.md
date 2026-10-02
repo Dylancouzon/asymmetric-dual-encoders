@@ -149,3 +149,49 @@ Evidence: `m15/EVIDENCE.md`, C16, reports gte-small head nDCG@10 of 0.4733 again
 **Fix:** “The bge-small head student retains 1.008 of bge-small’s own retrieval score; the gte-small head student retains 0.978 of gte-small’s own score.”
 
 Otherwise, I found nothing essential in the supplied changes. The restored numbers match v20 and the checked receipts; the terminology replacements preserve the measured references; removing the retrospective validation does not remove a required test. Required disclosures and the six previous fixes remain intact.
+## v22 consultation
+
+Consultation on proposed v22 changes (no edits this round; read-only, same read rules). The owner asked me to consult you before Sol writes v22. Push back where a proposal overclaims, breaks the whitepaper register, loses existing content, or contradicts an owner ruling in m15/OWNER_PREFERENCES.md. Owner context: v21.1 is correct but not exciting enough to be discussed or shared; it must stay a research whitepaper, not an article (no narrative hook, no product-first story, no "we built"); excitement must come from claims stated at full strength with effect sizes, and from figures. The owner also asks to bring back a framing from v17/v18 that later drafts buried: reducing cost and increasing speed over your own existing index without re-ingesting.
+
+Proposed changes (current paper: m15/PAPER.md at HEAD; v17 text: `git show 5b825f9:m15/PAPER.md`):
+
+1. Keep v21's research order (setup, quality, search cost, the family). No reordering.
+2. Abstract and introduction: keep the approved opening on computational roles, and add v17's changeability point in plain words: the stored document vectors are what the graph, quantization, and every consumer depend on, while the query encoder runs per request and nothing stored depends on it. No 39.9-hour encoding figure (owner rejected it as unrepresentative). Remove the meta sentence "We study what this separation gives and what it costs through two empirical questions and a demonstrated capability."
+3. Research gap and contributions list, stated as findings:
+   a. An existing index's fixed properties, its embedding dimensionality and its own measured retrieval quality, predict the quality of a cheap query student over it, including prospectively (hash-committed predictions); the best-retrieving registered model gives the worst token table at the same 1024 dimensions as the best table (gte-large 0.5970 and table 0.2455; Stella 0.5745 and table 0.3974).
+   b. Replacement queries need a median two to four times the graph-search effort to recover their own exact neighbors over the unchanged HNSW graph; the distance ratio computed from the index's own queries flags which indexes pay more before any replacement exists; the deficit recurs in LightRetriever's jointly trained lookup path.
+   c. On Stella's index, two query encoders were added with no document re-encoding or collection rebuild; on one binary-quantized one-million-passage collection, encoding plus search takes 21.3 ms (Stella), 2.48 ms (Nano), and 1.11 ms (Zero) at the fastest settings within 1% of each encoder's own exact score, at nDCG@10 of 0.7226, 0.6893, and 0.6116; Nano's final optimization took 57.3 A100 hours and a fitted screen takes minutes; the encoder can be chosen per request.
+4. Section 4 framed as what an existing index's fixed properties predict, keeping the selection lesson (fit and measure the student directly) and the unfavorable top-choice gaps.
+5. Section 6 restores "no document re-encoding or collection rebuild" and reports the measured latencies in (3c) beside the existing extrapolated component-time shares.
+6. A page-1 teaser figure, standard in IR/ML papers: panel (a) the reversal (model's own score versus table-student score, gte-large and Stella marked); panel (b) encoding-plus-search latency per encoder on the binary collection at its 1%-loss setting, with quality labels.
+7. Artifact availability: one sentence that the three encoders are available through FastEmbed (owner: assume the PyPI release ships by publication). A typing-stage demo stays outside the paper and is linked.
+
+Answer under 600 words, numbered by proposal:
+- For each: keep, modify (with the exact fix), or drop, with the reason.
+- Check claims 3a to 3c against receipts named in m15/PAPER_EVIDENCE_MAP.md and m15/EVIDENCE.md: numbers, evidence labels (registered or exploratory), and scope. In particular: is "predict before anything is built" true for both predictors (the RQ1 model needs the model's own retrieval score on labelled datasets; the distance ratio does not)? Is the latency selection registered or exploratory? Was "no rebuild" verified, and is "without downtime" supported or only implied?
+- Anything in v21.1 that these changes would lose.
+- Your strongest single objection, if any.
+
+### Astra
+
+1. **Keep.** The research order preserves the whitepaper register. Stronger findings and figures can supply the emphasis without a product-first narrative.
+
+2. **Modify.** Keep the approved opening and delete the meta sentence. Replace the proposed dependency claim with: **“The stored document vectors support the graph, quantized representations, and downstream uses of those vectors. A compatible replacement query encoder can search these assets without changing them.”** “Every consumer” and “nothing stored depends on it” are universal claims the evidence cannot establish. Query-dependent caches and serving settings can require changes.
+
+3. **Modify the contributions as follows.**
+
+   **3a:** Say **“Embedding dimensionality and the original encoder’s measured benchmark retrieval score jointly predict fitted-student quality across the studied models.”** Retrieval quality is workload-dependent, not an intrinsic fixed property of an index. The four reversal scores and shared 1024 dimensions are correct (`m15_e8_towers.json`; evidence C3). That comparison is registered; conditional prediction and the prospective test are exploratory. State prospective support specifically for the head: ρ=0.86 [0.33, 1.00]; the table’s 0.71 [−0.12, 1.00] remains uncertain (`m15_e24_prospective_amend1.json`; C22). **Before student fitting**, yes; **before anything is built**, no. RQ1 requires original-encoder retrieval on labelled datasets.
+
+   **3b:** Say **“Across the measured models and corpora, fitted token tables require median `ef` multipliers of two to four to match the original encoder’s exact-neighbor recovery.”** This is exploratory, and `ef` is graph breadth, not measured runtime (`m15_e20_ann_spaces.json`). The original-query distance ratio predicts **recovery deficits at fixed effort**, not directly latency or required multipliers (`m15_e22_gap_predictors.json`; C20). It needs query/document vectors and distance calculations, but no relevance labels or fitted replacement. LightRetriever recurrence is supported and exploratory (`m15_e25_lightretriever.json`; C19).
+
+   **3c:** Numbers confirmed: 21.335/2.484/1.113 ms and 0.7226/0.6893/0.6116 (`m15_e2_ann_msmarco1m.json`; C10). Describe this as **“an exploratory selection from the registered sweep, restricted to one binary collection.”** These are medians of encoding-plus-search times measured in separate phases, excluding loading and application dispatch. The positive-preserving diagnostic and unequal absolute relevance must accompany the comparison. Same populated collection, unchanged document vectors, and no rebuild **between encoder batches** are verified. Deployment without downtime was not measured. The 57.3-hour optimization and minutes-scale screen are correct, distinct construction components.
+
+4. **Modify.** Frame §4 around **“what the existing document representation and measured baseline retrieval predict.”** Preserve recipe scope, prospective uncertainty, direct evaluation, and unfavorable selection gaps. Do not imply transfer to arbitrary production indexes or trained students has been demonstrated.
+
+5. **Keep, with measurement separation.** Restore the verified reuse statement. Identify binary timings as using the diagnostic’s own queries; the existing extrapolated shares combine different encoding and search samples under uncompressed search.
+
+6. **Modify.** Keep the teaser. Panel (a) should show the registered comparison or explicitly identify the two highlighted models as its extrema. Panel (b) needs quality labels and a caption naming the exploratory binary selection, diagnostic corpus, and separate timing phases. Do not present equal-quality speedups.
+
+7. **Keep.** FastEmbed availability follows the owner’s publication assumption; verify the released version before publication. Link the demo externally, while retaining the paper’s settled per-request-choice explanation.
+
+Preserve the four restored passages, registered tests, disclosures, Zero’s construction estimate, and full-build exclusions. **Strongest objection:** presenting benchmark retrieval quality as an intrinsic index property would turn a bounded predictive finding into an unsupported universal claim.
