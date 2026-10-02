@@ -170,3 +170,17 @@ Applied the agreed pass to [m15/PAPER.md](/Users/dylanc/Documents/GitHub/asymetr
 Claims, numbers, and evidence labels are preserved. Numeric, terminology, paragraph-order, and whitespace checks passed.
 
 **Main-text prose: 3,739 words** for Sections 1–8, excluding headings, captions, tables, alt text, and citations. **Including the abstract: 3,982 words.**
+## Connective sentences check
+
+1. **P2: “Savings … recur on every query” overstates both timing results.** The measurements are medians, cached queries need no encoding, and requests may select Stella. In both the abstract and construction paragraph, replace with:
+   > Using a smaller encoder can reduce recurring computation on uncached queries, while construction incurs a one-time cost.
+
+   Keep Nano’s optimization figure in the following sentence.
+
+2. **P2: “Large differences by query type” attributes dataset-level differences to query type.** The cited results compare datasets, which also differ in documents and relevance judgments. Replace with:
+   > The averages in Table 2 conceal substantial differences in retained quality across datasets.
+
+3. **P2: “The search penalty from Section 5 reappears as time” conflates distinct experiments and sounds like an article transition.** Section 5 primarily establishes neighbor-recovery effort; this comparison uses released models, another workload, and relative nDCG targets. Replace with:
+   > The Constella comparison measures how additional graph-search effort affects the encoding-time savings.
+
+The BM25 statement is supported by the BEIR-15 macro improvement. Both coefficient intervals exclude zero for both students in Table 1. The query-placement description fairly summarizes the distance ratio, which the next sentence defines.

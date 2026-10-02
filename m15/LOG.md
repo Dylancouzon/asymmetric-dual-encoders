@@ -1080,3 +1080,8 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Claude's modifications to Astra's proposals: kept the 31.6 ms to 0.044 ms hook in the abstract; kept a vivid contribution headline ("Replacement queries need a wider search over the unchanged graph"); kept the Discussion's three consequences. Claude then fixed four leftovers (a dangling "that choice", a repeated "consumes" claim, a repeated "binary-quantized collection", and the dropped selection claim in the first consequence, checked against the v20 selection gaps 0.035 versus 0.285).
 - Numbers unchanged; no em dashes; PDF 17 pages.
 
+### 2026-10-02: v22 connective sentences
+
+- Owner: the paper sometimes reads as a list of unrelated facts (example: the abstract's closing three sentences); improve it with minimal changes and no regression. Claude changed opening or joining sentences only, in eight places: the abstract's close (recurring savings against one-time construction, then per-request choice), the Table 1 result, the distance-ratio paragraph, three Section 6 openings, the construction paragraph, and the request-context paragraph. No other sentence, number, or claim changed.
+- Astra check: three P2s fixed (savings apply to uncached queries that use a smaller encoder; dataset-level, not query-type, differences, also fixed in the existing "type of query" sentence; Section 6 timing transition no longer conflates the Section 5 experiment). Nothing else flagged.
+
