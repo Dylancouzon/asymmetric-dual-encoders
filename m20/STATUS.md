@@ -1,5 +1,25 @@
 # M20 status — stages A, B, C COMPLETE; stage D archive BUILT; two exit conditions outstanding
 
+## HANDOFF 2026-10-06 — pods first, then disk
+
+**Pods: not done.** Dylan asked for the RunPod pods to be stopped. The last provider check
+(2026-09-23, condition 4 below) recorded three retained pods `EXITED`; nobody has re-checked since.
+Stopped pods still bill for their volumes. This session could not reach the API: the auto-mode
+classifier blocked reading the key location in `scripts/m13_reserved_cloud.py` (RunPod GraphQL
+client). Next session: ask Dylan to approve key access or confirm he handled it in the console,
+then list pods and ask **stop vs terminate** — terminate deletes their volumes and is irreversible.
+
+**Disk cleanup done (owner-directed: training finished, weights not needed).** Deleted the
+HF/uv/pip caches and `work/{enc,m13cloud,m10arms,pool,runs,m17,m9long,lotte,m10targets,m10tok,
+m10paq,enc9,m10harvest,onnx,m9onnx}`, `~/asymetric-dual-encoders-m18`, and the archived document
+vectors in `work/m13-reserved-enc` plus the `work/m20-archive` staging copy. The vectors survive
+only on `/mnt/d/constella-archive/beir15/` (verified 2026-09-23, manifest
+`results/m20_archive_manifest.json`) — that is now the sole copy. Kept: `results/`,
+`work/release`, `work/m11onnx`, `~/disney-demo` (active). WSL root went 582G → 75G used.
+**Still open:** `~/qdrant-pgvector-recall-bench` has root-owned Docker volume files left (needs
+`sudo` in a real terminal), and C: stays ~98% full until Dylan compacts the WSL `ext4.vhdx`
+(`wsl --shutdown`, then `--set-sparse true` or `Optimize-VHD -Mode Full`).
+
 ## Closure state
 
 `instructions-m20.md` sets five exit conditions. Four are met; one is not, and it needs an owner
