@@ -7,7 +7,8 @@
 each `EXITED` with a 500 GB volume (~$0.41/h together), were deleted via the REST API (204 each);
 their volumes are gone. No network volumes exist. One pod remains: `8oby6v8j8x6j5p`
 `m15-e25-a100`, created 2026-10-01, `EXITED`, 80 GB container disk, **no volume**, and not
-recorded anywhere in this repo. It was left alone pending Dylan's word on what it belongs to.
+recorded anywhere in this repo — also terminated on Dylan's word (204). **The account has no
+pods and no network volumes.**
 
 **Disk cleanup done (owner-directed: training finished, weights not needed).** Deleted the
 HF/uv/pip caches and `work/{enc,m13cloud,m10arms,pool,runs,m17,m9long,lotte,m10targets,m10tok,
