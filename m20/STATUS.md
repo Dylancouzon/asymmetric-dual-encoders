@@ -2,12 +2,12 @@
 
 ## HANDOFF 2026-10-06 — pods first, then disk
 
-**Pods: not done.** Dylan asked for the RunPod pods to be stopped. The last provider check
-(2026-09-23, condition 4 below) recorded three retained pods `EXITED`; nobody has re-checked since.
-Stopped pods still bill for their volumes. This session could not reach the API: the auto-mode
-classifier blocked reading the key location in `scripts/m13_reserved_cloud.py` (RunPod GraphQL
-client). Next session: ask Dylan to approve key access or confirm he handled it in the console,
-then list pods and ask **stop vs terminate** — terminate deletes their volumes and is irreversible.
+**Pods: the three M13 pods are TERMINATED (Dylan, 2026-10-06).** `wnzk8eeqrrkw4m`
+(m13-gate-chain), `exulxoxelug5um` (m13-replacement) and `k3aee2m68765em` (m13-a100-benchmark),
+each `EXITED` with a 500 GB volume (~$0.41/h together), were deleted via the REST API (204 each);
+their volumes are gone. No network volumes exist. One pod remains: `8oby6v8j8x6j5p`
+`m15-e25-a100`, created 2026-10-01, `EXITED`, 80 GB container disk, **no volume**, and not
+recorded anywhere in this repo. It was left alone pending Dylan's word on what it belongs to.
 
 **Disk cleanup done (owner-directed: training finished, weights not needed).** Deleted the
 HF/uv/pip caches and `work/{enc,m13cloud,m10arms,pool,runs,m17,m9long,lotte,m10targets,m10tok,
