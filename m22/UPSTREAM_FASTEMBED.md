@@ -1,5 +1,13 @@
 # Upstream FastEmbed #751: Constella registrations merged (2026-09-29)
 
+## Current state (verified 2026-10-07)
+
+**M23 is complete.** The maintainer merged [#754](https://github.com/qdrant/fastembed/pull/754) on 2026-10-02 as `2f2a8bfadb6d643c8774ae0234197f28b7e2b46c`; [#752](https://github.com/qdrant/fastembed/issues/752) closed as completed. The fix preserves the model's floating dtype in all three mean-pooling output paths, including Nano. [FastEmbed v0.9.0](https://github.com/qdrant/fastembed/releases/tag/v0.9.0) includes #751 and #754 and is available on [PyPI](https://pypi.org/project/fastembed/0.9.0/) as of 2026-10-07.
+
+Verification used GitHub merge metadata, the changed source files, release notes, and PyPI wheel/source metadata. Model inference was not rerun. M22 remains deferred by the owner; its future card update can use the standard FastEmbed install. The following sections preserve the 2026-09-30 checks and decisions; their open dtype and unreleased-PyPI statements are historical.
+
+## Historical record (2026-09-30)
+
 George Panchuk (FastEmbed maintainer) opened and merged
 [qdrant/fastembed#751](https://github.com/qdrant/fastembed/pull/751) on 2026-09-29 as upstream
 commit `a56e1e13508980441cf4f2072951c92c224e7fbe`, co-authored with Dylan. CI passed 17 of 17

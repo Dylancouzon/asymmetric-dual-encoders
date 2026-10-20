@@ -16,10 +16,10 @@ Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md)
 
 ## Quickstart
 
-The three native registrations are merged into upstream FastEmbed ([#751](https://github.com/qdrant/fastembed/pull/751)) but not yet in a PyPI release. Until then, install the preview branch, which also returns Nano's vectors as fp32:
+FastEmbed registers all three models. Zero runs on FastEmbed's NumPy static path ([#832](https://github.com/qdrant/fastembed/pull/832)), with output identical to the released int8 table:
 
 ```bash
-pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview" qdrant-client
+pip install "fastembed>=0.9.0" qdrant-client
 ```
 
 This indexes with Stella, then queries the same in-memory Qdrant collection with Nano and Zero;

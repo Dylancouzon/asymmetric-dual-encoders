@@ -1,10 +1,12 @@
 # Project status: 2026-09-30
 
+**FastEmbed update (verified 2026-10-07).** M23 is complete: FastEmbed 0.9.0 on PyPI includes the three model registrations and dtype fix #754. M22 remains deferred by Dylan; its card and install-line updates remain outstanding. `instructions-m23.md` and `m22/UPSTREAM_FASTEMBED.md` record the upstream verification. The following overview otherwise retains its historical date; current paper status is in `m15/HANDOFF.md`.
+
 **Constella Zero, the Stella document tower and Constella Nano are public; Nano is a research
 preview.** M13 and M14 are closed. M20's measurements are complete: the reserved four were spent
 once on 2026-09-19 and BEIR-15 finished on 2026-09-23. Only the object-storage half of its archive
-remains, which needs an owner decision. M22 (official release) may start. M23's upstream work moved
-first: registrations merged as qdrant/fastembed#751, the dtype bug filed as #752. Current plan:
+remains, which needs an owner decision. M22 (official release) is deferred. M23's upstream work is
+complete: registrations #751 and dtype fix #754 are in FastEmbed 0.9.0. Current plan:
 `ROADMAP.md`; published numbers: `m21/BENCHMARKS.md`; M20 results: `m20/STATUS.md`.
 
 ## Research and product
@@ -22,7 +24,7 @@ first: registrations merged as qdrant/fastembed#751, the dtype bug filed as #752
 | M19 | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development results were label-sensitive, confirmation remained sealed and released Zero v1 stays selected |
 | M20 | Active, measurements complete. Reserved four spent once (tag `m8-reserved-spent`, `results/m13_reserved_run.json`); BEIR-15 `COMPLETE` over the eight-system roster (`results/m20_beir15_run.json`); archive built and verified on `D:`, object-storage copy outstanding. `m20/STATUS.md` |
 | M21 | Closed 2026-09-15: research-preview documentation, canonical benchmark tables, model-card publication and FastEmbed polish completed |
-| FastEmbed upstream | The three registrations merged as qdrant/fastembed#751 on 2026-09-29, not yet on PyPI. Verified 2026-09-30 against direct ORT: all three agree with direct ORT on the M14 fixtures and thresholds (the Torch leg was not rerun); upstream Nano returns float64, and the dtype fix is not upstream yet. `m22/UPSTREAM_FASTEMBED.md` |
+| FastEmbed upstream | M23 complete, verified 2026-10-07: registrations #751 and dtype fix #754 are in FastEmbed 0.9.0 on PyPI. The 2026-09-30 direct-ORT parity checks remain historical; inference was not rerun for 0.9.0. Zero then moved from ONNX to FastEmbed's NumPy static path (qdrant/fastembed#832, with the int8 `model.safetensors` from Hub PR [#1](https://huggingface.co/Qdrant/constella-zero/discussions/1)); output matches the released int8 encoder to 4.5e-08, and the static path needs tokenizers ≥0.20. `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Verification and limits
 

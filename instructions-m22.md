@@ -4,6 +4,8 @@
 mandate so that M20 stays evaluation-only. Runs after `m20/STATUS.md` reports the reserved four and
 BEIR-15 complete. No new measurement, no training, no protected access.
 
+**Owner note (2026-10-07).** FastEmbed 0.9.0 includes the models and dtype fix; M23 is complete. Official release work remains deferred at Dylan's request. The PyPI availability check is satisfied; install-line and card updates remain M22 work. This note starts no card update, publication, or storage retirement.
+
 ## Deliverables
 
 1. **Card revision** of `Qdrant/constella-nano` (moved from `DylanCouzon/` under R25, `m22/HUB_TRANSFER.md`) as a later revision of the existing

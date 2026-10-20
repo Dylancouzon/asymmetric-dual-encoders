@@ -4,9 +4,9 @@ Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. T
 and navigation, not results, registered constants or access rules. **M20 is the active execution
 milestone** (opened 2026-09-16 under R22, evaluation-only), but its measurement work is finished:
 stages A, B and C are complete and only the archive (stage D) remains, blocked on object storage.
-**M22 (official release) may start** without waiting for stage D — object storage blocks M22's
+**M22 (official release) is ready but deferred by Dylan (2026-10-07).** Object storage blocks M22's
 storage-retirement recommendation, not card preparation, staging, verification or release
-(Sol, 2026-09-23). M23's upstream work moved first: registrations merged as #751, dtype bug filed as #752. M19 closed at its development-judgment boundary
+(Sol, 2026-09-23). **M23 is complete:** FastEmbed 0.9.0 includes the model registrations (#751) and dtype fix (#754); #752 is closed. M19 closed at its development-judgment boundary
 with confirmation sealed and released Zero v1 retained.
 
 | Milestone | Deliverable | State / entry point |
@@ -20,15 +20,15 @@ with confirmation sealed and released Zero v1 retained.
 | M12 | Qdrant fusion audit | Closed; `m12/FINDINGS.md` |
 | M13 | Cloud E, build, final evaluation and cost frontier | Planned historical track, not current execution; `m13/STATUS.md`, `instructions-m13.md` |
 | M14 | Nano research preview (own Hub account, custom FastEmbed branch) | **Closed 2026-09-15**, published at revision `6bb167dc`; `m14/STATUS.md` |
-| M15 | Whitepaper (research paper, arXiv preprint) and evidence package | **Active on branch `m15-whitepaper`**: draft v18, reviewer-signed 2026-10-02 (frozen-index frame, two research questions), E1–E21 complete, E22–E24 pre-specified and reviewed, waiting on pod GPU; owner review ongoing. `m15/HANDOFF.md`, `m15/REVISION_PLAN_V17.md` |
+| M15 | Whitepaper (research paper, arXiv preprint) and evidence package | **Active on branch `m15-whitepaper`**: draft v22, experiments complete, internal review Google Doc prepared. Owner/coauthor review, fit-list and passage-identifier archival, and publication checks remain. `m15/HANDOFF.md`, `m15/REVISION_PLAN_V22.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
 | M19 | Deterministic short-query Zero feasibility | **Closed 2026-09-13** as `SYSTEM_READY` + `ENCODER_INCONCLUSIVE`; development result label-sensitive, confirmation sealed, Zero v1 retained; `m19/STATUS.md` |
 | M20 | Reserved four + BEIR-15 descriptive evaluation, eight-system roster, dataset/vector archive | **Active**; stages A+B complete 2026-09-19 (reserved access SPENT, `m8-reserved-spent`), **stage C complete 2026-09-23** (`results/m20_beir15_run.json`); only stage D remains, blocked on object storage; `m20/STATUS.md`, `m20/FINDINGS.md`, `instructions-m20.md` |
 | M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
-| M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | After M20; `instructions-m22.md` |
-| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | Registrations merged upstream as #751 (2026-09-29); padding fixed by upstream; dtype bug filed as #752, no PR planned; `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
+| M22 | Official Nano release: card revision with M20 tables, verification, storage-retirement request | **Deferred by owner (2026-10-07)**; measurements are complete, object storage blocks storage retirement only. `instructions-m22.md` |
+| M23 | Upstream FastEmbed PRs (padding, dtype, registrations) | **Complete, verified 2026-10-07**: padding fixed upstream; registrations #751 and dtype fix #754 included in FastEmbed 0.9.0 on PyPI. `instructions-m23.md`, `m22/UPSTREAM_FASTEMBED.md` |
 
 ## Migration map
 
