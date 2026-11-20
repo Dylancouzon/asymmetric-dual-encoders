@@ -1,0 +1,233 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory",
+  "smoke": false,
+  "dataset": "msmarco1m",
+  "n_queries": 6980,
+  "n_docs": 1000000,
+  "inputs": {
+    "source": "BeIR/msmarco",
+    "revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+    "qrels_source": "BeIR/msmarco-qrels",
+    "qrels_revision": "253fbf8a3f8d4a0932b63882b5162bedc84779f5",
+    "split": "dev"
+  },
+  "qdrant_version": "1.19.1",
+  "qdrant_binary_sha256": "967ce05dac592ede582072f0c335f3c2d095dfe4dd21ab370b89d7d9158d6cc4",
+  "original_e2_receipt_sha256": "582893baf36653e61280835cd958fb19b0bc9b9c86122e14e0e94855586ccd95",
+  "zero_int8_table_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+  "bm25_avg_doc_length": 56.242468,
+  "top_k_requested": 11,
+  "top_k_scored": 10,
+  "zero_search": {
+    "hnsw_ef": 512,
+    "oversampling": 2.0,
+    "rescore": true
+  },
+  "protocol": {
+    "clock": "text input to ranked IDs, single sequential gRPC client",
+    "order": "alternating which system sees each query first, flipped each pass",
+    "warmup_queries_per_path_per_pass": 100,
+    "passes": 3,
+    "summary": "median across pass-level statistics"
+  },
+  "indexes": {
+    "zero_binary1": {
+      "seconds_to_green": 309.7337314169854,
+      "points": 1000000,
+      "indexed_vectors": 1000000,
+      "segments": 7,
+      "config": {
+        "params": {
+          "vectors": {
+            "dense": {
+              "size": 1024,
+              "distance": "Cosine",
+              "hnsw_config": null,
+              "quantization_config": null,
+              "on_disk": null,
+              "memory": null,
+              "datatype": null,
+              "multivector_config": null
+            }
+          },
+          "shard_number": 1,
+          "sharding_method": null,
+          "replication_factor": 1,
+          "write_consistency_factor": 1,
+          "read_fan_out_factor": null,
+          "read_fan_out_delay_ms": null,
+          "on_disk_payload": true,
+          "payload": null,
+          "sparse_vectors": null
+        },
+        "hnsw_config": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10000,
+          "max_indexing_threads": 0,
+          "on_disk": false,
+          "memory": null,
+          "payload_m": null,
+          "inline_storage": null
+        },
+        "optimizer_config": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 0,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null,
+          "prevent_unoptimized": null
+        },
+        "wal_config": {
+          "wal_capacity_mb": 32,
+          "wal_segments_ahead": 0,
+          "wal_retain_closed": 1
+        },
+        "quantization_config": {
+          "binary": {
+            "always_ram": null,
+            "memory": "pinned",
+            "encoding": "one_bit",
+            "query_encoding": null
+          }
+        },
+        "strict_mode_config": null,
+        "metadata": {}
+      }
+    },
+    "qdrant_bm25": {
+      "seconds_to_green": 89.16628329106607,
+      "points": 1000000,
+      "indexed_vectors": 1000000,
+      "segments": 7,
+      "config": {
+        "params": {
+          "vectors": {},
+          "shard_number": 1,
+          "sharding_method": null,
+          "replication_factor": 1,
+          "write_consistency_factor": 1,
+          "read_fan_out_factor": null,
+          "read_fan_out_delay_ms": null,
+          "on_disk_payload": true,
+          "payload": null,
+          "sparse_vectors": {
+            "bm25": {
+              "index": null,
+              "modifier": "idf"
+            }
+          }
+        },
+        "hnsw_config": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10000,
+          "max_indexing_threads": 0,
+          "on_disk": false,
+          "memory": null,
+          "payload_m": null,
+          "inline_storage": null
+        },
+        "optimizer_config": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 0,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null,
+          "prevent_unoptimized": null
+        },
+        "wal_config": {
+          "wal_capacity_mb": 32,
+          "wal_segments_ahead": 0,
+          "wal_retain_closed": 1
+        },
+        "quantization_config": null,
+        "strict_mode_config": null,
+        "metadata": {}
+      }
+    }
+  },
+  "results": {
+    "zero_binary1": {
+      "ndcg10": 0.6093639174685309,
+      "p50_ms": 1.1063545000000001,
+      "p95_ms": 1.229167,
+      "passes": [
+        {
+          "ndcg10": 0.6093639174685309,
+          "p50_ms": 1.4930835,
+          "p95_ms": 4.006739599999998
+        },
+        {
+          "ndcg10": 0.6093639174685309,
+          "p50_ms": 1.1063545000000001,
+          "p95_ms": 1.229167
+        },
+        {
+          "ndcg10": 0.6093639174685309,
+          "p50_ms": 1.0966455,
+          "p95_ms": 1.21900205
+        }
+      ]
+    },
+    "qdrant_bm25": {
+      "ndcg10": 0.48949438254485667,
+      "p50_ms": 0.657375,
+      "p95_ms": 0.73875,
+      "passes": [
+        {
+          "ndcg10": 0.48949438254485667,
+          "p50_ms": 0.654833,
+          "p95_ms": 0.8023791499999999
+        },
+        {
+          "ndcg10": 0.48949438254485667,
+          "p50_ms": 0.657375,
+          "p95_ms": 0.73875
+        },
+        {
+          "ndcg10": 0.48949438254485667,
+          "p50_ms": 0.6574375,
+          "p95_ms": 0.7365985499999999
+        }
+      ]
+    }
+  },
+  "receipt": {
+    "script": "m15src/bm25_zero_msmarco1m.py",
+    "script_sha256": "0fcad2afe1d47f68fe421a5ec59b4e572ee4fae909c2292599368092123a7df1",
+    "git_commit": "03e2768b03dd7a5cf142e314bcf098b46c1f5728",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-20T00:05:48Z",
+    "finished_utc": "2026-11-20T00:13:18Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "qdrant-client": "1.19.0",
+      "pyarrow": "25.0.1",
+      "tokenizers": "0.22.2"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "ids": "work/m15/msmarco1m_ids.json",
+        "ids_sha256": "4a09d3d055f13ae8cfd3f3a9202574af0f084954cd51f482918ce31aaee181a3",
+        "n_positives": 7433,
+        "vectors": "work/m15/vecs/msmarco1m (Mac MPS)",
+        "vector_shards": 50
+      }
+    ],
+    "method": "Text-to-ranked-IDs measurement defined in the benchmark script"
+  }
+}
