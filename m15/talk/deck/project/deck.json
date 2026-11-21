@@ -21,8 +21,8 @@
     "footprint",
     "distill",
     "zero-mech",
-    "zero-train",
     "order",
+    "zero-train",
     "nano",
     "bench",
     "bet",
@@ -36,7 +36,9 @@
     "b-datasets",
     "b-msmarco",
     "b-edge",
-    "b-routing"
+    "b-routing",
+    "b-teachers",
+    "b-predictor"
   ],
   "sections": {
     "opening": {
