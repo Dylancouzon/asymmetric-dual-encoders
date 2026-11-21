@@ -80,6 +80,10 @@ done = collections.deque(maxlen=200_000)       # (t_done, latency_ms, encoder, n
 dropped = collections.deque(maxlen=200_000)    # t of each dropped arrival
 arrivals = collections.deque(maxlen=20_000)    # [t_arrival_wall, ok]; ok None until known
 pins = []
+trial = {"id": 0, "end": 0.0, "mode": None, "rate": 0.0}   # a timed, seeded trial; 0 = none running
+TRIAL_S = float(os.environ.get("TRIAL_S", "12"))
+reseed = [False]
+HEADROOM = 0.85                                 # auto plans to 85% of the budget
 service = dict(BASE)                           # EWMA ms under current load
 last_used = {r: 0.0 for r in RUNG}
 
@@ -95,9 +99,11 @@ def generator():
     rng, nxt = random.Random(0), time.perf_counter()
     while True:
         now = time.perf_counter()
+        if reseed[0]:                     # every trial replays the same arrival and query sequence
+            rng, nxt, reseed[0] = random.Random(0), now, False
         with cv:
             while nxt <= now:
-                rec = [time.time() - (now - nxt), None]
+                rec = [time.time() - (now - nxt), None, trial["id"] if time.time() < trial["end"] else 0]
                 arrivals.append(rec)
                 if len(queue) >= MAX_QUEUE:
                     dropped.append(time.time())
@@ -111,11 +117,12 @@ def generator():
 
 def choose(wait_ms):
     if state["mode"] != "auto":
-        return state["mode"]
+        return state["mode"]          # fixed modes name a ladder rung
     now = time.time()
     for r, *_ in LADDER:                # best quality that still fits the budget after queueing
-        est = service[r] if now - last_used[r] < 2.0 else BASE[r]   # stale estimates fall back to quiet time
-        if wait_ms + est <= state["budget_ms"]:
+        if now - last_used[r] >= 2.0:     # stale: forget overload history, restart from quiet time
+            service[r] = BASE[r]
+        if wait_ms + service[r] <= HEADROOM * state["budget_ms"]:
             return r
     return LADDER[-1][0]
 
@@ -135,7 +142,7 @@ def worker():
         lat, nd = (t1 - t_arr) * 1000, ndcg10(QIDS[i], [h.id for h in hits])
         # A good answer: at least one judged-relevant passage in the top 10, within the budget.
         rec[1] = lat <= state["budget_ms"] and nd > 0
-        done.append((time.time(), lat, RUNG[r][0], nd, r, (t0 - t_arr) * 1000, enc_ms, srch_ms))
+        done.append((time.time(), lat, RUNG[r][0], nd, r, (t0 - t_arr) * 1000, enc_ms, srch_ms, rec[2]))
 
 
 app = FastAPI()
@@ -150,7 +157,7 @@ def index():
 def set_state(rate: float = None, mode: str = None, budget: float = None):
     if rate is not None:
         state["rate"] = max(1.0, min(5000.0, rate))
-    if mode in ORDER + ("auto",):   # fixed modes use each encoder's selected setting
+    if mode in tuple(RUNG) + ("auto",):
         state["mode"] = mode
     if budget is not None:
         state["budget_ms"] = max(1.0, budget)
@@ -174,6 +181,28 @@ def pin():
     return pins
 
 
+@app.post("/trial")
+def start_trial():
+    """Empty the queue, replay the seeded trace for TRIAL_S seconds, then pin this trial's own results."""
+    reset()
+    trial.update(id=trial["id"] + 1, end=time.time() + TRIAL_S, mode=state["mode"], rate=state["rate"], pinned=False)
+    reseed[0] = True
+    return trial
+
+
+def finish_trial():
+    tid, now = trial["id"], time.time()
+    arr = [a for a in list(arrivals) if a[2] == tid]
+    comp = [d for d in list(done) if d[8] == tid]
+    lat = [d[1] for d in comp]
+    pins.append({"mode": trial["mode"], "rate": trial["rate"], "trial": True,
+                 "good_pct": 100.0 * sum(1 for a in arr if a[1]) / len(arr) if arr else 0.0,
+                 "p95_ms": float(np.percentile(lat, 95)) if lat else None,
+                 "ndcg10": float(np.mean([d[3] for d in comp])) if comp else 0.0,
+                 "served_per_s": len(comp) / TRIAL_S})
+    trial["pinned"] = True
+
+
 @app.post("/unpin")
 def unpin():
     pins.clear()
@@ -185,6 +214,9 @@ HIST = collections.deque(maxlen=400)          # one /stats sample every 250 ms, 
 
 def sampler():
     while True:
+        # Pin a trial once its last arrival's deadline has passed.
+        if trial["id"] and not trial.get("pinned") and time.time() > trial["end"] + state["budget_ms"] / 1000 + 0.5:
+            finish_trial()
         HIST.append(snapshot())
         time.sleep(0.25)
 
@@ -218,6 +250,7 @@ def snapshot():
             "split_ms": {"queue": med(5), "encode": med(6), "search": med(7)},
             "active": active[0][0] if active else None,
             "active_setting": (lambda r: f"{RUNG[r][0].capitalize()} · ef {RUNG[r][1]} · os {RUNG[r][2]:g}")(active[0][0]) if active else "",
+            "trial_left": max(0.0, trial["end"] - now) if trial["id"] else 0.0,
             "service_ms": {k: round(v, 2) for k, v in service.items()},
             "base_ms": {k: round(v, 2) for k, v in BASE.items()},
             "n_docs": len(DOC_IDS), "workers": WORKERS}
