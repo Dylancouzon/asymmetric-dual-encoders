@@ -365,8 +365,8 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 
 ### L39. Filling a WSL GPU spills silently into shared memory
 
-- **Observation:** Stella document encoding on the RTX 3080 (10 GB) under WSL ran shard 0 (50k NQ passages) in 13 min at 65 passages/s, then shard 1 in 58 min with GPU memory at 9.9 GB and utilization still at 100%. No OOM was raised. Halving the length-bucketed batch from 16,384 to 8,192 tokens brought memory to about 3 GB at the start of the next shard.
-- **Decision:** On WSL, cap batch tokens below the card's memory with margin and watch per-shard time, not only utilization or OOM.
+- **Observation:** Stella document encoding on the RTX 3080 (10 GB) under WSL ran shard 0 (50k NQ passages) in 13 min at 65 passages/s, then shard 1 in 58 min with GPU memory at 9.9 GB and utilization still at 100%. No OOM was raised. Halving the length-bucketed batch from 16,384 to 8,192 tokens kept memory near 3.3 GB and cut shard time to about 6.2 min (about 135 passages/s), twice as fast as shard 0, so the larger batch was already degrading shard 0.
+- **Decision:** On WSL, cap batch tokens well below the card's memory and compare per-shard time across batch sizes; a larger batch can be slower without any error, and 100% utilization does not show it.
 - **Evidence:** `m15src/talk_encode_nq.py` comment and box logs `~/constella-talk/encode_nq.part1.log`; related L29.
 - **Strength/reach:** One machine and driver stack; diagnosis by memory reading and timing, not a driver trace.
 - **Use:** Engineering note; not paper material.
