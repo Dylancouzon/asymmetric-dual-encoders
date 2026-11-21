@@ -19,6 +19,7 @@
     "flops",
     "arch",
     "footprint",
+    "cloud",
     "distill",
     "zero-mech",
     "order",

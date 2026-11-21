@@ -6,6 +6,7 @@ stored fp16. NQ pins come from results/m20_beir15_scores/nq/zero-dense.json. Res
 Run on the RTX box: M7_ENCODER=stella PYTHONPATH=m7src python m15src/talk_encode_nq.py OUT_DIR
 """
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -36,7 +37,9 @@ def main(out):
         rows = corpus.select(range(lo, min(lo + SHARD, N_DOCS)))
         texts = [f"{(t or '').strip()} {(x or '').strip()}".strip()
                  for t, x in zip(rows["title"], rows["text"])]
-        v = teacher.encode(texts, prefix="", max_length=512, batch_tokens=16384,
+        # 16384 filled the 10 GB card and spilled into WSL shared memory (shard 1: 58 min vs 13).
+        v = teacher.encode(texts, prefix="", max_length=512,
+                           batch_tokens=int(os.environ.get("BATCH_TOKENS", "8192")),
                            model_id=teacher.TEACHER, revision=teacher.TEACHER_REV,
                            dtype=torch.float32, device="cuda")
         np.save(p.with_suffix(".tmp.npy"), v.astype(np.float16))
