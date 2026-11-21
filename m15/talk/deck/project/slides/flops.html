@@ -13,5 +13,9 @@
 <div class="host" style="width:1664px;height:30px"><p class="axl" style="left:184px;top:0;width:80px">10³</p><p class="axl" style="left:479px;top:0;width:80px">10⁵</p><p class="axl" style="left:774px;top:0;width:80px">10⁷</p><p class="axl" style="left:1069px;top:0;width:80px">10⁹</p><p class="axl" style="left:1364px;top:0;width:80px">10¹¹</p></div>
 </div>
 <p class="src">Estimate: 2·P·T + 4·L·T²·d per forward pass, P = matmul weights (Nano’s head runs per token); median over 100 real queries of 5–12 words. Zero: 2 FLOPs per gathered value plus normalization.</p>
-<aside>[Draft notes; Sol pass pending.] The title says zero compute, so here is the definition in numbers. Stella runs a 24-layer, 1024-wide transformer over 31 tokens: about 25 GFLOPs per query. Nano runs a 12-layer, 384-wide transformer over 12 tokens: about half a GFLOP. Zero gathers one row per token from a table and adds them up: about 28 thousand FLOPs. That is roughly 900,000 times less arithmetic than Stella. No neural network runs when Zero encodes a query; the graph search still runs.</aside>
+<aside>[~1 min] [Trace the three bars on the log scale.] A token takes a very different trip through each encoder. Stella sends it through 24 layers at width 1,024. Nano sends it through 12 layers at width 384. Zero uses its token ID to fetch a row, then pools and normalizes the rows.
+
+For the transformer estimate I count the weights used in matrix multiplies, multiply by twice the token count, and add attention. That counts Stella's gated feed-forward block and Nano's projection on every token. At the median lengths, 31 tokens for Stella and 12 for Nano, I get 25.1 and 0.54 billion operations. Zero takes about 28,000. That's roughly 900,000 times less arithmetic than Stella and 19,000 times less than Nano.
+
+Zero takes its name from the number of neural network passes it runs to encode a query. The lookup does arithmetic, and I still have an index to search.</aside>
 </section>

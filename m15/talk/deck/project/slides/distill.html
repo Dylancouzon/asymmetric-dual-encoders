@@ -9,5 +9,9 @@
 <div class="kv" style="flex:1"><p class="k2">Labels</p><p class="v2">optional</p><p class="d2">Nano trains on teacher vectors alone. Zero also uses query–positive pairs in both phases.</p></div>
 <div class="kv" style="flex:1"><p class="k2">Index</p><p class="v2">untouched</p><p class="d2">Vectors, HNSW graph and quantized codes stay as they are.</p></div>
 </div>
-<aside>[Draft notes; Sol pass pending.] How do you build a cheaper query encoder for an index you already have? Treat the original query encoder as the teacher. Run it once over a large set of texts, keep its normalized vectors, and train a student to land on the same points. The document side is frozen, so anything the student learns is measured against the vectors already in your index. Nano's fit needs no relevance labels; Zero also learns from query and positive-passage pairs. For a new teacher, computing the targets is the main cost: we estimated 8 to 12 hours of encoding for Zero.</aside>
+<aside>[~1 min] A vector of the right length is easy to make. I need one whose dot products make sense against Stella's passages. I already have a function that makes those vectors. That's the teacher. I run it once over the training texts and save its normalized outputs. Then I fit a student to land near those outputs. I can score the resulting queries directly against the document vectors I already have.
+
+For Nano I use Stella's query output for a query and its document output for a passage. Those vectors are the supervision, so Nano can train without relevance judgments. Zero also uses queries paired with relevant passages, in both training phases. With a new teacher, our historical estimate for preparing Zero's targets was eight to 12 hours of encoding.
+
+The smallest student I tried has a single row of numbers per token. Here's where the work goes when I type a query.</aside>
 </section>

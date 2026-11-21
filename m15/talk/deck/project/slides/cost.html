@@ -10,5 +10,11 @@
 <div class="kv" style="flex:1"><p class="k2 tr">Q = 1M queries</p><p class="v2">10.3 hours</p><p class="d2">sequential 4-thread CPU time for Stella encoding alone (mean 37 ms), before any search</p></div>
 </div>
 <p class="src">Ê = L2-normalized encoder output. Passage rate measured for this talk; query latency from the paper’s registered CPU protocol; FLOPs ≈ 2·P·T + attention, P = matmul weights.</p>
-<aside>[Draft notes; Sol pass pending.] A dual encoder scores a document by the inner product of two normalized vectors. The cost has two very different terms. N times c_D is paid once: encoding the 2.7 million Wikipedia passages behind tonight's demo ran at 141 passages a second on my desktop RTX 3080: 5.3 GPU-hours. Q of t times c_Q is paid on every uncached query, forever: with Stella that is 31 tokens including its instruction prompt, about 25 GFLOPs, 32 ms median on a laptop CPU; a million queries is about 10 hours of encoding. Agents multiply Q. And if you want a cheaper model, the usual answer is to change both encoders, which means paying N times c_D again and running two indexes during the migration. What if you only change E_Q?</aside>
+<aside>[~1.25 min] [Point to the score, then the two terms in the cost equation.] The score is a dot product between two unit vectors. I can take my time building the document vector because I get to reuse it. Every uncached query needs a fresh vector and a search. If an agent calls search several times, I pay that query cost several times.
+
+For scale, I encoded the 2.7 million Wikipedia passages we'll search later on one RTX 3080. At a steady 141 passages per second, that's an estimated 5.3 GPU-hours of encoding. The run took 6.5 hours elapsed with a memory spill and a crash. Mine was a desktop, and it had opinions.
+
+On the query side, Stella saw a median of 31 tokens including its instruction prompt. That's about 25 billion floating-point operations and 32 milliseconds on a laptop CPU with four threads. The mean gives about 10.3 elapsed hours for a million sequential queries, before search.
+
+A swap of both encoders brings the passage job back and can leave you running two indexes during migration. What happens if I change just the function that makes the query vector?</aside>
 </section>

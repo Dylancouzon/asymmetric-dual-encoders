@@ -1,5 +1,5 @@
 <section id="b-routing" class="s" hidden>
 <div class="head"><p class="eyebrow">Backup</p><h2>Per-Query Routing Is Hard</h2></div>
 <div class="row"><div class="card"><p class="tag">ORACLE PICKS ZERO OR NANO</p><p class="num">0.547</p></div><div class="card"><p class="tag">ALWAYS NANO</p><p class="num">0.516</p></div><div class="card"><p class="tag">QUERY-TEXT FEATURES</p><p class="num" style="font-size:72px">≤ +0.005</p><p class="t">over random routing</p></div></div>
-<aside>[~0.5 min] The oracle used relevance judgments to pick Zero or Nano and scored 0.547 against 0.516 for always running Nano. At the same Nano share, query length, subwords per word, and pooled vector norm beat random routing by at most 0.005 nDCG@10. I'd start with a policy based on what the user is doing, such as typing, pausing, or submitting a search.</aside>
+<aside>[~0.5 min] With relevance judgments to pick Zero or Nano, the oracle scored 0.547 against 0.516 for always running Nano. At the same Nano share, query length, subwords per word, and pooled vector norm beat random routing by at most 0.005 nDCG@10. I'd start by using the encoder budget that fits what the user is doing, such as typing, pausing, or submitting.</aside>
 </section>

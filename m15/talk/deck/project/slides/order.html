@@ -11,9 +11,9 @@
 <div class="col" style="gap:4px"><p class="eyebrow" style="color:#c9cede">Stella</p><p class="num" style="font-size:150px">4<span class="mut"> / 24</span></p></div>
 <p class="lead" style="width:900px">pairs where Stella ranked the right passage first in both directions · Nano 2 / 24 · Zero 0 / 24</p>
 </div>
-<aside>[~1.75 min] Suppose I want to go from Paris to Rome. If I reverse those cities, I'd like a different ticket. Zero gets the same bag of tokens either way. I look up the same rows with the same weights. Both queries produce exactly the same vector.
+<aside>[~1.5 min] I can keep every word and still ask for a different ticket. Read "Paris to Rome," then "Rome to Paris." Zero gets the same bag of tokens. The same rows get the same weights, so I get exactly the same vector. Whatever the search does for the first route, it does for the second route too.
 
-I wanted to see how much a contextual encoder would gain here. I wrote 24 pairs of queries where reversing the direction changes the answer. I gave each pair two passages, one intended for each direction. I counted a pair as a success only if the right passage came first on both queries. Stella changed its vector on every reversal. [click] Stella ranked the right passage first in both directions on 4 of 24 pairs. All four successes were unit conversions.
+I wanted to see what the contextual encoders could do with the order. I wrote 24 pairs where reversing the direction changes the answer. Each pair got two passages, one for each direction. To pass, an encoder had to put the intended passage first on both queries. Stella changed its query vector on every reversal. That's an easy test for context to pass. Now watch the ranking test.
 
-That's a small exploratory test. The query and passage pairs are in the repository. For Zero, this kind of reversal disappears during pooling. For Stella, a change in the query vector was easy to measure. Getting both rankings right was harder. Nano gives me a way to keep a contextual encoder on the query side at a smaller cost.</aside>
+[click] Stella got both directions right on four of 24 pairs. All four were unit conversions. Nano got two pairs right, and Zero got zero. It's a small exploratory probe. The query and passage pairs are in the repository if you want to try them with another encoder. The exercise gave me two things to check separately. Can the encoder tell the queries apart? Do the changed vectors put the right passage first?</aside>
 </section>

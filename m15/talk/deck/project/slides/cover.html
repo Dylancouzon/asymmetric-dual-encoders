@@ -5,7 +5,9 @@
 <p class="sub" style="width:900px">From Nano to Constella</p>
 <div class="grow"></div>
 <div class="fl" style="gap:24px"><img src="project/ds/qdrant/assets/logo-red-white.svg" alt="Qdrant" style="width:180px;height:48px;object-fit:contain"><p class="note">Dylan Couzon · Developer Relations</p></div>
-<aside>[~0.75 min] Hi, I'm Dylan Couzon. I'm a researcher in Developer Relations at Qdrant. If someone offered you a cheaper embedding model on Monday, how much would it cost you to try it? The answer might include re-embedding the corpus and building another index. I wanted to see what happens if I keep the index I've already paid for and swap the code that turns the query into a vector.
+<aside>[~0.75 min] Hi, I'm Dylan Couzon. I do research in Developer Relations at Qdrant. Thanks for joining us here and on Zoom.
 
-[Trace the three paths into the cluster.] Each path here is a different way of encoding the same query. Every path searches the same documents. One of them can do it with a lookup table. I'll show you how I built it, then we'll race it against the model that built the index.</aside>
+Say someone offers you a cheaper embedding model on Monday. What would it cost to try it? If you change both encoders, that's another pass over the corpus and another index. I wanted to try the cheaper half on its own.
+
+[Trace the three paths into the cluster.] Each route makes a query vector and searches the same documents. One route makes its vector from a lookup table. I'll show you how I built it, then race it against the model that built the index.</aside>
 </section>

@@ -12,5 +12,9 @@
 <div class="kv" style="flex:1"><p class="k2">Not yet counted</p><p class="v2">graph search</p></div>
 </div>
 <p class="src">GCP c4-standard-8 (8 vCPU Xeon Platinum 8581C), us-east1, on-demand $0.395/h. Encoding only, batch 1, 8 processes × 1 ONNX Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries, best worker count per encoder. Exploratory.</p>
-<aside>[Draft notes; Sol pass pending.] Laptop numbers flatter the big model, so I rented a normal cloud machine: a c4-standard-8, eight vCPUs, 40 cents an hour. Saturated with eight workers, it encodes 18 Stella queries a second. That is six dollars per million queries, and 56 of these machines to encode a thousand queries a second. Nano: 464 a second, 24 cents per million, three machines. Zero: 67 thousand a second, a sixth of a cent per million, and one machine at one and a half percent of its measured capacity. These dollars assume a saturated machine; one dedicated Zero VM at a steady thousand queries a second is about eleven cents per million. One thing is missing from this table: the search. Hold that thought.</aside>
+<aside>[~1.25 min] If the laptop made Stella look easy to serve, try putting a price on the query rate. I rented a GCP c4-standard-8 with eight vCPUs at about 40 cents an hour. I ran eight workers on batches of one. They kept sending queries as fast as they finished them.
+
+[Point to the throughput and VM columns.] At saturation I measured about 18 Stella queries a second. That projects to about $6 per million at peak and 56 VMs to encode 1,000 queries a second. Nano did 464 a second, so 24 cents per million at peak and three VMs for the same rate. Zero did about 67,000 a second. The price at that measured peak is $0.0016 per million, about a sixth of a cent.
+
+A dedicated Zero VM serving 1,000 queries a second would use only about 1.5% of that measured capacity. You'd still pay for the VM, so the bill works out to about 11 cents per million. All of that is for making the vectors. The search meter starts where this one stops.</aside>
 </section>

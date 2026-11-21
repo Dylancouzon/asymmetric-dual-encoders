@@ -13,5 +13,9 @@
 <div class="kv" style="flex:1"><p class="k2">Table</p><p class="v2">31 MB int8</p></div>
 </div>
 <p class="src">p = softmax of scores over the candidate set. Retrain time is a historical estimate. All training sources permit commercial derived weights.</p>
-<aside>[Draft notes; Sol pass pending.] Zero is trained in two phases, and it all fits on a 10-gigabyte desktop card. Each row starts as Stella's own encoding of that token, and each token weight starts at its IDF. Phase one, 16,000 steps of 512: match Stella's query vector with a cosine loss, and match Stella's score distribution over one positive and 31 distractors with a KL term at temperature 0.02. Phase two, 2,500 steps: rank the positive above 32,768 negatives from a bank of stored document vectors, masking known positives and any negative Stella scores above the positive minus 0.02, so we don't punish false negatives. Sources: Amazon ESCI, FEVER, HotpotQA, SQuAD, Mr. TyDi, NQ Open and TriviaQA. Then fold the weights into the rows and store int8 with one scale per row. With targets already computed, a retrain takes about 20 minutes. All training sources permit commercial derived weights.</aside>
+<aside>[~1 min] [Point to Align and Rank. Leave the source list for questions.] I started with Stella's encoding of each token and gave its scalar weight the token's inverse document frequency. Alignment runs for 16,000 batches of 512. Half the batch gets cosine loss alone. The paired half also matches Stella's softmax over one positive and 31 distractors using KL divergence at temperature 0.02.
+
+Then I ran 2,500 ranking steps against a bank of frozen vectors, with 32,768 bank negatives per step. I masked known positives and any negative Stella scored above the positive minus 0.02. That keeps plausible answers out of the penalty. I folded the weights into the int8 rows and kept one scale per row. With targets ready, the estimate was about 20 minutes on a 10 GB 3080.
+
+[If asked about the data, name Amazon ESCI, FEVER, HotpotQA, SQuAD, Mr. TyDi, NQ Open, and TriviaQA. All training sources permit commercial derived weights.]</aside>
 </section>

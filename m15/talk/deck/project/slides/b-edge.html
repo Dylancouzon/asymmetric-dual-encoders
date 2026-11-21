@@ -1,5 +1,5 @@
 <section id="b-edge" class="s" hidden>
 <div class="head"><p class="eyebrow">Backup</p><h2>The Encoder Can Be a Collection</h2></div>
 <p class="lead" style="width:1500px">Zero’s 30,522 rows fit in a Qdrant Edge shard. Encoding becomes a point lookup by token id plus a mean: identical vectors to the released encoder (max difference 0 on 500 queries).</p>
-<aside>[~0.5 min] I put all 30,522 rows in a Qdrant Edge shard and fetched them by token ID before pooling and searching. Across 500 queries the vectors exactly matched the released encoder, with a maximum difference of zero. On this laptop the lookup path added about 0.25 ms compared with the in-memory NumPy table.</aside>
+<aside>[~0.5 min] I put all 30,522 rows in a Qdrant Edge shard and fetched them by token ID before pooling and searching. Across 500 queries, the maximum difference from the released encoder was zero. The lookup added about a quarter millisecond on this laptop compared with the in-memory NumPy table.</aside>
 </section>

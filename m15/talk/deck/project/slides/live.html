@@ -7,17 +7,17 @@
 <div class="card"><p class="tag">TURN</p><h3>hnsw_ef up and down</h3></div>
 <div class="card"><p class="tag">CHECK</p><h3>Own exact top 10 found</h3></div>
 </div>
-<aside>[~4.0 min] [Switch to the demo and open Live. Take a query from the room or Zoom chat. Enter it and run all four columns.]
+<aside>[~4 min] [Switch to the demo and open Live. Take a query from the room or Zoom chat. Enter it and run all four columns.]
 
-You can give me something you'd look up in Wikipedia. Stella, Nano, and Zero all search the same document vectors. BM25 gives us a lexical reference over the same passages. Watch the split between encoding and search, then look at the first passage each column returns. Read the title and the first line with me. Which one would you open?
+Give me something you'd look up in Wikipedia. I'll send that same text through all three dense encoders against the same document vectors. BM25 searches the same passages as a lexical reference. Watch the boundary between encode and search, then read the title and first line of each top passage with me. Which would you open? What were you hoping to find?
 
 [Read the first results aloud. Ask what the audience wanted to find. Switch on the exact check and compare the dense columns.]
 
-This count is specific to each encoder. In the Zero column I'm asking how many of Zero's exact top 10 the graph found. If Stella and Zero both recover all 10, their exact lists can still be different. Now I'll change hnsw_ef and run the same text again. We keep the encoder and index in place, so we can see what changing the search breadth buys on this query.
+In the Zero column, that count asks how many of Zero's exact top ten the graph found. Stella's column uses Stella's list. Both can show ten even if they send you to different pages. Keep your answer about which page you'd open in mind while I change the search.
 
 [Lower hnsw_ef and rerun. Raise it and rerun. Read out the search times and exact-neighbor counts that appear. If the first query barely changes, take another from the room or Zoom. Use the recorded fallback if live search is unavailable.]
 
-Watch the search segment after I turn the setting up. Check whether the extra time brought any of the exact neighbors back. If the count stays put, compare what we spent for the same recall. I'd use a set of judged queries to decide whether the trade holds across my traffic. That same set can save me time before I even pick a teacher.
+I kept the text, the encoders, and the index fixed. Watch whether the extra search time brought any exact neighbors back. [If the count stays put, compare the search times at equal recovery.] And check whether the page you'd open changed. That last question is what I'd ask across a batch of judged queries from my traffic. The same batch can save time if I'm still deciding which document encoder to build around.
 
 [Return to the deck.]</aside>
 </section>
