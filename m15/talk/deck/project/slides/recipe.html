@@ -1,25 +1,11 @@
 <section id="recipe" class="s" data-transition="fade">
 <div class="head"><h2>The Monday Recipe</h2></div>
-<div class="fl" style="gap:40px;align-items:stretch;margin-top:8px"><div class="fxbox" style="flex:1;padding:32px 40px">
-<p class="fx" style="font-size:34px;white-space:pre">(e, ef, os)* = argmin  p50<span class="mut">_total</span>(e, ef, os)</p>
-<p class="fx" style="font-size:34px;white-space:pre">        s.t.  nDCG@10(e, ef, os) ≥ <span class="tr">floor</span></p>
-<p class="fx" style="font-size:34px;white-space:pre">              p95<span class="mut">_total</span>(e, ef, os) ≤ <span class="tr">budget</span></p>
-</div><div class="dtab" style="width:600px;display:grid;grid-template-columns:130px 230px 240px;font-size:32px">
-<p class="hd" style="padding:8px 14px;grid-column:1/4">budget: p95 ≤ <span class="tr">3 ms</span></p><p class="hd" style="padding:8px 14px">floor</p><p class="hd" style="padding:8px 14px">solution</p><p class="hd" style="padding:8px 14px">p50 · p95</p>
-<p style="padding:8px 14px">0.50</p><p style="padding:8px 14px"><span class="tr">Zero</span> 512·4</p><p style="padding:8px 14px">0.49 · 0.96</p>
-<p style="padding:8px 14px;background:#2a2a5c;font-weight:600;color:#fcfdff">0.55</p><p style="padding:8px 14px;background:#2a2a5c;font-weight:600;color:#fcfdff"><span style="color:#b9b9ff">Nano</span> 64·4</p><p style="padding:8px 14px;background:#2a2a5c;font-weight:600;color:#fcfdff">1.74 · 2.12</p>
-<p style="padding:8px 14px">0.62</p><p style="padding:8px 14px" class="mut">none</p><p style="padding:8px 14px;white-space:nowrap" class="mut">Stella 34.6</p>
-</div></div>
-<div class="steps" style="margin-top:40px">
-<div class="step"><p class="sn">01</p><p class="st">Judged queries</p><p class="sd">sampled from your traffic</p></div>
-<div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">per encoder, on your index</p></div>
-<div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">per encoder, time encode + search</p></div>
-<div class="step"><p class="sn">04</p><p class="st">Solve and ship</p><p class="sd">carry (ef, os) with the encoder choice</p></div>
-</div>
-<p class="src">Solved on BEIR NQ: 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential; nDCG@10 floor, times in ms, ef · os, ef ≥ 64. Exploratory.</p>
-<aside>[~2 min] Suppose I need 0.55 nDCG@10 and a 3 ms p95. Which encoder would you ship from this sweep? [Give the room and Zoom a moment to decide. Point to Nano's row.] I'd take Nano with those search settings. If I raise the relevance floor to the bottom row and keep the same latency budget, every tested setting misses a requirement. I'd need the team to choose which constraint it can change.
+<div class="fxbox" style="margin-top:24px;padding:36px 48px"><p class="fx" style="font-size:40px;white-space:pre">(e, ef, os)* = argmin p50<span class="mut">_total</span></p><p class="fx" style="font-size:40px;white-space:pre">        s.t.  nDCG@10 ≥ <span class="tr">floor</span>,  p95<span class="mut">_total</span> ≤ <span class="tr">budget</span></p></div><div class="steps" style="margin-top:56px"><div class="step"><p class="sn">01</p><p class="st">Judge queries</p><p class="sd">sampled from your traffic</p></div><div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">each encoder, your index</p></div><div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">time encode + search</p></div><div class="step"><p class="sn">04</p><p class="st">Ship the winner</p><p class="sd">with its ef and os</p></div></div>
+<aside>[~1.75 min] [Point to the two constraints.] I'd agree on a relevance floor and a tail latency budget before I tune anything. Then I'd look for the lowest end-to-end median among the settings that meet both. The encoder, ef, and oversampling are one decision. The cheapest encoder can send me off to do more search work.
 
-On my traffic, I'd agree on those limits up front. I'd judge a batch of actual queries and run each encoder with exact search. If the exact rankings miss my relevance floor, I'd try a different encoder before I spend time on the graph. Then I'd vary search breadth and oversampling and time encoding and search together. For the settings that meet both limits, I'd take the lowest median and ship the graph settings with the encoder. I'd check the result again at the traffic level I expect to serve. Tonight's sweep ran sequentially.
+I'd start by sampling real queries from my traffic and judging which passages answer them. Then I'd run exact search with each encoder on the same index and score nDCG@10. That tells me how each encoder ranks my passages before I ask the graph to find them. If the exact results miss my floor, I'd look at those rankings before spending time on a sweep.
 
-And trying it on your own data takes a few lines.</aside>
+For the sweep I'd vary ef and oversampling. I'd time encoding and search together and record both the median and the p95. Of the combinations that pass, I'd ship the one with the lowest median. Its ef and oversampling go with it. I'd check that configuration again at the load I expect to serve.
+
+You need 0.55 nDCG@10 and a 3 ms p95. Which encoder ships?</aside>
 </section>
