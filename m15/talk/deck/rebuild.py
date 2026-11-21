@@ -38,14 +38,14 @@ g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
 g.append(f'<rect x="0" y="100" width="440" height="200" rx="16" fill="#1d2433" stroke="{GRAY}" stroke-width="3"/>')
 g.append(t(220, 170, "2.68M passages", 34, WHITE, "middle", 600))
 g.append(t(220, 222, "5.3 GPU-hours", 34, WHITE, "middle", 600))
-g.append(t(220, 270, "once", 30, GRAY, "middle"))
+g.append(t(220, 270, "steady-rate estimate · once", 26, GRAY, "middle"))
 for i in range(60):
     x = 490 + i * 19.5
     h = 200
     g.append(f'<rect x="{x:.0f}" y="100" width="10" height="{h}" rx="3" fill="{RED}" opacity="{0.35 + 0.65 * (i % 5 == 0)}"/>')
 g.append(t(490, 80, "every uncached query · forever", 28, RED, "start", 600, True))
 g.append(t(490, 350, "Stella per query: 31.6 ms · 25 GFLOPs", 34, WHITE, "start", 600))
-g.append(t(490, 396, "1M queries ≈ 10.3 CPU-hours, before any search", 30, GRAY))
+g.append(t(490, 396, "1M sequential encodes ≈ 10.3 hours, before any search", 30, GRAY))
 g.append(f'<line x1="0" y1="450" x2="1664" y2="450" stroke="{LINE}" stroke-width="2"/>')
 g.append(t(0, 516, "C(t) = N · c_D + Q(t) · (c_Q + c_search)", 40, WHITE, "start", 400, True))
 g.append(t(1664, 516, "agents multiply Q(t)", 30, RED, "end", 600))
@@ -115,11 +115,11 @@ g = ['<svg width="1664" height="420" viewBox="0 0 1664 420">',
      box(430, 380, "1 · Align", ["match Stella's", "vectors and scores"], WHITE), arrow(822),
      box(880, 380, "2 · Rank", ["positives vs", "32,768 negatives"], WHITE), arrow(1272),
      box(1330, 334, "31 MB table", ["int8 rows", "+ row scales"], RED),
-     t(0, 360, "min_θ  E_x ‖ f_θ(x) − Ê_S(x) ‖²   ·   the index Ê_D(d) never changes", 32, WHITE, "start", 400, True),
+     t(0, 360, "align: 1 − cos(z, Ê_S) + KL(p_S ‖ p_z)  ·  rank: InfoNCE  ·  Ê_D(d) never changes", 30, WHITE, "start", 400, True),
      "</svg>"]
 chips = ('<div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">RTX 3080 · 10 GB</p>'
-         '<p class="chip red">≈ 20 min retrain</p><p class="chip">Nano: no relevance labels</p></div>')
-write("distill", " foot", "Train Against a Frozen Index, on a Desktop GPU",
+         '<p class="chip red">≈ 20 min with prepared targets</p><p class="chip">Nano: no relevance labels</p></div>')
+write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
       '<div style="margin-top:32px">' + "".join(g) + "</div>" + chips,
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
       "a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.",
@@ -173,8 +173,8 @@ g.append(f'<polyline points="{" ".join(f"{PX(x):.0f},{PY(y):.0f}" for _, x, y, _
 for n, x, y, c, lab in pts:
     g.append(f'<circle cx="{PX(x):.0f}" cy="{PY(y):.0f}" r="18" fill="{c}"/>')
     g.append(t(PX(x), PY(y) - 34, f"{n} · {lab}", 32, c, "middle", 600))
-g.append(f'<circle cx="{PX(0.044):.0f}" cy="{PY(0.879):.0f}" r="16" fill="none" stroke="{RED}" stroke-width="4"/>')
-g.append(t(PX(0.044) + 30, PY(0.879) + 10, "Zero + BM25 · 87.9%", 28, RED))
+g.append(t(PX(0.044) - 20, PY(0.814) + 70, "+ BM25 branch → 87.9%", 28, RED, "start", 600))
+g.append(t(PX(0.044) - 20, PY(0.814) + 108, "adds a sparse index, search and merge", 26, MUT))
 g.append("</svg>")
 write("bench", " foot", "One Index, Three Price Points",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
@@ -198,19 +198,20 @@ for i, (n, tot, enc, nd, c, star) in enumerate([("Nano", 2.04, 0.807, "0.579", V
     g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(tot * enc) - SX(0):.0f}" height="64" fill="{TEAL}"/>')
     g.append(f'<rect x="{SX(tot * enc):.0f}" y="{y + 10}" width="{SX(tot) - SX(tot * enc):.0f}" height="64" fill="{ORG}"/>')
     g.append(t(SX(tot) + 18, y + 56, f"{tot} ms", 40, WHITE, "start", 600))
-    g.append(t(1420, y + 56, nd + star, 40, WHITE, "start", 600))
-y = 380
+    g.append(t(1420, y + 56, nd, 40, WHITE, "start", 600))
+    if star:
+        g.append(t(1420, y + 96, "98.5% of exact", 26, RED))
+y = 440
 g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
-g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(AX) - SX(0) + 40:.0f}" height="64" fill="{TEAL}" opacity="0.55"/>')
-g.append(t(SX(AX) + 56, y + 56, "20.8 ms →", 40, WHITE, "start", 600))
+g.append(t(SX(0), y + 54, "20.8 ms · off this scale (encode is 99%)", 34, GRAY))
 g.append(t(1420, y + 56, "0.631", 40, WHITE, "start", 600))
 for v in (0, 1, 2):
-    g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="80" y2="470" stroke="{LINE}" stroke-width="2"/>')
-    g.append(t(SX(v), 505, str(v), 24, MUT, "middle", 400, True))
+    g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="80" y2="360" stroke="{LINE}" stroke-width="2"/>')
+    g.append(t(SX(v), 395, str(v), 24, MUT, "middle", 400, True))
 g.append("</svg>")
 write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×",
       '<div style="margin-top:32px">' + "".join(g) + "</div>",
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10; "
-      "*Zero misses that at every tested point (best shown: ef 1024, os 8). Exploratory.")
+      "Zero misses that at every tested point (best shown: ef 1024, os 8). Exploratory.")
 print("rebuilt")
