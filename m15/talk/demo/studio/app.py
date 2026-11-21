@@ -215,10 +215,13 @@ def plan_loop():
                 elif p95 < 0.7 * target and not expired:            # comfortably under: recover slowly
                     h = min(0.85, h + 0.01)
                 router["headroom"] = h
+        # An encoder's own time must fit in what the queue leaves of the target.
+        waits = [d[4] for d in work.recent(work.done, 3.0, now)]
+        budget = target - (float(np.median(waits)) if len(waits) >= 20 else 0.0)
         p = allocator.plan(rate,
                            [allocator.EncoderCost(n, c["quality"], c["encode_per_s"], c["search_ms"], c["service_ms"])
                             for n, c in costs.items()],
-                           floor=state["floor"], target_ms=state["target_ms"], headroom=router["headroom"],
+                           floor=state["floor"], budget_ms=budget, headroom=router["headroom"],
                            shard_reserved=bench.shard_busy)
         router["plan"] = p
         work.shares = dict(p.shares)

@@ -238,8 +238,8 @@ function render(s) {
   const p = s.plan, shares = p ? p.shares : Object.fromEntries(ENC.map(e => [e, s.split[e] / (ENC.reduce((a, o) => a + s.split[o], 0) || 1)]));
   $("plan_k").textContent = s.route === "auto" ? "auto plan" : "split";
   $("bar").innerHTML = ENC.filter(e => shares[e] > 0.004).map(e => `<div style="width:${100 * shares[e]}%;background:${COL[e]}">${shares[e] > 0.08 ? `${Math.round(100 * shares[e])}% ${NAME[e]}` : ""}</div>`).join("");
-  const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "floor unreachable": ["#2a1f0a", "#f5a623"], manual: ["#1d1d3d", "#9494ff"]}[status];
-  $("chip").textContent = status === "overloaded" ? "overloaded · shedding" : status === "floor unreachable" ? "floor unreachable within target" : status; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
+  const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "floor unreachable": ["#2a1f0a", "#f5a623"], "over target to keep floor": ["#2a1f0a", "#f5a623"], manual: ["#1d1d3d", "#9494ff"]}[status];
+  $("chip").textContent = status === "overloaded" ? "overloaded · shedding" : status === "over target to keep floor" ? "floor first · latency may exceed target" : status; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
   $("util").textContent = p ? `expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · search ${Math.round(100 * p.shard_util)}% of capacity · headroom ${Math.round(100 * s.headroom)}%` : "";
   // encoders
   $("enc_tbl").innerHTML = ENC.map(e => { const c = s.costs[e] || {}; return `<tr><td><span class="dot" style="background:${COL[e]}"></span>${NAME[e]}</td>
