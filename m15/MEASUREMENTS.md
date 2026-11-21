@@ -763,6 +763,12 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   30 s, all workers starting together, W in {1, 2, 4, 8}. End-to-end mode: one process, W threads
   sharing one encoder and one Edge shard (Edge locks its directory) at T3's selected settings.
   Script `m15src/talk_throughput.py`; receipts `results/m15_talk_throughput_<dataset>_<label>_<modes>.json`.
+  End-to-end runs (2026-11-21): the NQ Edge shard was copied to the VM without its write-ahead log
+  (it loads with all 2,681,468 points). The first run read the on-disk fp16 vectors from a cold page
+  cache on the VM's network disk (receipt `..._gcp-c4-standard-8-cold_e2e.json`); the second ran after
+  reading the vector, quantized-code and graph files once into page cache (29 GB RAM;
+  `..._gcp-c4-standard-8-warm_e2e.json`). Both use one process and W threads sharing the shard, so
+  Python's global interpreter lock and the single Edge process bound the cheap encoders.
 - **T5 demo.** `m15/talk/demo/` replays T3's per-query arrays and runs live queries; it produces no
   result file.
 - **T6 NQ document encode and parity.** BEIR NQ corpus (revision `b7253e6c`, 2,681,468 passages) on

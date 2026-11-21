@@ -880,3 +880,22 @@ Parity on 256 seeded passages: min cosine 0.99994, median 0.999999 (RTX 3080 CUD
 Example "cheap flights paris to rome": cosine with Stella 0.878 (Zero), 0.963 (Nano).
 
 **Cannot show.** Retrieval quality (see C23); queries beyond 24 hand-written pairs.
+
+## C29. Encode plus search on a cloud VM
+
+**Label:** exploratory (talk, gcp-c4-standard-8). **Source:** `results/m15_talk_throughput_nq_gcp-c4-standard-8-warm_e2e.json`, `..._cold_e2e.json`
+
+**Claim.** With search included, Stella costs $4.91 per million queries, Nano $0.18 and Zero $0.17 (warm page cache): 27-29x cheaper, and the two cheap encoders tie at the one-process ceiling.
+
+| page cache | encoder | best threads | queries/s | p50 ms | p95 ms | USD per 1M (0.395/h) |
+|---|---|---|---|---|---|---|
+| warm | stella | 8 | 22.4 | 355.30 | 412.78 | 4.906 |
+| warm | nano | 8 | 605.4 | 12.78 | 19.01 | 0.181 |
+| warm | zero | 2 | 653.1 | 3.06 | 4.83 | 0.168 |
+| cold | stella | 8 | 20.5 | 390.05 | 450.35 | 5.344 |
+| cold | nano | 8 | 607.7 | 12.72 | 18.86 | 0.181 |
+| cold | zero | 8 | 628.3 | 11.72 | 25.18 | 0.175 |
+
+One process, W threads sharing one Qdrant Edge shard, each encoder at its C26 selected setting (Zero at its best tested point), batch 1, 30 s per point. Cold: rescoring read fp16 vectors from the VM's network disk.
+
+**Cannot show.** Several processes or shards; Qdrant server; GPU encoders; other instance types.

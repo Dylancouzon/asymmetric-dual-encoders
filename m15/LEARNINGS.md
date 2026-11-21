@@ -411,6 +411,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** 24 hand-written pairs and one example query; vector geometry, not retrieval quality.
 - **Use:** Talk order and lookup slides.
 
+### L45. On a cloud VM, the whole request is 27-29x cheaper, not 3,700x, and Zero ties Nano
+
+- **Observation:** With search included (NQ, Qdrant Edge, each encoder's selected setting, one process, best of 1-8 threads on a c4-standard-8 at $0.395/h, warm page cache), Stella served 22.4 queries/s ($4.91 per million), Nano 605 ($0.18) and Zero 653 ($0.17). Encoding alone had separated them 26x and 3,700x. Zero reached 640 queries/s on one thread and did not scale with more, and Nano topped out at the same level: the single process running the Edge search sets the ceiling. With a cold page cache, rescoring read fp16 vectors from the network disk: Zero dropped to 42 queries/s on one thread (23 ms median) and needed eight threads to reach 628.
+- **Decision:** Quote end-to-end cost next to encode-only cost; warm (or RAM-resident) rescoring vectors before serving; treat the one-process ceiling as a property of this setup, and scale out with more processes or shards rather than a cheaper encoder.
+- **Evidence:** `results/m15_talk_throughput_nq_gcp-c4-standard-8-warm_e2e.json`, `..._cold_e2e.json`, C29; related C25, L43.
+- **Strength/reach:** One VM type, one process with threads, 30 s per point; other deployments (several processes, Qdrant server, GPU encoders) can move the ceiling.
+- **Use:** Talk cost slide; paper deployment section.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.
