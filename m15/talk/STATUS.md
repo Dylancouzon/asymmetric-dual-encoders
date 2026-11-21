@@ -27,6 +27,13 @@ Owner notes: high technical bar but not academic; depth in mechanisms, statistic
 4. Gates: andrey-review, Codex, humanizer on slides and narration. Rehearsal script and recorded demo fallback.
 5. Optional: priced VM throughput (runpodctl REST endpoint unresolvable; no other cloud CLI); large-teacher table fit.
 
+## Logging rule (owner, 2026-11-21): log every talk result in m15 as it lands
+1. Receipt via a committed `m15src/talk_*.py` script into `results/m15_talk_*.json` (never overwrite).
+2. Method in `m15/MEASUREMENTS.md` section "Talk measurements T1-T5" (add T6+ for new ones).
+3. Card in `m15/make_evidence.py` (C23+), then `python m15/make_evidence.py`; diff must show only new cards.
+4. Lesson in `m15/LEARNINGS.md` (next L-number), dated entry in `m15/LOG.md`.
+5. Commit and push (standing approval).
+
 ## Decisions
 - Laptop-only stage demo (owner). No phone demo. VM optional.
 - Race uses released in-memory Zero; Edge-table variant is backup slide `b-edge`.
