@@ -38,17 +38,15 @@ g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
 g.append(f'<rect x="0" y="100" width="440" height="200" rx="16" fill="#1d2433" stroke="{GRAY}" stroke-width="3"/>')
 g.append(t(220, 170, "2.68M passages", 34, WHITE, "middle", 600))
 g.append(t(220, 222, "5.3 GPU-hours", 34, WHITE, "middle", 600))
-g.append(t(220, 270, "steady-rate estimate · once", 26, GRAY, "middle"))
+g.append(t(220, 270, "once", 30, GRAY, "middle"))
 for i in range(60):
     x = 490 + i * 19.5
     h = 200
     g.append(f'<rect x="{x:.0f}" y="100" width="10" height="{h}" rx="3" fill="{RED}" opacity="{0.35 + 0.65 * (i % 5 == 0)}"/>')
-g.append(t(490, 80, "every uncached query · forever", 28, RED, "start", 600, True))
 g.append(t(490, 350, "Stella per query: 31.6 ms · 25 GFLOPs", 34, WHITE, "start", 600))
-g.append(t(490, 396, "1M sequential encodes ≈ 10.3 hours, before any search", 30, GRAY))
+g.append(t(490, 396, "1M queries ≈ 10.3 hours of encoding", 30, GRAY))
 g.append(f'<line x1="0" y1="450" x2="1664" y2="450" stroke="{LINE}" stroke-width="2"/>')
 g.append(t(0, 516, "C(t) = N · c_D + Q(t) · (c_Q + c_search)", 40, WHITE, "start", 400, True))
-g.append(t(1664, 516, "agents multiply Q(t)", 30, RED, "end", 600))
 g.append("</svg>")
 write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
       '<div style="margin-top:40px">' + "".join(g) + "</div>",
@@ -70,8 +68,6 @@ g.append(f'<rect x="1010" y="170" width="654" height="300" rx="20" fill="#11182a
 g.append(t(1337, 240, "One Stella index", 44, WHITE, "middle", 600))
 g.append(t(1337, 296, "2.68M vectors · 1024-d", 30, GRAY, "middle"))
 g.append(t(1337, 342, "HNSW · binary codes in RAM", 30, GRAY, "middle"))
-g.append(t(1337, 420, "built once · never re-encoded", 30, TEAL, "middle", 600))
-g.append(t(1337, 560, "↑ passages → Stella document encoder (once)", 26, MUT, "middle"))
 g.append("</svg>")
 write("arch", " foot", "Three Query Encoders Search One Index",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
@@ -83,8 +79,8 @@ g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
 rows = [("Stella", 6.07, "$6.07", 56, GRAY), ("Nano", 0.236, "$0.24", 3, VIO), ("Zero", 0.0016, "$0.0016", 1, RED)]
 x0, x1, lo, hi = 200, 1000, math.log10(0.001), math.log10(10)
 X = lambda v: x0 + (math.log10(v) - lo) / (hi - lo) * (x1 - x0)
-g.append(t(x0, 30, "encoding cost per 1M queries, at peak throughput (log scale)", 26, MUT))
-g.append(t(1100, 30, "VMs to encode 1,000 queries/s", 26, MUT))
+g.append(t(x0, 30, "$ per 1M queries (log scale)", 26, MUT))
+g.append(t(1100, 30, "VMs for 1,000 queries/s", 26, MUT))
 for i, (n, v, lab, vms, c) in enumerate(rows):
     y = 80 + i * 150
     g.append(t(0, y + 52, n, 40, c, "start", 600))
@@ -94,13 +90,13 @@ for i, (n, v, lab, vms, c) in enumerate(rows):
         cx, cy = 1100 + (k % 14) * 38, y + (k // 14) * 26 - 10
         g.append(f'<rect x="{cx}" y="{cy + 10}" width="30" height="20" rx="4" fill="{c}"/>')
     if vms == 1:
-        g.append(t(1150, y + 28, "1, at 1.5% of its capacity", 28, WHITE))
+        g.append(t(1150, y + 28, "1 VM, 1.5% used", 28, WHITE))
 for d in (0.001, 0.01, 0.1, 1, 10):
     g.append(t(X(d), 520, f"${d:g}", 24, MUT, "middle", 400, True))
 g.append("</svg>")
-write("cloud", " foot", "A Million Queries: $6.07, $0.24, or a Sixth of a Cent",
+write("cloud", " foot", "Encoding 1M Queries: $6.07, $0.24, or $0.0016",
       '<div style="margin-top:40px">' + "".join(g) + "</div>"
-      '<p class="lead" style="margin-top:8px"><span class="tr">Not yet counted:</span> graph search.</p>',
+      '',
       "GCP c4-standard-8, us-east1, on-demand $0.395/h. Encoding only, batch 1, 8 processes × 1 ONNX Runtime thread "
       "(Zero: NumPy), 30 s closed loop on NQ queries; dollars assume a saturated VM. Exploratory.")
 
@@ -118,7 +114,7 @@ g = ['<svg width="1664" height="420" viewBox="0 0 1664 420">',
      t(0, 360, "align: 1 − cos(z, Ê_S) + KL(p_S ‖ p_z)  ·  rank: InfoNCE  ·  Ê_D(d) never changes", 30, WHITE, "start", 400, True),
      "</svg>"]
 chips = ('<div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">RTX 3080 · 10 GB</p>'
-         '<p class="chip red">≈ 20 min with prepared targets</p><p class="chip">Nano: no relevance labels</p></div>')
+         '<p class="chip red">≈ 20 min with prepared targets</p></div>')
 write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
       '<div style="margin-top:32px">' + "".join(g) + "</div>" + chips,
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
@@ -173,8 +169,7 @@ g.append(f'<polyline points="{" ".join(f"{PX(x):.0f},{PY(y):.0f}" for _, x, y, _
 for n, x, y, c, lab in pts:
     g.append(f'<circle cx="{PX(x):.0f}" cy="{PY(y):.0f}" r="18" fill="{c}"/>')
     g.append(t(PX(x), PY(y) - 34, f"{n} · {lab}", 32, c, "middle", 600))
-g.append(t(PX(0.044) - 20, PY(0.814) + 70, "+ BM25 branch → 87.9%", 28, RED, "start", 600))
-g.append(t(PX(0.044) - 20, PY(0.814) + 108, "adds a sparse index, search and merge", 26, MUT))
+g.append(t(PX(0.044) - 20, PY(0.814) + 70, "with BM25 fusion: 87.9%", 28, RED, "start", 600))
 g.append("</svg>")
 write("bench", " foot", "One Index, Three Price Points",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
@@ -203,7 +198,7 @@ for i, (n, tot, enc, nd, c, star) in enumerate([("Nano", 2.04, 0.807, "0.579", V
         g.append(t(1420, y + 96, "98.5% of exact", 26, RED))
 y = 440
 g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
-g.append(t(SX(0), y + 54, "20.8 ms · off this scale (encode is 99%)", 34, GRAY))
+g.append(t(SX(0), y + 54, "20.8 ms (off scale)", 34, GRAY))
 g.append(t(1420, y + 56, "0.631", 40, WHITE, "start", 600))
 for v in (0, 1, 2):
     g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="80" y2="360" stroke="{LINE}" stroke-width="2"/>')
