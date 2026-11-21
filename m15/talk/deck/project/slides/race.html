@@ -8,15 +8,15 @@
 </div>
 <aside>[~3 min] [Switch the shared screen to the demo. Open Race and press Space. Play the recorded fallback if the replay is unavailable.]
 
-I measured the same 3,452 questions one encoder at a time on this laptop. The lanes replay those timings side by side. They can line up on screen because I gave each encoder its own run. The dense lanes search one Stella index with 2.7 million Wikipedia passages. Qdrant Edge runs in the same process as the demo.
+I measured the questions one encoder at a time. I've lined up those timings so we can follow the same question in each lane. Qdrant Edge runs in the same process here. The clock covers making the vector and getting the results from the index.
 
-Watch the seam where teal turns orange. Teal ends when there's a query vector. Orange runs from there until the graph search and rescoring are done. Start with Stella. See how long the transformer keeps the search waiting. Then follow Zero on the same question. That little flash of teal is why I wanted to put a clock on the whole thing.
+[Let the replay run. Follow one question in the Stella lane, then find the same question in Nano and Zero.]
 
-[Let the replay run. Point out the encoding and search segments for Nano and Zero on the same query. Compare the full timings shown for the two lanes.] [Give Zoom time to follow the highlighted segments.]
+Watch where the color changes. That's when search gets a vector it can use. Stella is still encoding for much of its lane. In Zero, the color changes almost as soon as the bar starts. Now look at the time it spends after that change. There was a lot less time left to save than the encoding result suggested.
 
-[Read back the displayed Nano and Zero totals and the speedup for the full request.] Across the whole replay, Nano spent 7.24 seconds encoding and searching. Zero spent 3.14. That's 2.30 times faster on the sum of all the requests. Search took 87% of Zero's time on that clock.
+[Give Zoom time to follow the bars. Wait for the finish clock.]
 
-[Bring back a guess from the room or Zoom.] A slow request adds its full time to that finish clock. Our bet was about the median request, so I need a different number from this same exploratory run. I also need to show what each lane gave back for the time we spent.
+Zero finished the full replay about 2.3 times as fast as Nano. That clock adds up every request. A slow one contributes all of its time. Our bet was about the request in the middle, so I measured that too.
 
-[Return to the split slide.]</aside>
+[Return to the split slide. Bring back the guess from the room or Zoom.]</aside>
 </section>

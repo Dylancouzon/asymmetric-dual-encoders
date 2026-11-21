@@ -5,5 +5,5 @@
 <div class="kv" style="flex:1"><p class="k2">75 model × workload pairs</p><p class="v2">ρ = −0.64</p><p class="d2">with the table’s recall gap; family-held-out prediction ρ = +0.64</p></div>
 <div class="kv" style="flex:1"><p class="k2">Recurs beyond tables</p><p class="v2">−3.6 pp</p><p class="d2">LightRetriever lookup vs full query encoder recall on FiQA, 4× ef to match</p></div>
 </div>
-<aside>[~0.5 min] Before fitting the table I can compare a teacher query's nearest-document distance with the typical nearest-neighbor distance between documents. Across 75 model and workload pairs, that ratio had a rank correlation of minus 0.64 with the signed recovery gap, and predictions on held-out model families correlated at plus 0.64. The gap also appeared with LightRetriever on FiQA, where its lookup path recovered 3.6 percentage points fewer of its own exact neighbors and needed four times the search breadth to match recovery.</aside>
+<aside>[~0.5 min] I compare the teacher query's nearest-passage distance with the typical distance between neighboring passages. A larger ratio tended to predict a larger recovery loss for the table, so I use it as a clue before fitting. The lookup path in LightRetriever also needed a wider search on FiQA, even though it was trained jointly with its document encoder.</aside>
 </section>

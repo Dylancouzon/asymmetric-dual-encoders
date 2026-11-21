@@ -7,17 +7,23 @@
 <div class="card"><p class="tag">TURN</p><h3>hnsw_ef up and down</h3></div>
 <div class="card"><p class="tag">CHECK</p><h3>Own exact top 10 found</h3></div>
 </div>
-<aside>[~4 min] [Switch to the demo and open Live. Take a query from the room or Zoom chat. Enter it and run all four columns.]
+<aside>[~4 min] Give me something you'd look up in Wikipedia. Call it out here or put it in the Zoom chat.
 
-Give me something you'd look up in Wikipedia. I'll send that same text through all three dense encoders against the same document vectors. BM25 searches the same passages as a lexical reference. Watch the boundary between encode and search, then read the title and first line of each top passage with me. Which would you open? What were you hoping to find?
+[Share the demo and open Live. Wait for a query. Read it aloud, enter it, and run all four columns. Use the recorded fallback if live search is unavailable.]
 
-[Read the first results aloud. Ask what the audience wanted to find. Switch on the exact check and compare the dense columns.]
+What's the answer you were hoping to find? Let's look at the first passage each encoder offers. BM25 gives us something to compare against from a term search on the same passages.
 
-In the Zero column, that count asks how many of Zero's exact top ten the graph found. Stella's column uses Stella's list. Both can show ten even if they send you to different pages. Keep your answer about which page you'd open in mind while I change the search.
+[Point to the encode and search timings. Read the titles and opening lines aloud. Give the person who supplied the query time to respond.]
 
-[Lower hnsw_ef and rerun. Raise it and rerun. Read out the search times and exact-neighbor counts that appear. If the first query barely changes, take another from the room or Zoom. Use the recorded fallback if live search is unavailable.]
+Which one would you open? Hold onto that answer while I give the graph a little more work to do.
 
-I kept the text, the encoders, and the index fixed. Watch whether the extra search time brought any exact neighbors back. [If the count stays put, compare the search times at equal recovery.] And check whether the page you'd open changed. That last question is what I'd ask across a batch of judged queries from my traffic. The same batch can save time if I'm still deciding which document encoder to build around.
+[Turn on the exact check. Lower hnsw_ef and rerun. Then raise it and rerun. Leave oversampling fixed. Point to the change in search time and recovery for one dense encoder.]
+
+Each dense column checks itself against its own exact results. Two columns can each recover all ten and still offer different pages. When I gave search more room, did it move a passage you'd open any higher?
+
+[Let the room and Zoom compare the results. If the recovery count holds steady, show what the wider search cost. Take a second query if time allows.]
+
+I'd ask that same question on a batch of judged searches from my own traffic. That batch can also help much earlier, when I'm choosing what to put in the index.
 
 [Return to the deck.]</aside>
 </section>

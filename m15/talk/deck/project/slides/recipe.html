@@ -4,7 +4,7 @@
 <p class="fx" style="font-size:34px;white-space:pre">(e, ef, os)* = argmin  p50<span class="mut">_total</span>(e, ef, os)</p>
 <p class="fx" style="font-size:34px;white-space:pre">        s.t.  nDCG@10(e, ef, os) ≥ <span class="tr">floor</span></p>
 <p class="fx" style="font-size:34px;white-space:pre">              p95<span class="mut">_total</span>(e, ef, os) ≤ <span class="tr">budget</span></p>
-</div><div class="dtab" style="width:600px;display:grid;grid-template-columns:130px 230px 240px;font-size:26px">
+</div><div class="dtab" style="width:600px;display:grid;grid-template-columns:130px 230px 240px;font-size:30px">
 <p class="hd" style="padding:8px 14px;grid-column:1/4">budget: p95 ≤ <span class="tr">3 ms</span></p><p class="hd" style="padding:8px 14px">floor</p><p class="hd" style="padding:8px 14px">solution</p><p class="hd" style="padding:8px 14px">p50 · p95</p>
 <p style="padding:8px 14px">0.50</p><p style="padding:8px 14px"><span class="tr">Zero</span> 512·4</p><p style="padding:8px 14px">0.49 · 0.96</p>
 <p style="padding:8px 14px">0.55</p><p style="padding:8px 14px"><span style="color:#9494ff">Nano</span> 64·4</p><p style="padding:8px 14px">1.74 · 2.12</p>
@@ -17,11 +17,13 @@
 <div class="step"><p class="sn">04</p><p class="st">Solve and ship</p><p class="sd">carry (ef, os) with the encoder choice</p></div>
 </div>
 <p class="src">Solved on BEIR NQ: 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential; nDCG@10 floor, times in ms, ef · os, ef ≥ 64. Exploratory.</p>
-<aside>[~1.75 min] You need 0.55 nDCG@10 and a 3 millisecond p95. Which encoder ships?
+<aside>[~2 min] You need 0.55 nDCG@10 and a 3 ms p95. Which encoder ships?
 
-[Give the room and Zoom a moment. Point to the 0.55 row.] Nano at ef 64 with fourfold oversampling. It scored 0.554 with a 2.12 millisecond p95 and a 1.74 millisecond median. At a floor of 0.50, Zero at ef 512 and fourfold oversampling gets the job at 0.49 milliseconds median and 0.96 p95. Raise the floor to 0.62 with the same budget and every tested configuration falls outside the constraints. Only Stella clears that relevance floor. It needs about 34.6 milliseconds at p95, so a 35 millisecond budget would let it in.
+[Ask with the teacher slide still visible. Take a guess from the room or Zoom and repeat it aloud.] [click] [Point to Nano's row.]
 
-I'd run this on my own traffic. Sample queries and judge the results. Set the relevance floor and the p95 budget before looking at the sweep. Run each encoder with exact search against the existing index to establish its ranking quality. Then sweep search breadth and oversampling for each encoder and time encoding plus search on each request. From the configurations that clear both constraints, ship the one with the lowest median.
+In this sweep, I'd ship Nano with the settings in that row. If the relevance requirement goes up and the latency budget stays put, look what happens at the bottom. Every tested setting misses at least one requirement. I'd take that result back to the team and ask which constraint we can change.
 
-If you have several budgets, carry ef and oversampling with each encoder choice. The measurements here come from one exploratory laptop run. The decision you'll make comes from your queries and the time your users can wait.</aside>
+On my own traffic I'd agree on both limits before looking at a timing chart. Start with queries you can judge. Exact search shows me what each encoder can put near the top before I adjust the graph. If that ranking is already poor, I'd try another encoder before spending time tuning search.
+
+I time encoding and search together on every request as I vary breadth and oversampling. I use p95 to see which settings fit my latency budget. Among the ones that also make the relevance cut, I take the lowest median. I carry those search settings with the encoder. I'd check the result under the traffic I expect to serve. Tonight's sweep ran one request at a time.</aside>
 </section>

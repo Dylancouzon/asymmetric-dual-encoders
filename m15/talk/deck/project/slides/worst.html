@@ -15,7 +15,11 @@
 </div>
 </div>
 <p class="src">Ten registered models, mean nDCG@10 over six BEIR datasets, exact search: original model → its fitted lookup table. Full 26-model study in the paper.</p>
-<aside>[~1.25 min] If you're still choosing a document encoder, here's a pitfall I hit. I expected the strongest retriever to give me the strongest cheap student. I fit lookup tables for 10 public embedding models in the registered comparison. Each kept its own document index. The ridge fit takes token counts divided by query length as X. It uses teacher query vectors as Y and pulls the fitted rows toward the teacher's encodings of individual tokens.
+<aside>[~1.25 min] [Point to gte-large, then Stella.]
 
-[Point to gte-large, then Stella.] Right is better original ranking. Up is better table ranking. Over six BEIR datasets with exact search, gte-large-en-v1.5 went from 0.5970 to 0.2455, the best original and the weakest table. Stella went from 0.5745 to 0.3974 and gave me the best table of the ten. Close vector agreement could still go with worse ranking. A screening fit took four to seven minutes on an A100. For that price, I can put it on my judged queries.</aside>
+I expected the model I'd pick on its own to be the one I'd pick for a cheap query encoder. I fit a small lookup table for each candidate and tested it against that candidate's own index. If I'd picked from the teacher scores alone, I'd have picked the dot I least wanted when I switched the query encoder.
+
+The fit is a screen. I use the teacher's query vectors as targets and keep the token rows close to the teacher's individual token encodings. It takes minutes on an A100. If I'm deciding between document encoders, I'd build a small evaluation collection for each candidate. I'd run the teacher and the fitted table on the same judged queries before committing to a full ingestion job.
+
+[Hold this slide for the opening question in the recipe notes.]</aside>
 </section>

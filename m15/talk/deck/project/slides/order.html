@@ -11,9 +11,17 @@
 <div class="col" style="gap:4px"><p class="eyebrow" style="color:#c9cede">Stella</p><p class="num" style="font-size:150px">4<span class="mut"> / 24</span></p></div>
 <p class="lead" style="width:900px">pairs where Stella ranked the right passage first in both directions · Nano 2 / 24 · Zero 0 / 24</p>
 </div>
-<aside>[~1.5 min] I can keep every word and still ask for a different ticket. Read "Paris to Rome," then "Rome to Paris." Zero gets the same bag of tokens. The same rows get the same weights, so I get exactly the same vector. Whatever the search does for the first route, it does for the second route too.
+<aside>[~1.5 min] [Point to each route as you read it.]
 
-I wanted to see what the contextual encoders could do with the order. I wrote 24 pairs where reversing the direction changes the answer. Each pair got two passages, one for each direction. To pass, an encoder had to put the intended passage first on both queries. Stella changed its query vector on every reversal. That's an easy test for context to pass. Now watch the ranking test.
+"Paris to Rome." "Rome to Paris." If I get those mixed up, I'm at the wrong airport. Which input to Zero's sum changed?
 
-[click] Stella got both directions right on four of 24 pairs. All four were unit conversions. Nano got two pairs right, and Zero got zero. It's a small exploratory probe. The query and passage pairs are in the repository if you want to try them with another encoder. The exercise gave me two things to check separately. Can the encoder tell the queries apart? Do the changed vectors put the right passage first?</aside>
+[Pause for a response.]
+
+The same rows go into that sum with the same weights. If search put the outbound trip first, it will put that trip first again when I ask for the return.
+
+I made a small exploratory test out of that. I gave each pair two passages, one for each direction. A model passed if it got both queries right. Stella changed its query vector on every reversal. I wanted to see how often that change sent the right passage to the top.
+
+[click] [Let the room read the result.]
+
+Every Stella win here was a unit conversion. That was enough to change what I'd put in a test set. If people need to search for directions, add a few pairs where the same words ask for different answers. Check the passage they get back.</aside>
 </section>

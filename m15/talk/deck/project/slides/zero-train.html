@@ -1,4 +1,4 @@
-<section id="zero-train" class="s foot" data-transition="fade">
+<section id="zero-train" class="s foot" hidden>
 <div class="head"><h2>Training Zero on a Desktop GPU</h2></div>
 <table class="dtab" style="margin-top:16px;font-size:24px">
 <tr class="hd"><th style="width:11%;text-align:left">Phase</th><th style="width:13%;text-align:left">Steps</th><th style="width:52%;text-align:left">Objective</th><th style="width:24%;text-align:left">Data</th></tr>
@@ -13,9 +13,5 @@
 <div class="kv" style="flex:1"><p class="k2">Table</p><p class="v2">31 MB int8</p></div>
 </div>
 <p class="src">p = softmax of scores over the candidate set. Retrain time is a historical estimate. All training sources permit commercial derived weights.</p>
-<aside>[~1 min] [Point to Align and Rank. Leave the source list for questions.] I started with Stella's encoding of each token and gave its scalar weight the token's inverse document frequency. Alignment runs for 16,000 batches of 512. Half the batch gets cosine loss alone. The paired half also matches Stella's softmax over one positive and 31 distractors using KL divergence at temperature 0.02.
-
-Then I ran 2,500 ranking steps against a bank of frozen vectors, with 32,768 bank negatives per step. I masked known positives and any negative Stella scored above the positive minus 0.02. That keeps plausible answers out of the penalty. I folded the weights into the int8 rows and kept one scale per row. With targets ready, the estimate was about 20 minutes on a 10 GB 3080.
-
-[If asked about the data, name Amazon ESCI, FEVER, HotpotQA, SQuAD, Mr. TyDi, NQ Open, and TriviaQA. All training sources permit commercial derived weights.]</aside>
+<aside>[~0.75 min] I start the rows from Stella's token encodings and the scalar weights from inverse document frequency. In the alignment pass, paired examples match Stella's candidate-score distribution as well as its query vector. The ranking pass uses a frozen pool of negatives and masks known positives and other candidates Stella scores close to the positive.</aside>
 </section>

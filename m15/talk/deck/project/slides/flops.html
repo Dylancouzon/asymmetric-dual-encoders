@@ -1,4 +1,4 @@
-<section id="flops" class="s foot" data-transition="fade">
+<section id="flops" class="s foot" hidden>
 <div class="head"><h2>Zero Compute, in FLOPs</h2></div>
 <table class="dtab" style="margin-top:24px">
 <tr class="hd"><th style="width:22%;text-align:left">Query encoder</th><th style="width:30%;text-align:left">Per-query operation</th><th style="width:14%;text-align:right">Tokens</th><th style="width:17%;text-align:right">FLOPs</th><th style="width:17%;text-align:right">vs Zero</th></tr>
@@ -13,9 +13,5 @@
 <div class="host" style="width:1664px;height:30px"><p class="axl" style="left:184px;top:0;width:80px">10³</p><p class="axl" style="left:479px;top:0;width:80px">10⁵</p><p class="axl" style="left:774px;top:0;width:80px">10⁷</p><p class="axl" style="left:1069px;top:0;width:80px">10⁹</p><p class="axl" style="left:1364px;top:0;width:80px">10¹¹</p></div>
 </div>
 <p class="src">Estimate: 2·P·T + 4·L·T²·d per forward pass, P = matmul weights (Nano’s head runs per token); median over 100 real queries of 5–12 words. Zero: 2 FLOPs per gathered value plus normalization.</p>
-<aside>[~1 min] [Trace the three bars on the log scale.] A token takes a very different trip through each encoder. Stella sends it through 24 layers at width 1,024. Nano sends it through 12 layers at width 384. Zero uses its token ID to fetch a row, then pools and normalizes the rows.
-
-For the transformer estimate I count the weights used in matrix multiplies, multiply by twice the token count, and add attention. That counts Stella's gated feed-forward block and Nano's projection on every token. At the median lengths, 31 tokens for Stella and 12 for Nano, I get 25.1 and 0.54 billion operations. Zero takes about 28,000. That's roughly 900,000 times less arithmetic than Stella and 19,000 times less than Nano.
-
-Zero takes its name from the number of neural network passes it runs to encode a query. The lookup does arithmetic, and I still have an index to search.</aside>
+<aside>[~0.5 min] I estimate the transformer arithmetic from the matrix multiplies and attention, including Stella's prompt tokens. Zero still pays for loading rows, pooling, and normalization, so I use measured timings to see what the change saves on a device.</aside>
 </section>

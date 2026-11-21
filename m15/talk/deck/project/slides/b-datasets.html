@@ -2,5 +2,5 @@
 <div class="head"><p class="eyebrow">Backup</p><h2>Retention Varies by Dataset</h2></div>
 <div class="fl" style="gap:48px;align-items:flex-start"><img src="/_blob/a00ffc280edda146812bdada65fe86da" alt="Per-dataset retention of Stella's nDCG@10 for Zero and Nano across 15 BEIR datasets; Zero ranges from about 0.67 on TREC-COVID to 0.96 on Climate-FEVER, Nano from about 0.76 on FEVER to 0.99 on Quora" style="width:620px;height:690px;object-fit:contain;background:#fbfbf8;border-radius:16px;padding:16px">
 <p class="lead" style="width:900px">Zero keeps 0.67 on TREC-COVID and FiQA, 0.95 on Quora. Nano stays between 0.85 and 0.99 except FEVER, which Zero trained on and Nano did not.</p></div>
-<aside>[~0.5 min] Quora was at 95% of Stella's score for Zero, while TREC-COVID and FiQA were both at 67%. Nano kept 85% to 99% except on FEVER. Zero's training pool included FEVER, and Nano's excluded it.</aside>
+<aside>[~0.5 min] Zero's score relative to Stella varies substantially across collections, so I'd measure retention on the queries my users send. The students had different training pools, including different FEVER exposure, so I'd be careful about attributing the gap there to model size.</aside>
 </section>

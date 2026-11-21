@@ -1,4 +1,4 @@
-<section id="footprint" class="s foot" data-transition="fade">
+<section id="footprint" class="s foot" hidden>
 <div class="head"><h2>What Ships to the Device</h2></div>
 <table class="dtab" style="margin-top:24px">
 <tr class="hd"><th style="width:16%;text-align:left">Encoder</th><th style="width:14%;text-align:right">Params</th><th style="width:15%;text-align:right">Files</th><th style="width:16%;text-align:right">Peak RSS</th><th style="width:15%;text-align:right">Model load</th><th style="width:24%;text-align:right">Encode p50 / p95</th></tr>
@@ -11,9 +11,5 @@
 <div class="kv" style="flex:1"><p class="k2 tr">Stella → Zero</p><p class="v2">718× faster · no transformer</p></div>
 </div>
 <p class="src">Apple M5 Pro CPU, ONNX Runtime 4 threads (Zero: NumPy), batch 1, 100 real queries of 5–12 words, 3 fresh processes. Model load with warm file cache. Zero’s files include an fp16 reference table; its 31 MB int8 table expands to 125 MB fp32 at load.</p>
-<aside>[~1 min] [Point to the file and peak RSS columns.] If you're trying to fit this on a device, read those as two different bills. Stella has about 435 million parameters in a 1,670 MiB export. It peaks at 2,812 MiB of RAM and takes about two seconds to load with a warm file cache. Nano has 34.5 million parameters and peaks at 317 MiB. On my M5 Pro, the median encode drops from 31.6 to 2.25 milliseconds.
-
-Zero is where file size can trip you up. Its 31 MB int8 table holds 31.3 million values. The shipped files also have an fp16 reference table, and the serving loader expands the int8 rows to 125 MB in fp32. The process peaks at 360 MiB, even though the median encode is 44 microseconds.
-
-Those are encoder measurements. I can run the big document encoder in the cloud and run the query encoder where the user is.</aside>
+<aside>[~0.5 min] Zero's download contains an int8 table and an fp16 reference copy. The released loader expands the int8 rows into fp32, which helps explain why Zero's process peaked above Nano's in memory on the laptop.</aside>
 </section>
