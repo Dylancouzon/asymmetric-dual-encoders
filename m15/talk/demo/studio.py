@@ -15,6 +15,7 @@ for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", 
     os.environ.setdefault(_v, "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 import collections   # noqa: E402
+import functools     # noqa: E402
 import json          # noqa: E402
 import math          # noqa: E402
 import random        # noqa: E402
@@ -40,6 +41,7 @@ WORKERS = int(os.environ.get("WORKERS", "14"))
 MAX_QUEUE = 1500                  # beyond this, arrivals are dropped
 TRIAL_S, WARM_S = 12.0, 3.0       # a replay: 3 s warm-up in the new setup, then 12 s of the fixed trace
 HEADROOM = 0.6                    # auto plans to 60% of the latency target (tails run above the mean)
+SLOW_CAP = 4                      # max concurrent requests on a setting that costs >20% of the latency plan
 DECAY_S = 5.0                     # an unused setting's cost estimate halves its distance to quiet time every 5 s
 ORDER = ("stella", "nano", "zero")
 TRIAL_LOG = REPO / "work/m15/logs/studio_trials.jsonl"
@@ -51,7 +53,7 @@ shard = E.EdgeShard.load(str(REPO / "work/m15/edge" / DATASET))
 ENC = {k: make_encoder(k) for k in ORDER}
 
 # Defaults: each encoder's selected NQ setting (fastest within 1% of its own exact nDCG@10; Zero: widest tested).
-state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "route": "split",
+state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "route": "auto",
          "split": {"stella": 1.0, "nano": 0.0, "zero": 0.0},
          "search": {"stella": [256, 4.0], "nano": [512, 4.0], "zero": [1024, 8.0]},
          "budget_ms": 150.0, "workers": WORKERS, "fanout": 1, "ndcg_floor": 0.50}
@@ -60,6 +62,7 @@ _SW = json.loads((REPO / f"results/m15_talk_edge_{DATASET}.json").read_text())["
 SWEEP = {(e, x["ef"], x["oversampling"]): x["ndcg10"] for e in ORDER for x in _SW[e]["settings"]}
 
 
+@functools.lru_cache(maxsize=None)
 def quality(e, ef, os_):
     """Sweep nDCG@10 for this setting; nearest swept ef and oversampling when off the grid."""
     efs = sorted({k[1] for k in SWEEP if k[0] == e}); oss = sorted({k[2] for k in SWEEP if k[0] == e})
@@ -90,15 +93,44 @@ def serve(enc, ef, os_, text):
     return hits, (t1 - t0) * 1000, (time.perf_counter() - t1) * 1000
 
 
-BASE = {}                 # quiet-time service ms per rung, for auto when a rung has not run lately
-for r, e, ef, os_ in ladder():
+# Quiet-time cost of a setting = this machine's single-thread encode time (measured at startup) plus the
+# median search time measured for that exact (encoder, ef, oversampling) in the NQ sweep.
+ENC_MS = {}
+for e in ORDER:
     for q in QUERIES[:5]:
-        serve(e, ef, os_, q)
+        ENC[e].encode([q])
     ts = []
     for q in QUERIES[5:35]:
-        t0 = time.perf_counter(); serve(e, ef, os_, q); ts.append((time.perf_counter() - t0) * 1000)
-    BASE[r] = float(np.median(ts))
+        t0 = time.perf_counter(); ENC[e].encode([q]); ts.append((time.perf_counter() - t0) * 1000)
+    ENC_MS[e] = float(np.median(ts))
+SEARCH_MS = {(e, x["ef"], x["oversampling"]): x["search_ms_p50"] for e in ORDER for x in _SW[e]["settings"]}
+
+
+@functools.lru_cache(maxsize=None)
+def search_ms(e, ef, os_):
+    efs = sorted({k[1] for k in SEARCH_MS if k[0] == e}); oss = sorted({k[2] for k in SEARCH_MS if k[0] == e})
+    return SEARCH_MS[(e, min(efs, key=lambda v: abs(math.log(v) - math.log(max(ef, 1)))), min(oss, key=lambda v: abs(v - os_)))]
+
+
+# Throughput a setting can sustain here: encodes run about PAR at a time (measured: Nano ~1,400/s at 1.95 ms,
+# Stella ~80/s at 28 ms with 14 threads), and searches on one Edge shard run one at a time.
+PAR = 2.8
+
+
+def capacity(e, ef, os_):
+    return min(PAR * 1000 / max(ENC_MS[e], 1e-3), 1000 / max(search_ms(e, ef, os_), 1e-3))
+
+
+def base_cost(e, ef, os_):
+    efs = sorted({k[1] for k in SEARCH_MS if k[0] == e}); oss = sorted({k[2] for k in SEARCH_MS if k[0] == e})
+    efn = min(efs, key=lambda v: abs(math.log(v) - math.log(max(ef, 1)))); osn = min(oss, key=lambda v: abs(v - os_))
+    return ENC_MS[e] + SEARCH_MS[(e, efn, osn)]
+
+
+BASE = {r: base_cost(e, ef, os_) for r, e, ef, os_ in ladder()}
 service, last_used = dict(BASE), {r: 0.0 for r in BASE}
+inflight = collections.Counter()              # picks not yet completed, per setting
+warmed = [0]                                  # worker threads that finished warming up
 
 queue = collections.deque()
 cv = threading.Condition()
@@ -139,6 +171,7 @@ def ndcg10(qid, ids):
 
 
 def generator():
+    interactive_qos()
     k, nxt = 0, time.perf_counter()
     while True:
         now, wall = time.perf_counter(), time.time()
@@ -182,28 +215,49 @@ _route_rng = random.Random(1)
 smooth_wait = [0.0]                           # EWMA of queue wait over recent requests, ms
 
 
+def overload_pick(allowed):
+    """Overloaded: the allowed setting that sustains the most traffic; within 10% of that, the best quality."""
+    top = max(capacity(*r[1:]) for r in allowed)
+    return max((r for r in allowed if capacity(*r[1:]) >= 0.9 * top), key=lambda r: quality(*r[1:]))
+
+
+def est_cost(r, now):
+    """Live cost estimate of a setting; when unused it drifts back toward its quiet-time cost."""
+    idle = max(0.0, now - last_used[r] - 1.0)
+    return BASE[r] + (service[r] - BASE[r]) * 0.5 ** (idle / DECAY_S)
+
+
+def plan_ms():
+    return HEADROOM * state["budget_ms"]
+
+
 def choose(wait_ms):
     """Returns (rung, encoder, ef, oversampling) for one request."""
     if state["route"] == "auto":
         # Quality first: never use a setting below the nDCG floor. Spare latency buys quality above it;
-        # when nothing fits the latency target, take the cheapest setting that still meets the floor.
+        # when nothing fits the latency target, fall back to the allowed setting with the lowest quiet-time cost.
         now = time.time()
         rungs = sorted(ladder(), key=lambda r: -quality(*r[1:]))
         ok = [r for r in rungs if quality(*r[1:]) >= state["ndcg_floor"]] or rungs[:1]
-        def est(r):                       # unused settings drift back toward quiet-time cost, no sudden probes
-            idle = max(0.0, now - last_used[r] - 1.0)
-            return BASE[r] + (service[r] - BASE[r]) * 0.5 ** (idle / DECAY_S)
         # Plan with the larger of this request's wait and the recent average wait, so a sustained load keeps
         # the cheaper setting instead of oscillating each time the queue drains.
         wait_ms = max(wait_ms, smooth_wait[0])
         for r, e, ef, os_ in ok:
-            if wait_ms + est(r) <= HEADROOM * state["budget_ms"]:
-                service[r], last_used[r] = est(r), now   # materialize the decay so this pick starts from it
+            c = est_cost(r, now)
+            if wait_ms + c <= plan_ms():
+                # A setting whose last measurement was over budget is recovering: one probe at a time.
+                if service[r] + wait_ms > plan_ms() and inflight[r] > 0:
+                    continue
+                # An expensive setting may hold at most SLOW_CAP workers, so a sudden spike cannot tie up
+                # every worker in slow requests before its cost estimate catches up.
+                if c > 0.2 * plan_ms() and inflight[r] >= SLOW_CAP:
+                    continue
+                service[r], last_used[r] = c, now     # materialize the decay so this pick starts from it
+                inflight[r] += 1
                 return r, e, ef, os_
-        # Overloaded: take the highest-capacity setting that meets the floor. Rank by quiet-time cost; under
-        # saturation, live timings mostly measure waiting for the shared process, not a setting's own cost.
-        pick = min(ok, key=lambda r: BASE[r[0]])
-        service[pick[0]], last_used[pick[0]] = est(pick[0]), now
+        pick = overload_pick(ok)
+        service[pick[0]], last_used[pick[0]] = est_cost(pick[0], now), now
+        inflight[pick[0]] += 1
         return pick
     w = state["split"]
     tot = sum(w.values()) or 1.0
@@ -211,11 +265,49 @@ def choose(wait_ms):
     for e in ORDER:                            # weighted split: all encoders serve at once
         acc += w[e]
         if x < acc:
+            inflight[e] += 1
             return (e, e, *state["search"][e])
+    inflight["zero"] += 1
     return ("zero", "zero", *state["search"]["zero"])
 
 
+def auto_table(now, sec):
+    """What auto sees right now, best quality first: why each setting is used or not."""
+    rungs = sorted(ladder(), key=lambda r: -quality(*r[1:]))
+    floor, wait = state["ndcg_floor"], smooth_wait[0]
+    counts = collections.Counter(d[4] for d in sec)
+    allowed = [r for r in rungs if quality(*r[1:]) >= floor]
+    fits = [r for r in allowed if wait + est_cost(r[0], now) <= plan_ms()]
+    chosen = fits[0][0] if fits else (overload_pick(allowed)[0] if allowed else None)
+    rows = []
+    for r, e, ef, os_ in rungs:
+        q, c = quality(e, ef, os_), est_cost(r, now)
+        why = ("below floor" if q < floor else "chosen" if r == chosen and fits
+               else "chosen: overload" if r == chosen else "fits" if (r, e, ef, os_) in fits else "too slow")
+        rows.append({"rung": r, "enc": e, "ef": ef, "os": os_, "quality": q, "est_ms": wait + c,
+                     "share": counts.get(r, 0) / len(sec) if sec else 0.0, "why": why})
+    return rows
+
+
+def interactive_qos():
+    """macOS: mark this thread user-interactive so the scheduler keeps it on performance cores. After a quiet
+    period, background-class threads sit on efficiency cores and take seconds to ramp when a spike arrives."""
+    if sys.platform == "darwin":
+        try:
+            import ctypes
+            ctypes.CDLL("/usr/lib/libSystem.dylib").pthread_set_qos_class_self_np(0x21, 0)   # QOS_CLASS_USER_INTERACTIVE
+        except Exception as err:              # not fatal: the demo still runs, just with slower ramp-up
+            print("QoS not set:", err, flush=True)
+
+
 def worker(idx):
+    interactive_qos()
+    # Warm every encoder and search setting on this thread first: a thread's first calls into a model are slow,
+    # and a spike would otherwise hit cold threads.
+    for r, e, ef, os_ in ladder():
+        for q in QUERIES[idx * 7: idx * 7 + 4]:
+            serve(e, ef, os_, q)
+    warmed[0] += 1
     while True:
         with cv:
             while not queue or idx >= state["workers"]:
@@ -227,6 +319,7 @@ def worker(idx):
         r, e, ef, os_ = choose(w_ms)
         hits, enc_ms, srch_ms = serve(e, ef, os_, QUERIES[i])
         t1 = time.perf_counter()
+        inflight[r] -= 1
         if r in service:
             service[r] = 0.9 * service[r] + 0.1 * (t1 - t0) * 1000
             last_used[r] = time.time()
@@ -252,9 +345,14 @@ def index():
     return FileResponse(HERE / "studio.html")
 
 
+EVENTS = collections.deque(maxlen=50)         # (t, label) for chart markers
+
+
 @app.post("/set")
 def set_state(body: dict):
-    """Partial update: rate, pattern, peak, spike, route, split{enc: w}, search{enc: [ef, os]}, budget_ms, workers."""
+    """Partial update: rate, pattern, peak, spike, route, split{enc: w}, search{enc: [ef, os]}, budget_ms, workers,
+    fanout, ndcg_floor. Changes apply to the next request; traffic never stops."""
+    before = dict(state)
     if "rate" in body:
         state["rate"] = max(1.0, min(5000.0, float(body["rate"])))
     if body.get("pattern") in ("steady", "wave", "bursts"):
@@ -272,8 +370,11 @@ def set_state(body: dict):
     for e, v in (body.get("search") or {}).items():
         if e in ORDER:
             state["search"][e] = [max(4, min(4096, int(v[0]))), max(1.0, min(16.0, float(v[1])))]
-    if "ndcg_floor" in body:
-        state["ndcg_floor"] = max(0.0, min(1.0, float(body["ndcg_floor"])))
+            r = e                              # the encoder's own rung follows its new search setting
+            BASE[r] = service[r] = base_cost(e, *state["search"][e])
+    if "ndcg_floor" in body:                  # a floor no setting can meet is refused: keep the best attainable
+        best = max(quality(*r[1:]) for r in ladder())
+        state["ndcg_floor"] = max(0.0, min(best, float(body["ndcg_floor"])))
     if "budget_ms" in body:
         state["budget_ms"] = max(1.0, float(body["budget_ms"]))
     if "fanout" in body:
@@ -282,6 +383,24 @@ def set_state(body: dict):
         state["workers"] = max(1, min(WORKERS, int(body["workers"])))
         with cv:
             cv.notify_all()
+    # One short marker per change, most important first.
+    label = []
+    if state["ndcg_floor"] != before["ndcg_floor"]:
+        label.append(f"floor {state['ndcg_floor']:.2f}")
+    elif state["route"] != before["route"]:
+        label.append(state["route"])
+    elif state["rate"] != before["rate"]:
+        label.append(f"{state['rate']:,.0f}/s")
+    elif state["spike"] != before["spike"]:
+        label.append(f"spike ×{state['peak']:g}" if state["spike"] else "spike off")
+    elif state["fanout"] != before["fanout"]:
+        label.append("agent tasks" if state["fanout"] > 1 else "single searches")
+    elif state["budget_ms"] != before["budget_ms"]:
+        label.append(f"target {state['budget_ms']:.0f} ms")
+    elif state["pattern"] != before["pattern"]:
+        label.append(state["pattern"])
+    if label:
+        EVENTS.append((time.time(), " · ".join(label)))
     return state
 
 
@@ -367,7 +486,10 @@ def snapshot():
             "cpu_s_per_1k": (cpu["cores"] / served * 1000) if served else None,
             "trial_left": max(0.0, trial["end"] - now) if not trial["pinned"] else 0.0,
             "warming": max(0.0, trial["start"] - now) if not trial["pinned"] else 0.0,
-            "pins": pins, "seg_age": now - seg["start"], "est_ms": {r: round(v, 2) for r, v in service.items()},
+            "auto": auto_table(now, sec), "plan_ms": plan_ms(), "events": [e for e in EVENTS if now - e[0] <= 60],
+            "best_quality": max(quality(*r[1:]) for r in ladder()),
+            "arrivals_per_s": sum(1 for a in list(arrivals)[-20000:] if now - a[0] <= 1.0),
+            "pins": pins, "seg_age": now - seg["start"], "warmed": warmed[0], "ready": ready[0], "est_ms": {r: round(v, 2) for r, v in service.items()},
             "smooth_wait_ms": round(smooth_wait[0], 1),
             "rungs": dict(collections.Counter(d[4] for d in sec)), "n_docs": len(DOC_IDS), "max_workers": WORKERS}
 
@@ -434,8 +556,35 @@ def stats():
                              for h in list(HIST)[-240:]]}
 
 
+ready = [False]
+
+
+def burn_in():
+    """Full-load warm-up before the demo: the first burst after start runs several times slower on this laptop
+    (measured: Nano encode 28 ms falling to 5 ms over ~8 s; later bursts start at 4 ms). Then reset all stats."""
+    while warmed[0] < WORKERS:
+        time.sleep(0.2)
+    defaults = json.loads(json.dumps(state))
+    state.update(route="split", split={"stella": 0.0, "nano": 60.0, "zero": 40.0}, rate=900.0, spike=False, fanout=1)
+    time.sleep(10)
+    state.update(split={"stella": 100.0, "nano": 0.0, "zero": 0.0}, rate=60.0)
+    time.sleep(4)
+    state.clear(); state.update(defaults)
+    reset()
+    time.sleep(1.5)
+    for d in (done, arrivals, dropped, tasks, HIST, EVENTS):
+        d.clear()
+    pins.clear()
+    service.update(BASE)
+    smooth_wait[0] = 0.0
+    seg.update(sig=None, start=time.time())
+    ready[0] = True
+    print("studio ready", flush=True)
+
+
 if __name__ == "__main__":
     import uvicorn
+    threading.Thread(target=burn_in, daemon=True).start()
     threading.Thread(target=generator, daemon=True).start()
     threading.Thread(target=sampler, daemon=True).start()
     for i in range(WORKERS):

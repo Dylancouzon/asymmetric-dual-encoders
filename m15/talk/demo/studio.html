@@ -45,8 +45,8 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
 </style></head><body><div class="app">
 <div class="panel ctl">
   <div><h1>Workload studio</h1><p id="sub"></p></div>
-  <div class="presets"><button id="p_quiet">Quiet</button><button id="p_spike">Traffic spike</button>
-    <button id="p_agent">Agent tasks</button><button id="p_tiers">Free / paid</button></div>
+  <div class="presets"><button id="p_quiet">Quiet · 40/s</button><button id="p_spike">Spike · 600/s</button>
+    <button id="p_over">Overload · 2,000/s</button><button id="p_agent">Agent tasks</button></div>
   <div class="card"><h2>TRAFFIC <b id="rate_v"></b></h2>
     <input id="rate" type="range" min="0" max="1000">
     <div class="seg" id="pattern"><button data-v="steady">steady</button><button data-v="wave">daily wave</button><button data-v="bursts">bursts</button></div>
@@ -73,7 +73,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
     <div class="panel t"><div class="k">traffic</div><div class="v" id="arr">–</div><div class="d" id="flow1"></div><div class="d" id="flow2"></div></div>
     <div class="panel t g" id="gt"><svg id="g" width="170" height="108" viewBox="0 0 190 120"></svg>
       <div><div class="k" id="p95k">p95 latency</div><div class="v" id="p95">–</div><div class="verdict" id="verdict"></div></div></div>
-    <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d">nDCG@10, judged</div></div>
+    <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d"></div></div>
     <div class="panel t"><div class="k">machine load</div><div class="v" id="load">–</div><div class="d" id="load_d"></div></div>
   </div>
   <div class="charts">
@@ -81,7 +81,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
     <div class="panel chart"><div class="k">searches/s served, by encoder · dashed: arriving</div><canvas id="c_qps"></canvas></div>
   </div>
   <div class="bottom">
-    <div class="panel"><div class="k">right now, by encoder</div><table><tr><th>encoder</th><th>share</th><th>served/s</th><th>time per search</th><th>nDCG@10</th></tr><tbody id="lanes"></tbody></table></div>
+    <div class="panel"><div class="k" id="lanes_k">right now, by encoder</div><table><thead id="lanes_h"></thead><tbody id="lanes"></tbody></table></div>
     <div class="panel chart"><div class="k">ranking quality, nDCG@10 · dashed: floor</div><canvas id="c_ndcg"></canvas></div>
   </div>
 </div></div>
@@ -100,10 +100,12 @@ const set = body => { editing = Date.now(); return fetch("/set", {method: "POST"
 for (const e of ORDER) $("os_" + e).innerHTML = OSS.map(o => `<option value="${o}">×${o}</option>`).join("");
 // Presets: real queries and judgments; the arrival patterns and tiers are simulated.
 const ONLY = e => ({stella: 0, nano: 0, zero: 0, [e]: 100});
-$("p_quiet").onclick = () => set({rate: 40, spike: false, pattern: "steady", fanout: 1, route: "split", split: ONLY("stella")});
-$("p_spike").onclick = () => set({spike: true, peak: 15});
+// Presets change only the traffic; routing, floor and target stay as set (Auto by default).
+$("p_quiet").onclick = () => set({rate: 40, spike: false, pattern: "steady", fanout: 1});
+$("p_spike").onclick = () => set({rate: 40, spike: true, peak: 15, pattern: "steady", fanout: 1});
+$("p_over").onclick = () => set({rate: 2000, spike: false, pattern: "steady", fanout: 1});
 $("p_agent").onclick = () => set({rate: 300, spike: false, pattern: "steady", fanout: 10});
-$("p_tiers").onclick = () => set({fanout: 1, route: "split", split: {stella: 10, nano: 90, zero: 0}});
+const tiers = () => set({fanout: 1, route: "split", split: {stella: 10, nano: 90, zero: 0}});
 $("rate").oninput = () => { $("rate_v").textContent = rateOf(+$("rate").value).toLocaleString() + " searches/s"; set({rate: rateOf(+$("rate").value)}); };
 $("spike").onclick = () => set({spike: !(S && S.spike)});
 $("peak").oninput = () => { $("peak_v").textContent = "×" + $("peak").value; set({peak: +$("peak").value}); };
@@ -130,7 +132,8 @@ addEventListener("keydown", ev => {
   if (["INPUT", "SELECT"].includes(ev.target.tagName) && ev.target.type !== "range") return;
   const one = {"1": "stella", "2": "nano", "3": "zero"}[ev.key];
   if (one) set({route: "split", split: ONLY(one)});
-  if (ev.key === "4") $("p_tiers").onclick();
+  if (ev.key === "4") tiers();
+  if (ev.key === "o") $("p_over").onclick();
   if (ev.key === "5") set({route: "auto"});
   if (ev.key === "s") $("spike").onclick();
   if (ev.key === "a") $("agent").onclick();
@@ -152,6 +155,11 @@ function chart(id, ticks, fy, fmt, layers) {
   x.font = "18px -apple-system, sans-serif"; x.fillStyle = "#9aa0b5"; x.strokeStyle = "#262c3d"; x.lineWidth = 1;
   for (const v of ticks) { const y = fy(v, h); x.beginPath(); x.moveTo(L, y); x.lineTo(w, y); x.stroke(); x.fillText(fmt(v), 0, y + 6); }
   for (const ly of layers) ly(x, tx, h);
+  x.font = "600 18px -apple-system, sans-serif";      // control changes, so cause and effect line up
+  const evs = ((S && S.events) || []).filter((e, i, a) => i === a.length - 1 || a[i + 1][0] - e[0] > 4);   // drop markers crowded by a newer one
+  for (const [t, label] of evs) { const ex = tx(t); if (ex < L) continue;
+    x.strokeStyle = "#f5a623"; x.lineWidth = 2; x.setLineDash([4, 6]); x.beginPath(); x.moveTo(ex, 0); x.lineTo(ex, h); x.stroke(); x.setLineDash([]);
+    x.fillStyle = "#f5a623"; x.fillText(label, Math.min(ex + 6, w - x.measureText(label).width - 4), 18); }
 }
 const latOf = s => s.fanout > 1 ? s.task_p95_ms : s.p95_ms;
 function draw() {
@@ -181,12 +189,13 @@ function setupName(p) {
 }
 function render(s) {
   const fresh = Date.now() - editing > 800;      // don't fight the control you are moving
-  $("sub").textContent = `${(s.n_docs / 1e6).toFixed(2)}M passages · one Stella index · this laptop`;
+  $("sub").textContent = s.ready ? `${(s.n_docs / 1e6).toFixed(2)}M passages · one Stella index · this laptop` : "warming up the laptop… ready in a few seconds";
   if (fresh) {
     $("rate").value = xOfRate(s.rate); $("rate_v").textContent = Math.round(s.rate).toLocaleString() + " searches/s";
     $("peak").value = s.peak; $("peak_v").textContent = "×" + s.peak;
     $("fanout").value = Math.max(2, s.fanout); $("fanout_v").textContent = Math.max(2, s.fanout);
-    $("floor").value = Math.round(s.ndcg_floor * 100); $("floor_v").textContent = "nDCG " + s.ndcg_floor.toFixed(2);
+    $("floor").max = Math.floor(s.best_quality * 100); $("floor").value = Math.round(s.ndcg_floor * 100);
+    $("floor_v").textContent = "nDCG " + s.ndcg_floor.toFixed(2) + (s.ndcg_floor >= Math.floor(s.best_quality * 100) / 100 ? " (max)" : "");
     $("budget").value = xOfBud(s.budget_ms); $("budget_v").textContent = Math.round(s.budget_ms) + " ms";
     $("workers").value = s.workers; $("workers_v").textContent = s.workers;
     const tot = ORDER.reduce((a, e) => a + s.split[e], 0) || 1;
@@ -209,10 +218,21 @@ function render(s) {
   $("verdict").textContent = over ? `OVER ${Math.round(s.budget_ms)} ms TARGET` : `under ${Math.round(s.budget_ms)} ms target`;
   $("verdict").style.color = over ? "var(--bad)" : "var(--mut)"; $("gt").classList.toggle("over", over); gauge(lat, s.budget_ms);
   $("ndcg").textContent = s.ndcg10.toFixed(2); $("ndcg").style.color = s.ndcg10 < s.ndcg_floor ? "var(--bad)" : "var(--txt)";
-  $("ndcg_d").textContent = `nDCG@10, judged · floor ${s.ndcg_floor.toFixed(2)}`;
+  $("ndcg_d").textContent = `nDCG@10, last 600 searches · floor ${s.ndcg_floor.toFixed(2)}`;
   $("load").textContent = s.cores_busy.toFixed(1); $("load_d").textContent = `of ${s.cores_total} cores busy`;
-  $("lanes").innerHTML = ORDER.map(e => { const p = s.per[e]; return `<tr><td><span class="dot" style="background:${COL[e]}"></span>${NAME[e]}</td>
-    <td>${Math.round(100 * p.share)}%</td><td>${p.served_per_s.toLocaleString()}</td><td>${p.served_per_s && p.work_ms != null ? fmtms(p.work_ms) : "–"}</td><td>${!p.served_per_s || p.ndcg10 == null ? "–" : p.ndcg10.toFixed(2)}</td></tr>`; }).join("");
+  if (s.route === "auto") {     // the router's view: why each setting is or is not used right now
+    $("lanes_k").textContent = "auto's choices right now";
+    $("lanes_h").innerHTML = "<tr><th>setting</th><th>nDCG</th><th>share</th><th></th></tr>";
+    const label = r => NAME[r.enc] + (r.rung.endsWith("fast") ? " fast" : "");
+    $("lanes").innerHTML = s.auto.map(r => { const used = r.share > 0.005, why = r.why, wc = why.startsWith("chosen") ? "#3fc1a5" : why === "below floor" ? "#ff516b" : "#9aa0b5";
+      return `<tr style="opacity:${why === "below floor" ? 0.5 : 1}"><td><span class="dot" style="background:${COL[r.enc]}"></span>${label(r)}</td>
+      <td>${r.quality.toFixed(2)}</td><td style="font-weight:${used ? 700 : 400}">${Math.round(100 * r.share)}%</td><td style="color:${wc}">${why}</td></tr>`; }).join("");
+  } else {
+    $("lanes_k").textContent = "right now, by encoder";
+    $("lanes_h").innerHTML = "<tr><th>encoder</th><th>share</th><th>served/s</th><th>time per search</th><th>nDCG@10</th></tr>";
+    $("lanes").innerHTML = ORDER.map(e => { const p = s.per[e]; return `<tr><td><span class="dot" style="background:${COL[e]}"></span>${NAME[e]}</td>
+      <td>${Math.round(100 * p.share)}%</td><td>${p.served_per_s.toLocaleString()}</td><td>${p.served_per_s && p.work_ms != null ? fmtms(p.work_ms) : "–"}</td><td>${!p.served_per_s || p.ndcg10 == null ? "–" : p.ndcg10.toFixed(2)}</td></tr>`; }).join("");
+  }
   if ($("pins")) $("pins").innerHTML = s.pins.slice(-6).reverse().map(p => { const L = p.fanout > 1 ? p.task_p95_ms : p.p95_ms, served = Math.min(100, 100 * p.completed / Math.max(1, p.offered));
     return `<tr><td>${setupName(p)}</td><td>${Math.round(p.arrival_rate || p.rate).toLocaleString()}/s${p.pattern !== "steady" ? " " + p.pattern : ""}</td>
     <td style="color:${L == null || L > p.budget_ms ? "#ff516b" : "#3fc1a5"}">${fmtms(L)}</td><td>${p.ndcg10.toFixed(2)}</td>
