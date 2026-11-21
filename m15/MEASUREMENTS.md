@@ -769,8 +769,12 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   reading the vector, quantized-code and graph files once into page cache (29 GB RAM;
   `..._gcp-c4-standard-8-warm_e2e.json`). Both use one process and W threads sharing the shard, so
   Python's global interpreter lock and the single Edge process bound the cheap encoders.
-- **T5 demo.** `m15/talk/demo/` replays T3's per-query arrays and runs live queries; it produces no
-  result file.
+- **T5 demo.** `m15/talk/demo/spike.py` (the stage demo) replays the 3,452 judged NQ test queries as
+  Poisson traffic from a fixed seeded trace against the NQ Edge shard (14 worker threads, one process),
+  with fixed-encoder modes and an Auto mode that picks the best (encoder, ef, oversampling) rung whose
+  service time fits the latency budget after queueing. It scores every answer against the judgments
+  but writes no result file; rehearsal numbers are demo observations, not measurements. The earlier
+  `app.py` replay remains for backup.
 - **T6 NQ document encode and parity.** BEIR NQ corpus (revision `b7253e6c`, 2,681,468 passages) on
   the RTX 3080 (WSL2, CUDA, fp32 compute, max length 512, no prompt, fp16 store, 54 shards of 50,000,
   batch_tokens 8,192). Encode cost is the steady-state rate from shard file times (shards 3-52, the

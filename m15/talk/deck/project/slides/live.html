@@ -1,13 +1,23 @@
 <section id="live" class="s demo" data-transition="fade">
-<div class="head"><h2>Live: Four Rankers on One Shard</h2></div>
-<div class="live"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:40px;margin-top:24px">Stella, Nano, Zero and BM25 on one Qdrant Edge shard, on this laptop.</p>
-<aside>[~4 min] [Share the demo, open Live, and leave the exact check off for the first two queries. Use the recorded fallback if live search is unavailable and the recording shows these queries.]
+<div class="head"><h2>Live: A Traffic Spike on One Index</h2></div>
+<div class="live"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:40px;margin-top:24px">2.68M passages, one Stella index, real NQ traffic, judged answers, on this laptop.</p>
+<aside>[~4 min] [Before the talk: start the demo server, set the budget to 100 ms, clear the scoreboard with U, and run every mode once to warm it. Keys: 1 Stella, 2 Nano, 3 Zero, 4 Zero narrow, 5 Auto, S spike to 1,000 or back to 40, T replay the same traffic for 12 seconds and add a scoreboard row, arrows step the traffic. Wait for each row before the next key. Press the up arrow once, wait for 1,500, then press it again for 2,000.]
 
-[Enter "how far is the moon from the earth" on the NQ index. Read the query aloud and run all four rankers.] I'm looking for a distance. BM25 starts with "Far side of the Moon." That has several of the words I'm after. My question asks for a distance. Zero brings up the Moon articles with the table we saw earlier. [Point to the results and give Zoom viewers a moment to read them.]
+[Share the demo. Press 1.] This is a search service on this laptop: the 2.68 million passages, one Stella index, real NQ questions arriving, and every answer checked against the judged answers. The big number asks one question: did the person get a relevant result in the top 10 within 100 milliseconds?
 
-[Read "movies where the dog dies at the end" aloud, enter it, and run all four rankers.] Zero puts "John Dies at the End" first. I can see why the words gave it a good score. I asked for a plot involving the dog. Stella and Nano put "Hachi: A Dog's Tale" first. That's the page I'd open. [Pause on the top hits.]
+[Press S, then T.] Traffic just went up 25 times. Stella still ranks well when it finishes, but almost nobody gets an answer in time.
 
-[Read "why is the sky blue" aloud and enter it. Enable the exact check. Run at hnsw_ef 64, then at 1024. Keep oversampling fixed. Point to the recovery counts before and after, then to the search times.] I'm giving the graph more room to look. Zero still finds eight of its own exact top 10. Stella and Nano find all of theirs. Each column checks against its own list, so a full count can mean different pages. I'd need a reason to pay for that extra search time.
+[After the row appears: press S, then C. Talk for 15 seconds while the laptop cools.] Back to quiet traffic. The usual fix is a bigger machine or a second, cheaper index. I'm going to change only the query encoder.
 
-[Return to the deck.] I'd use examples like these to decide what to judge in a batch. Then I'd use that batch to choose both an encoder and its search settings.</aside>
+[Press 2, S, then T.] Same index, same replayed traffic. Nano keeps up.
+
+[Press the up arrow twice to 2,000, then T.] Double it again and Nano falls behind too.
+
+[Press 3, then T.] Zero should win this, it has no transformer. It doesn't, because its wide search is now the bottleneck.
+
+[Press 4, then T.] Same lookup table, narrower search: most answers come back in time again, and you can see what that costs in ranking quality.
+
+[Press 5, then sweep: down to 40, S to 1,000, up twice to 2,000, then S back to 40.] Now the service picks per request: Stella when it's quiet, mostly Nano under the spike, Nano and narrow Zero at the peak, and back to Stella when traffic falls. One index the whole time.
+
+[Return to the deck.] On another machine the crossover points move. That's why you measure it on yours.</aside>
 </section>
