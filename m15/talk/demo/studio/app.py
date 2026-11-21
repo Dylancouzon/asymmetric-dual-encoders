@@ -119,11 +119,12 @@ probes = collections.deque(maxlen=5000)                  # (t, encoder, encode_m
 
 def probe_loop():
     """Twice a second, time one encode per encoder under whatever load the machine carries, so Auto knows what an
-    encoder would cost right now even while it serves no traffic."""
+    encoder would cost right now even while it serves no traffic. Probing waits 2 s after a traffic change, while
+    searches from the old traffic finish."""
     i = 0
     while True:
         time.sleep(0.5)
-        if not calib["ready"]:
+        if not calib["ready"] or time.time() - router["workload_t"] < 2.0:
             continue
         for name in ENCODERS:
             i += 1
@@ -135,9 +136,9 @@ def probe_loop():
 def encode_tail_ms(name, recent, now):
     """Tail of this encoder's encode time under the current load, from served searches and 10 s of probes (its time
     under load varies too much to judge from a few). A traffic change clears the probes, since they were timed under
-    the old load, and served searches from before the change are ignored. An agent task waits for the slowest of its searches, so the percentile rises with fan-out:
+    the old load, and searches that arrived before the change are ignored. An agent task waits for the slowest of its searches, so the percentile rises with fan-out:
     P(max of k <= x) = F(x)^k >= 0.95 needs F(x) >= 0.95^(1/k)."""
-    xs = [d[5] for d in recent if d[2] == name and d[0] >= router["workload_t"]]
+    xs = [d[5] for d in recent if d[2] == name and d[0] - d[1] / 1000 >= router["workload_t"]]
     xs += [p[2] for p in Workload.recent(probes, 10.0, now) if p[1] == name]
     q = 100 * 0.95 ** (1 / max(1, state["fanout"]))
     return float(np.percentile(xs, q)) if len(xs) >= 5 else calib["encode_ms"].get(name, 0.0)
@@ -160,7 +161,7 @@ def cost(name, ef, oversampling, slowdown):
 
 def slow_encoders(enc_ms, target, now):
     """Encoders whose own time does not fit the latency target. Once marked slow, an encoder must stay under the
-    target for 10 s before it returns: its time under load varies, and one lucky reading should not readmit it.
+    target for 5 s before it returns: its time under load varies, and one lucky reading should not readmit it.
     A traffic change clears the marks (see /set)."""
     for name in ENCODERS:
         if enc_ms[name] > target:
@@ -169,7 +170,7 @@ def slow_encoders(enc_ms, target, now):
             since = router["slow"][name]
             if since is None:
                 router["slow"][name] = now
-            elif now - since >= 10:
+            elif now - since >= 5:
                 del router["slow"][name]
     return frozenset(router["slow"])
 
@@ -193,12 +194,13 @@ def plan_loop():
         now = time.time()
         recent = work.recent(work.done, 3.0, now)
         enc_ms, slowdown = {n: encode_tail_ms(n, recent, now) for n in ENCODERS}, shard_slowdown(recent)
+        router["encode_ms"] = enc_ms
         router["costs"] = {n: cost(n, *state["search"][n], slowdown) for n in ENCODERS}
         rate = work.offered_rate(now)
         if state["route"] == "split":
             work.shares, router["plan"] = dict(state["split"]), None
             continue
-        if rate <= 0:                             # paused: keep the last plan while the queue drains
+        if rate <= 0 and router["plan"] is not None:   # paused: keep the last plan while the queue drains
             continue
         target = state["target_ms"]
         # Headroom from measured p95 (per agent task when searches come in groups), once per fresh second of
@@ -276,7 +278,7 @@ def snapshot():
         "plan": None if p is None else {"preset": p.preset, "shares": p.shares, "quality": p.quality,
                                         "encode_util": p.encode_util, "shard_util": p.shard_util, "status": p.status},
         "headroom": router["headroom"], "n_docs": len(DOC_IDS), "efs": EFS, "oversampling": OVERSAMPLING,
-        "slow": sorted(router["slow"]),
+        "slow": sorted(router["slow"]), "encode_tail_ms": router.get("encode_ms", {}),
         "costs": {n: {"quality": c.quality, "search_ms": c.search_ms, "encode_per_s": c.encode_per_s}
                   for n, c in router["costs"].items()},
         "events": [e for e in EVENTS if now - e[0] <= 60]}
