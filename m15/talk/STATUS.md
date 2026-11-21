@@ -15,6 +15,11 @@ Owner notes: high technical bar but not academic; depth in mechanisms, statistic
 ## Running
 - NQ (2,681,468 passages) Stella doc encode on the RTX box at 65 docs/s, ETA Sat 2026-11-21 about 10:00 EST: `ssh dylan@100.114.121.66`, log `~/constella-talk/encode_nq.log`, output `~/constella-talk/work/nq_stella/`.
 
+## VM (owner-provided, pay per minute)
+- GCP `c4-standard-8`, us-east1-b, `ssh dylan@34.24.205.71`, code in `~/ade` (bundle of m15src, bench/core.py, m11/release, m7/FREEZE.json, NQ M20 pins), venv pinned to local versions. On-demand list price about $0.395/h.
+- Encode-only throughput sweep launched 2026-11-21 (`~/encode_run.log`); receipt passes placeholder price 0.40, recompute dollars at 0.395. Single-thread Stella on this CPU: about 271 ms per query vs 49 ms on the M5 Pro.
+- Next VM session: end-to-end NQ throughput after the NQ Edge build; upload shard, run `talk_throughput.py --modes e2e`. Ask the owner to stop the VM between sessions.
+
 ## Next
 1. Copy NQ shards to `work/m15/vecs/nq_stella/`; parity-check a sample against a Mac encode; `talk_edge.py build nq`, `bench nq`.
 2. Fill NQ placeholders: bet (encode ratio as bars), race title counts, recovery chart (own-exact top-10 recovery vs hnsw_ef at fixed oversampling), recipe results row.
