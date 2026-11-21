@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Traffic Spike</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#090c14;--panel:#111827;--line:#303547;--txt:#f0f3fa;--mut:#9aa0b5;--stella:#c9cede;--nano:#9494ff;--zero:#ff516b;--ok:#3fc1a5;--warn:#f5a623}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:"Mona Sans",-apple-system,Segoe UI,Arial,sans-serif}
+.wrap{padding:24px 32px;display:grid;grid-template-rows:auto auto auto 1fr;gap:16px;height:100vh}
+.top{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+h1{font-size:36px;margin:0;font-weight:650}h1 small{font-size:22px;color:var(--mut);font-weight:400;margin-left:12px}
+.modes{display:flex;gap:10px}.modes button,.btn{font-family:inherit;font-weight:600;font-size:24px;padding:10px 18px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer}
+.modes button.on{border-color:currentColor;box-shadow:0 0 24px rgba(255,255,255,.14)}
+.modes .stella{color:var(--stella)}.modes .nano{color:var(--nano)}.modes .zero{color:var(--zero)}.modes .auto{color:var(--ok)}
+.btn.spike{border-color:var(--warn);color:var(--warn);background:#2a1f0a}
+.ctl{display:flex;align-items:center;gap:10px;font-size:22px;color:var(--mut)}.ctl b{color:var(--txt);min-width:100px;display:inline-block}
+input[type=range]{width:200px;accent-color:#ff516b}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.tile{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:12px 18px}
+.tile .k{font-size:18px;color:var(--mut);letter-spacing:2px;text-transform:uppercase}.tile .v{font-size:52px;font-weight:700;line-height:1.1}
+.tile.hero{border-color:var(--ok)}.tile.hero .v{font-size:60px;color:var(--ok)}
+.tile.bad{border-color:var(--zero)}.tile.bad .v{color:var(--zero)}
+.pins{display:flex;gap:12px;flex-wrap:wrap;min-height:44px;align-items:center}
+.pin{font-size:22px;padding:8px 16px;border-radius:12px;background:var(--panel);border:2px solid var(--line)}
+.pin b{font-size:26px}.pins .hint{font-size:18px;color:var(--mut)}
+.charts{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;min-height:0}
+.chart{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 16px;display:flex;flex-direction:column;min-height:0}
+.chart .t{font-size:21px;color:var(--mut);margin-bottom:4px}.chart canvas{flex:1;width:100%;min-height:0}
+.where{display:flex;flex-direction:column;gap:10px;justify-content:center;flex:1}
+.where .act{font-size:38px;font-weight:700}
+.bar{display:grid;grid-template-columns:110px 1fr 120px;align-items:center;gap:12px;font-size:24px}
+.bar .track{height:30px;background:#0b0f19;border-radius:8px;overflow:hidden}.bar .fill{height:100%;border-radius:8px}
+.mixstrip{display:flex;height:16px;border-radius:6px;overflow:hidden;margin-top:6px}
+</style></head><body><div class="wrap">
+<div class="top">
+  <h1>Traffic spike <small id="sub"></small></h1>
+  <div class="modes" id="modes">
+    <button class="stella" data-m="stella">1 Stella</button><button class="nano" data-m="nano">2 Nano</button>
+    <button class="zero" data-m="zero">3 Zero</button><button class="auto" data-m="auto">4 Auto</button>
+  </div>
+  <div class="ctl">target <input type="range" id="rate" min="0" max="1000"><b id="ratev"></b></div>
+  <div class="ctl">p95 budget <input type="range" id="budget" min="5" max="200"><b id="budgetv"></b></div>
+  <button class="btn spike" id="spike">S spike ×25</button>
+  <button class="btn" id="reset">C clear queue</button>
+  <button class="btn" id="pinb">P pin</button>
+</div>
+<div class="tiles">
+  <div class="tile hero" id="goodt"><div class="k">good answers</div><div class="v" id="good">–</div></div>
+  <div class="tile"><div class="k">target arrivals/s</div><div class="v" id="offered">–</div></div>
+  <div class="tile"><div class="k">served / s</div><div class="v" id="served">–</div></div>
+  <div class="tile" id="p95t"><div class="k">p95 latency</div><div class="v" id="p95">–</div></div>
+  <div class="tile"><div class="k">nDCG@10</div><div class="v" id="ndcg">–</div></div>
+  <div class="tile" id="queuet"><div class="k">queue</div><div class="v" id="queue">–</div></div>
+</div>
+<div class="pins" id="pins"><span class="hint">good answers = of the last 500 arrivals, the share that got a judged-relevant passage in the top 10 within the budget (drops and late answers count as failures)</span></div>
+<div class="charts">
+  <div class="chart"><div class="t">good answers, % of last 500 arrivals</div><canvas id="c_good"></canvas></div>
+  <div class="chart"><div class="t">p95 latency, ms (log) · dashed: budget</div><canvas id="c_lat"></canvas></div>
+  <div class="chart"><div class="t">nDCG@10 on judged NQ queries (last 600 served)</div><canvas id="c_ndcg"></canvas></div>
+  <div class="chart"><div class="t">where the time goes: wall time per stage, median of last second</div>
+    <div class="where"><div class="act" id="act">–</div>
+      <div class="bar"><span>queue</span><div class="track"><div class="fill" id="b_queue" style="background:#f5a623"></div></div><b id="v_queue"></b></div>
+      <div class="bar"><span>encode</span><div class="track"><div class="fill" id="b_encode" style="background:#3fc1a5"></div></div><b id="v_encode"></b></div>
+      <div class="bar"><span>search</span><div class="track"><div class="fill" id="b_search" style="background:#9494ff"></div></div><b id="v_search"></b></div>
+      <div class="mixstrip" id="mix"></div></div></div>
+</div></div>
+<script>
+const WIN = 60; let H = [];
+const C = {stella: "#c9cede", nano: "#9494ff", zero: "#ff516b", line: "#303547", mut: "#9aa0b5", ok: "#3fc1a5", warn: "#f5a623"};
+const NAME = {stella: "Stella", nano: "Nano", zero: "Zero", auto: "Auto"};
+const rateOf = v => Math.round(10 * Math.pow(300, v / 1000)), sliderOf = r => Math.round(1000 * Math.log(r / 10) / Math.log(300));
+const LOW = 40;
+const post = (path, p) => fetch(path + (p ? "?" + new URLSearchParams(p) : ""), {method: "POST"});
+document.querySelectorAll("#modes button").forEach(b => b.onclick = () => post("/set", {mode: b.dataset.m}));
+const rate = document.getElementById("rate"), budget = document.getElementById("budget");
+rate.oninput = () => post("/set", {rate: rateOf(+rate.value)});
+budget.oninput = () => post("/set", {budget: +budget.value});
+const spike = () => { const cur = H.length ? H[H.length - 1].rate : LOW; post("/set", {rate: cur > LOW * 2 ? LOW : LOW * 25}); };
+document.getElementById("spike").onclick = spike;
+document.getElementById("reset").onclick = () => post("/reset");
+document.getElementById("pinb").onclick = () => post("/pin");
+addEventListener("keydown", e => {
+  const m = {"1": "stella", "2": "nano", "3": "zero", "4": "auto"}[e.key];
+  if (m) post("/set", {mode: m});
+  if (e.key === "s") spike();
+  if (e.key === "c") post("/reset");
+  if (e.key === "p") post("/pin");
+  if (e.key === "u") post("/unpin");
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") { const r = H.length ? H[H.length - 1].rate : LOW; post("/set", {rate: Math.round(r * (e.key === "ArrowUp" ? 1.5 : 1 / 1.5))}); e.preventDefault(); }
+});
+function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; if (c.width !== Math.round(r.width * d)) { c.width = r.width * d; c.height = r.height * d; } const x = c.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height]; }
+function axes(x, w, h, ys, fy, fmt) { x.font = "18px -apple-system, sans-serif"; x.fillStyle = C.mut; x.strokeStyle = C.line; x.lineWidth = 1;
+  for (const v of ys) { const y = fy(v); x.beginPath(); x.moveTo(52, y); x.lineTo(w, y); x.stroke(); x.fillText(fmt(v), 0, y + 6); } }
+const tx = (t, w, now) => 52 + (w - 52) * (1 - (now - t) / WIN);
+function line(x, pts, col, width, dash) { x.strokeStyle = col; x.lineWidth = width; x.setLineDash(dash || []); x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.stroke(); x.setLineDash([]); }
+function modeBands(x, w, h, now) {   // faint background band per mode so the phases read at a glance
+  for (let i = 1; i < H.length; i++) { const col = {stella: C.stella, nano: C.nano, zero: C.zero, auto: C.ok}[H[i].mode];
+    x.fillStyle = col + "14"; x.fillRect(tx(H[i - 1].t, w, now), 0, tx(H[i].t, w, now) - tx(H[i - 1].t, w, now) + 0.5, h); } }
+function draw() {
+  if (!H.length) return; const now = H[H.length - 1].t;
+  { const [x, w, h] = fit(document.getElementById("c_good")); modeBands(x, w, h, now); const fy = v => h - 8 - v / 100 * (h - 16);
+    axes(x, w, h, [0, 50, 100], fy, v => v + "%"); line(x, H.map(s => [tx(s.t, w, now), fy(s.good_pct)]), C.ok, 5); }
+  { const [x, w, h] = fit(document.getElementById("c_lat")); modeBands(x, w, h, now); const lo = Math.log10(0.5), hi = Math.log10(20000);
+    const fy = v => h - 8 - (Math.log10(Math.max(v, 0.5)) - lo) / (hi - lo) * (h - 16);
+    axes(x, w, h, [1, 10, 100, 1000, 10000], fy, v => v >= 1000 ? v / 1000 + "s" : v);
+    line(x, H.map(s => [tx(s.t, w, now), fy(s.budget_ms)]), C.warn, 2, [8, 8]);
+    line(x, H.map(s => [tx(s.t, w, now), fy(s.p95_ms)]), "#fcfdff", 4); }
+  { const [x, w, h] = fit(document.getElementById("c_ndcg")); modeBands(x, w, h, now); const lo = 0.3, hi = 0.75, fy = v => h - 8 - (v - lo) / (hi - lo) * (h - 16);
+    axes(x, w, h, [0.4, 0.5, 0.6, 0.7], fy, v => v.toFixed(1)); line(x, H.map(s => [tx(s.t, w, now), fy(s.ndcg10)]), "#fcfdff", 4); }
+}
+const fmtms = v => v >= 1000 ? (v / 1000).toFixed(1) + " s" : v.toFixed(v < 10 ? 2 : 0) + " ms";
+async function tick() {
+  try {
+    const s = await (await fetch("/stats")).json(); H = s.history.filter(x => s.t - x.t <= WIN);
+    const set = (id, v) => document.getElementById(id).textContent = v;
+    set("good", s.good_pct.toFixed(0) + "%"); set("offered", Math.round(s.rate)); set("served", s.served_per_s);
+    set("p95", fmtms(s.p95_ms)); set("ndcg", s.ndcg10.toFixed(3)); set("queue", s.queue);
+    document.getElementById("goodt").classList.toggle("bad", s.good_pct < 50);
+    document.getElementById("p95t").classList.toggle("bad", s.p95_ms > s.budget_ms);
+    document.getElementById("queuet").classList.toggle("bad", s.queue > 50);
+    document.querySelectorAll("#modes button").forEach(b => b.classList.toggle("on", b.dataset.m === s.mode));
+    set("ratev", Math.round(s.rate) + "/s"); set("budgetv", s.budget_ms + " ms");
+    if (document.activeElement !== rate) rate.value = sliderOf(s.rate);
+    if (document.activeElement !== budget) budget.value = s.budget_ms;
+    set("sub", `${(s.n_docs / 1e6).toFixed(2)}M passages · one Stella index · Qdrant Edge · this laptop`);
+    set("act", s.active_setting || "–");
+    document.getElementById("act").style.color = C[s.active ? s.active.split("-")[0] : "stella"];
+    const mx = Math.log10(20000), sc = v => Math.max(0, Math.min(100, (Math.log10(Math.max(v, 0.01)) + 2) / (mx + 2) * 100));
+    for (const k of ["queue", "encode", "search"]) { document.getElementById("b_" + k).style.width = sc(s.split_ms[k]) + "%"; set("v_" + k, fmtms(s.split_ms[k])); }
+    const tot = s.mix.stella + s.mix.nano + s.mix.zero || 1;
+    document.getElementById("mix").innerHTML = ["stella", "nano", "zero"].map(k => `<div style="width:${100 * s.mix[k] / tot}%;background:${C[k]}"></div>`).join("");
+    const pins = document.getElementById("pins");
+    if (s.pins.length) pins.innerHTML = s.pins.map(p => `<div class="pin" style="border-color:${C[p.mode] || C.ok}"><b style="color:${C[p.mode] || C.ok}">${NAME[p.mode]}</b> @ ${Math.round(p.rate)}/s · <b>${p.good_pct.toFixed(0)}%</b> good · p95 ${fmtms(p.p95_ms)} · nDCG ${p.ndcg10.toFixed(3)}</div>`).join("");
+    draw();
+  } catch (e) {}
+  setTimeout(tick, 250);
+}
+addEventListener("resize", draw); tick();
+</script></body></html>
