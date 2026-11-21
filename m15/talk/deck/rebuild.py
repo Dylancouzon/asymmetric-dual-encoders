@@ -9,8 +9,8 @@ MUT, LINE, WHITE = "#9aa0b5", "#303547", "#fcfdff"
 MONO = "font-family:JetBrains Mono,monospace"
 
 
-# The merged distill note is built from the committed original, so reruns stay idempotent.
-ORIG_DISTILL = re.search(r"<aside>.*?</aside>", Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/talk/deck/project/slides/distill.html").read_text(), re.S).group(0)
+# The distill slide's own note; the zero-train note is appended at build time.
+ORIG_DISTILL = "<aside>[~2 min] [Start at the teacher targets.]\n\nI needed a table whose pooled vectors would make sense to an index full of Stella passages. I began with Stella's encoding of each token. I also gave rare terms more initial weight using inverse document frequency. That gives each row a starting point before I've asked it to represent a whole query.\n\n[Follow the two training phases.]\n\nFor the first pass I saved Stella's vectors and used them as targets. On paired examples I also matched how Stella distributed its scores across candidate passages. A query vector can look close to the teacher's and still put a different passage first. Matching scores gives the table a chance to learn which of those differences matters.\n\nThen I trained with query and passage pairs to put the relevant passage ahead of negatives in a frozen bank. I masked known positives and candidates Stella scored close to or better than the positive. Some of those could answer the question too. At export I folded the learned weights into the rows that the encoder reads.\n\nThe desktop retrain estimate assumes I have the teacher outputs ready. For a new teacher, I estimated eight to 12 hours just to prepare Zero's targets. I can reuse those targets across attempts. Nano can train on Stella's outputs alone, which gives me a way to train a contextual encoder on text without relevance labels.</aside>"
 
 
 def aside(sid):

@@ -1,17 +1,17 @@
 <section id="live" class="s demo" data-transition="fade">
 <div class="head"><h2>Live: An Auto Router on One Index</h2></div>
 <div class="live"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:40px;margin-top:24px">2.68M passages, real NQ questions, judged answers, on this laptop.</p>
-<aside>[~4 min] [Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio.py, open http://127.0.0.1:8767 and wait until the subtitle stops saying "warming up". Leave routing on Auto, quality floor 0.50, p95 target 150 ms. Keys: Q quiet, S spike, O overload, A agent tasks, arrow keys for traffic.]
+<aside>[~4 min] [Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767 and wait until the subtitle stops saying "warming up". Leave routing on Auto, quality floor 0.50, p95 target 150 ms, Zero search at ef 1024 x8. Keys: Q quiet, S spike, O overload, A agent tasks, space pause, arrow keys for traffic.]
 
-[Share the studio.] This is a search service running on this laptop: the 2.68 million passages, one Stella index, real NQ questions arriving, every answer scored against the judged answers. I give the router two rules. Quality first: only settings whose score on these questions meets the floor. Then latency: stay under this target.
+[Share the studio.] This is a search service running on this laptop: the 2.68 million passages, one Stella index, real NQ questions arriving, every answer scored against the judged answers. I give the router two rules. Quality first: the average score of what it serves stays above this floor. Then latency: stay under this target.
 
 [Quiet.] With quiet traffic it spends the spare time on Stella, the best ranking we have.
 
-[Press S.] Fifteen times the traffic. Watch the table: within a second or two it moves the traffic to Nano. Latency stays under the line; quality dips a little.
+[Press S.] Fifteen times the traffic. Watch the plan bar: within a second it moves the traffic to Nano. Latency stays under the line; quality dips a little.
 
-[Press O.] Two thousand searches a second. Nothing above my quality floor can carry that on one laptop, so latency gives way. That's the rule I set: quality first.
+[Press O.] Two thousand searches a second. No mix above my floor fits on one laptop, so it serves what it can and sheds the rest. Quality first.
 
-[Drag the floor down to 0.47.] Lowering the floor to 0.47 admits Zero with a narrow search. Keep the traffic at two thousand and watch: it takes most of the load, and latency comes back under the line. Same index, nothing re-encoded.
+[Drag the Zero ef slider down to 128.] Zero gets a narrower search. Its score drops, and the studio measures the new score live in a few seconds. Now a mix fits: Nano keeps the average above the floor, Zero carries the volume, and latency comes back under the line. Same index, nothing re-encoded.
 
 [Optional, press A.] An agent firing ten searches per task: now the gauge times the slowest of the ten.
 
