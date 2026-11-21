@@ -5,7 +5,7 @@
 <p class="fx">C(t) = <span class="mut">N · c_D</span> + <span class="tr">Q(t) · (c_Q + c_search)</span></p>
 </div>
 <div class="row" style="gap:48px;margin-top:40px">
-<div class="kv" style="flex:1"><p class="k2">N · c_D · paid once</p><p class="v2">5.3 GPU-hours</p><p class="d2">2,681,468 NQ passages through Stella on one RTX 3080, fp32, 141 passages/s (measured)</p></div>
+<div class="kv" style="flex:1"><p class="k2">N · c_D · paid once</p><p class="v2">5.3 GPU-hours</p><p class="d2">2,681,468 NQ passages, Stella fp32, one RTX 3080, at a steady 141 passages/s; 6.5 h elapsed with one crash</p></div>
 <div class="kv" style="flex:1"><p class="k2 tr">c_Q · every uncached query</p><p class="v2">31.6 ms · 25 GFLOPs</p><p class="d2">Stella, 31 tokens with its prompt, M5 Pro CPU, 4 threads, p50</p></div>
 <div class="kv" style="flex:1"><p class="k2 tr">Q = 1M queries</p><p class="v2">10.3 hours</p><p class="d2">sequential 4-thread CPU time for Stella encoding alone (mean 37 ms), before any search</p></div>
 </div>

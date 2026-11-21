@@ -14,7 +14,7 @@
 <p class="lname tv">Nano</p>
 <div class="pipe"><p class="pnode">query</p><p class="par">→</p><p class="pnode v">bge-small 12 × 384</p><p class="par">→</p><p class="pnode">mean L12 ⊕ L8 ⊕ L4 ∈ ℝ¹¹⁵²</p><p class="par">→</p><p class="pnode">Linear → ℝ¹⁰²⁴</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">2.25 ms</p></div>
 <p class="lname tr">Zero</p>
-<div class="pipe"><p class="pnode">query</p><p class="par">→</p><p class="pnode">WordPiece</p><p class="par">→</p><p class="pnode r">gather W[t] · int8 30,522 × 1024</p><p class="par">→</p><p class="pnode">Σ √cₜ · W[t]</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">0.044 ms</p></div>
+<div class="pipe"><p class="pnode">query</p><p class="par">→</p><p class="pnode">WordPiece</p><p class="par">→</p><p class="pnode r">gather dequantized rows · 30,522 × 1024</p><p class="par">→</p><p class="pnode">Σ √cₜ · W[t]</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">0.044 ms</p></div>
 </div>
 <aside>[Draft notes; Sol pass pending.] Here is the whole system. Documents go through Stella once: 24 layers, 1024 wide, mean pooling, a square Dense head, normalized, stored as fp16. The index is 2.7 million of those vectors in an HNSW graph, with binary quantization: one bit per dimension, 128 bytes per vector, 343 megabytes in RAM, and the fp16 originals on disk for rescoring. Three query encoders search it. Stella itself, with its instruction prompt. Nano: bge-small, the mean of layers 12, 8 and 4 concatenated into 1,152 features, one linear map into Stella's 1,024 dimensions. Zero: tokenize, gather one int8 row per token, square-root-weighted sum, normalize. Same vectors, same graph, no re-indexing: you pick one per request.</aside>
 </section>

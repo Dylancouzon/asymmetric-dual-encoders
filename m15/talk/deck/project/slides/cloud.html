@@ -1,10 +1,10 @@
 <section id="cloud" class="s foot" data-transition="fade">
 <div class="head"><h2>Query Encoding on a Cloud CPU</h2></div>
 <table class="dtab" style="margin-top:24px">
-<tr class="hd"><th style="width:16%;text-align:left">Encoder</th><th style="width:21%;text-align:right">Queries/s per VM</th><th style="width:15%;text-align:right">p95</th><th style="width:26%;text-align:right">$ per 1M queries</th><th style="width:22%;text-align:right">VMs for 1,000 QPS</th></tr>
+<tr class="hd"><th style="width:16%;text-align:left">Encoder</th><th style="width:21%;text-align:right">Queries/s per VM</th><th style="width:15%;text-align:right">p95</th><th style="width:26%;text-align:right">$ per 1M at peak</th><th style="width:22%;text-align:right">VMs for 1,000 QPS</th></tr>
 <tr><td>Stella</td><td style="text-align:right">18</td><td style="text-align:right">493 ms</td><td style="text-align:right">$6.07</td><td style="text-align:right">56</td></tr>
 <tr class="hl"><td style="color:#9494ff">Nano</td><td style="text-align:right">464</td><td style="text-align:right">19.7 ms</td><td style="text-align:right">$0.24</td><td style="text-align:right">3</td></tr>
-<tr class="hz"><td style="color:#ff516b">Zero</td><td style="text-align:right">67,423</td><td style="text-align:right">0.15 ms</td><td style="text-align:right">$0.0016</td><td style="text-align:right">1 at 1.5% load</td></tr>
+<tr class="hz"><td style="color:#ff516b">Zero</td><td style="text-align:right">67,423</td><td style="text-align:right">0.15 ms</td><td style="text-align:right">$0.0016</td><td style="text-align:right">1 at 1.5% of capacity</td></tr>
 </table>
 <div class="row" style="gap:48px;margin-top:56px">
 <div class="kv" style="flex:1"><p class="k2">Stella → Nano</p><p class="v2">26× cheaper</p></div>
@@ -12,5 +12,5 @@
 <div class="kv" style="flex:1"><p class="k2">Not yet counted</p><p class="v2">graph search</p></div>
 </div>
 <p class="src">GCP c4-standard-8 (8 vCPU Xeon Platinum 8581C), us-east1, on-demand $0.395/h. Encoding only, batch 1, 8 processes × 1 ONNX Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries, best worker count per encoder. Exploratory.</p>
-<aside>[Draft notes; Sol pass pending.] Laptop numbers flatter the big model, so I rented a normal cloud machine: a c4-standard-8, eight vCPUs, 40 cents an hour. Saturated with eight workers, it encodes 18 Stella queries a second. That is six dollars per million queries, and 56 of these machines to encode a thousand queries a second. Nano: 464 a second, 24 cents per million, three machines. Zero: 67 thousand a second, a sixth of a cent per million, and one machine at one and a half percent load. One thing is missing from this table: the search. Hold that thought.</aside>
+<aside>[Draft notes; Sol pass pending.] Laptop numbers flatter the big model, so I rented a normal cloud machine: a c4-standard-8, eight vCPUs, 40 cents an hour. Saturated with eight workers, it encodes 18 Stella queries a second. That is six dollars per million queries, and 56 of these machines to encode a thousand queries a second. Nano: 464 a second, 24 cents per million, three machines. Zero: 67 thousand a second, a sixth of a cent per million, and one machine at one and a half percent of its measured capacity. These dollars assume a saturated machine; one dedicated Zero VM at a steady thousand queries a second is about eleven cents per million. One thing is missing from this table: the search. Hold that thought.</aside>
 </section>
