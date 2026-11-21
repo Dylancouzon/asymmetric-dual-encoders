@@ -39,7 +39,8 @@ HERE = Path(__file__).parent
 WORKERS = int(os.environ.get("WORKERS", "14"))
 MAX_QUEUE = 1500                  # beyond this, arrivals are dropped
 TRIAL_S, WARM_S = 12.0, 3.0       # a replay: 3 s warm-up in the new setup, then 12 s of the fixed trace
-HEADROOM = 0.85                   # auto plans to 85% of the latency target
+HEADROOM = 0.6                    # auto plans to 60% of the latency target (tails run above the mean)
+DECAY_S = 5.0                     # an unused setting's cost estimate halves its distance to quiet time every 5 s
 ORDER = ("stella", "nano", "zero")
 TRIAL_LOG = REPO / "work/m15/logs/studio_trials.jsonl"
 
@@ -53,7 +54,17 @@ ENC = {k: make_encoder(k) for k in ORDER}
 state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "route": "split",
          "split": {"stella": 1.0, "nano": 0.0, "zero": 0.0},
          "search": {"stella": [256, 4.0], "nano": [512, 4.0], "zero": [1024, 8.0]},
-         "budget_ms": 100.0, "workers": WORKERS}
+         "budget_ms": 150.0, "workers": WORKERS, "fanout": 1, "ndcg_floor": 0.50}
+# Measured NQ nDCG@10 for every (encoder, ef, oversampling) in the sweep (exact-match validated runs).
+_SW = json.loads((REPO / f"results/m15_talk_edge_{DATASET}.json").read_text())["results"]
+SWEEP = {(e, x["ef"], x["oversampling"]): x["ndcg10"] for e in ORDER for x in _SW[e]["settings"]}
+
+
+def quality(e, ef, os_):
+    """Sweep nDCG@10 for this setting; nearest swept ef and oversampling when off the grid."""
+    efs = sorted({k[1] for k in SWEEP if k[0] == e}); oss = sorted({k[2] for k in SWEEP if k[0] == e})
+    ef = min(efs, key=lambda v: abs(math.log(v) - math.log(max(ef, 1)))); os_ = min(oss, key=lambda v: abs(v - os_))
+    return SWEEP[(e, ef, os_)]
 _params = {}
 
 
@@ -95,6 +106,9 @@ done = collections.deque(maxlen=400_000)      # (t, latency, enc, ndcg, rung, qu
 arrivals = collections.deque(maxlen=400_000)  # [t_wall, ok, trial]
 dropped = collections.deque(maxlen=400_000)
 trial = {"id": 0, "start": 0.0, "end": 0.0, "pinned": True}
+groups = {}                                   # agent task id -> [searches left, max latency so far]
+tasks = collections.deque(maxlen=200_000)     # (t_done, task latency ms) for fan-out tasks
+_gid = [0]
 pins, HIST = [], collections.deque(maxlen=400)
 epoch = [time.time()]                         # pattern phase origin; a replay restarts it
 reseed = [False]
@@ -134,39 +148,63 @@ def generator():
                 for item in queue:
                     item[2][1] = False
                 queue.clear()
+                groups.clear()
             k, nxt, reseed[0], epoch[0] = 0, now, False, wall
         rate = min(0.3 * current_rate(wall), 300.0) if warming else current_rate(wall)
+        f = max(1, int(state["fanout"]))
         with cv:
             while nxt <= now:
+                # One arrival = one agent task issuing f searches together (f = 1: ordinary traffic).
                 tid = trial["id"] if trial["start"] <= wall < trial["end"] else 0
-                rec = [wall - (now - nxt), None, tid]
-                arrivals.append(rec)
-                qi, gap = int(QIDX[k % len(QIDX)]), float(GAPS[k % len(GAPS)])
-                k += 1
-                if len(queue) >= MAX_QUEUE:
-                    dropped.append(wall)
-                    rec[1] = False
-                else:
-                    queue.append((qi, nxt, rec))
-                nxt += gap / rate
+                gap = float(GAPS[k % len(GAPS)])
+                full = len(queue) + f > MAX_QUEUE
+                gid = None
+                if f > 1 and not full:
+                    _gid[0] += 1
+                    gid = _gid[0]
+                    groups[gid] = [f, 0.0]
+                for j in range(f):
+                    rec = [wall - (now - nxt), None, tid]
+                    arrivals.append(rec)
+                    qi = int(QIDX[(k + j) % len(QIDX)])
+                    if full:
+                        dropped.append(wall)
+                        rec[1] = False
+                    else:
+                        queue.append((qi, nxt, rec, gid))
+                k += f
+                nxt += gap * f / rate          # rate stays in searches per second
             cv.notify_all()
         time.sleep(max(0.0, min(0.005, nxt - time.perf_counter())))
 
 
 _route_rng = random.Random(1)
+smooth_wait = [0.0]                           # EWMA of queue wait over recent requests, ms
 
 
 def choose(wait_ms):
     """Returns (rung, encoder, ef, oversampling) for one request."""
     if state["route"] == "auto":
+        # Quality first: never use a setting below the nDCG floor. Spare latency buys quality above it;
+        # when nothing fits the latency target, take the cheapest setting that still meets the floor.
         now = time.time()
-        rungs = ladder()
-        for r, e, ef, os_ in rungs:
-            if now - last_used[r] >= 2.0:     # stale: forget overload history, restart from quiet time
-                service[r] = BASE[r]
-            if wait_ms + service[r] <= HEADROOM * state["budget_ms"]:
+        rungs = sorted(ladder(), key=lambda r: -quality(*r[1:]))
+        ok = [r for r in rungs if quality(*r[1:]) >= state["ndcg_floor"]] or rungs[:1]
+        def est(r):                       # unused settings drift back toward quiet-time cost, no sudden probes
+            idle = max(0.0, now - last_used[r] - 1.0)
+            return BASE[r] + (service[r] - BASE[r]) * 0.5 ** (idle / DECAY_S)
+        # Plan with the larger of this request's wait and the recent average wait, so a sustained load keeps
+        # the cheaper setting instead of oscillating each time the queue drains.
+        wait_ms = max(wait_ms, smooth_wait[0])
+        for r, e, ef, os_ in ok:
+            if wait_ms + est(r) <= HEADROOM * state["budget_ms"]:
+                service[r], last_used[r] = est(r), now   # materialize the decay so this pick starts from it
                 return r, e, ef, os_
-        return rungs[-1]
+        # Overloaded: take the highest-capacity setting that meets the floor. Rank by quiet-time cost; under
+        # saturation, live timings mostly measure waiting for the shared process, not a setting's own cost.
+        pick = min(ok, key=lambda r: BASE[r[0]])
+        service[pick[0]], last_used[pick[0]] = est(pick[0]), now
+        return pick
     w = state["split"]
     tot = sum(w.values()) or 1.0
     x, acc = _route_rng.random() * tot, 0.0
@@ -182,9 +220,11 @@ def worker(idx):
         with cv:
             while not queue or idx >= state["workers"]:
                 cv.wait(0.05)
-            i, t_arr, rec = queue.popleft()
+            i, t_arr, rec, gid = queue.popleft()
         t0 = time.perf_counter()
-        r, e, ef, os_ = choose((t0 - t_arr) * 1000)
+        w_ms = (t0 - t_arr) * 1000
+        smooth_wait[0] = 0.95 * smooth_wait[0] + 0.05 * w_ms
+        r, e, ef, os_ = choose(w_ms)
         hits, enc_ms, srch_ms = serve(e, ef, os_, QUERIES[i])
         t1 = time.perf_counter()
         if r in service:
@@ -193,6 +233,15 @@ def worker(idx):
         lat, nd = (t1 - t_arr) * 1000, ndcg10(QIDS[i], [h.id for h in hits])
         rec[1] = lat <= state["budget_ms"] and nd > 0
         done.append((time.time(), lat, e, nd, r, (t0 - t_arr) * 1000, enc_ms, srch_ms, rec[2]))
+        if gid is not None:                   # an agent task finishes when its last search does
+            with cv:
+                g = groups.get(gid)
+                if g:
+                    g[0] -= 1
+                    g[1] = max(g[1], lat)
+                    if g[0] == 0:
+                        tasks.append((time.time(), g[1]))
+                        del groups[gid]
 
 
 app = FastAPI()
@@ -223,8 +272,12 @@ def set_state(body: dict):
     for e, v in (body.get("search") or {}).items():
         if e in ORDER:
             state["search"][e] = [max(4, min(4096, int(v[0]))), max(1.0, min(16.0, float(v[1])))]
+    if "ndcg_floor" in body:
+        state["ndcg_floor"] = max(0.0, min(1.0, float(body["ndcg_floor"])))
     if "budget_ms" in body:
         state["budget_ms"] = max(1.0, float(body["budget_ms"]))
+    if "fanout" in body:
+        state["fanout"] = max(1, min(64, int(body["fanout"])))
     if "workers" in body:
         state["workers"] = max(1, min(WORKERS, int(body["workers"])))
         with cv:
@@ -238,6 +291,7 @@ def reset():
         for item in queue:
             item[2][1] = False
         queue.clear()
+        groups.clear()
     return {"queue": 0}
 
 
@@ -247,7 +301,7 @@ def start_trial():
     reset()
     start = time.time() + WARM_S
     trial.update(id=trial["id"] + 1, start=start, end=start + TRIAL_S, pinned=False,
-                 config=json.loads(json.dumps({k: state[k] for k in ("rate", "pattern", "peak", "spike", "route", "split", "search", "budget_ms", "workers")})))
+                 config=json.loads(json.dumps({k: state[k] for k in ("rate", "pattern", "peak", "spike", "route", "split", "search", "budget_ms", "workers", "fanout")})))
     reseed[0] = True
     return trial
 
@@ -261,6 +315,9 @@ def unpin():
 def finish_trial():
     tid = trial["id"]
     arr = [a for a in list(arrivals) if a[2] == tid]
+    cum = [h for h in list(HIST) if trial["start"] <= h["t"] <= trial["end"] + 0.5]
+    cores = (cum[-1]["cpu_used"] - cum[0]["cpu_used"]) / (cum[-1]["t"] - cum[0]["t"]) if len(cum) > 1 else cpu["cores"]
+    tl = [d[1] for d in list(tasks) if trial["start"] <= d[0] <= trial["end"] + 2]
     comp = [d for d in list(done) if d[8] == tid]
     lat = [d[1] for d in comp]
     med = lambda j: float(np.median([d[j] for d in comp])) if comp else None
@@ -269,7 +326,9 @@ def finish_trial():
            "ndcg10": float(np.mean([d[3] for d in comp])) if comp else 0.0,
            "good_pct": 100.0 * sum(1 for a in arr if a[1]) / len(arr) if arr else 0.0,
            "served_per_s": len(comp) / TRIAL_S, "completed": len(comp), "offered": len(arr),
-           "cores_busy": cpu["cores"], "mix": per,
+           "dropped": sum(1 for t in list(dropped) if trial["start"] <= t <= trial["end"]), "outstanding": sum(1 for a in arr if a[1] is None),
+           "task_p95_ms": float(np.percentile(tl, 95)) if tl else None,
+           "cores_busy": cores, "cpu_s_per_1k": cores / (len(comp) / TRIAL_S) * 1000 if comp else None, "mix": per,
            "split_ms": {"queue": med(5), "encode": med(6), "search": med(7)}}
     pins.append(row)
     with open(TRIAL_LOG, "a") as f:
@@ -290,6 +349,8 @@ def snapshot():
         le = [d for d in last if d[2] == e]
         recent = [d[3] for d in tail[-6000:] if d[2] == e][-300:]
         per[e] = {"served_per_s": sum(1 for d in le if now - d[0] <= 1.0), "p95_ms": pct([d[1] for d in le], 95),
+                  "work_ms": float(np.median([d[6] + d[7] for d in le])) if le else None,
+                  "quality": quality(e, *state["search"][e]),
                   "ndcg10": float(np.mean(recent)) if recent else None, "share": (sum(1 for d in sec if d[2] == e) / len(sec)) if sec else 0.0}
     recent = tail[-600:]
     served = len(sec)
@@ -300,15 +361,60 @@ def snapshot():
             "ndcg10": float(np.mean([d[3] for d in recent])) if recent else 0.0,
             "good_pct": 100.0 * sum(1 for a in due if a[1]) / len(due) if due else 0.0,
             "per": per, "split_ms": {"queue": med(5), "encode": med(6), "search": med(7)},
-            "cores_busy": round(cpu["cores"], 1), "cores_total": os.cpu_count(),
+            "cores_busy": round(cpu["cores"], 1), "cores_total": os.cpu_count(), "cpu_used": cpu["last"][1] if cpu["last"] else 0.0,
+            "tasks_per_s": sum(1 for d in list(tasks)[-5000:] if now - d[0] <= 1.0),
+            "task_p95_ms": pct([d[1] for d in list(tasks)[-5000:] if now - d[0] <= 2.0], 95),
             "cpu_s_per_1k": (cpu["cores"] / served * 1000) if served else None,
             "trial_left": max(0.0, trial["end"] - now) if not trial["pinned"] else 0.0,
             "warming": max(0.0, trial["start"] - now) if not trial["pinned"] else 0.0,
-            "pins": pins, "n_docs": len(DOC_IDS), "max_workers": WORKERS}
+            "pins": pins, "seg_age": now - seg["start"], "est_ms": {r: round(v, 2) for r, v in service.items()},
+            "smooth_wait_ms": round(smooth_wait[0], 1),
+            "rungs": dict(collections.Counter(d[4] for d in sec)), "n_docs": len(DOC_IDS), "max_workers": WORKERS}
+
+
+SEG_MIN_S, SEG_SETTLE_S = 6.0, 2.0
+seg = {"sig": None, "start": time.time(), "cfg": None}
+
+
+def signature():
+    tot = sum(state["split"].values()) or 1.0
+    cfg = {k: state[k] for k in ("rate", "pattern", "peak", "spike", "route", "search", "budget_ms", "workers", "fanout", "ndcg_floor")}
+    cfg["split"] = {e: round(state["split"][e] / tot, 2) for e in ORDER}
+    return json.dumps(cfg, sort_keys=True), cfg
+
+
+def record_segment(now):
+    """Each setup that ran long enough becomes a 'recent setups' row: its steady state after settling."""
+    t0 = seg["start"] + SEG_SETTLE_S
+    comp = [d for d in list(done)[-200000:] if t0 <= d[0] <= now]
+    if not comp:
+        return
+    hs = [h for h in list(HIST) if t0 <= h["t"] <= now]
+    cores = (hs[-1]["cpu_used"] - hs[0]["cpu_used"]) / (hs[-1]["t"] - hs[0]["t"]) if len(hs) > 1 and hs[-1]["t"] > hs[0]["t"] else cpu["cores"]
+    arr = [a for a in list(arrivals)[-400000:] if t0 <= a[0] <= now - state["budget_ms"] / 1000]
+    tl = [d[1] for d in list(tasks)[-50000:] if t0 <= d[0] <= now]
+    lat, span = [d[1] for d in comp], max(1e-6, now - t0)
+    row = {**seg["cfg"], "auto_recorded": True, "seconds": round(now - seg["start"], 1),
+           "p95_ms": float(np.percentile(lat, 95)), "task_p95_ms": float(np.percentile(tl, 95)) if tl else None,
+           "ndcg10": float(np.mean([d[3] for d in comp])), "served_per_s": len(comp) / span,
+           "arrival_rate": float(np.mean([h["arrival_rate"] for h in hs])) if hs else state["rate"],
+           "completed": len(comp), "offered": len(arr) or len(comp),
+           "dropped": sum(1 for t in list(dropped)[-200000:] if t0 <= t <= now),
+           "cores_busy": cores, "cpu_s_per_1k": cores / (len(comp) / span) * 1000,
+           "mix": {e: sum(1 for d in comp if d[2] == e) / len(comp) for e in ORDER}}
+    pins.append(row)
+    with open(TRIAL_LOG, "a") as f:
+        f.write(json.dumps({"t": time.strftime("%Y-%m-%dT%H:%M:%S"), **row}) + "\n")
 
 
 def sampler():
     while True:
+        now = time.time()
+        sig, cfg = signature()
+        if sig != seg["sig"]:
+            if seg["sig"] and now - seg["start"] >= SEG_MIN_S and trial["pinned"]:
+                record_segment(now)
+            seg.update(sig=sig, start=now, cfg=cfg)
         if not trial["pinned"] and time.time() > trial["end"] + state["budget_ms"] / 1000 + 0.5:
             finish_trial()
         t, r = time.time(), resource.getrusage(resource.RUSAGE_SELF)
@@ -323,7 +429,7 @@ def sampler():
 @app.get("/stats")
 def stats():
     s = HIST[-1] if HIST else snapshot()
-    keep = ("t", "arrival_rate", "served_per_s", "p95_ms", "budget_ms", "ndcg10", "cores_busy")
+    keep = ("t", "arrival_rate", "served_per_s", "p95_ms", "budget_ms", "ndcg10", "ndcg_floor", "cores_busy", "queue", "task_p95_ms", "fanout")
     return {**s, "history": [{**{k: h[k] for k in keep}, "by": {e: h["per"][e]["served_per_s"] for e in ORDER}}
                              for h in list(HIST)[-240:]]}
 
