@@ -864,3 +864,19 @@ Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed s
 Parity on 256 seeded passages: min cosine 0.99994, median 0.999999 (RTX 3080 CUDA fp32 vs M5 Pro MPS fp32). Rate: median shard 353 s per 50,000 passages over 49 steady shards (MEASUREMENTS T6).
 
 **Cannot show.** Other GPUs; fp16 or bf16 compute; the 6.5 h wall clock, which includes a VRAM spill and a crash.
+
+## C28. Reversing a query barely moves the query vector
+
+**Label:** exploratory (talk). **Source:** `results/m15_talk_slide_data.json`; pairs `m15/talk/word_order_pairs.json`
+
+**Claim.** Across 24 reversal pairs, Stella's query vector turns a median 4.9 degrees, Nano's 2.5 and Zero's 0.
+
+| encoder | median cosine | median angle (deg) | min cosine |
+|---|---|---|---|
+| stella-query | 0.9964 | 4.9 | 0.9806 |
+| nano | 0.9991 | 2.5 | 0.9911 |
+| zero | 1.0000 | 0.0 | 1.0000 |
+
+Example "cheap flights paris to rome": cosine with Stella 0.878 (Zero), 0.963 (Nano).
+
+**Cannot show.** Retrieval quality (see C23); queries beyond 24 hand-written pairs.

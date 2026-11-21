@@ -727,7 +727,7 @@ also appears in that model's own setting, where the lookup path is learned, not 
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
 
 
-## Talk measurements T1-T6 (exploratory, 2026-11-20 and 2026-11-21)
+## Talk measurements T1-T7 (exploratory, 2026-11-20 and 2026-11-21)
 
 Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
 exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
@@ -773,3 +773,9 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   `vectors15.encode_docs`, cosine against the box vectors; pass at min cosine >= 0.9999 (E2's bar).
   Script `m15src/talk_encode_nq.py --parity`; receipt `results/m15_talk_nq_parity.json`. Wall clock
   22:24-04:56 (6.5 h) includes one 58-min VRAM-spill shard at batch_tokens 16,384 and one host crash.
+- **T7 slide data: reversal angle and one lookup example.** For each of T1's 24 frozen reversal pairs,
+  the cosine between the two query vectors per encoder (Stella with its prompt, Nano, released Zero);
+  the slide reports the median as an angle. For one query ("cheap flights paris to rome"), the
+  dequantized Zero rows it gathers (first 48 dimensions, for drawing), Zero's pooled vector, and its
+  cosine with Stella's and Nano's query vectors. Script `m15src/talk_slide_data.py`; receipt
+  `results/m15_talk_slide_data.json`.

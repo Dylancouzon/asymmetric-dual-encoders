@@ -403,6 +403,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** One corpus, one graph build, sequential laptop timing; quality numbers are exact-match validated against M20.
 - **Use:** Talk bet, race, split, recovery and recipe slides; paper deployment section.
 
+### L44. Reversing a query barely moves any of the three query vectors
+
+- **Observation:** Over 24 reversal pairs, the median cosine between a query and its reversal is 0.9964 for Stella (4.9 degrees), 0.9991 for Nano (2.5 degrees) and exactly 1 for Zero. On "cheap flights paris to rome", Zero's vector has cosine 0.878 with Stella's and Nano's has 0.963.
+- **Decision:** Present Zero's word-order blindness as structural (identical vectors) and small relative to the teacher's own sensitivity, not as a large ranking loss; keep T1's 4 of 24 as context.
+- **Evidence:** `results/m15_talk_slide_data.json`, MEASUREMENTS T7; related L36.
+- **Strength/reach:** 24 hand-written pairs and one example query; vector geometry, not retrieval quality.
+- **Use:** Talk order and lookup slides.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.
