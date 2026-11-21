@@ -387,6 +387,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** One small corpus, one graph build, sequential timing on a laptop.
 - **Use:** Talk; supports the graph-effort section.
 
+### L42. A desktop GPU re-encodes a 2.7M-passage index in about five hours, if the batch fits in VRAM
+
+- **Observation:** Stella's document path encoded BEIR NQ (2,681,468 passages) at a steady 141 passages/s on one RTX 3080 (median shard 353 s per 50,000, range 333-375), so N·c_D = 5.3 GPU-hours. At batch_tokens 16,384 the 10 GB card spilled into WSL shared memory and one shard took 58 min instead of about 6. Box (CUDA) and Mac (MPS) vectors agree to min cosine 0.99994 on 256 seeded passages. A resumed job's printed rate counted already-finished shards (it showed 316/s); shard file times gave the true rate.
+- **Decision:** Quote 5.3 GPU-hours as the one-time index cost in the talk; size batches below VRAM under WSL; compute rates from shard times, and print rates over the current run only (fixed in `talk_encode_nq.py`).
+- **Evidence:** `results/m15_talk_nq_parity.json`, MEASUREMENTS T6, `m15/LOG.md` 2026-11-21.
+- **Strength/reach:** One GPU, one corpus, fp32 compute; fp16 or bf16 compute would be faster but changes the registered path.
+- **Use:** Talk cost slide; paper deployment-cost section.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

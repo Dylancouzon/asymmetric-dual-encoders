@@ -727,7 +727,7 @@ also appears in that model's own setting, where the lookup path is learned, not 
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
 
 
-## Talk measurements T1-T5 (exploratory, 2026-11-20 and 2026-11-21)
+## Talk measurements T1-T6 (exploratory, 2026-11-20 and 2026-11-21)
 
 Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
 exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
@@ -759,3 +759,11 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   Script `m15src/talk_throughput.py`; receipts `results/m15_talk_throughput_<dataset>_<label>_<modes>.json`.
 - **T5 demo.** `m15/talk/demo/` replays T3's per-query arrays and runs live queries; it produces no
   result file.
+- **T6 NQ document encode and parity.** BEIR NQ corpus (revision `b7253e6c`, 2,681,468 passages) on
+  the RTX 3080 (WSL2, CUDA, fp32 compute, max length 512, no prompt, fp16 store, 54 shards of 50,000,
+  batch_tokens 8,192). Encode cost is the steady-state rate from shard file times (shards 3-52, the
+  crash-resume shard excluded), not the log's printed rate, which counted resumed shards until the
+  fix. Parity: 256 passages drawn with the M15 seed, re-encoded on the Mac MPS through
+  `vectors15.encode_docs`, cosine against the box vectors; pass at min cosine >= 0.9999 (E2's bar).
+  Script `m15src/talk_encode_nq.py --parity`; receipt `results/m15_talk_nq_parity.json`. Wall clock
+  22:24-04:56 (6.5 h) includes one 58-min VRAM-spill shard at batch_tokens 16,384 and one host crash.

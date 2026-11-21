@@ -32,9 +32,16 @@ def doc_vectors(dataset, data):
         if ids != data["doc_ids"]:
             raise RuntimeError("NQ vector ids differ from the pinned corpus")
         shards = sorted(NQ_VECS.glob("shard_*.npy"))
-        vecs = np.concatenate([np.load(p) for p in shards])
-        if len(vecs) != len(ids):
-            raise RuntimeError(f"NQ has {len(vecs)} vectors for {len(ids)} docs")
+        # Preallocate: concatenate would hold two copies of the 5.5 GB matrix.
+        vecs, off = np.empty((len(ids), 1024), np.float16), 0
+        for p in shards:
+            a = np.load(p, mmap_mode="r")
+            if off + len(a) > len(ids):
+                raise RuntimeError("NQ has more vectors than docs")
+            vecs[off:off + len(a)] = a
+            off += len(a)
+        if off != len(ids):
+            raise RuntimeError(f"NQ has {off} vectors for {len(ids)} docs")
         return vecs, {"source": str(NQ_VECS.relative_to(REPO)), "n_shards": len(shards)}
     import vectors15
     return vectors15.doc_vectors(dataset, data)
@@ -149,7 +156,7 @@ def parity(dataset):
         raise SystemExit("parity FAILED")
 
 
-def exact_topk(q, vecs, k=10, chunk=262_144):
+def exact_topk(q, vecs, k=10, chunk=65_536):   # 3,452 x 65k fp32 scores = 0.9 GB
     best_s = np.full((len(q), k), -np.inf, dtype=np.float32)
     best_i = np.zeros((len(q), k), dtype=np.int64)
     for lo in range(0, len(vecs), chunk):

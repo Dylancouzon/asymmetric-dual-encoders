@@ -1,0 +1,33 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory",
+  "n": 256,
+  "seed": 20260930,
+  "min_cos": 0.9999353289604187,
+  "median_cos": 0.9999988079071045,
+  "passed": true,
+  "box": "RTX 3080 CUDA fp32",
+  "mac": "M5 Pro MPS fp32",
+  "receipt": {
+    "script": "m15src/talk_encode_nq.py",
+    "script_sha256": "8b5f98089fb161834e858f2146ef5afa4327691310cc585c5db0d5c222010479",
+    "git_commit": "014e4ccf7a32496dd527fa924b1383828a3e06a8",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-21T10:09:20Z",
+    "finished_utc": "2026-11-21T10:09:44Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "torch": "2.8.0",
+      "transformers": "4.57.6"
+    },
+    "seed": 20260930,
+    "inputs": {},
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "7234c2ffd0a510e375af2eacfd6f831d52b179f1937cae04ce77959b0a1d8c4b"
+  }
+}

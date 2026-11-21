@@ -836,3 +836,13 @@ Batch 1, closed loop, one ONNX Runtime thread per process (Zero: NumPy), 30 s pe
 Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed separately per query; totals are per-query sums. Transformers run ONNX Runtime CPU, 4 threads. zero-edge retrieves Zero's rows from an Edge shard. Selected = fastest median total within 1% of the encoder's own exact nDCG@10.
 
 **Cannot show.** Throughput under load; other engines or graph settings.
+
+## C27. One-time index cost: BEIR NQ on a desktop GPU
+
+**Label:** exploratory (talk). **Source:** `results/m15_talk_nq_parity.json`; shard file times `m15/talk/nq_shard_times.txt`
+
+**Claim.** Stella's document path encoded 2,681,468 NQ passages at a steady 141 passages/s on one RTX 3080, 5.3 GPU-hours; the box vectors match a Mac re-encode.
+
+Parity on 256 seeded passages: min cosine 0.99994, median 0.999999 (RTX 3080 CUDA fp32 vs M5 Pro MPS fp32). Rate: median shard 353 s per 50,000 passages over 49 steady shards (MEASUREMENTS T6).
+
+**Cannot show.** Other GPUs; fp16 or bf16 compute; the 6.5 h wall clock, which includes a VRAM spill and a crash.

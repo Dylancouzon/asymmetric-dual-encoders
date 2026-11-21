@@ -1118,3 +1118,4 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   the end-to-end run; log all talk results in m15; commit and push freely.
 
 - 2026-11-21 02:34: RTX box crashed during the NQ encode after 29 of 54 shards (cause not diagnosed; no kernel log survived the restart). Owner restarted it; all 29 shards verified intact and the encode resumed from shard 29. The Mac had slept from about 00:32 to 02:30, pausing the watchdog; `caffeinate -i` now runs for the session.
+- 2026-11-21 05:05: NQ encode complete, 2,681,468 vectors in 54 shards, copied to the Mac and verified (shape, unit norm, no NaN). Steady-state 141 passages/s, 5.3 GPU-hours (T6, L42; raw shard times `m15/talk/nq_shard_times.txt`). Box-vs-Mac parity passed, min cosine 0.99994 on 256 passages (`results/m15_talk_nq_parity.json`). Cost slide now shows the measured figure. Edge build for NQ started.
