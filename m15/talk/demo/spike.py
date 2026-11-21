@@ -17,7 +17,6 @@ import collections
 import json
 import math
 import os
-import random
 import sys
 import threading
 import time
@@ -78,7 +77,7 @@ queue = collections.deque()
 cv = threading.Condition()
 done = collections.deque(maxlen=200_000)       # (t_done, latency_ms, encoder, ndcg, rung, queue_ms, enc_ms, search_ms)
 dropped = collections.deque(maxlen=200_000)    # t of each dropped arrival
-arrivals = collections.deque(maxlen=20_000)    # [t_arrival_wall, ok]; ok None until known
+arrivals = collections.deque(maxlen=200_000)   # [t_arrival_wall, ok, trial]; ok None until known
 pins = []
 trial = {"id": 0, "end": 0.0, "mode": None, "rate": 0.0}   # a timed, seeded trial; 0 = none running
 TRIAL_S = float(os.environ.get("TRIAL_S", "12"))
@@ -95,22 +94,31 @@ def ndcg10(qid, ids):
     return dcg / ideal if ideal else 0.0
 
 
+# A fixed offered trace: unit-rate exponential gaps and query ids. Each arrival consumes one entry whether or
+# not it is dropped, so every trial offers exactly the same traffic.
+_trace_rng = np.random.default_rng(0)
+GAPS = _trace_rng.exponential(1.0, 2_000_000)
+QIDX = _trace_rng.integers(0, len(QUERIES), 2_000_000)
+
+
 def generator():
-    rng, nxt = random.Random(0), time.perf_counter()
+    k, nxt = 0, time.perf_counter()
     while True:
         now = time.perf_counter()
-        if reseed[0]:                     # every trial replays the same arrival and query sequence
-            rng, nxt, reseed[0] = random.Random(0), now, False
+        if reseed[0]:                     # every trial replays the trace from its start
+            k, nxt, reseed[0] = 0, now, False
         with cv:
             while nxt <= now:
                 rec = [time.time() - (now - nxt), None, trial["id"] if time.time() < trial["end"] else 0]
                 arrivals.append(rec)
+                qi, gap = int(QIDX[k % len(QIDX)]), float(GAPS[k % len(GAPS)])
+                k += 1
                 if len(queue) >= MAX_QUEUE:
                     dropped.append(time.time())
                     rec[1] = False
                 else:
-                    queue.append((rng.randrange(len(QUERIES)), nxt, rec))
-                nxt += rng.expovariate(state["rate"])
+                    queue.append((qi, nxt, rec))
+                nxt += gap / state["rate"]
             cv.notify_all()
         time.sleep(max(0.0, min(0.005, nxt - time.perf_counter())))
 
@@ -199,7 +207,7 @@ def finish_trial():
                  "good_pct": 100.0 * sum(1 for a in arr if a[1]) / len(arr) if arr else 0.0,
                  "p95_ms": float(np.percentile(lat, 95)) if lat else None,
                  "ndcg10": float(np.mean([d[3] for d in comp])) if comp else 0.0,
-                 "served_per_s": len(comp) / TRIAL_S})
+                 "served_per_s": len(comp) / TRIAL_S, "completed": len(comp), "offered": len(arr)})
     trial["pinned"] = True
 
 

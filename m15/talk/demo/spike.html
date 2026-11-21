@@ -69,7 +69,7 @@ const C = {stella: "#c9cede", nano: "#9494ff", zero: "#ff516b", line: "#303547",
 const NAME = {stella: "Stella", nano: "Nano", zero: "Zero wide", "zero-fast": "Zero narrow", auto: "Auto"};
 const COL = m => ({stella: "#c9cede", nano: "#9494ff", zero: "#ff516b", "zero-fast": "#ff8fa0", auto: "#3fc1a5"})[m];
 const rateOf = v => Math.round(10 * Math.pow(300, v / 1000)), sliderOf = r => Math.round(1000 * Math.log(r / 10) / Math.log(300));
-const LOW = 40;
+const LOW = 40, STEPS = [10, 20, 40, 80, 160, 320, 640, 800, 1000, 1500, 2000];
 const post = (path, p) => fetch(path + (p ? "?" + new URLSearchParams(p) : ""), {method: "POST"});
 document.querySelectorAll("#modes button").forEach(b => b.onclick = () => post("/set", {mode: b.dataset.m}));
 const rate = document.getElementById("rate"), budget = document.getElementById("budget");
@@ -86,7 +86,10 @@ addEventListener("keydown", e => {
   if (e.key === "c") post("/reset");
   if (e.key === "p") post("/pin");
   if (e.key === "u") post("/unpin");
-  if (e.key === "ArrowUp" || e.key === "ArrowDown") { const r = H.length ? H[H.length - 1].rate : LOW; post("/set", {rate: Math.round(r * (e.key === "ArrowUp" ? 1.5 : 1 / 1.5))}); e.preventDefault(); }
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") {      // fixed steps, so 800 and 1,000 are one key apart
+    const r = H.length ? H[H.length - 1].rate : LOW, up = e.key === "ArrowUp";
+    const next = up ? STEPS.find(x => x > r + 0.5) : [...STEPS].reverse().find(x => x < r - 0.5);
+    if (next) post("/set", {rate: next}); e.preventDefault(); }
 });
 function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; if (c.width !== Math.round(r.width * d) || c.height !== Math.round(r.height * d)) { c.width = r.width * d; c.height = r.height * d; } const x = c.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height]; }
 function axes(x, w, h, ys, fy, fmt) { x.font = "18px -apple-system, sans-serif"; x.fillStyle = C.mut; x.strokeStyle = C.line; x.lineWidth = 1;
@@ -132,7 +135,7 @@ async function tick() {
     set("act", s.mode === "auto" ? "Auto: " + ["stella", "nano", "zero"].map(k => `${Math.round(100 * s.mix[k] / tot)}% ${NAME[k].split(" ")[0]}`).join(" · ") : (s.active_setting || "–"));
     set("trialv", s.trial_left > 0 ? `trial ${s.trial_left.toFixed(0)} s` : "");
     const pins = document.getElementById("pins");
-    pins.innerHTML = s.pins.map(p => `<div class="pin" style="border-color:${COL(p.mode)}"><b style="color:${COL(p.mode)}">${NAME[p.mode]}</b> @ ${Math.round(p.rate)}/s · <b>${p.good_pct.toFixed(0)}%</b> in time · p95 ${isFinite(p.p95_ms) ? fmtms(p.p95_ms) : "–"} · nDCG ${p.ndcg10.toFixed(3)}</div>`).join("");
+    pins.innerHTML = s.pins.map(p => `<div class="pin" style="border-color:${COL(p.mode)}"><b style="color:${COL(p.mode)}">${NAME[p.mode]}</b> @ ${Math.round(p.rate)}/s · <b>${p.good_pct.toFixed(0)}%</b> in time · p95 ${isFinite(p.p95_ms) ? fmtms(p.p95_ms) : "–"} · nDCG ${p.ndcg10.toFixed(3)}${p.offered ? ` <span style="color:#9aa0b5">(${p.completed.toLocaleString()} of ${p.offered.toLocaleString()} done)</span>` : ""}</div>`).join("");
     draw();
   } catch (e) {}
   setTimeout(tick, 250);
