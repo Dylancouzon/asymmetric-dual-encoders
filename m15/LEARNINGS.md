@@ -339,6 +339,54 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
   confound size with domain; latency not claimed. E22 and E23 pending.
 - **Use:** v17 RQ2.
 
+### L36. Reversing a query's word order defeats Zero by construction, and Stella mostly too
+
+- **Observation:** On 24 hand-written direction-sensitive pairs (two authored passages per pair), Zero produced identical vectors for all 24 reversals and ranked the intended passage first in both directions on 0 pairs. Stella changed its vector every time but succeeded on 4/24 pairs (28/48 directions, chance 24/48), all unit conversions whose passages also differ in numbers; Nano 2/24.
+- **Decision:** Treat word order as a weak signal for dense retrieval generally, not only for bag-of-token encoders; test direction-sensitive query classes explicitly before choosing an encoder for them.
+- **Evidence:** C23, `results/m15_talk_word_order.json`, pairs frozen in git (`ba452d9`) before any run.
+- **Strength/reach:** Small exploratory probe; only two passages compete, not a corpus. Not evidence that dense models ignore order in general.
+- **Use:** Talk; possible limitation paragraph next to Zero's pooling.
+
+### L37. Cloud CPUs widen the encoding-cost gap that laptop timings show
+
+- **Observation:** One ONNX Runtime thread on a GCP c4-standard-8 (Xeon Platinum 8581C) encoded a Stella query in about 271 ms versus about 49 ms on the M5 Pro; Nano 7.3 vs 2.3 ms; Zero 0.059 vs 0.029 ms. Saturating the 8-vCPU VM gave 18.1, 464 and 67,423 queries/s, i.e. about $6.07, $0.24 and $0.0016 per million queries of encoding at $0.395/h.
+- **Decision:** Price query encoders on the hardware that will serve them; Apple-silicon latency understates the transformer cost on cloud CPUs.
+- **Evidence:** C25, `results/m15_talk_throughput_nq_gcp-c4-standard-8_encode.json`.
+- **Strength/reach:** One instance type, encoding only, batch 1, 30 s per point. Excludes graph search, batching and GPU serving.
+- **Use:** Talk cost slide; candidate deployment-cost paragraph.
+
+### L38. Count FLOPs from the actual block, not a generic transformer formula
+
+- **Observation:** A first per-query estimate assumed a plain 2·d·ff feed-forward block and gave 18.8 GFLOPs for Stella; Stella's block is gated (3·d·ff weights), which gives 25.1 GFLOPs, and Nano's linear head runs per token (0.54, not 0.51 GFLOPs). An independent review caught it from the model source.
+- **Decision:** Derive analytic cost from the loaded module's code and record the formula in the receipt.
+- **Evidence:** C24, `results/m15_talk_flops.json`; review `m15/talk/planning/astra_deck2.md`.
+- **Strength/reach:** Analytic estimate; ignores memory traffic, which dominates Zero.
+- **Use:** Talk; reproducibility note.
+
+### L39. Filling a WSL GPU spills silently into shared memory
+
+- **Observation:** Stella document encoding on the RTX 3080 (10 GB) under WSL ran shard 0 (50k NQ passages) in 13 min at 65 passages/s, then shard 1 in 58 min with GPU memory at 9.9 GB and utilization still at 100%. No OOM was raised. Halving the length-bucketed batch from 16,384 to 8,192 tokens brought memory to about 3 GB at the start of the next shard.
+- **Decision:** On WSL, cap batch tokens below the card's memory with margin and watch per-shard time, not only utilization or OOM.
+- **Evidence:** `m15src/talk_encode_nq.py` comment and box logs `~/constella-talk/encode_nq.part1.log`; related L29.
+- **Strength/reach:** One machine and driver stack; diagnosis by memory reading and timing, not a driver trace.
+- **Use:** Engineering note; not paper material.
+
+### L40. A Qdrant Edge shard is single-process, and it can hold the query encoder
+
+- **Observation:** A second process opening the same Edge shard fails on its write-ahead-log lock (`WouldBlock`), so concurrent benchmarks share one shard across threads. Zero's 30,522 rows stored in their own Edge shard reproduce the released encoder exactly (max difference 0 on 500 queries) at about 0.25-0.28 ms more per query than the in-memory NumPy table.
+- **Decision:** Benchmark Edge with in-process threads; keep the NumPy table for latency-critical serving, and use the shard form only where shipping one storage artifact matters.
+- **Evidence:** C26 (`zero-edge` row), `m15src/talk_edge.py`, `m15src/talk_throughput.py`.
+- **Strength/reach:** qdrant-edge-py 0.8.0 on macOS; one corpus for the latency delta.
+- **Use:** Talk backup slide; Edge deployment note.
+
+### L41. On a small corpus, binary quantization can keep Zero just short of its own exact score
+
+- **Observation:** On FiQA (57,638 passages) in Qdrant Edge with binary quantization and fp16 rescoring, Zero's best tested setting (ef 1024, oversampling 8) reached ANN nDCG@10 0.3674 against its exact 0.3728 (98.6%), while recovering 0.907 of its own exact top 10; Stella and Nano met the 99% target at ef 128/os 2 and ef 256/os 4.
+- **Decision:** Include oversampling in the search sweep for replacement encoders, and report when an encoder misses its own exact target rather than silently taking its best point.
+- **Evidence:** C26, `results/m15_talk_edge_fiqa.json`; related L10 and L12.
+- **Strength/reach:** One small corpus, one graph build, sequential timing on a laptop.
+- **Use:** Talk; supports the graph-effort section.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

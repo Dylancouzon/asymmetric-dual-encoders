@@ -1100,3 +1100,19 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
 - Manuscript source `540e2bb089a30c83225156945a76b1537beedcd3` stays unchanged. Refreshed the stale v15 reviewer appendix to the current v22 evidence map, all 24 evidence-card links, and pinned source URLs. All 66 pinned file targets exist at the source snapshot. Historical provenance links inside PROVENANCE_AUDIT.md remain untouched.
 - Native import readback finds all 610 source paragraphs, eight tables, five figure images, and ten equation elements. Google Docs PDF export is 19 pages including the reviewer appendix; inspected all pages in contact sheets and detailed equation/table views. No clipping or missing glyphs observed. Author byline and scholarly dates preserved as supplied.
 - Temporary DOCX import staging used the Documents skill; the local renderer required installing LibreOffice. Drive was connected throughout; the deliverable is native Google Docs. Updated reviewer guide, README, handoff and creation instructions; COLLABORATION_RECEIPT.json records hashes and verification. Accepted edits remain in Git with manual targeted Doc updates.
+
+
+### 2026-11-20 to 2026-11-21: London IR Meetup talk preparation
+
+- Owner request: a 30-minute talk for search engineers (Mon 2026-11-23) with a demo, new benchmarks
+  allowed, Codex Astra (gpt-6.2-astra) as reviewer and Sol (gpt-6.2-sol) for narration. Structure
+  agreed with Astra over five rounds; owner raised the technical bar after v1. Deck:
+  https://claude.ai/artifact/KHUEXngqsxnHt43vh3Xptj (sources in `m15/talk/deck/`).
+- New exploratory measurements T1-T4 (methods appended to MEASUREMENTS.md, cards C23-C26 in
+  EVIDENCE.md, learnings L36-L41): word-order probe; analytic FLOPs; Qdrant Edge encode-plus-search
+  on FiQA (NQ pending); cloud encode throughput on a GCP c4-standard-8.
+- Corrections caught by review before publication: Stella FLOPs 18.8 to 25.1 G (gated FFN); Nano layer
+  order 12, 8, 4; 343 MB covers binary codes only; Zero uses positives in both phases; 10.3 h (mean, not
+  median) per million Stella queries.
+- Owner rulings: laptop-only stage demo; NQ encoded on the RTX box; VM in us-east1 left running until
+  the end-to-end run; log all talk results in m15; commit and push freely.

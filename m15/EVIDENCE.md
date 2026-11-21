@@ -770,3 +770,69 @@ Held-out models (leave one family out unless named):
 Excluded by tokenizer check: none. One table fit (e5-base-unsupervised) stopped at the convergence gate and is listed, not replaced; its head fit completed. The first assembly (`results/m15_e24_prospective.json`, n=7 in both rows) dropped it from both rows; E24 amendment 1 restates the rule to the method's and keeps its head point.
 
 **Cannot show.** Eight head points and seven table points; the table interval includes zero; related checkpoints; transfer to trained students.
+
+## C23. Word-order reversals
+
+**Label:** exploratory (talk, pairs frozen in git before any run). **Source:** `results/m15_talk_word_order.json`; pairs `m15/talk/word_order_pairs.json`
+
+**Claim.** Zero gives a reversed query the same vector; Stella and Nano change the vector but rarely rank the intended passage first in both directions.
+
+| encoder | pairs right both ways | directions right | identical query vectors |
+|---|---|---|---|
+| stella-query | 4 / 24 | 28 / 48 | 0 |
+| nano | 2 / 24 | 26 / 48 | 0 |
+| zero | 0 / 24 | 24 / 48 | 24 |
+
+Stella's both-way wins: usd-eur, celsius-fahrenheit, kg-lb, miles-km (all unit conversions, whose passages also differ in numbers). Each pair has two authored passages, one per direction; chance is one direction per pair.
+
+**Cannot show.** Retrieval over a corpus (only the two authored passages compete); 24 hand-written pairs; any claim that dense models in general ignore word order.
+
+## C24. Per-query encoding arithmetic
+
+**Label:** exploratory (analytic estimate). **Source:** `results/m15_talk_flops.json`
+
+**Claim.** Median per-query FLOPs differ by about six orders of magnitude between Stella and Zero.
+
+| encoder | median tokens | median FLOPs | ratio to Zero |
+|---|---|---|---|
+| stella | 31 | 2.51e+10 | 906,433 |
+| nano | 12 | 5.41e+08 | 19,552 |
+| zero | 12 | 2.76e+04 | 1 |
+
+Formula: 2*P_matmul*T + 4*L*T^2*d; Stella gated FFN 3*d*ff; Nano head per token. Tokens counted with each served tokenizer on the 100 medium queries of E1 (Stella includes its instruction prompt).
+
+**Cannot show.** Measured time (see C2 and C25); kernel efficiency; memory traffic, which dominates Zero.
+
+## C25. Query-encoding throughput on a cloud CPU
+
+**Label:** exploratory (talk, gcp-c4-standard-8). **Source:** `results/m15_talk_throughput_nq_gcp-c4-standard-8_encode.json`
+
+**Claim.** On one 8-vCPU cloud VM, Stella encodes about 18 queries per second, Nano about 464 and Zero about 67,000; encoding cost per million queries falls by roughly 26x and 3,700x.
+
+| encoder | best workers | queries/s | p50 ms | p95 ms | USD per 1M (0.395/h) | VMs per 1,000 QPS |
+|---|---|---|---|---|---|---|
+| stella | 8 | 18.1 | 434.709 | 493.082 | 6.0732 | 55.35 |
+| nano | 8 | 464.3 | 17.081 | 19.664 | 0.2363 | 2.15 |
+| zero | 8 | 67,422.7 | 0.114 | 0.146 | 0.0016 | 0.01 |
+
+Batch 1, closed loop, one ONNX Runtime thread per process (Zero: NumPy), 30 s per point; all worker counts are in the receipt. Single-thread Stella took about 271 ms per query here versus about 49 ms on the M5 Pro.
+
+**Cannot show.** Graph search cost (C26 and the end-to-end run); batching; GPU serving; other instance types.
+
+## C26. Edge encode-plus-search on fiqa (57,638 passages)
+
+**Label:** exploratory (talk). **Source:** `results/m15_talk_edge_fiqa.json`
+
+**Claim.** Each encoder at its fastest Qdrant Edge setting within 1% of its own exact nDCG@10, binary quantization with rescoring, one in-process shard.
+
+| encoder | encode p50 ms | exact nDCG@10 | ef / oversampling | ANN nDCG@10 | total p50 ms | own top-10 recovery |
+|---|---|---|---|---|---|---|
+| stella | 33.717 | 0.5536 | 128 / 2 | 0.5489 | 33.802 | 0.860 |
+| nano | 1.732 | 0.4778 | 256 / 4 | 0.4731 | 1.860 | 0.912 |
+| zero | 0.033 | 0.3728 | 1024 / 8 (best; misses 1%) | 0.3674 | 0.414 | 0.907 |
+| zero-edge | 0.315 | 0.3728 | 1024 / 8 (best; misses 1%) | 0.3674 | 0.671 | 0.907 |
+| bm25 | - | - | - | 0.2522 | 0.062 | - |
+
+Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed separately per query; totals are per-query sums. Transformers run ONNX Runtime CPU, 4 threads. zero-edge retrieves Zero's rows from an Edge shard. Selected = fastest median total within 1% of the encoder's own exact nDCG@10.
+
+**Cannot show.** Throughput under load; other engines or graph settings.

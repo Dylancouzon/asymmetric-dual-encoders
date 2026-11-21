@@ -725,3 +725,37 @@ also appears in that model's own setting, where the lookup path is learned, not 
   instruction beyond a secondary row.
 - **Cost:** one fresh A100 pod, about $10 to $15; no project cache is needed.
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
+
+
+## Talk measurements T1-T5 (exploratory, 2026-11-20 and 2026-11-21)
+
+Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
+exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
+`m15/talk/planning/`. Status: `m15/talk/STATUS.md`.
+
+- **T1 word-order probe.** 24 direction-sensitive query pairs, each with two authored passages, frozen
+  in `m15/talk/word_order_pairs.json` (commit `ba452d9`) before any model ran. A direction succeeds when
+  its passage outscores the other; a pair when both do. Stella passages via the registered document
+  path. Script `m15src/talk_word_order.py`; receipt `results/m15_talk_word_order.json`.
+- **T2 per-query FLOPs.** Analytic: 2·P_matmul·T + 4·L·T²·d per forward pass; Stella's gated FFN holds
+  3·d·ff weights per layer; Nano's head runs per token; Zero costs 2 FLOPs per gathered value plus
+  normalization. T counted with the served tokenizers on E1's 100 medium queries. Script
+  `m15src/talk_flops.py`; receipt `results/m15_talk_flops.json`.
+- **T3 Qdrant Edge encode-plus-search.** One in-process Edge shard per corpus: Stella document vectors
+  in fp16, HNSW m=16, ef_construct=100, binary quantization in RAM, BM25 sparse vector with IDF. Each
+  encoder (Stella and Nano via ONNX Runtime 4 threads, released Zero, Zero rows read from an Edge
+  shard) is warmed, encoded and searched sequentially, timed separately, over ef 32-1024 and
+  oversampling 1-8 with rescoring. Exact top 10 by brute force on the same fp16 vectors. Selected
+  setting: fastest median total within 1% of the encoder's own exact nDCG@10. Corpora: FiQA, and BEIR
+  NQ (2,681,468 passages) encoded with the registered Stella document path (fp32 compute, fp16 store)
+  on the RTX 3080. NQ Open training questions were in Zero's and Nano's pools; the run uses NQ test
+  queries. Script `m15src/talk_edge.py` (and `m15src/talk_encode_nq.py`); receipts
+  `results/m15_talk_edge_<dataset>.json`.
+- **T4 cloud throughput.** GCP c4-standard-8, us-east1-b, on-demand list price $0.395/h checked
+  2026-11-21 (the encode receipt stores the run's 0.40 placeholder; dollars are recomputed at 0.395).
+  Encode mode: W processes with one ONNX Runtime thread each (Zero: NumPy), closed loop, batch 1,
+  30 s, all workers starting together, W in {1, 2, 4, 8}. End-to-end mode: one process, W threads
+  sharing one encoder and one Edge shard (Edge locks its directory) at T3's selected settings.
+  Script `m15src/talk_throughput.py`; receipts `results/m15_talk_throughput_<dataset>_<label>_<modes>.json`.
+- **T5 demo.** `m15/talk/demo/` replays T3's per-query arrays and runs live queries; it produces no
+  result file.

@@ -624,12 +624,103 @@ def prospective():
                 "`results/m15_e24_prospective_amend1.json`", "Eight head points and seven table points; the table interval includes zero; related checkpoints; transfer to trained students.")
 
 
+def talk_word_order():
+    if not (REPO / "results" / "m15_talk_word_order.json").exists():
+        return ""
+    d = R("m15_talk_word_order.json")["results"]
+    rows = [[n, f"{v['pairs_both_directions_correct']} / {v['n_pairs']}",
+             f"{v['directions_correct']} / {2 * v['n_pairs']}",
+             sum(r["identical_query_vectors"] for r in v["rows"])] for n, v in d.items()]
+    wins = ", ".join(r["id"] for r in d["stella-query"]["rows"] if r["ab_correct"] and r["ba_correct"])
+    return card("C23. Word-order reversals", "exploratory (talk, pairs frozen in git before any run)",
+                "Zero gives a reversed query the same vector; Stella and Nano change the vector but rarely "
+                "rank the intended passage first in both directions.",
+                table(["encoder", "pairs right both ways", "directions right", "identical query vectors"], rows)
+                + f"\n\nStella's both-way wins: {wins} (all unit conversions, whose passages also differ in numbers). "
+                  "Each pair has two authored passages, one per direction; chance is one direction per pair.",
+                "`results/m15_talk_word_order.json`; pairs `m15/talk/word_order_pairs.json`",
+                "Retrieval over a corpus (only the two authored passages compete); 24 hand-written pairs; any "
+                "claim that dense models in general ignore word order.")
+
+
+def talk_flops():
+    if not (REPO / "results" / "m15_talk_flops.json").exists():
+        return ""
+    d = R("m15_talk_flops.json")
+    rows = [[n, f"{v['median_tokens']:.0f}", f"{v['median_flops']:.3g}", f"{v['ratio_to_zero']:,.0f}"]
+            for n, v in d["results"].items()]
+    return card("C24. Per-query encoding arithmetic", "exploratory (analytic estimate)",
+                "Median per-query FLOPs differ by about six orders of magnitude between Stella and Zero.",
+                table(["encoder", "median tokens", "median FLOPs", "ratio to Zero"], rows)
+                + f"\n\nFormula: {d['formula']}. Tokens counted with each served tokenizer on the {d['n_queries']} "
+                  "medium queries of E1 (Stella includes its instruction prompt).",
+                "`results/m15_talk_flops.json`",
+                "Measured time (see C2 and C25); kernel efficiency; memory traffic, which dominates Zero.")
+
+
+def talk_cloud():
+    import glob
+    files = sorted(glob.glob(str(REPO / "results" / "m15_talk_throughput_*_encode.json")))
+    if not files:
+        return ""
+    d = json.loads(Path(files[-1]).read_text())
+    price = 0.395      # us-east1 on-demand list price checked 2026-11-21; receipt stores the run's placeholder
+    rows = []
+    for n, by_w in d["results"]["encode"].items():
+        w, r = max(by_w.items(), key=lambda kv: kv[1]["qps"])
+        rows.append([n, w, f"{r['qps']:,.1f}", f"{r['p50_ms']:.3f}", f"{r['p95_ms']:.3f}",
+                     f"{price / (r['qps'] * 3600) * 1e6:.4f}", f"{1000 / r['qps']:.2f}"])
+    return card("C25. Query-encoding throughput on a cloud CPU", f"exploratory (talk, {d['label']})",
+                "On one 8-vCPU cloud VM, Stella encodes about 18 queries per second, Nano about 464 and Zero "
+                "about 67,000; encoding cost per million queries falls by roughly 26x and 3,700x.",
+                table(["encoder", "best workers", "queries/s", "p50 ms", "p95 ms", "USD per 1M (0.395/h)",
+                       "VMs per 1,000 QPS"], rows)
+                + "\n\nBatch 1, closed loop, one ONNX Runtime thread per process (Zero: NumPy), 30 s per point; "
+                  "all worker counts are in the receipt. Single-thread Stella took about 271 ms per query here "
+                  "versus about 49 ms on the M5 Pro.",
+                "`" + str(Path(files[-1]).relative_to(REPO)) + "`",
+                "Graph search cost (C26 and the end-to-end run); batching; GPU serving; other instance types.")
+
+
+def talk_edge():
+    out = []
+    for ds in ("fiqa", "nq"):
+        if not (REPO / "results" / f"m15_talk_edge_{ds}.json").exists():
+            continue
+        d = R(f"m15_talk_edge_{ds}.json")
+        rows = []
+        for n in ("stella", "nano", "zero", "zero-edge"):
+            v = d["results"].get(n)
+            if not v:
+                continue
+            pq = v["per_query"]
+            s = v["selected"] or next(x for x in v["settings"]
+                                      if x["ef"] == pq["ef"] and x["oversampling"] == pq["oversampling"])
+            rows.append([n, f"{v['encode_ms_p50']:.3f}", f4(v["exact_ndcg10"]),
+                         f"{pq['ef']} / {pq['oversampling']:g}" + ("" if v["selected"] else " (best; misses 1%)"),
+                         f4(s["ndcg10"]), f"{s['total_ms_p50']:.3f}", f"{s['own_exact_top10_recovery']:.3f}"])
+        b = d["results"]["bm25"]
+        rows.append(["bm25", "-", "-", "-", f4(b["ndcg10"]), f"{b['total_ms_p50']:.3f}", "-"])
+        out.append(card(f"C26. Edge encode-plus-search on {ds} ({d['n_docs']:,} passages)", "exploratory (talk)",
+                        "Each encoder at its fastest Qdrant Edge setting within 1% of its own exact nDCG@10, "
+                        "binary quantization with rescoring, one in-process shard.",
+                        table(["encoder", "encode p50 ms", "exact nDCG@10", "ef / oversampling", "ANN nDCG@10",
+                               "total p50 ms", "own top-10 recovery"], rows)
+                        + "\n\n" + d["protocol"],
+                        f"`results/m15_talk_edge_{ds}.json`",
+                        "Throughput under load; other engines or graph settings"
+                        + ("; NQ training-question exposure (NQ Open train questions were in Zero's and "
+                           "Nano's pools; the run uses NQ test queries)." if ds == "nq" else ".")))
+    return "\n".join(out)
+
+
 if __name__ == "__main__":
     parts = ["# M15 evidence, in plain language\n",
              "Generated by `python m15/make_evidence.py` from committed result files. Each card "
              "states an available finding, whether it was registered before observation or is "
              "exploratory, the numbers, the file that holds them, and what the result cannot show.\n",
              beir(), latency(), towers(), towers_extended(), mechanisms(), oracle(), prefixes(), routers(), blend(),
-             system(), failure_modes(), heldout(), decision_audit(), precision_followup(), cross_recipe(), cross_space_ann(), width_model(), lightretriever(), gap_predictors(), corpus_size(), prospective()]
+             system(), failure_modes(), heldout(), decision_audit(), precision_followup(), cross_recipe(), cross_space_ann(), width_model(), lightretriever(), gap_predictors(), corpus_size(), prospective(),
+             talk_word_order(), talk_flops(), talk_cloud(), talk_edge()]
     OUT.write_text("\n".join(p for p in parts if p))
     print("wrote", OUT.relative_to(REPO))
