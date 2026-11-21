@@ -49,19 +49,20 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
     <button id="p_over">Overload · 2,000/s</button><button id="p_agent">Agent tasks</button></div>
   <div class="card"><h2>TRAFFIC <b id="rate_v"></b></h2>
     <input id="rate" type="range" min="0" max="1000">
-    <div class="seg" id="pattern"><button data-v="steady">steady</button><button data-v="wave">daily wave</button><button data-v="bursts">bursts</button></div>
-    <div class="tg" id="spike_g"><button id="spike">Spike</button><div class="sub"><label>size <b id="peak_v"></b></label><input id="peak" type="range" min="2" max="50"></div></div>
-    <div class="tg" id="agent_g"><button id="agent">Agent tasks</button><div class="sub"><label><b id="fanout_v"></b> searches per task</label><input id="fanout" type="range" min="2" max="20"></div></div></div>
+  </div>
   <div class="card"><h2>ROUTING</h2>
     <div class="seg" id="route"><button data-v="split">split traffic</button><button data-v="auto">auto</button></div>
     <div id="splits">
       <div class="mix"><span><span class="dot" style="background:var(--stella)"></span>Stella</span><input id="w_stella" type="range" min="0" max="100"><b id="w_stella_v"></b></div>
       <div class="mix"><span><span class="dot" style="background:var(--nano)"></span>Nano</span><input id="w_nano" type="range" min="0" max="100"><b id="w_nano_v"></b></div>
       <div class="mix"><span><span class="dot" style="background:var(--zero)"></span>Zero</span><input id="w_zero" type="range" min="0" max="100"><b id="w_zero_v"></b></div></div>
-    <div class="hint" id="autohint">Never below the quality floor; spare latency buys more quality.</div></div>
+    <div class="hint" id="autohint">Uses settings whose NQ score meets the floor; spare latency buys more quality.</div></div>
   <div class="card"><h2>QUALITY FLOOR · FIRST <b id="floor_v"></b></h2><input id="floor" type="range" min="40" max="64">
     <h2 style="margin-top:8px">P95 TARGET · THEN <b id="budget_v"></b></h2><input id="budget" type="range" min="0" max="1000"></div>
-  <details><summary>ADVANCED</summary>
+  <details><summary>MORE</summary>
+    <div class="seg" id="pattern"><button data-v="steady">steady</button><button data-v="wave">daily wave</button><button data-v="bursts">bursts</button></div>
+    <div class="tg" id="spike_g"><button id="spike">Spike</button><div class="sub"><label>size <b id="peak_v"></b></label><input id="peak" type="range" min="2" max="50"></div></div>
+    <div class="tg" id="agent_g"><button id="agent">Agent tasks</button><div class="sub"><label><b id="fanout_v"></b> searches per task</label><input id="fanout" type="range" min="2" max="20"></div></div>
     <div class="encrow"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="7"><b id="ef_stella_v"></b><select id="os_stella"></select></div>
     <div class="encrow"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="7"><b id="ef_nano_v"></b><select id="os_nano"></select></div>
     <div class="encrow"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="7"><b id="ef_zero_v"></b><select id="os_zero"></select></div>
@@ -78,7 +79,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
   </div>
   <div class="charts">
     <div class="panel chart"><div class="k" id="latk">p95 latency · dashed: target</div><canvas id="c_lat"></canvas></div>
-    <div class="panel chart"><div class="k">searches/s served, by encoder · dashed: arriving</div><canvas id="c_qps"></canvas></div>
+    <div class="panel chart"><div class="k">searches/s served, by encoder · dashed: offered</div><canvas id="c_qps"></canvas></div>
   </div>
   <div class="bottom">
     <div class="panel"><div class="k" id="lanes_k">right now, by encoder</div><table><thead id="lanes_h"></thead><tbody id="lanes"></tbody></table></div>
@@ -222,11 +223,11 @@ function render(s) {
   $("load").textContent = s.cores_busy.toFixed(1); $("load_d").textContent = `of ${s.cores_total} cores busy`;
   if (s.route === "auto") {     // the router's view: why each setting is or is not used right now
     $("lanes_k").textContent = "auto's choices right now";
-    $("lanes_h").innerHTML = "<tr><th>setting</th><th>nDCG</th><th>share</th><th></th></tr>";
+    $("lanes_h").innerHTML = "<tr><th>setting</th><th>nDCG on NQ</th><th>served, last second</th><th></th></tr>";
     const label = r => NAME[r.enc] + (r.rung.endsWith("fast") ? " fast" : "");
     $("lanes").innerHTML = s.auto.map(r => { const used = r.share > 0.005, why = r.why, wc = why.startsWith("chosen") ? "#3fc1a5" : why === "below floor" ? "#ff516b" : "#9aa0b5";
       return `<tr style="opacity:${why === "below floor" ? 0.5 : 1}"><td><span class="dot" style="background:${COL[r.enc]}"></span>${label(r)}</td>
-      <td>${r.quality.toFixed(2)}</td><td style="font-weight:${used ? 700 : 400}">${Math.round(100 * r.share)}%</td><td style="color:${wc}">${why}</td></tr>`; }).join("");
+      <td>${r.quality.toFixed(2)}</td><td style="font-weight:${used ? 700 : 400}">${Math.round(100 * r.share)}%</td><td style="color:${wc}">${why === "below floor" || why === "too slow" ? why : ""}</td></tr>`; }).join("");
   } else {
     $("lanes_k").textContent = "right now, by encoder";
     $("lanes_h").innerHTML = "<tr><th>encoder</th><th>share</th><th>served/s</th><th>time per search</th><th>nDCG@10</th></tr>";

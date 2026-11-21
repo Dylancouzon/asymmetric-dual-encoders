@@ -1,0 +1,15 @@
+Final pass on the workload studio demo (m15/talk/demo/studio.py, m15/talk/demo/studio.html). The owner said: "Don't over-engineer, think about what makes a good demo." He will mostly demo Auto routing. Since your last review (/private/tmp/claude-501/-Users-dylanc-Documents-GitHub-asymetric-dual-encoders/ffe18849-e8e1-45a2-8851-1392874ab679/scratchpad/astra_studio2.md) I applied: infeasible floors refused (capped at the best attainable nDCG), one probe at a time for a recovering setting, costs tied to the exact (encoder, ef, oversampling) via startup encode time plus swept search time, overload fallback by estimated capacity with a quality tie-break, a cap of 4 concurrent requests on settings costing over 20% of the plan, a startup burn-in (the first burst after launch was several times slower), presets that change only traffic (Quiet 40/s, Spike 600/s, Overload 2,000/s, Agent tasks), an auto table (setting, nDCG, share, why), and one short chart marker per control change. Attached: screenshot of quiet -> spike -> overload -> floor 0.47. Fresh-start stress results:
+OK quiet 40/s                         served     42 p95 max      85 nDCG 0.615 floor 0.50 mix {'stella': 0.95, 'nano': 0.05}
+OK spike 600/s                        served    623 p95 max      61 nDCG 0.593 floor 0.50 mix {'stella': 0.03, 'nano': 0.97}
+OK back to 40/s                       served     36 p95 max      83 nDCG 0.597 floor 0.50 mix {'stella': 1.0}
+OK 1000/s floor .50                   served   1000 p95 max      39 nDCG 0.571 floor 0.50 mix {'nano': 1.0}
+-- 2000/s floor .50 (expect over)     served   1158 p95 max    1375 nDCG 0.574 floor 0.50 mix {'nano': 1.0}
+OK 2000/s floor .47                   served   2036 p95 max      95 nDCG 0.513 floor 0.47 mix {'nano': 0.29, 'zero': 0.71}
+OK 40/s floor .50                     served     40 p95 max      72 nDCG 0.616 floor 0.50 mix {'stella': 0.97, 'nano': 0.03}
+OK 40/s floor .62                     served     39 p95 max     117 nDCG 0.636 floor 0.62 mix {'stella': 1.0}
+OK wave 40-600                        served    587 p95 max      64 nDCG 0.587 floor 0.50 mix {'stella': 0.05, 'nano': 0.95}
+OK bursts                             served     35 p95 max      78 nDCG 0.610 floor 0.50 mix {'stella': 0.97, 'nano': 0.03}
+OK agent tasks                        served    240 p95 max     113 nDCG 0.588 floor 0.50 mix {'stella': 0.15, 'nano': 0.85}
+OK quiet again                        served     42 p95 max      78 nDCG 0.622 floor 0.50 mix {'stella': 0.92, 'nano': 0.08}
+The stage beats are in the live slide notes: /private/tmp/claude-501/-Users-dylanc-Documents-GitHub-asymetric-dual-encoders/ffe18849-e8e1-45a2-8851-1392874ab679/scratchpad/../deck/project/slides/live.html (aside).
+Answer only: (1) what to CUT or hide to make it simpler and clearer for the audience (be specific); (2) anything that would confuse or mislead on stage; (3) blockers. No new features unless one is essential. End with READY or blockers. Read only the named files. No recursive searches; never read results/frozen_eval/untouched-*, work/m9reserve, or reserved qrels.
