@@ -1,0 +1,16 @@
+<section id="bench" class="s foot" data-transition="fade">
+<div class="head"><h2>How Much Relevance Survives</h2></div>
+<table class="dtab" style="margin-top:16px">
+<tr class="hd"><th style="width:27%;text-align:left">Query side</th><th style="width:25%;text-align:left">Document index</th><th style="width:18%;text-align:right">BEIR-15</th><th style="width:15%;text-align:right">vs Stella</th><th style="width:15%;text-align:right">Encode</th></tr>
+<tr><td>Stella</td><td>Stella</td><td style="text-align:right">0.5614</td><td style="text-align:right">—</td><td style="text-align:right">31.6 ms</td></tr>
+<tr class="hl"><td style="color:#9494ff">Nano</td><td>Stella</td><td style="text-align:right">0.5081</td><td style="text-align:right">90.5%</td><td style="text-align:right">2.25 ms</td></tr>
+<tr class="hz"><td style="color:#ff516b">Zero</td><td>Stella</td><td style="text-align:right">0.4572</td><td style="text-align:right">81.4%</td><td style="text-align:right">0.044 ms</td></tr>
+<tr class="hz"><td style="color:#ff516b">Zero + BM25 (DBSF)</td><td>Stella + sparse</td><td style="text-align:right">0.4933</td><td style="text-align:right">87.9%</td><td style="text-align:right">0.044 ms</td></tr>
+<tr><td class="mut">LEAF</td><td class="mut">its own</td><td style="text-align:right">0.5402</td><td style="text-align:right">—</td><td style="text-align:right">1.39 ms</td></tr>
+<tr><td class="mut">bge-small</td><td class="mut">its own</td><td style="text-align:right">0.5171</td><td style="text-align:right">—</td><td style="text-align:right">2.57 ms</td></tr>
+<tr><td class="mut">BM25</td><td class="mut">sparse</td><td style="text-align:right">0.4006</td><td style="text-align:right">—</td><td style="text-align:right">—</td></tr>
+</table>
+<p class="note" style="margin-top:28px">Zero per dataset: 0.67 of Stella on TREC-COVID and FiQA, 0.95 on Quora.</p>
+<p class="src">Exact search, nDCG@10, unweighted mean of 15 BEIR datasets (registered descriptive evaluation). Fusion: DBSF over 100 candidates per branch. Encode: M5 Pro CPU p50.</p>
+<aside>[Draft notes; Sol pass pending.] Here is what the cheap encoders give up, with exact search so the graph doesn't blur the picture. Averaged over 15 BEIR datasets, Nano keeps 90.5 percent of Stella and Zero 81.4 percent. Add a BM25 branch over the same documents and fuse with distribution-based score fusion, and Zero climbs to 88 percent, still with no neural network on the query side. For reference, bge-small and LEAF on their own indexes score a little higher than Nano. That's the price of sharing Stella's index: you trade about a hundredth of nDCG for one index and three budgets. And averages hide spread: Zero keeps two thirds of Stella on TREC-COVID and FiQA and 95 percent on Quora.</aside>
+</section>

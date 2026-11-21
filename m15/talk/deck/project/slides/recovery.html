@@ -1,10 +1,12 @@
 <section id="recovery" class="s foot" data-transition="fade">
 <div class="head"><h2>Cheaper Queries Need a Wider Search</h2></div>
-<p class="lead">[Chart pending the NQ benchmark: share of each encoder’s own exact top 10 recovered, as hnsw_ef grows.]</p>
-<p class="src">[2.7M NQ passages, Qdrant Edge, binary quantization with rescoring. Exploratory.]</p>
-<aside>[~1.5 min] All three dense encoders walk the same HNSW graph. Its links connect document vectors. To measure how well an encoder searches it, I first run an exact search with that encoder's vector and save its top 10. Then I count how many of those documents come back through the graph at each setting of hnsw_ef. Stella has its own reference list. So do Nano and Zero.
-
-[If the recovery chart is available, use this paragraph and trace a fixed hnsw_ef across the curves.] This is the Wikipedia index from the race, with binary quantization and rescoring. Where Zero's curve sits lower at the same hnsw_ef, it finds a smaller share of its own exact neighbors than Stella finds of its own.
-
-In the paper's graph tests, fitted tables often needed a wider search to match the teacher's recovery rate. Each encoder had its own exact neighbors as the reference. A wider search takes time and can get a ranking closer to what that encoder returns with an exact scan. I'd still use judged relevance to decide whether those are the documents I want. We can watch the exact-neighbor count change on a query from the room.</aside>
+<div class="fl" style="align-items:flex-start;gap:64px">
+<div style="width:1000px;height:600px;border:2px dashed #303547;border-radius:16px;display:flex;align-items:center;justify-content:center"><p class="lead mut" style="width:800px;text-align:center">[NQ chart: recall of each encoder’s own exact top 10 vs hnsw_ef, fixed oversampling]</p></div>
+<div class="col" style="width:600px;gap:34px">
+<div class="kv"><p class="k2">Across 25 models · paper</p><p class="v2">ef × 4</p><p class="d2">median breadth for a table to match its teacher’s exact-top-10 recall on FiQA and TREC-COVID (× 2 on SCIDOCS)</p></div>
+<div class="kv"><p class="k2">Predictable before fitting</p><p class="eq" style="font-size:28px;white-space:nowrap">r = d(q, NN(q)) / d(x, NN(x))</p><p class="d2">teacher queries vs documents; ρ = −0.64 with the recall gap</p></div>
+</div>
+</div>
+<p class="src">Paper: Qdrant 1.19.1, HNSW m=16, ef_construct=100, uncompressed, two builds per model, exploratory. d(x, NN(x)): typical document-to-nearest-document distance.</p>
+<aside>[Draft notes; Sol pass pending.] Why does Zero wait on search? The HNSW graph links document vectors, and every encoder walks the same graph. To compare fairly, I take each encoder's own exact top ten as its reference, and count how many the graph search returns at each hnsw_ef. On the paper's 25-model study, lookup tables needed a median of four times the search breadth to match their teacher's recall on FiQA and TREC-COVID, and twice on SCIDOCS. And you can see it coming before you fit anything: take the teacher's own queries, and compare their distance to the nearest document with the typical distance between neighboring documents. Models whose queries sit farther from the documents had larger gaps, correlation minus 0.64.</aside>
 </section>

@@ -1,14 +1,15 @@
 <section id="recipe" class="s" data-transition="fade">
 <div class="head"><h2>The Monday Recipe</h2></div>
-<div class="steps" style="margin-top:56px">
-<div class="step"><p class="sn">01</p><p class="st">Sample real queries</p><p class="sd">with relevance judgments, from your traffic</p></div>
-<div class="step"><p class="sn">02</p><p class="st">Measure exact nDCG@10</p><p class="sd">for each candidate encoder, on your index</p></div>
-<div class="step"><p class="sn">03</p><p class="st">Sweep hnsw_ef</p><p class="sd">and oversampling, per encoder</p></div>
-<div class="step"><p class="sn">04</p><p class="st">Pick the cheapest setting</p><p class="sd">that meets your relevance floor and p95</p></div>
+<div class="fxbox" style="margin-top:8px;padding:36px 48px">
+<p class="fx">(e, ef, os)* = argmin  p50<span class="mut">_total</span>(e, ef, os)</p>
+<p class="fx">        s.t.  nDCG@10(e, ef, os) ≥ <span class="tr">floor</span></p>
+<p class="fx">              p95<span class="mut">_total</span>(e, ef, os) ≤ <span class="tr">budget</span></p>
 </div>
-<aside>[~2.0 min] I'd start Monday by sampling queries from my own traffic and getting relevance judgments. I'd choose a minimum nDCG@10 and a p95 latency budget before I pick an encoder. The benchmark averages tell me which changes are worth a look. Those two limits tell me if I can ship one.
-
-I'd run exact search for each candidate over the document vectors I have in production. If an encoder already falls below my relevance floor there, I can see the ranking problem before I add the graph. Then I'd sweep hnsw_ef for each encoder. On a quantized index I'd sweep oversampling too, so I can see what I gain by rescoring a larger group of candidates. I'd measure nDCG@10 again at the settings I can serve.
-
-Finally, I'd time completed requests, from text in to results out. I'd record p95 with encoding and search in the same request on the system I plan to use. Then I'd pick the cheapest encoder and search settings that clear both limits. If I serve more than one budget, I'd carry the search settings with the encoder choice. The index can serve each of them.</aside>
+<div class="steps" style="margin-top:40px">
+<div class="step"><p class="sn">01</p><p class="st">Judged queries</p><p class="sd">sampled from your traffic</p></div>
+<div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">per encoder, on your index</p></div>
+<div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">per encoder, time encode + search</p></div>
+<div class="step"><p class="sn">04</p><p class="st">Solve and ship</p><p class="sd">carry (ef, os) with the encoder choice</p></div>
+</div>
+<aside>[Draft notes; Sol pass pending.] Here is the whole method as one optimization. Choose the encoder e, the search breadth ef and the oversampling os that minimize median request time, subject to a relevance floor and a p95 budget that you set before you look. To fill it in: sample and judge real queries; measure each encoder with exact search on your own index, so the graph doesn't hide encoder quality; sweep ef and oversampling for each encoder separately, timing encoding and search together; then pick the cheapest point that clears both constraints. If you serve several budgets, the search settings travel with the encoder choice. The index stays the same.</aside>
 </section>

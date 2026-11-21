@@ -1,0 +1,9 @@
+<section id="split" class="s foot" data-transition="fade">
+<div class="head"><h2>Where the Time Goes</h2></div>
+<div style="width:1664px;height:520px;border:2px dashed #303547;border-radius:16px;display:flex;align-items:center;justify-content:center"><p class="lead mut" style="width:1100px;text-align:center">[NQ: stacked encode + search medians per encoder at its selected setting, nDCG@10 beside each; BM25 reference]</p></div>
+<div class="fxbox" style="flex-direction:row;gap:40px;align-items:center;padding:20px 32px;margin-top:8px">
+<p class="spec" style="color:#fcfdff;font-weight:600">Binary quantization</p><p class="spec">1 bit/dim → Hamming candidates → rescore os · k with fp16</p>
+</div>
+<p class="src">[2.68M NQ passages, Qdrant Edge in-process, M5 Pro. Selected setting: fastest median total within 1% of the encoder’s own exact nDCG@10. Exploratory.]</p>
+<aside>[Draft notes; Sol pass pending.] Here is the race in one chart. [Numbers pending.] Binary quantization keeps one sign bit per dimension, so candidate generation is Hamming distance over 128-byte codes in RAM, then the top os times k candidates are rescored with the fp16 vectors. That is what gives Zero its speed back.</aside>
+</section>

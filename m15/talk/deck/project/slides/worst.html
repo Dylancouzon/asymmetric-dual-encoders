@@ -8,14 +8,13 @@
 <p style="position:absolute;left:557px;top:464px;width:300px;text-align:right;font-size:28px;font-weight:600;color:#ff516b">gte-large-en-v1.5</p>
 <p style="position:absolute;left:500px;top:67px;width:230px;text-align:right;font-size:30px;font-weight:600;color:#fcfdff">Stella</p>
 </div>
-<div class="col" style="width:600px;gap:28px;margin-top:40px">
-<p class="cap">One cheap fit per model:</p>
-<p class="eq" style="font-size:32px;white-space:nowrap">min ‖XW − Y‖² + λ‖W − W₀‖²</p>
-<p class="num" style="font-size:88px">4–7 min</p>
-<p class="cap">per model on one A100. Then measure ranking on judged queries.</p>
+<div class="col" style="width:600px;gap:30px;margin-top:8px">
+<div class="kv"><p class="k2">Screening fit, per model</p><p class="eq" style="font-size:30px;white-space:nowrap">min ‖XW − Y‖² + λ‖W − W₀‖²</p><p class="d2">4–7 min on one A100</p></div>
+<div class="kv"><p class="k2">Rank correlation, 26 models</p><p class="v2">ρ = +0.09</p><p class="d2">teacher nDCG vs table nDCG</p></div>
+<div class="kv"><p class="k2">Holding width fixed</p><p class="v2" style="font-size:36px;white-space:nowrap">β_quality +0.63 · β_dim −0.64</p><p class="d2">higher-dimensional teachers predicted weaker tables</p></div>
 </div>
 </div>
-<p class="src">Ten registered models, six BEIR datasets, exact search. Full 26-model study in the paper.</p>
+<p class="src">Plot: ten registered models, six BEIR datasets, exact search. ρ and β: all 26 models, standardized coefficients (exploratory). e5 tables matched their teachers at cosine 0.90 and still ranked below Stella’s table at 0.78.</p>
 <aside>[~1.75 min] I'd expected the strongest retriever to give me the strongest cheap student. To test that, I fitted one lookup table for each of 10 public embedding models in the registered comparison. Each model kept its own document index. The equation shows the ridge fit for those screening tables. X is the token counts divided by the number of tokens in the query, and Y is the model's own query vectors. I fit the rows so the pooled vectors approach Y. The penalty keeps the rows close to what the teacher outputs when I encode each token alone.
 
 Each screen took four to seven minutes on an A100. Then I measured exact ranking on six BEIR datasets. [Point to gte-large, then Stella.] The farther a dot is to the right, the better the original retriever. The higher it is, the better the table. gte-large is farthest to the right and gave me the weakest table of these 10 models. Stella gave me the strongest table. Even close agreement with the teacher's query vectors could go with worse ranking. Once a fit takes minutes, I can spend my time measuring the ranking I want on the queries I serve.</aside>

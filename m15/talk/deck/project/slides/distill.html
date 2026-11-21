@@ -1,0 +1,13 @@
+<section id="distill" class="s" data-transition="fade">
+<div class="head"><h2>Distill Into a Frozen Space</h2></div>
+<div class="fxbox" style="margin-top:16px;padding:40px 48px">
+<p class="fx" style="font-size:48px">min<span class="mut">_θ</span>  𝔼<span class="mut">_x</span> ‖ f̂<span class="mut">_θ</span>(x) − Ê<span class="mut">_S</span>(x) ‖²</p>
+<p class="fxl">f_θ: student · E_S: Stella query encoder (teacher) · Ê_D(d): frozen, never re-encoded</p>
+</div>
+<div class="row" style="gap:48px;margin-top:40px">
+<div class="kv" style="flex:1"><p class="k2">Targets</p><p class="v2">computed once</p><p class="d2">Teacher vectors for the training texts. A new teacher costs 8–12 h of target encoding.</p></div>
+<div class="kv" style="flex:1"><p class="k2">Labels</p><p class="v2">none</p><p class="d2">The vector fit needs no relevance judgments. Zero adds a ranking phase that uses positives.</p></div>
+<div class="kv" style="flex:1"><p class="k2">Index</p><p class="v2">untouched</p><p class="d2">Vectors, HNSW graph and quantized codes stay as they are.</p></div>
+</div>
+<aside>[Draft notes; Sol pass pending.] How do you build a cheaper query encoder for an index you already have? Treat the original query encoder as the teacher. Run it once over a large set of texts, keep its normalized vectors, and train a student to land on the same points. The document side is frozen, so anything the student learns is measured against the vectors already in your index. The vector fit needs no relevance labels. For a new teacher, computing the targets is the main cost: 8 to 12 hours of encoding in our setup.</aside>
+</section>

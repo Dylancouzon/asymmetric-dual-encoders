@@ -1,0 +1,20 @@
+<section id="arch" class="s" data-transition="fade">
+<div class="head"><h2>One Index, Three Query Encoders</h2></div>
+<div class="lane3" style="margin-top:8px">
+<p class="lname mut">Documents</p>
+<div class="pipe"><p class="pnode">passage</p><p class="par">→</p><p class="pnode g">Stella · 24 × 1024</p><p class="par">→</p><p class="pnode">mean pool</p><p class="par">→</p><p class="pnode">Dense 1024²</p><p class="par">→</p><p class="pnode">L2 · fp16</p><p class="fxl">once</p></div>
+</div>
+<div class="fxbox" style="flex-direction:row;gap:40px;align-items:center;padding:22px 32px">
+<p class="spec" style="color:#fcfdff;font-weight:600">Index</p>
+<p class="spec" style="white-space:nowrap">2.68M × 1024 · fp16</p><p class="spec" style="white-space:nowrap">HNSW m 16 · ef_c 100</p><p class="spec" style="white-space:nowrap">BQ 128 B/vec · 343 MB RAM</p>
+</div>
+<div class="lane3" style="gap:28px 32px">
+<p class="lname">Stella</p>
+<div class="pipe"><p class="pnode">prompt + query</p><p class="par">→</p><p class="pnode g">24 × 1024 transformer</p><p class="par">→</p><p class="pnode">mean</p><p class="par">→</p><p class="pnode">Dense</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">31.6 ms</p></div>
+<p class="lname tv">Nano</p>
+<div class="pipe"><p class="pnode">query</p><p class="par">→</p><p class="pnode v">bge-small 12 × 384</p><p class="par">→</p><p class="pnode">mean L4 ⊕ L8 ⊕ L12 ∈ ℝ¹¹⁵²</p><p class="par">→</p><p class="pnode">Linear → ℝ¹⁰²⁴</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">2.25 ms</p></div>
+<p class="lname tr">Zero</p>
+<div class="pipe"><p class="pnode">query</p><p class="par">→</p><p class="pnode">WordPiece</p><p class="par">→</p><p class="pnode r">gather W[t] · int8 30,522 × 1024</p><p class="par">→</p><p class="pnode">Σ √cₜ · W[t]</p><p class="par">→</p><p class="pnode">L2</p><p class="fxl">0.044 ms</p></div>
+</div>
+<aside>[Draft notes; Sol pass pending.] Here is the whole system. Documents go through Stella once: 24 layers, 1024 wide, mean pooling, a square Dense head, normalized, stored as fp16. The index is 2.7 million of those vectors in an HNSW graph, with binary quantization: one bit per dimension, 128 bytes per vector, 343 megabytes in RAM, and the fp16 originals on disk for rescoring. Three query encoders search it. Stella itself, with its instruction prompt. Nano: bge-small, the mean of layers 4, 8 and 12 concatenated into 1,152 features, one linear map into Stella's 1,024 dimensions. Zero: tokenize, gather one int8 row per token, square-root-weighted sum, normalize. Same vectors, same graph, no re-indexing: you pick one per request.</aside>
+</section>
