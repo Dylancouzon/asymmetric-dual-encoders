@@ -18,6 +18,7 @@ import json
 import math
 import os
 import sys
+import resource
 import threading
 import time
 from pathlib import Path
@@ -72,7 +73,7 @@ for r in RUNG:
         t0 = time.perf_counter(); serve(r, q); ts.append((time.perf_counter() - t0) * 1000)
     BASE[r] = float(np.median(ts))
 
-state = {"rate": 40.0, "mode": "stella", "budget_ms": 150.0}
+state = {"rate": 40.0, "mode": "stella", "budget_ms": 100.0, "workers": WORKERS}
 queue = collections.deque()
 cv = threading.Condition()
 done = collections.deque(maxlen=200_000)       # (t_done, latency_ms, encoder, ndcg, rung, queue_ms, enc_ms, search_ms)
@@ -80,7 +81,11 @@ dropped = collections.deque(maxlen=200_000)    # t of each dropped arrival
 arrivals = collections.deque(maxlen=200_000)   # [t_arrival_wall, ok, trial]; ok None until known
 pins = []
 trial = {"id": 0, "end": 0.0, "mode": None, "rate": 0.0}   # a timed, seeded trial; 0 = none running
+SETTLE_S = 3.0                                  # warm-up before a trial, so the new mode starts warm
+paused_until = [0.0]
+cpu = {"cores": 0.0, "last": None}
 TRIAL_S = float(os.environ.get("TRIAL_S", "12"))
+TRIAL_LOG = REPO / "work/m15/logs/spike_trials.jsonl"
 reseed = [False]
 HEADROOM = 0.85                                 # auto plans to 85% of the budget
 service = dict(BASE)                           # EWMA ms under current load
@@ -105,11 +110,20 @@ def generator():
     k, nxt = 0, time.perf_counter()
     while True:
         now = time.perf_counter()
-        if reseed[0]:                     # every trial replays the trace from its start
+        warming = time.time() < paused_until[0]
+        if reseed[0] and not warming:     # trial starts: drop warm-up leftovers, replay the trace from its start
+            with cv:
+                for _, _, rec in queue:
+                    rec[1] = False
+                queue.clear()
             k, nxt, reseed[0] = 0, now, False
+        # Warm-up before a trial: real traffic in the new mode at 30% of the trial rate (at most 300/s), so
+        # per-thread model state and disk pages are warm when the measured trace starts.
+        rate = min(0.3 * state["rate"], 300.0) if warming else state["rate"]
         with cv:
             while nxt <= now:
-                rec = [time.time() - (now - nxt), None, trial["id"] if time.time() < trial["end"] else 0]
+                rec = [time.time() - (now - nxt), None,
+                       trial["id"] if trial.get("start", 0) <= time.time() < trial["end"] else 0]
                 arrivals.append(rec)
                 qi, gap = int(QIDX[k % len(QIDX)]), float(GAPS[k % len(GAPS)])
                 k += 1
@@ -118,7 +132,7 @@ def generator():
                     rec[1] = False
                 else:
                     queue.append((qi, nxt, rec))
-                nxt += gap / state["rate"]
+                nxt += gap / rate
             cv.notify_all()
         time.sleep(max(0.0, min(0.005, nxt - time.perf_counter())))
 
@@ -135,11 +149,11 @@ def choose(wait_ms):
     return LADDER[-1][0]
 
 
-def worker():
+def worker(idx):
     while True:
         with cv:
-            while not queue:
-                cv.wait()
+            while not queue or idx >= state["workers"]:   # workers above the live setting stay idle
+                cv.wait(0.05)
             i, t_arr, rec = queue.popleft()
         t0 = time.perf_counter()
         r = choose((t0 - t_arr) * 1000)
@@ -162,13 +176,24 @@ def index():
 
 
 @app.post("/set")
-def set_state(rate: float = None, mode: str = None, budget: float = None):
+def set_state(rate: float = None, mode: str = None, budget: float = None, workers: int = None,
+              enc: str = None, ef: int = None, os: float = None):
     if rate is not None:
         state["rate"] = max(1.0, min(5000.0, rate))
-    if mode in tuple(RUNG) + ("auto",):
-        state["mode"] = mode
     if budget is not None:
         state["budget_ms"] = max(1.0, budget)
+    if workers is not None:
+        state["workers"] = max(1, min(WORKERS, workers))
+        with cv:
+            cv.notify_all()
+    if enc in ORDER and ef and os:      # any encoder with any search setting, as a fixed "custom" mode
+        ef, os = max(4, min(4096, int(ef))), max(1.0, min(16.0, float(os)))
+        PARAMS["custom"] = E.SearchParams(hnsw_ef=ef, quantization=E.QuantizationSearchParams(rescore=True, oversampling=os))
+        RUNG["custom"] = (enc, ef, os)
+        BASE.setdefault("custom", BASE[enc]); service["custom"] = BASE[enc]; last_used.setdefault("custom", 0.0)
+        mode = "custom"
+    if mode in tuple(RUNG) + ("auto",):
+        state["mode"] = mode
     return state
 
 
@@ -193,9 +218,12 @@ def pin():
 def start_trial():
     """Empty the queue, replay the seeded trace for TRIAL_S seconds, then pin this trial's own results."""
     reset()
-    trial.update(id=trial["id"] + 1, end=time.time() + TRIAL_S, mode=state["mode"], rate=state["rate"], pinned=False)
+    start = time.time() + SETTLE_S
+    paused_until[0] = start
+    trial.update(id=trial["id"] + 1, start=start, end=start + TRIAL_S, mode=state["mode"], rate=state["rate"],
+                 setting=RUNG.get(state["mode"]), pinned=False)
     reseed[0] = True
-    return trial
+    return {k: v for k, v in trial.items()}
 
 
 def finish_trial():
@@ -203,11 +231,18 @@ def finish_trial():
     arr = [a for a in list(arrivals) if a[2] == tid]
     comp = [d for d in list(done) if d[8] == tid]
     lat = [d[1] for d in comp]
-    pins.append({"mode": trial["mode"], "rate": trial["rate"], "trial": True,
-                 "good_pct": 100.0 * sum(1 for a in arr if a[1]) / len(arr) if arr else 0.0,
-                 "p95_ms": float(np.percentile(lat, 95)) if lat else None,
-                 "ndcg10": float(np.mean([d[3] for d in comp])) if comp else 0.0,
-                 "served_per_s": len(comp) / TRIAL_S, "completed": len(comp), "offered": len(arr)})
+    med = lambda j: float(np.median([d[j] for d in comp])) if comp else None
+    row = {"mode": trial["mode"], "rate": trial["rate"], "trial": True, "budget_ms": state["budget_ms"],
+           "setting": trial.get("setting"), "workers": state["workers"],
+           "good_pct": 100.0 * sum(1 for a in arr if a[1]) / len(arr) if arr else 0.0,
+           "p95_ms": float(np.percentile(lat, 95)) if lat else None,
+           "ndcg10": float(np.mean([d[3] for d in comp])) if comp else 0.0,
+           "served_per_s": len(comp) / TRIAL_S, "completed": len(comp), "offered": len(arr),
+           "split_ms": {"queue": med(5), "encode": med(6), "search": med(7)}}
+    pins.append(row)
+    # Keep every trial across restarts (rehearsal and stage); demo observations, not registered results.
+    with open(TRIAL_LOG, "a") as f:
+        f.write(json.dumps({"t": time.strftime("%Y-%m-%dT%H:%M:%S"), "trial_s": TRIAL_S, "workers": WORKERS, **row}) + "\n")
     trial["pinned"] = True
 
 
@@ -225,6 +260,12 @@ def sampler():
         # Pin a trial once its last arrival's deadline has passed.
         if trial["id"] and not trial.get("pinned") and time.time() > trial["end"] + state["budget_ms"] / 1000 + 0.5:
             finish_trial()
+        t, r = time.time(), resource.getrusage(resource.RUSAGE_SELF)
+        used = r.ru_utime + r.ru_stime
+        if cpu["last"]:
+            dt = t - cpu["last"][0]
+            cpu["cores"] = 0.7 * cpu["cores"] + 0.3 * max(0.0, (used - cpu["last"][1]) / dt) if dt > 0 else cpu["cores"]
+        cpu["last"] = (t, used)
         HIST.append(snapshot())
         time.sleep(0.25)
 
@@ -259,6 +300,9 @@ def snapshot():
             "active": active[0][0] if active else None,
             "active_setting": (lambda r: f"{RUNG[r][0].capitalize()} · ef {RUNG[r][1]} · os {RUNG[r][2]:g}")(active[0][0]) if active else "",
             "trial_left": max(0.0, trial["end"] - now) if trial["id"] else 0.0,
+            "settling": max(0.0, paused_until[0] - now),
+            "cores_busy": round(cpu["cores"], 1), "cores_total": os.cpu_count(),
+            "setting": {"enc": RUNG[state["mode"]][0], "ef": RUNG[state["mode"]][1], "os": RUNG[state["mode"]][2]} if state["mode"] in RUNG else None,
             "service_ms": {k: round(v, 2) for k, v in service.items()},
             "base_ms": {k: round(v, 2) for k, v in BASE.items()},
             "n_docs": len(DOC_IDS), "workers": WORKERS}
@@ -269,5 +313,5 @@ if __name__ == "__main__":
     threading.Thread(target=generator, daemon=True).start()
     threading.Thread(target=sampler, daemon=True).start()
     for _ in range(WORKERS):
-        threading.Thread(target=worker, daemon=True).start()
+        threading.Thread(target=worker, args=(_,), daemon=True).start()
     uvicorn.run(app, host="127.0.0.1", port=8766, log_level="warning")
