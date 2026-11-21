@@ -2,46 +2,64 @@
 <html lang="en"><head><meta charset="utf-8"><title>Workload Studio</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
+html{font-size:clamp(8px,0.833vw,16px)}   /* everything scales with the window; 16px at 1920 wide */
+
 :root{--bg:#090c14;--panel:#111827;--card:#0d1320;--line:#262c3d;--txt:#f0f3fa;--mut:#9aa0b5;--ok:#3fc1a5;--bad:#ff516b;--warn:#f5a623;
   --stella:#c9cede;--nano:#9494ff;--zero:#ff516b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:"Mona Sans",-apple-system,Segoe UI,Arial,sans-serif}
-.app{display:grid;grid-template-columns:480px 1fr;gap:22px;padding:22px 28px;height:100vh}
-.panel{background:var(--panel);border-radius:18px;padding:16px 20px;min-height:0}
-.ctl{display:flex;flex-direction:column;gap:12px;overflow:auto}
-h1{font-size:32px;margin:0}h1+p{margin:2px 0 0;color:var(--mut);font-size:19px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
-.card h2{font-size:17px;letter-spacing:3px;color:var(--mut);margin:0 0 8px;font-weight:600;display:flex;justify-content:space-between}
-.card h2 b{letter-spacing:0;color:var(--txt);font-size:24px}
-.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.presets button{font:inherit;font-size:21px;font-weight:700;padding:11px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer}
+.app{display:grid;grid-template-columns:30rem 1fr;gap:1.375rem;padding:1.375rem 1.75rem;height:100vh}
+.panel{background:var(--panel);border-radius:1.125rem;padding:1rem 1.25rem;min-height:0}
+.ctl{display:flex;flex-direction:column;gap:0.75rem;overflow:auto}
+h1{font-size:2rem;margin:0}h1+p{margin:2px 0 0;color:var(--mut);font-size:1.1875rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:0.875rem;padding:0.75rem 1rem}
+.card h2{font-size:1.0625rem;letter-spacing:3px;color:var(--mut);margin:0 0 0.5rem;font-weight:600;display:flex;justify-content:space-between}
+.card h2 b{letter-spacing:0;color:var(--txt);font-size:1.5rem}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+.presets button{font:inherit;font-size:1.3125rem;font-weight:700;padding:0.6875rem 0.5rem;border-radius:0.75rem;border:2px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer}
 .presets button:hover{border-color:#9494ff}
-input[type=range]{width:100%;accent-color:#9494ff;height:30px;margin:2px 0}
-.seg{display:flex;gap:6px;margin:6px 0}.seg button{flex:1;font:inherit;font-size:20px;font-weight:600;padding:8px 6px;border-radius:10px;border:2px solid var(--line);background:#0b0f19;color:var(--mut);cursor:pointer}
+input[type=range]{width:100%;accent-color:#9494ff;height:1.875rem;margin:2px 0}
+.seg{display:flex;gap:0.375rem;margin:0.375rem 0}.seg button{flex:1;font:inherit;font-size:1.25rem;font-weight:600;padding:0.5rem 0.375rem;border-radius:0.625rem;border:2px solid var(--line);background:#0b0f19;color:var(--mut);cursor:pointer}
 .seg button.on{border-color:var(--ok);color:var(--txt);background:#122a26}
-.tg{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;margin-top:6px}
-.tg button{font:inherit;font-size:20px;font-weight:700;padding:8px 14px;border-radius:10px;border:2px solid var(--warn);background:#0b0f19;color:var(--warn);cursor:pointer;white-space:nowrap}
+.tg{display:grid;grid-template-columns:auto 1fr;gap:0.875rem;align-items:center;margin-top:0.375rem}
+.tg button{font:inherit;font-size:1.25rem;font-weight:700;padding:0.5rem 0.875rem;border-radius:0.625rem;border:2px solid var(--warn);background:#0b0f19;color:var(--warn);cursor:pointer;white-space:nowrap}
 .tg button.on{background:var(--warn);color:#0b0f19}
 .tg .sub{display:none}.tg.open .sub{display:block}
-.sub label{font-size:18px;color:var(--mut)}
-.mix{display:grid;grid-template-columns:96px 1fr 60px;align-items:center;gap:10px;font-size:21px}
-.mix b{text-align:right}.hint{font-size:19px;color:var(--mut);margin:4px 0}
-details summary{font-size:17px;letter-spacing:3px;color:var(--mut);cursor:pointer;font-weight:600}
-.encrow{display:grid;grid-template-columns:76px 1fr 60px 74px;align-items:center;gap:8px;font-size:19px;margin:4px 0}
-.encrow select{font:inherit;font-size:19px;background:#0b0f19;color:var(--txt);border:2px solid var(--line);border-radius:8px;padding:2px 6px}
-.dot{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:8px}
-.right{display:grid;grid-template-rows:auto 1fr auto;gap:18px;min-height:0}
-.tiles{display:grid;grid-template-columns:1.2fr 1.6fr 1fr 1fr;gap:16px}
-.t .k{font-size:21px;color:var(--mut)}.t .v{font-size:60px;font-weight:700;line-height:1.05;white-space:nowrap}
-.t .d{font-size:20px;color:var(--mut);white-space:nowrap}.t .d b{color:var(--txt)}.t .d b.bad{color:var(--bad)}
-.t.g{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border:3px solid transparent}.t.g.over{border-color:var(--bad)}
-.verdict{font-size:20px;font-weight:700}
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
-.chart{display:flex;flex-direction:column}.chart .k{font-size:20px;color:var(--mut);margin-bottom:4px}canvas{flex:1;width:100%;min-height:0}
-.bottom{display:grid;grid-template-columns:1fr 1.3fr;gap:16px;min-height:250px}
-.bottom .k{font-size:20px;color:var(--mut);margin-bottom:2px}
-table{width:100%;border-collapse:collapse;font-size:23px}th{font-size:16px;color:var(--mut);font-weight:500;text-align:right;padding:2px 8px}
-th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8px;border-top:1px solid var(--line)}
-.pins td{font-size:20px}
+.sub label{font-size:1.125rem;color:var(--mut)}
+.mix{display:grid;grid-template-columns:6rem 1fr 3.75rem;align-items:center;gap:0.625rem;font-size:1.3125rem}
+.mix b{text-align:right}.hint{font-size:1.1875rem;color:var(--mut);margin:0.25rem 0}
+details summary{font-size:1.0625rem;letter-spacing:3px;color:var(--mut);cursor:pointer;font-weight:600}
+.encrow{display:grid;grid-template-columns:4.75rem 1fr 3.75rem 4.625rem;align-items:center;gap:0.5rem;font-size:1.1875rem;margin:0.25rem 0}
+.encrow select{font:inherit;font-size:1.1875rem;background:#0b0f19;color:var(--txt);border:2px solid var(--line);border-radius:0.5rem;padding:2px 0.375rem}
+.dot{display:inline-block;width:0.875rem;height:0.875rem;border-radius:0.25rem;margin-right:0.5rem}
+.right{display:grid;grid-template-rows:auto 1fr auto;gap:1.125rem;min-height:0}
+.tiles{display:grid;grid-template-columns:1.2fr 1.6fr 1fr 1fr;gap:1rem}
+.t .k{font-size:1.3125rem;color:var(--mut)}.t .v{font-size:3.75rem;font-weight:700;line-height:1.05;white-space:nowrap}
+.t .d{font-size:1.25rem;color:var(--mut);white-space:nowrap}.t .d b{color:var(--txt)}.t .d b.bad{color:var(--bad)}
+.t.g{display:grid;grid-template-columns:auto 1fr;gap:0.875rem;align-items:center;border:3px solid transparent}.t.g.over{border-color:var(--bad)}
+.verdict{font-size:1.25rem;font-weight:700}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:1rem;min-height:0}
+.chart{display:flex;flex-direction:column}.chart .k{font-size:1.25rem;color:var(--mut);margin-bottom:0.25rem}canvas{flex:1;width:100%;min-height:0}
+.bottom{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem;min-height:15.625rem}
+.bottom .k{font-size:1.25rem;color:var(--mut);margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:1.4375rem}th{font-size:1rem;color:var(--mut);font-weight:500;text-align:right;padding:2px 0.5rem}
+th:first-child,td:first-child{text-align:left}td{text-align:right;padding:0.3125rem 0.5rem;border-top:1px solid var(--line)}
+.pins td{font-size:1.25rem}
+
+#g{width:10.6rem;height:6.75rem}
+@media (max-width:900px){              /* phones and narrow windows: one column, page scrolls */
+  html{font-size:12px}
+  .app{grid-template-columns:minmax(0,1fr);height:auto}
+  .right{grid-template-rows:auto}
+  .tiles,.presets{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .charts,.bottom{grid-template-columns:minmax(0,1fr)}
+  .chart{height:260px}
+  .bottom>.panel{min-height:260px}
+  .app{padding:12px;gap:12px}
+  .app *{min-width:0}
+  .t .v,.t .d{white-space:normal}
+  .t.g{grid-template-columns:1fr}
+  .tiles{gap:8px}
+}
 </style></head><body><div class="app">
 <div class="panel ctl">
   <div><h1>Workload studio</h1><p id="sub"></p></div>
@@ -72,7 +90,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:5px 8p
 <div class="right">
   <div class="tiles">
     <div class="panel t"><div class="k">traffic</div><div class="v" id="arr">–</div><div class="d" id="flow1"></div><div class="d" id="flow2"></div></div>
-    <div class="panel t g" id="gt"><svg id="g" width="170" height="108" viewBox="0 0 190 120"></svg>
+    <div class="panel t g" id="gt"><svg id="g" viewBox="0 0 190 120"></svg>
       <div><div class="k" id="p95k">p95 latency</div><div class="v" id="p95">–</div><div class="verdict" id="verdict"></div></div></div>
     <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d"></div></div>
     <div class="panel t"><div class="k">machine load</div><div class="v" id="load">–</div><div class="d" id="load_d"></div></div>
@@ -151,16 +169,17 @@ function gauge(p95, target) {
 function cv(id) { const c = $(id), r = c.getBoundingClientRect(), d = devicePixelRatio || 1;
   if (c.width !== Math.round(r.width * d) || c.height !== Math.round(r.height * d)) { c.width = r.width * d; c.height = r.height * d; }
   const x = c.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height]; }
+const REM = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
 function chart(id, ticks, fy, fmt, layers) {
-  const [x, w, h] = cv(id), now = H[H.length - 1].t, L = 64, tx = t => L + (w - L) * (1 - (now - t) / 60);
-  x.font = "18px -apple-system, sans-serif"; x.fillStyle = "#9aa0b5"; x.strokeStyle = "#262c3d"; x.lineWidth = 1;
+  const rem = REM(), [x, w, h] = cv(id), now = H[H.length - 1].t, L = 4 * rem, tx = t => L + (w - L) * (1 - (now - t) / 60);
+  x.font = `${Math.round(1.1 * rem)}px -apple-system, sans-serif`; x.fillStyle = "#9aa0b5"; x.strokeStyle = "#262c3d"; x.lineWidth = 1;
   for (const v of ticks) { const y = fy(v, h); x.beginPath(); x.moveTo(L, y); x.lineTo(w, y); x.stroke(); x.fillText(fmt(v), 0, y + 6); }
   for (const ly of layers) ly(x, tx, h);
-  x.font = "600 18px -apple-system, sans-serif";      // control changes, so cause and effect line up
+  x.font = `600 ${Math.round(1.1 * rem)}px -apple-system, sans-serif`;      // control changes, so cause and effect line up
   const evs = ((S && S.events) || []).filter((e, i, a) => i === a.length - 1 || a[i + 1][0] - e[0] > 4);   // drop markers crowded by a newer one
   for (const [t, label] of evs) { const ex = tx(t); if (ex < L) continue;
     x.strokeStyle = "#f5a623"; x.lineWidth = 2; x.setLineDash([4, 6]); x.beginPath(); x.moveTo(ex, 0); x.lineTo(ex, h); x.stroke(); x.setLineDash([]);
-    x.fillStyle = "#f5a623"; x.fillText(label, Math.min(ex + 6, w - x.measureText(label).width - 4), 18); }
+    x.fillStyle = "#f5a623"; x.fillText(label, Math.min(ex + 6, w - x.measureText(label).width - 4), 1.3 * rem); }
 }
 const latOf = s => s.fanout > 1 ? s.task_p95_ms : s.p95_ms;
 function draw() {
