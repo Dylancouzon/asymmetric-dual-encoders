@@ -1116,3 +1116,5 @@ Session on `main`, then on this branch. M20's measurements had landed (`results/
   median) per million Stella queries.
 - Owner rulings: laptop-only stage demo; NQ encoded on the RTX box; VM in us-east1 left running until
   the end-to-end run; log all talk results in m15; commit and push freely.
+
+- 2026-11-21 02:34: RTX box crashed during the NQ encode after 29 of 54 shards (cause not diagnosed; no kernel log survived the restart). Owner restarted it; all 29 shards verified intact and the encode resumed from shard 29. The Mac had slept from about 00:32 to 02:30, pausing the watchdog; `caffeinate -i` now runs for the session.

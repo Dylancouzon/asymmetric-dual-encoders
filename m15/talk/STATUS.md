@@ -13,7 +13,7 @@ Owner notes: high technical bar but not academic; depth in mechanisms, statistic
 - Deck v1: 18 main slides + 4 hidden backups, Astra storyboard and deck reviews applied, Sol narration in every `<aside>` (29.5 min main).
 
 ## Running
-- NQ (2,681,468 passages) Stella doc encode on the RTX box. Restarted 23:45 EST at BATCH_TOKENS=8192 after VRAM spill (shard 1 took 58 min); now about 6.2 min/shard (135 passages/s), ETA Sat 2026-11-21 about 05:00 EST. Watchdog `bash m15/talk/ops/watch_nq.sh`, heartbeat `/tmp/claude-501/hb_nq.txt`: `ssh dylan@100.114.121.66`, log `~/constella-talk/encode_nq.log`, output `~/constella-talk/work/nq_stella/`.
+- NQ (2,681,468 passages) Stella doc encode on the RTX box. Restarted 23:45 EST at BATCH_TOKENS=8192 after VRAM spill (shard 1 took 58 min); about 6 min/shard (148 passages/s). Box crashed after shard 28 (cause unknown; owner restarted it 02:34); 29 shards verified intact (shape, unit norm, no NaN) and the encode resumed at shard 29. ETA about 05:00 EST. Watchdog `bash m15/talk/ops/watch_nq.sh`, heartbeat `/tmp/claude-501/hb_nq.txt`: `ssh dylan@100.114.121.66`, log `~/constella-talk/encode_nq.log`, output `~/constella-talk/work/nq_stella/`.
 
 ## VM (owner-provided, pay per minute)
 - GCP `c4-standard-8`, us-east1-b, `ssh dylan@34.24.205.71`, code in `~/ade` (bundle of m15src, bench/core.py, m11/release, m7/FREEZE.json, NQ M20 pins), venv pinned to local versions. On-demand list price about $0.395/h.
