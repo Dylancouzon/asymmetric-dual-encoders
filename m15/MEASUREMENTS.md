@@ -771,14 +771,14 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   Python's global interpreter lock and the single Edge process bound the cheap encoders.
 - **T5 demo.** `m15/talk/demo/studio/` (the stage demo, a "workload studio"; run `app.py`) replays the
   3,452 judged NQ test queries from a fixed seeded trace against the NQ Edge shard (14 worker threads, one
-  process) as continuous traffic with live controls: rate, pattern, spike, agent fan-out, pause, a manual
-  split across encoders, or Auto, plus each encoder's HNSW ef and oversampling. A paced background bench
-  scores each encoder's current search setting on 1,000 seeded judged queries with cached query vectors.
-  Auto (`allocator.py`) re-plans every 250 ms: it picks traffic shares that maximize average nDCG@10 with
-  the average at or above the floor, inside measured encode and shard capacity scaled by a headroom that
-  p95 feedback tunes against the target; under overload it sheds the excess. Startup quality on this
-  laptop: Stella 0.627, Nano 0.582, Zero 0.507 (ef 1024 x8); capacity Stella 80, Nano 1,292, Zero 17,516
-  encodes/s. Demo observations, not measurements; nothing is recorded to disk.
+  process) as continuous traffic with live controls: rate, pattern, spike, agent fan-out, pause, Auto, or a manual
+  split with per-encoder HNSW ef and oversampling. Every query is served; a full queue holds the replay back and
+  the wait counts in latency. Auto (`allocator.py`) re-plans every 250 ms over traffic shares and one shared search
+  preset (ef 128, 256 or 512 with oversampling 4, or ef 1024 with 8): best average nDCG@10 at or above the floor,
+  inside measured encode and shard capacity scaled by a headroom that p95 feedback tunes. Quality per setting comes
+  from T3's sweep (`results/m15_talk_edge_nq.json`). Rehearsal on the M5 Pro (floor 0.50, target 150 ms): 40/s
+  Stella; 600/s Nano; 1,500/s Nano and Zero at ef 256, 0 of 20 seconds over target in four runs; 2,000/s at ef 128,
+  0-4 of 20 over; one process serves about 2,600/s whatever the mix. Demo observations, not measurements.
 - **T6 NQ document encode and parity.** BEIR NQ corpus (revision `b7253e6c`, 2,681,468 passages) on
   the RTX 3080 (WSL2, CUDA, fp32 compute, max length 512, no prompt, fp16 store, 54 shards of 50,000,
   batch_tokens 8,192). Encode cost is the steady-state rate from shard file times (shards 3-52, the

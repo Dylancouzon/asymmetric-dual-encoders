@@ -3,8 +3,8 @@
 Arrivals follow a fixed seeded trace (exponential gaps, query ids), shaped by the controls: rate, a steady /
 daily-wave / bursts pattern, a spike switch, and agent tasks (one task = several searches issued together, done
 when the slowest returns). One FIFO queue feeds a pool of worker threads; each request is encoded by the chosen
-encoder, searched on the shared Edge shard, and scored against the NQ judgments. A request that has already waited
-past its deadline is shed instead of served: it would miss the latency target anyway.
+encoder, searched on the shared Edge shard, and scored against the NQ judgments. Every query is served: when the
+queue is full, the replay waits, and each query keeps its scheduled arrival time, so the wait counts in latency.
 """
 import collections
 import math
@@ -14,10 +14,16 @@ import time
 
 import numpy as np
 
-from quality import ndcg10
-
 ENCODERS = ("stella", "nano", "zero")
-MAX_QUEUE = 1500                              # beyond this, arrivals are dropped
+MAX_QUEUE = 5000                              # bounds memory; beyond it the replay falls behind schedule instead
+
+
+def ndcg10(relevant: dict, ranked: list) -> float:
+    """relevant: {doc_id: grade}; ranked: doc ids in rank order. Binary gain, as in the BEIR NQ judgments."""
+    dcg = sum(1 / math.log2(i + 2) for i, d in enumerate(ranked[:10]) if relevant.get(d, 0) > 0)
+    n_rel = sum(1 for g in relevant.values() if g > 0)
+    ideal = sum(1 / math.log2(i + 2) for i in range(min(10, n_rel)))
+    return dcg / ideal if ideal else 0.0
 
 
 class Workload:
@@ -28,16 +34,12 @@ class Workload:
         rng = np.random.default_rng(0)
         self.gaps, self.qidx = rng.exponential(1.0, 2_000_000), rng.integers(0, len(queries), 2_000_000)
         self.queue, self.cv = collections.deque(), threading.Condition()
-        # (t, latency_ms, encoder, ndcg, queue_ms, encode_ms, search_ms, shard_wait_ms)
+        # (t, latency_ms, encoder, ndcg, queue_ms, encode_ms, search_ms, (ef, oversampling))
         self.done = collections.deque(maxlen=100_000)
         self.arrived = collections.deque(maxlen=100_000)
-        self.dropped = collections.deque(maxlen=100_000)     # shed at arrival (admission or full queue)
-        self.expired = collections.deque(maxlen=100_000)     # shed in the queue, past the deadline
         self.tasks = collections.deque(maxlen=50_000)      # (t, latency of the slowest search in an agent task)
-        self._groups = {}
         self.shares = {"stella": 1.0, "nano": 0.0, "zero": 0.0}   # dispatch weights, set by the router
-        self.admit = 1.0                                           # share of arrivals admitted (shedding < 1)
-        self.deadline_ms = float("inf")                            # longest queue wait worth serving
+        self.behind_s = 0.0                                        # how far the replay lags its schedule
         self.epoch = time.time()                                   # origin of the wave / bursts pattern
         self._rng = random.Random(1)
 
@@ -65,26 +67,21 @@ class Workload:
         while True:
             now, wall = time.perf_counter(), time.time()
             rate = self.offered_rate(wall)
-            if rate <= 0:                     # paused
-                nxt = now
+            if rate <= 0:                     # paused: the schedule restarts on resume
+                nxt, self.behind_s = now, 0.0
                 time.sleep(0.02)
                 continue
             fanout = max(1, int(self.state["fanout"]))
             with self.cv:
-                while nxt <= now:
+                while nxt <= now and len(self.queue) + fanout <= MAX_QUEUE:
+                    group = [fanout, 0.0] if fanout > 1 else None   # searches left, slowest latency
                     arrival = wall - (now - nxt)
-                    group = None
-                    if fanout > 1:
-                        group = [fanout, 0.0, False]       # searches left, slowest latency, any shed
-                    admitted = self._rng.random() < self.admit and len(self.queue) + fanout <= MAX_QUEUE
                     for j in range(fanout):
                         self.arrived.append(arrival)
-                        if admitted:
-                            self.queue.append((int(self.qidx[(k + j) % len(self.qidx)]), nxt, group))
-                        else:
-                            self.dropped.append(wall)
+                        self.queue.append((int(self.qidx[(k + j) % len(self.qidx)]), nxt, group))
                     k += fanout
                     nxt += float(self.gaps[k % len(self.gaps)]) * fanout / rate
+                self.behind_s = max(0.0, now - nxt)
                 self.cv.notify_all()
             time.sleep(max(0.0, min(0.005, nxt - time.perf_counter())))
 
@@ -104,27 +101,21 @@ class Workload:
                     self.cv.wait(0.05)
                 qi, t_arrival, group = self.queue.popleft()
             t0 = time.perf_counter()
-            if (t0 - t_arrival) * 1000 > self.deadline_ms:
-                self.expired.append(time.time())
-                if group is not None:
-                    with self.cv:
-                        group[0], group[2] = group[0] - 1, True
-                continue
             name = self.pick_encoder()
             ef, oversampling = self.state["search"][name]
             vector = self.encoders[name].encode([self.queries[qi]])[0]
             t1 = time.perf_counter()
-            ids, wait_ms, search_ms = self.search.search(vector, ef, oversampling)
+            ids, _, search_ms = self.search.search(vector, ef, oversampling)
             t2 = time.perf_counter()
             latency = (t2 - t_arrival) * 1000
             score = ndcg10(self.qrels.get(self.qids[qi], {}), [self.doc_ids[p] for p in ids])
             self.done.append((time.time(), latency, name, score, (t0 - t_arrival) * 1000,
-                              (t1 - t0) * 1000, search_ms, wait_ms))
+                              (t1 - t0) * 1000, search_ms, (ef, oversampling)))
             if group is not None:             # an agent task finishes with its slowest search
                 with self.cv:
                     group[0] -= 1
                     group[1] = max(group[1], latency)
-                    if group[0] == 0 and not group[2]:
+                    if group[0] == 0:
                         self.tasks.append((time.time(), group[1]))
 
     # ---- recent windows ------------------------------------------------------------------------------
