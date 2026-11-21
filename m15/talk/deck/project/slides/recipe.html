@@ -1,15 +1,21 @@
 <section id="recipe" class="s" data-transition="fade">
 <div class="head"><h2>The Monday Recipe</h2></div>
-<div class="fxbox" style="margin-top:8px;padding:36px 48px">
-<p class="fx">(e, ef, os)* = argmin  p50<span class="mut">_total</span>(e, ef, os)</p>
-<p class="fx">        s.t.  nDCG@10(e, ef, os) ≥ <span class="tr">floor</span></p>
-<p class="fx">              p95<span class="mut">_total</span>(e, ef, os) ≤ <span class="tr">budget</span></p>
-</div>
+<div class="fl" style="gap:40px;align-items:stretch;margin-top:8px"><div class="fxbox" style="flex:1;padding:32px 40px">
+<p class="fx" style="font-size:34px;white-space:pre">(e, ef, os)* = argmin  p50<span class="mut">_total</span>(e, ef, os)</p>
+<p class="fx" style="font-size:34px;white-space:pre">        s.t.  nDCG@10(e, ef, os) ≥ <span class="tr">floor</span></p>
+<p class="fx" style="font-size:34px;white-space:pre">              p95<span class="mut">_total</span>(e, ef, os) ≤ <span class="tr">budget</span></p>
+</div><div class="dtab" style="width:600px;display:grid;grid-template-columns:150px 250px 200px;font-size:26px">
+<p class="hd" style="padding:8px 14px">floor</p><p class="hd" style="padding:8px 14px">solution</p><p class="hd" style="padding:8px 14px">p50 · p95</p>
+<p style="padding:8px 14px">0.50</p><p style="padding:8px 14px"><span class="tr">Zero</span> 512·4</p><p style="padding:8px 14px">0.49 · 0.96</p>
+<p style="padding:8px 14px">0.55</p><p style="padding:8px 14px"><span style="color:#9494ff">Nano</span> 64·4</p><p style="padding:8px 14px">1.74 · 2.12</p>
+<p style="padding:8px 14px">0.62</p><p style="padding:8px 14px">Stella 64·8</p><p style="padding:8px 14px">20.6 · 34.6</p>
+</div></div>
 <div class="steps" style="margin-top:40px">
 <div class="step"><p class="sn">01</p><p class="st">Judged queries</p><p class="sd">sampled from your traffic</p></div>
 <div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">per encoder, on your index</p></div>
 <div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">per encoder, time encode + search</p></div>
 <div class="step"><p class="sn">04</p><p class="st">Solve and ship</p><p class="sd">carry (ef, os) with the encoder choice</p></div>
 </div>
-<aside>[Draft notes; Sol pass pending.] Here is the whole method as one optimization. Choose the encoder e, the search breadth ef and the oversampling os that minimize median request time, subject to a relevance floor and a p95 budget that you set before you look. To fill it in: sample and judge real queries; measure each encoder with exact search on your own index, so the graph doesn't hide encoder quality; sweep ef and oversampling for each encoder separately, timing encoding and search together; then pick the cheapest point that clears both constraints. If you serve several budgets, the search settings travel with the encoder choice. The index stays the same.</aside>
+<p class="src">Solved on BEIR NQ: 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential; nDCG@10 floor, times in ms, ef · os, ef ≥ 64. Exploratory.</p>
+<aside>[Draft notes; Sol pass pending.] Here is the whole method as one optimization. Choose the encoder e, the search breadth ef and the oversampling os that minimize median request time, subject to a relevance floor and a p95 budget that you set before you look. To fill it in: sample and judge real queries; measure each encoder with exact search on your own index, so the graph doesn't hide encoder quality; sweep ef and oversampling for each encoder separately, timing encoding and search together; then pick the cheapest point that clears both constraints. If you serve several budgets, the search settings travel with the encoder choice. The index stays the same. Solved on tonight's NQ index: a floor of 0.50 picks Zero at half a millisecond, 0.55 picks Nano at 1.7, and 0.62 needs Stella at 21 milliseconds, all on one index.</aside>
 </section>

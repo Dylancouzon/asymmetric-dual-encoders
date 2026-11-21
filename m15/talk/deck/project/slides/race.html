@@ -1,6 +1,6 @@
 <section id="race" class="s demo" data-transition="fade">
 <div class="live" style="background:rgba(148,148,255,0.14);border-color:#9494ff"><div class="dot" style="background:#9494ff"></div><p style="color:#dde0ff">REPLAY</p></div>
-<div class="head"><h2>[3,452] Questions, [2.7M] Wikipedia Passages</h2></div>
+<div class="head"><h2>3,452 Questions, 2.7M Wikipedia Passages</h2></div>
 <p class="lead">One Stella index in Qdrant Edge, in-process on this laptop.</p>
 <div class="fl" style="gap:48px;margin-top:40px">
 <div class="fl" style="gap:16px"><div style="width:40px;height:24px;border-radius:6px;background:#3fc1a5"></div><p class="watch">query encoding</p></div>
@@ -8,7 +8,7 @@
 </div>
 <aside>[~3.0 min] [Switch the shared screen to the demo. Open Race and press Space. Play the recorded fallback if the replay is unavailable.]
 
-I measured these queries one encoder at a time on this laptop. The lanes replay those per-query timings, so they can line up on screen without competing for the same CPU. The replay covers [3,452] questions. The dense lanes use one Stella index with [2.7M] Wikipedia passages. Qdrant Edge is running inside the demo process.
+I measured these queries one encoder at a time on this laptop. The lanes replay those per-query timings, so they can line up on screen without competing for the same CPU. The replay covers 3,452 questions. The dense lanes use one Stella index with 2.7M Wikipedia passages. Qdrant Edge is running inside the demo process.
 
 Follow the join in each bar. Teal is the time up to the point where I have a query vector. Orange is the time from there through the graph search. Start with Stella to see how much the encoder matters when it's the large transformer. Then watch Zero. The join comes early enough that you spend most of the race watching it search.
 
