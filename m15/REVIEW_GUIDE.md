@@ -2,18 +2,13 @@
 
 ## What is ready to review
 
-The current manuscript is **v22, Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes** on `m15-whitepaper` (v15 and v16 are in git history; `REVISION_PLAN_V17.md` records the
-frame, the voice contract, and the agreed claim wording). It is an empirical whitepaper for experienced search engineers. The goal is useful,
-credible research that improves Qdrant's reputation in that community. The thesis and content remain
-open to challenge; the owner has not accepted this draft.
+The current manuscript is **Swappable Query Encoders for a Frozen Index: From Transformer to Lookup Table** on `m15-whitepaper`. Start with [the PDF](latex/paper.pdf), [the Markdown source](PAPER.md), and [the evidence map](PAPER_EVIDENCE_MAP.md).
 
-The owner has finished drafting v22 and authorized the internal review Doc on 2026-10-02. Review the source snapshot identified in that Doc; [LOG.md](LOG.md) records revisions and checks. Earlier sign-offs apply to their named versions.
+The November 21 revision incorporates coauthor feedback and the Natural Questions cloud throughput experiment. [LOG.md](LOG.md) records the revisions. Earlier sign-offs apply to their named versions.
 
 The branch contains the current paper, its numerical result summaries, methods, experiment code,
 figures, original registered outcomes, negative findings, full-history synthesis, author preferences,
-and previous reviews with dispositions. All 55 local targets linked by the current manuscript's
-evidence map are tracked. That establishes source availability, not a new independent verification
-of every scientific conclusion.
+and previous reviews with dispositions. The evidence map links committed receipts and documents the scope of the results.
 
 **A fresh clone is sufficient for substantive review. It is not a complete, offline rerun bundle.**
 Large vectors, model weights, fit matrices, environments, and some raw logs are outside Git. The
@@ -28,8 +23,8 @@ Some experiments would need artifact recovery or reconstruction before an exact 
 | Is this clear, interesting, and useful for a production search engineer? | [PAPER.md](PAPER.md) | [Owner expectations](OWNER_PREFERENCES.md), [all potential learnings](LEARNINGS.md) |
 | Does a particular claim follow from the experiment? | [Current evidence map](PAPER_EVIDENCE_MAP.md) | [Numerical cards](EVIDENCE.md), the source result named in that row, [methods](MEASUREMENTS.md) |
 | Did we choose the right direction and findings from the whole project? | [Editorial rationale and alternatives](EDITORIAL_RATIONALE.md) | [LEARNINGS.md](LEARNINGS.md), its milestone coverage table and named historical FINDINGS/STATUS files |
-| Are confirmatory outcomes and unfavorable comparisons visible? | Paper Appendix A | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published reserved aggregate](../results/m13_reserved_run.json), [canonical benchmarks](../m21/BENCHMARKS.md) |
-| How strong are the ANN and query-precision conclusions? | Paper §3 and Appendix B | [C10/C14/C15 cards](EVIDENCE.md), E2/E16–E18 in [methods](MEASUREMENTS.md), [follow-up options](FOLLOWUP.md) |
+| Are confirmatory outcomes and unfavorable comparisons visible? | Paper §7 and Appendix B | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published held-out aggregate](../results/m13_reserved_run.json), [benchmarks](../m21/BENCHMARKS.md) |
+| What changes when search is included? | Paper §§5–6 and Appendix A | [C10/C17/C29 cards](EVIDENCE.md), E2/E20 and T4 in [methods](MEASUREMENTS.md) |
 | What did earlier reviewers find, and what was fixed? | [V15 dispositions](REVIEWS/2026-10-01-v15-synthesis.md) | [Reader review](REVIEWS/2026-10-01-v15-reader.md), [correctness review](REVIEWS/2026-10-01-v15-correctness.md), [LOG.md](LOG.md) |
 | Is a claim already established in prior work? | [Paper references](PAPER.md) | [Primary-source literature notes](RELATED_WORK.md) and the linked papers |
 | What exactly is in the branch? | [BRANCH_INVENTORY.md](BRANCH_INVENTORY.md) | [All baseline tracked paths and blob identities](BRANCH_FILES.tsv) |

@@ -1,6 +1,8 @@
 # M15 handoff (2026-10-01)
 
-## Current state (2026-10-02, end of session)
+The November 21 manuscript is available in [PAPER.md](PAPER.md) and [paper.pdf](latex/paper.pdf). See [README.md](README.md) for the current build entry point and [LOG.md](LOG.md) for the sync record.
+
+## October v22 state (2026-10-02, end of session)
 
 - Manuscript: **v22** in PAPER.md and latex/paper.pdf (17 pages). Decisions: REVISION_PLAN_V21.md and REVISION_PLAN_V22.md. Evidence: the v22 table at the top of PAPER_EVIDENCE_MAP.md. Reviews: REVIEWS/2026-10-02-v21-sol-rounds.md, -astra-v21-correctness.md, -astra-v22-cohesion.md.
 - Process that worked: Codex (GPT-6.1-Sol) writes from decisions agreed with Claude; Claude reads every result as prose and checks numbers; a GPT-6-Astra correctness check follows each Codex-written revision.

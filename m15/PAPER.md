@@ -1,327 +1,292 @@
-# Your Index Is Fine, Your Query Encoder Is Not: Query Distillation over Frozen Indexes
-
-**Draft v22, 2026-10-02. Not for circulation.**
+# Swappable Query Encoders for a Frozen Index: From Transformer to Lookup Table
 
 ## Abstract
 
-A dense index encodes each document once; its query encoder runs on every uncached search. Replacing only the query encoder preserves stored vectors, graphs, and quantized codes, and can cut median CPU query-encoding time from 31.6 ms to 0.044 ms. How much quality survives, and what the replacement costs at search time, depends on the index it inherits.
+Dense vector search reuses document vectors, but it still has to turn each uncached query into a vector. We trained Constella Nano and Zero to search an index built with Stella, a 400-million-parameter English embedding model. Nano uses a smaller transformer. Zero builds a query vector from a learned lookup table, with no neural network at query time. All three encoders can search the same index, so an application can choose one for each request.
 
-A student is a smaller query encoder trained to reproduce the original model's query vectors. The study fits token tables that average learned token vectors and transformer students that project features from a frozen transformer. Among ten registered embedding models, the best retriever produces the worst table student. Across 26 models, dimensionality and measured retrieval score jointly predict student quality, with prospective support for the transformer student. On unchanged HNSW graphs, fitted tables need a median two to four times the search breadth to recover the same fraction of their own exact neighbors. This deficit recurs in a jointly trained lookup model; the index's own queries flag where it is largest.
+On a binary-quantized index of one million MS MARCO passages, Stella took a median of 21.3 ms for query encoding plus search. Zero took 1.1 ms (19× speedup) and retained 85% of Stella's relevance score. Nano took 2.5 ms (8.6× speedup) and retained 95% of Stella's relevance score.
 
-Stella, a 400-million-parameter English embedding model, supports two separately trained students without document re-encoding: the 34.5-million-parameter transformer Nano and token table Zero. They retain 90.5% and 81.4% of Stella's BEIR-15 nDCG@10, respectively. In an exploratory selection on one binary-quantized collection, encoding plus search falls from 21.3 ms to 2.48 ms and 1.11 ms, respectively, at lower relevance. These savings apply to every uncached query that uses a smaller encoder, while construction is paid once: Nano's final optimization took 57.3 A100 hours. Because the three encoders share one index, each request can choose the budget it needs.
+The paper describes how to apply this method to an existing index. Engineers can fit replacements to their original model's query vectors, test how well each ranks their documents, and measure the combined time for encoding and search.
 
 ## 1. Introduction
 
-Query and document encoders serve different computational roles. Document embeddings are stored and reused across searches, allowing an expensive document representation to be amortized. Every uncached query incurs its own encoding cost. This asymmetry raises the question of choosing the query encoder independently of the stored document representation. Query-side distillation builds a cheaper encoder whose vectors remain compatible with the documents [QED, EmbedDistill, LEAF], separating the representation retained in the index from the computation used to search it.
+Changing the embedding model behind an existing search index can mean re-encoding the entire corpus. The query encoder runs on every uncached request, so replacing that part alone could reduce a recurring cost. We asked how much of that work a cheaper encoder could take over while the documents and index stayed fixed.
 
-The stored document vectors support the graph, quantized representations, and downstream uses of those vectors. A compatible replacement query encoder can search these assets without changing them. Changing document encoders requires corpus re-embedding and index rebuilding; maintaining availability during migration can require parallel indexes and ingestion pipelines, extra infrastructure load, relevance validation, and rollback [Index migration].
+The original query encoder served as the teacher. We ran it on example queries and used its output vectors to train a cheaper student encoder. Because the student learned to produce vectors in the same space, it could search the documents already in the index. Prior work established this form of distillation [3, 5]. Our question was how to choose a student for an existing index and what that choice would save.
 
-The study asks which properties of an existing document representation predict student retrieval quality, and how replacing the query encoder changes the graph-search effort required. It fits two kinds of student across 26 embedding models: a table student that averages learned token vectors, and a transformer student that uses a frozen transformer with a learned projection. Each model retains its own document index.
+Training a student to match the teacher's vectors leaves two practical questions. The first is whether the student still ranks relevant documents well. We compared the rankings on a separate set of judged queries and scored every document to isolate the encoder's effect (§2). The second is whether faster encoding reduces the combined cost of encoding and search. The new query vectors can require a broader search over the same index, taking back some of the time saved during encoding (§5).
 
-**Constella** makes the choice of query encoder concrete. It consists of two query encoders aligned to the 1024-dimensional document embeddings of **Stella**, the pretrained English model stella_en_400M_v5 [Stella]. **Nano** is a separately trained 34.5-million-parameter transformer, and **Zero** is a trained token-vector table. Together with Stella's own query encoder, they provide three query-compute budgets over identical document vectors. A request can select an encoder without changing the document representation. Constella demonstrates the resulting choices with separately trained encoders, accounting for their construction costs and recurring encoding and search costs.
+We chose ten public English embedding models with the same tokenizer vocabulary and used the same method to fit a lookup table for each. On six retrieval benchmarks, the model with the highest score using its original query encoder produced the lowest-scoring lookup table. We chose Stella for the case study because its fitted lookup table scored highest in that comparison.
 
-![Stacked bars of query encoding and graph search time for Stella, Nano, and Zero on one unchanged binary-quantized index](figures/f0_teaser.png)
+We trained two query encoders for Stella. Nano is a distilled transformer, and Zero builds query vectors from a learned lookup table without running a neural network. Both Constella encoders can search the same index as Stella (Figure 1).
 
-**Figure 1.** Where query time goes when three encoders search one unchanged index. Solid bars are query encoding and hatched bars are graph search, for each encoder at its fastest setting within 1% of its own exact score on one binary-quantized, positive-preserving one-million-passage MS MARCO diagnostic. Stella's time is almost all encoding; Zero's is almost all search, at four times Stella's `ef`. The values are medians on the diagnostic's own queries, with encoding and search measured separately, from an exploratory selection of the registered sweep at unequal relevance.
+![Stella encodes documents once. At query time, Stella, Nano, or Zero produces a vector for the same index, with search breadth tuned for each encoder.](figures/manuscript/figure-1.png)
 
-The study establishes three findings:
+**Figure 1.** Stella encodes documents at ingestion. Stella's original query encoder, Nano's distilled transformer, and Zero's lookup table all search the same index. Zero tokenizes each query and pools the vectors it looks up. Each encoder can use its own search breadth. This setting controls how widely Qdrant explores the graph (ef in the diagram, hnsw_ef in Qdrant).
 
-- **The best retriever can produce the worst cheap query encoder.** In the ten-model registered comparison, the best-retrieving gte-large produces the worst table and Stella the best, both at 1024 dimensions. The exploratory analysis finds that dimensionality and measured benchmark score jointly predict fitted-student quality before a candidate is fitted. A prospective test with predictions committed before fitting supports this for the transformer student (+0.86 [+0.33, +1.00]); the table result is uncertain.
-- **Replacement queries need a wider search over the unchanged graph.** In the exploratory comparison, fitted tables need a median two to four times the graph-search breadth (`ef`) to match the model's own exact-neighbor recovery. A distance ratio computed from the model's own queries predicts recovery deficits at fixed effort without relevance labels or a fitted student. The deficit also recurs in LightRetriever's jointly trained lookup query encoder.
-- **An existing index can serve three query budgets without re-ingestion.** Nano and Zero were added to Stella's populated collections without document re-encoding or collection rebuilding. On one binary-quantized million-passage MS MARCO diagnostic, encoding plus search takes 21.3 ms for Stella, 2.48 ms for Nano, and 1.11 ms for Zero, at nDCG@10 of 0.7226, 0.6893, and 0.6116, respectively, an exploratory selection at each encoder's fastest setting within 1% of its own exact score (Figure 1). Nano's final optimization took 57.3 A100 hours; the fitted screens take minutes.
+### Prior work and scope
 
-## 2. Related work
+Prior studies established that a distilled query encoder can search document vectors produced by its teacher [3–5]. Static token representations also reduce query encoding cost [6]. pyNIFE uses this approach to fit a lookup encoder for an existing teacher index [7]. We applied the same fitting procedure across teachers to test whether stronger original retrievers yield stronger replacements. We then measured how much of the encoding speedup remained once search was included.
 
-Query-side distillation over a frozen document encoder is established. QED aligns a compact query encoder with an existing dense retriever [QED]; EmbedDistill studies geometric distillation against frozen document representations [EmbedDistill]; and LEAF provides teacher-aligned compact representations [LEAF]. pyNIFE fits a static token table against a frozen teacher [pyNIFE]. Model2Vec and static sentence embeddings average token vectors [Model2Vec, StaticEmb], placing Zero within a broader family of static representations. LightRetriever trains a lookup query encoder jointly with a document tower [LightRetriever]. Our contribution is a common-recipe comparison across embedding models and a study of the search consequences of substituting queries over unchanged graphs.
-QED reports 92.5% retention of a dense retriever's BEIR score with a two-layer student, and LEAF reports 97.7% retention at 4.7-fold compression [QED, LEAF]. LightRetriever reports about 95% retention for its jointly trained lookup query encoder, which requires its own document index, compared with Zero's 81.4% over frozen Stella here; the different models and evaluation protocols leave the quality cost of freezing the document index unresolved [LightRetriever].
+Prior studies of graph search have examined how differences between query and document distributions affect approximate retrieval [11, 12]. Our evaluation covered related English embedding models, with fully trained replacements evaluated on Stella's index. The exploratory graph study covered three workloads in Qdrant with a single graph configuration.
 
-Stronger teachers can produce weaker students in general distillation [Cho and Hariharan 2019] and dense retrieval [PROD]. Those studies discuss capacity gaps between teacher and student. We test embedding dimensionality as a predictive property across embedding models, alongside the measured relevance of the model's own query encoder.
+## 2. Which teachers yield the strongest replacements?
 
-Graph-based approximate nearest-neighbor search is sensitive to query placement relative to indexed vectors [HNSW]. Out-of-distribution queries can require more work, and query-aware graph construction can mitigate difficult query distributions [OOD-DiskANN, RoarGraph]. Here the graph stays fixed while the query encoder changes.
+For an existing index, the original embedding model is already the teacher. We compared teachers to see whether their retrieval scores could predict how well their replacements would rank documents.
 
-Per-query retrieval-strategy selection and query performance prediction also have substantial prior work [Arabzadeh et al., QPP]. A compatible family permits selection, but compatibility alone supplies no rule for allocating compute according to relevance.
+For each of the ten public English embedding models in Figure 2, we used ridge regression to fit two query encoders. One learned a vector for each token in a lookup table, and the other learned a projection on top of a frozen transformer. Both fits used the original encoder's query vectors as targets, and both searched its existing document vectors. The registered comparison covered lookup tables for those ten models. In exploratory analyses, we extended that comparison to 16 more models and evaluated the transformer fits.
 
-## 3. Experimental setup
+We fitted candidates on 337,981 queries paired with vectors from the original encoders. Fitting used no relevance labels. To choose the penalty by retrieval quality, we used separate, judged queries from the CQADupStack physics and programmers forums. For evaluation, we scored every eligible document by cosine similarity. We measured nDCG@10, which gives more weight to relevant documents ranked higher in the top ten. We averaged the scores equally across NFCorpus, SCIDOCS, SciFact, TREC-COVID, FiQA, and ArguAna [13].
 
-### 3.1 Embedding models, students, and data
+Among the ten registered models, gte-large-en-v1.5 scored highest with its original query encoder and lowest with its fitted lookup table. Stella's fitted table scored highest. Both original encoders produced 1,024-dimensional vectors. Across the expanded set of 26 models, original and fitted-table retrieval scores had a rank correlation of +0.09 (95% interval −0.39 to +0.52) [1].
 
-The study uses 26 public English embedding models sharing the 30,522-entry BERT WordPiece vocabulary. Ten embedding models were registered before results, and 16 were added as an exploratory expansion. The model list spans nine related model families and embedding dimensionalities of 384, 768, and 1024. Each model's own query encoder searches its own frozen document vectors. Appendix C retains the complete scores and model identities.
+![Dot plot of exact nDCG@10 for ten models. The model with the highest original score has the lowest fitted lookup-table score. Stella has the highest fitted lookup-table score.](figures/manuscript/figure-2.png)
 
-We fit two representations for the students by ridge regression to each model's own query vectors. The **table student** assigns a vector to each token, mean-pools the token occurrences, and L2-normalizes the result. Its regression penalty anchors the rows to vectors obtained by encoding individual tokens through the original model. The **transformer student** uses contextual features from a frozen bge-small transformer [BGE]: attention-masked mean states from layers 12, 8, and 4 are concatenated into 1,152 features. A fitted projection with bias maps those features into the stored document representation, followed by normalization. Only the projection is learned, so construction is inexpensive while inference still runs the backbone. The shared-vocabulary requirement applies to the table comparison. The transformer student obtains its features from bge-small.
+**Figure 2.** Exact nDCG@10 averaged across six datasets. The ten registered models are ordered by the retrieval score of their original encoder [1].
 
-Both students use the same cleaned 337,981 fit queries and each original model's published query prompt for targets. Penalties are selected by exact retrieval on the CQADupStack physics and programmers development forums, then frozen before public scoring. Quality is normalized discounted cumulative gain at rank 10, **nDCG@10**, under exact search on NFCorpus, SCIDOCS, SciFact, TREC-COVID, FiQA, and ArguAna [BEIR]. The primary outcome is the unweighted mean over these six datasets. A sensitivity analysis uses the first four datasets, for which Stella discloses no training exposure.
+We also tested whether query-vector similarity could predict retrieval quality. We measured similarity as the mean cosine similarity between each table's query vectors and its original encoder's vectors. Both e5 tables matched their original encoders more closely than Stella's table did, but both scored lower on retrieval [1].
 
-The fitted students provide a controlled construction comparison. Released Zero and Nano use additional training beyond these fitted students and different training pools. Zero learns token vectors and scalar weights through vector alignment, teacher-score matching, and contrastive ranking against frozen Stella document vectors. The final ranking phase trains Zero to place each query's relevant document above negatives among those stored vectors, which targets ranking directly; Section 4 shows that vector agreement alone does not certify it. Zero's training pool contains 338,076 usable query-document pairs; the first phase also uses query-only text and document spans for vector alignment. Its served table uses square-root token-count weights and int8 rows. Nano starts from bge-small, concatenates the same three layers, and learns a projection into Stella's document embeddings; backbone and projection are then trained jointly against Stella targets. Nano's optimization requires no relevance labels: it matches Stella's vectors for 3,486,034 query texts, including 834,462 LLM-generated queries, and for document passages. Training alternates three query batches with one document batch. Stella remains the document encoder for retrieval. We report the fitted students and the released models as separate experiments, with reproduction details in Appendix B.
+The best of the 26 fitted lookup tables on the two development forums also ranked first on the six evaluation datasets. A predictor based on the original encoder's retrieval score and vector dimension chose a weaker table. The two selection methods tied on seven new models with completed table fits [1].
 
-### 3.2 Search and evidence status
+For an existing index, use its original model as the teacher. Compare replacement encoders on separate queries with relevance judgments. In our registered comparison, fitting a table took four to seven minutes per model on an A100. That time included encoding the training queries, except for Stella, whose vectors were already cached [1].
 
-Approximate search uses Qdrant 1.19.1, a vector search engine, with uncompressed vectors, cosine distance, and hierarchical navigable small-world (**HNSW**) graphs [Qdrant 1.19.1, HNSW]. The search workloads are FiQA, SCIDOCS, and TREC-COVID. Two graph builds per model differ in seeded document insertion order. The graph parameters stay fixed while each model's own query encoder and its students search with varying `ef`, the parameter controlling graph-search breadth.
+### How we fitted the candidate encoders
 
-We measure **relevance loss**, the fractional reduction from an encoder's own exact nDCG@10, and **exact-neighbor recovery**, the fraction of its exact top-10 recovered by graph search. Each encoder has its own reference. Effort multipliers compare the smallest student `ef` reaching the loss or recovery of the model's own query encoder at `ef=64`, divided by 64 and averaged over builds. A target not reached by the largest setting is censored, with a multiplier of at least eight. Appendix B specifies ties, parity checks, and exclusions.
+**Training targets.** For each training query, we ran the original encoder locally with its usual preprocessing and prompt. We used its output vector as the target for both candidates. The candidates received the query text without the original prompt.
 
-"Registered" identifies evaluations whose decision rules preceded observations. "Exploratory" identifies subsequent analyses. The quality and search screens across embedding models are exploratory, with their analyses written before scoring. The conditional-quality hypothesis was developed after seeing the original 26 embedding models; its prospective test committed predictions by hash before fitting new students.
+**Lookup table.** Each token had one vector. We initialized it by running the original encoder on that token alone. All original encoders shared the BERT WordPiece vocabulary, so the tables covered the same tokens. The lookup encoder averages these vectors to embed a query. We fitted the table W by minimizing the following objective.
 
-## 4. Quality: what an existing index predicts
+$$\lVert XW - Y\rVert_F^2 + \lambda\lVert W - A\rVert_F^2$$
 
-An existing index fixes the document representation, while its dimensionality and the model's measured baseline retrieval are available before any student is fitted. We initially hypothesized that stronger baseline retrieval would predict stronger fitted students, so that the best-retrieving embedding model would yield the best student. The registered comparison reverses that selection rule: gte-large-en-v1.5 scores 0.5970 but yields the weakest registered table at 0.2455; Stella scores 0.5745 and yields the strongest registered table at 0.3974. Across all 26 embedding models (Figure 2), retrieval scores of the models' own query encoders and their students have rank correlation +0.09 for both representations, with 95% intervals from resampling the models of [−0.39, +0.52] for the table and [−0.36, +0.51] for the transformer student.
+Each row of X contains a query's token counts divided by its length, so XW gives the fitted query vectors. The subscript F denotes the Frobenius norm. The first term sums squared errors against the teacher's vectors Y. The second penalizes changes from the initial table A, with λ controlling the penalty. This helps stabilize vectors for rare tokens.
 
-![Table student and transformer student quality against the quality of the model's own query encoder, colored by embedding dimensionality](figures/f9_width.png)
+**Transformer projection.** We froze the bge-small backbone. We averaged the token vectors in each layer, excluding padding. The final layer gives 384 values. A linear projection can produce 1,024 values from those inputs, but its output can vary along at most 384 independent directions. Combining the averages from layers 12, 8, and 4 gave the projection 1,152 inputs and more room to match the teacher's vectors. In an exploratory test, adding each earlier layer improved retrieval on both CQADupStack forums [1].
 
-**Figure 2.** Student quality against the quality of the model's own query encoder for table students (left) and transformer students (right), colored by dimensionality. Filled points are registered embedding models; triangles are prospective embedding models, eight for the transformer student and seven for the table.
+We fitted a linear projection and bias by ridge regression to map these inputs into each teacher's vector space. Both fitted encoders normalized their output vectors before search [1, 15].
 
-The competing hypothesis uses both properties available for the existing index: at a given embedding size, higher baseline retrieval scores should favor stronger students, while higher dimensionality should predict weaker students after accounting for baseline retrieval quality. We model absolute student nDCG@10 from the model's own retrieval quality and log2 dimensionality (Table 1). Standardized coefficients express changes in standard deviations of student retrieval scores per predictor standard deviation. Intervals use 10,000 resamples of the models; held-out prediction fits on eight families and predicts the ninth.
+## 3. Training Nano and Zero
 
-**Table 1.** Conditional prediction of student nDCG@10 on the six datasets across 26 embedding models (exploratory, analysis pre-specified). Coefficients have 95% intervals; R² is in-sample fit, and held-out $\rho$ is Spearman correlation across family-held-out predictions.
+The ridge fits compared two query encoder designs across embedding models. For Stella's index, we trained Nano and Zero separately and kept the stored document vectors fixed.
 
-| Student | Quality coefficient | Dimensions coefficient | R² | Held-out $\rho$ |
-|---|---|---|---:|---:|
-| Transformer student | +0.69 [+0.40, +0.97] | −0.83 [−1.14, −0.60] | 0.70 | +0.69 |
-| Table student | +0.63 [+0.06, +0.89] | −0.64 [−0.95, −0.32] | 0.48 | +0.40 |
+Training for another index requires representative queries encoded with the original query model and preprocessing. A hosted encoder can supply targets for the initial transformer fit if it returns the same query vectors. Passage targets come from the document encoder that built the index. The projection must match the stored vector dimension, and lookup rows follow the original tokenizer's token IDs. We generated Stella's targets locally [1].
 
-Both predictions hold, with coefficient intervals that exclude zero (Table 1). The model's own retrieval quality and dimensionality correlate at +0.61, so their opposing associations hide the positive quality signal in the pooled comparison. Quality-only models have R² of 0.12 for the transformer student and 0.14 for the table, with held-out correlations −0.17 and −0.15. Adding dimensionality improves both. On the sensitivity outcome for four datasets, the dimensionality association persists, while the table's interval for the coefficient of the model's own retrieval quality slightly crosses zero. The result is predictive: the model list does not separate dimensionality causally from family and other model properties.
+### Training Nano
 
-Because the hypothesis was formed after all 26 embedding models had been seen, we tested it prospectively: the test fixed eight further encoders, committed predictions by hash, then fitted and scored their students. One table fit stopped at its convergence gate, leaving seven tables and eight transformer students.
+**Initialization.** Nano is a 34.5-million-parameter query encoder built from BAAI's bge-small-en-v1.5 [8, 15]. With the backbone frozen, we used the three layers from Section 2 to fit a linear projection into Stella's 1,024-dimensional space by ridge regression.
 
-The prospective predictions rank the transformer students at +0.86 [+0.33, +1.00] and tables at +0.71 [−0.12, +1.00], against +0.26 and +0.39 for the model's own retrieval quality alone. Mean absolute score error is 0.039 for the transformer student and 0.032 for the table. The transformer student result supports positive prospective ranking; the table interval leaves its result uncertain. Appendix C gives every actual and predicted score.
+**Training objective.** We then trained the backbone and projection jointly. For each query or passage, we minimized squared error between Nano's normalized output and Stella's normalized vector for the same text. Stella's vectors supplied the training targets without relevance labels [1].
 
-The prospective result supports predicting student rankings from properties of the original model. Selecting a single student is a further test: the following comparison measures how much retrieval quality each selection rule loses relative to the best available student. On the original model list, the conditional model's top choices, each predicted by a fit on the other 25 embedding models, lose 0.249 nDCG@10 for the transformer student and 0.107 for the table relative to the best available students. Selecting by directly measured development retrieval loses 0.035 and 0.000; on the prospective candidates, both rules select the best transformer student and a table 0.043 below the best.
+We used three query batches for every document batch. The document batches exposed Nano to a wider range of text while keeping most updates focused on queries. The released checkpoint saw about 200 million training examples, counting repeats. At serving time, Nano encodes queries for the existing Stella index [1].
 
-Direct evaluation selected stronger students on the original model list, and its construction cost was modest: table fits took four to seven minutes per registered embedding model on an A100, including query encoding except for cached Stella targets. Direct evaluation also tests the relevant outcome: two e5 tables match their models' own query vectors at mean cosine 0.90 and 0.89, against Stella's 0.78, yet retrieve worse. Better vector agreement does not certify better ranking against the stored documents.
+**Development comparison.** We kept generated queries in Nano's training mix after a registered comparison at five million training examples per run. The baseline used factoid questions, product queries, claims, keywords, and titles. Adding seven generated forms and redistributing the same training budget across all 12 raised mean nDCG@10 from 0.4903 to 0.5024. MedicalQARetrieval accounted for 82% of the gain [1].
 
-## 5. Search cost: what query replacement changes
+### Training Zero
 
-Exact retrieval establishes the student representation's quality. Approximate search adds another possible loss over the same document vectors. We hypothesized that replacing the model's own queries would require more graph effort to recover the same fraction of each encoder's exact neighbors. This exploratory screen holds the graphs fixed between query encoders and measures 25 models after the parity exclusion described in Appendix B.
+**Initialization.** Zero starts with one vector per token in Stella's WordPiece vocabulary. We initialized each row by encoding that token with Stella, using the tokenizer's usual start and end markers.
 
-At `ef=64`, table students recover fewer exact neighbors (Figure 3) for all 25 models on FiQA and TREC-COVID, and in 17 of 25 on SCIDOCS. Mean recovery gaps between students and the models' own query encoders are −2.9, −3.9, and −0.8 percentage points, respectively. Median recovery-effort multipliers are four on FiQA and TREC-COVID and two on SCIDOCS. The transformer students also have deficits for 24 of 25 models on FiQA and 23 of 25 on TREC-COVID. Query substitution affects graph search beyond the lookup representation alone.
+**Training objective.** We first trained the table rows and token weights to reproduce Stella's query vectors. We used both labeled and unlabeled text for this step. For labeled queries, we also matched Stella's distribution of scores across the relevant document and 31 other candidates [1].
 
-![Table student exact-neighbor recovery minus recovery with the model's own query encoder at ef=64 across 25 embedding models and three workloads](figures/f8_spaces.png)
+In the second stage, we drew from a pool of 338,076 labeled query-document pairs to teach Zero to rank relevant documents ahead of negatives. We sampled negatives from a document bank and the training data. We excluded known relevant documents and candidates that Stella scored close to or above the labeled relevant document [1].
 
-**Figure 3.** Student exact-neighbor recovery minus recovery with the model's own query encoder at `ef=64`, by embedding model and workload, averaged over two builds. Negative values mean the table student recovers fewer of its own exact neighbors.
+**Development comparison.** At query time, Zero weights each distinct token's vector by the square root of its count and normalizes the sum. A token that appears four times gets twice the weight of a single occurrence. With the int8 rows held fixed, square-root weighting raised mean development nDCG@10 from 0.6114 to 0.6153. The comparison was inconclusive on a second checkpoint [1].
 
-Relevance gives a less uniform answer. Matching the relative nDCG loss of the model's own query encoder requires greater effort for all 25 models on FiQA, with a median multiplier of four among reached targets and four models censored in at least one build. The multiplier exceeds one for 17 of 25 models on SCIDOCS but only 12 of 25 on TREC-COVID. On TREC-COVID's 50 queries, the model's own query encoder loses only 0.2% of nDCG at the reference setting, making its threshold sensitive to very small differences. The recurring neighbor-recovery deficit therefore has corpus-dependent relevance consequences.
+## 4. What Nano and Zero retained on Stella's index
 
-Corpus size contributes to the variation. An exploratory, pre-specified control subsamples FiQA to SCIDOCS's 25,657 documents while retaining judged positives and rebuilding two graphs per model. The recovery gap moves from −2.9 to −1.2 points, a paired change of +1.8 [+1.3, +2.3] across embedding models. The recovery deficit remains 0.4 percentage points larger than on SCIDOCS; the interval for the signed difference is [−0.9, −0.1]. Smaller corpus size reproduces much of the attenuation, with a remaining corpus difference.
+On Stella's index, the fitted lookup table outscored the frozen transformer with a fitted projection. After full training, Nano outscored Zero in exact search on all six datasets. The initial fits help screen designs. The trained encoders still need their own relevance evaluation [1, 17].
 
-Part of this variation can be anticipated before any student exists, from where the model's own queries sit relative to its documents. Before computing features, we specified the ratio of query-to-nearest-document distance to typical nearest-neighbor distance among documents, alongside other geometry measurements. Across 75 combinations of embedding model and workload, the ratio from the models' own query vectors correlates with the recovery gap at −0.64 [−0.75, −0.48]. Its family-held-out predictions correlate at +0.64 with mean absolute error 1.26 percentage points, versus 2.22 for the training-fold mean. Embedding models whose own query vectors sit farther from documents tend to incur larger replacement deficits.
+| **Query encoder** | **Exact nDCG@10** | **Stella score retained** | **Encoding median** |
+|:---|----|----|----|
+| Stella | 0.5614 | Reference | 31.6 ms |
+| Nano | 0.5081 | 90.5% | 2.25 ms |
+| Zero | 0.4572 | 81.4% | 0.044 ms |
+| Qdrant BM25 | 0.4006 | Lexical reference | Not timed separately |
 
-The ratio for the model's own queries marks the tendency toward larger recovery gaps, and its cause stays open: the difference in this ratio between the student and the model's own queries predicts poorly on held-out families. Transfer across workloads is weaker than transfer across families: the model with all features and covariates, trained on two workloads, ranks the third at +0.50, but its error is 2.55 points against 2.33 for the fold-mean baseline.
+**Table 1.** Exact retrieval scores are means across 15 BEIR datasets, weighted equally. This descriptive average includes the two CQADupStack forums used for development. Retention is the share of Stella's score that each replacement retained. Qdrant BM25 is the lexical baseline. Encoding medians come from a separate CPU benchmark using 100 queries of five to 12 words [2, 9].
 
-We then test recurrence beyond students fitted to a frozen teacher. In an exploratory experiment specified before encoding, LightRetriever's released Qwen2.5-1.5B model supplies both lookup and full query encoders over its own document vectors [LightRetriever]. Under its primary web-search prompt, lookup-minus-full recovery gaps are −3.6 [−4.3, −2.9] points on FiQA and −1.7 [−2.1, −1.4] on SCIDOCS. Matching the full query encoder's recovery requires four times the `ef` on both corpora. Relative relevance-loss effort agrees on FiQA; on SCIDOCS, both encoders lose under 0.1% of nDCG at the reference, making that comparison sensitive to small changes.
+The relevance gap between Nano and Zero varied by dataset. Nano scored 0.238 nDCG@10 higher than Zero on TREC-COVID and 0.030 higher on Quora [2].
 
-The deficit thus recurs in a jointly trained lookup model as well as our closed-form students. Search-effort multipliers measure graph breadth. Settings for each encoder recover the measured targets where the sweep reaches them; relevance and recovery remain distinct criteria for that adjustment.
+Zero's query vector depends on which tokens appear and how often they appear. For example, "Paris to Rome" and "Rome to Paris" produce the same vector with Zero [8]. Nano's transformer can use word order to represent the difference. Queries whose meaning depends on word order are therefore a useful test for a lookup encoder.
 
-## 6. One index, several query budgets
+## 5. Latency and relevance on a shared index
 
-Constella turns query-side separation into a family: Stella, Nano, and Zero search the same populated document collections, while providing different relevance and compute budgets. Nano and Zero were added without document re-encoding or collection rebuilding between encoder batches, and all three encoders were verified against those same populated collections. The family preserves the stored representation across these choices, so the operating policy can choose an encoder for each request.
+Changing the query encoder changes how HNSW navigates the same graph. At a fixed search breadth, it can miss documents that the new encoder would rank highly in an exact search. We measured how much search each replacement needed to stay close to its exact-search score, and what that cost in latency.
 
-The registered descriptive BEIR-15 evaluation measures exact quality. Encoding is measured separately on an Apple M5 Pro CPU with four threads, batch one, and 100 real queries of five to 12 words. Table 2 places these two measurements side by side; its asset sizes describe encoder files, not resident memory.
+We ran the benchmark on one million MS MARCO passages using Qdrant 1.19.1 [16] on an Apple M5 Pro. We kept every passage judged relevant to the 6,980 development queries and sampled the rest, leaving fewer passages to compete for the top results.
 
-**Table 2.** Constella over one frozen Stella document representation. Quality is exact BEIR-15 macro nDCG@10; retention is the ratio to Stella. Encoding medians follow the registered medium-query CPU protocol.
+We tested both uncompressed vectors and binary quantization to see whether cheaper candidate scoring preserved more of the encoding savings. The binary index used one sign bit per coordinate to find candidates and rescored them with the original vectors. All three encoders shared an index within each format. We varied hnsw_ef, which controls how broadly HNSW searches the graph. For each encoder and format, we chose the setting with the lowest median encoding-plus-search time that retained at least 99% of that encoder's exact nDCG@10.
 
-| Query encoder | nDCG@10 | Retention | Encode p50 | Asset size |
-|---|---:|---:|---:|---:|
-| Stella | 0.5614 | reference | 31.6 ms | 1669.6 MiB |
-| Nano | 0.5081 | 90.5% | 2.25 ms | 132.3 MiB |
-| Zero | 0.4572 | 81.4% | 0.044 ms | 90.1 MiB |
+| **Encoder and index** | **hnsw_ef** | **Oversampling** | **nDCG@10** | **Median encoding + search** |
+|:---|----|----|----|----|
+| Stella (binary) | 128 | 1 | 0.7226 | 21.335 ms |
+| Nano (binary) | 256 | 4 | 0.6893 | 2.484 ms |
+| Zero (binary) | 512 | 2 | 0.6116 | 1.113 ms |
+| Stella (uncompressed) | 128 | N/A | 0.7240 | 22.229 ms |
+| Nano (uncompressed) | 256 | N/A | 0.6917 | 3.847 ms |
+| Zero (uncompressed) | 512 | N/A | 0.6124 | 3.613 ms |
 
-The averages in Table 2 hide large differences across datasets. Zero's sum of token vectors is insensitive to word order and context. Its retention of Stella's score is 0.67 on TREC-COVID and FiQA, compared with 0.95 on Quora (Figure A1). Nano's retention ranges from 0.85 to 0.99 except on FEVER, which was in Zero's training pool and excluded from Nano's. The choice between them therefore depends on the workload as well as on the compute budget.
+**Table 2.** Exploratory settings from the registered sweep. Latency is the median of per-query sums from separate encoding and search passes. Oversampling sets the number of candidates to rescore relative to the requested result count. Table 1 used a separate set of short queries [1].
 
-A lexical branch over the same documents can recover part of the quality Zero gives up. In the descriptive BEIR-15 evaluation, fusion with BM25 raises Zero's score to 0.4933, or 87.9% of Stella's score. The effect varies by workload; fusion lowers Nano's score on MS MARCO. This route adds a sparse index and branch search, using distribution-based score fusion over 100 candidates per branch [DBSF].
+On this sample, Stella's binary score stayed close to its uncompressed score with full-precision rescoring enabled. Its exact nDCG@10 was 0.7293 [1].
 
-Additional graph-search effort also cuts into Constella's encoding savings. On the uncompressed million-passage collection, additional graph search consumes much of Zero's encoding advantage over Nano (Figure 4). On the one-million-passage MS MARCO diagnostic, with 6,980 development queries, uncompressed search reaches within 1% of each encoder's own exact nDCG at `ef=128` for Stella, 256 for Nano, and 512 for Zero. The diagnostic preserves all judged positives and samples other passages, reducing competition relative to the full corpus. Its search measurements and Table 2's encoding sample describe separate query populations.
+Zero encoded queries in 0.026 ms at the median, compared with 1.611 ms for Nano. With search included, Zero's lead was 0.234 ms on the uncompressed index and 1.371 ms with binary quantization. On the uncompressed index, Zero needed hnsw_ef=512 to meet its relevance target, while Nano used 256. At the same hnsw_ef, median search times differed by at most 7% across encoders over the sweep of 32, 64, 128, 256, and 512 [1].
 
-Summing these component medians and extrapolating to one million queries gives Nano and Zero time shares of 13% and 11% of Stella's, respectively. Large savings versus the model's own query encoder remain. At a fixed `ef` from 32 to 512, search medians differ by at most 7% across encoders; the added work comes from the larger settings required to reach their respective targets. These component-time shares measure neither sustained throughput nor equal absolute relevance.
+Table 2 compares each encoder against its own exact score. At a shared target of 0.68 nDCG@10, no tested binary setting for Zero qualified (Figure 3). Nano met the target in 2.286 ms at hnsw_ef=128 with oversampling set to one [1].
 
-![Measured quality and encoding-plus-search time for the three query encoders on two collections](figures/f4_system.png)
+![Latency versus nDCG@10 for Stella, Nano, and Zero on uncompressed and binary-quantized indexes. Nano reaches 0.68 on the binary index in 2.286 ms. Zero stays below that target.](figures/manuscript/figure-3.png)
 
-**Figure 4.** Approximate-search quality against encoding plus search time on FiQA and the positive-preserving MS MARCO diagnostic, registered sweep. Dotted lines are each encoder's exact score.
+**Figure 3.** Fastest settings at each relevance level on the million-passage sample. The arrow marks Nano's fastest binary setting that met the 0.68 nDCG@10 target [1].
 
-The binary-quantized collection leaves a larger speed difference between Nano and Zero. This comparison uses encoding timings from the diagnostic's own queries, measured separately from search. In an exploratory selection from the registered sweep, the fastest settings within 1% of each encoder's own exact score give encoding plus search medians of 21.3 ms for Stella, 2.48 ms for Nano, and 1.11 ms for Zero, at nDCG@10 of 0.7226, 0.6893, and 0.6116, respectively. These sums differ from the uncompressed extrapolated time shares above. Zero is 2.2-fold faster than Nano including search at these unequal quality levels.
+Against BM25, the lexical baseline, Zero gained 24.5% in nDCG@10 for 0.45 ms more median latency (Table 3).
 
-**Construction and recurring cost.** The savings above apply to every uncached query that uses a smaller encoder; construction is paid once. Nano's final optimization took a measured 57.3 A100 hours, about $95 at the recorded rental rate. Zero's retraining was historically estimated at 20 minutes with prepared targets, plus 8 to 12 hours of target encoding for a new embedding model. Preparation, data generation, recipe search, failed runs, evaluation, and engineering add to the full build. The four-to-seven-minute fitted screens answer a cheaper construction question than producing these optimized models. Once constructed, a compatible query encoder can amortize that one-time cost through recurring savings, provided its retained relevance meets the workload's requirements.
+| **Retrieval method** | **Median query time** | **p95 query time** | **nDCG@10** |
+|:---------------------|-----------------------|--------------------|-------------|
+| BM25                 | 0.66 ms               | 0.74 ms            | 0.4895      |
+| Zero                 | 1.11 ms               | 1.23 ms            | 0.6094      |
 
-Because the three encoders differ in quality and cost but share one index, the choice can be made per request. In an e-commerce example, Zero could serve searches while a user types, Nano after typing stops, and Stella on submission, with an `ef` setting for the chosen encoder accompanying each selection. This is an illustrative policy enabled by compatibility, not a measured typeahead workload. The policy assigns computation by interaction stage, so it needs no prediction of which encoder will retrieve better for a particular query.
+**Table 3.** Separate, matched rerun against BM25 on the same one million MS MARCO passages and 6,980 queries. Latencies are medians across three passes timed from query text to ranked results. Zero used binary quantization, and BM25 used a sparse index [19].
 
-Automatic relevance-based allocation is a separate problem. In the registered routing analysis over 12 datasets, a label-aware oracle selecting Zero or Nano scores 0.5473 against 0.5161 for always-Nano. Yet query length, subwords per word, and pooled-vector norm improve at most 0.005 over random routing at matched Nano share. The oracle shows the potential benefit of choosing between Zero and Nano for each query. The tested features capture little of that benefit. The oracle requires relevance information unavailable at request time.
+### Search breadth across models
 
-## 7. Discussion
+The latency savings depended on the workload. On the uncompressed FiQA index, Zero saved 1.784 ms over Nano at the same 99% retention threshold. Nano ranked results better on both FiQA and the MS MARCO sample [1].
 
-The findings separate two consequences of replacing a query encoder. Exact retrieval measures how well the replacement ranks the stored documents. Approximate search measures the additional loss introduced by searching their graph. A student can therefore reduce encoding cost while requiring greater graph-search breadth, and these effects must be considered together when interpreting the resulting savings.
+Fitted lookup tables often needed a wider search to recover their exact neighbors. The effect on judged relevance varied by dataset. In an exploratory comparison of 25 embedding models, each table shared an index with its original encoder. On FiQA and TREC-COVID, the tables needed four times the original encoders' hnsw_ef of 64 at the median to match their exact top-10 recovery. To match the original encoders' relative loss in nDCG@10, all 25 tables on FiQA needed a wider search on average or missed the target at the widest setting. On TREC-COVID, this applied to 12 of 25 [1].
 
-These results have three consequences for a search system. First, a candidate query encoder is cheap to fit and to measure on development queries for the target index. On the original model list, that measurement selected better students than the model's own retrieval score did. The vector-agreement counterexamples show that cosine fidelity cannot certify the choice. Second, a replacement query encoder has its own search requirements. The distance ratio for the models' own queries flags embedding models with larger recovery gaps before any replacement is fitted; the size of the penalty on a new workload still needs measurement on that workload. Third, a compatible family turns query compute into a per-request setting over the same stored documents. Allocation by request context needs no predictor; predicting which encoder will retrieve best for a given query remains unresolved.
+The neighbor recovery gap also changed with index size. After we reduced FiQA to 25,657 documents and rebuilt the index, the average gap narrowed from 2.9 to 1.2 percentage points. The smaller sample kept all judged relevant passages. Qdrant can use full scans on small segments, and we did not record which segments it scanned [1, 16].
 
-The comparison with bge-small and LEAF concerns the value of retaining a shared index. bge-small scores 0.5171 and LEAF 0.5402 on BEIR-15, above Nano's 0.5081, using their own document indexes. Keeping one Stella index lets each request choose among three query budgets; separate models would need separate indexes and ingestion pipelines to offer those choices.
+## 6. Deployment choices and costs
 
-## 8. Limitations
+The deployment trade-off depends on the upfront cost of training and how much traffic a replacement can serve at the required relevance and latency.
 
-The quality study covers two closed-form recipes over related English embedding models at three dimensionalities. The shared vocabulary constrains the table's model list; transfer to other tokenizers, vendor-provided embeddings, and fully trained students remains open. Dimensionality covaries with family and quality. Intervals from resampling the models describe this model list, while family-held-out and prospective tests probe specific extensions.
+### Training cost
 
-The search study covers one engine, one graph configuration, and three corpora, including TREC-COVID's 50 queries. Its geometry predictor forecasts recovery gaps, not their mechanism. Timing across embedding models used a shared machine; latency conclusions use the separate Constella sweep. LightRetriever recurrence covers one released model and two corpora.
+Nano's final optimization took 57.3 hours on an A100, or about \$95 at the recorded rate. That figure excludes data preparation, earlier runs, and evaluation. With prepared targets, we estimated that retraining Zero would take 20 minutes. A new teacher would add an estimated eight to 12 hours to encode the training queries. The companion repository provides both training implementations [1], and the model cards identify the released checkpoints for the Stella index [8].
 
-Constella's training pools differ, including FEVER exposure; Stella discloses ArguAna, FiQA, and FEVER exposure. Quality intervals condition on fixed models. Timing covers warmed sequential CPU execution, while the million-passage diagnostic preserves positives. Request-context selection is a capability and an illustrative policy; concurrent operation and real typeahead quality were not measured.
+### Adding a lexical branch
 
-## Artifact availability
+Pairing Zero with BM25 enables hybrid retrieval without running a neural network at query time. In the descriptive BEIR-15 evaluation, this raised Zero's nDCG@10 from 0.4572 to 0.4933. We combined 100 candidates from each branch using distribution-based score fusion. That gain comes with a sparse index to maintain and a second search per request. The registered fusion comparison used convex fusion at a depth of 1,000 candidates [2, 17].
 
-The [companion repository](https://github.com/Dylancouzon/asymmetric-dual-encoders) contains inference examples, pinned configurations, dated methods and amendments, immutable result receipts, and the full research history, including secondary analyses and negative results. Released models are [Constella Zero](https://huggingface.co/Qdrant/constella-zero), [Constella Nano](https://huggingface.co/Qdrant/constella-nano), and the [Stella document encoder](https://huggingface.co/Qdrant/stella-en-400M-v5-doc-onnx). The three encoders are available through FastEmbed, Qdrant's embedding library. The cleaned 337,981-query fit list and the one-million-passage identifier list are identified by hash but not yet archived. Prepared training corpora are described by source and file manifests.
+### Choosing an encoder for each request
 
-## Appendix A. Registered evaluations
+At high query rates, routing requests that Zero can serve at the required relevance reduces the load on transformer inference. A search bar could use Zero while users type and Stella on submission, over the same index. Table 2 measured sequential latency on completed queries. The search-bar example still requires separate measurements on partial queries.
 
-**Serving configuration.** Stella is pinned to revision `ffeb2b7e`, with its `s2p_query` prompt, fp32 encoding, normalized output, fp16 stored document vectors, and cosine similarity; maximum sequence length 512. Zero's training pool includes FEVER-train and HotpotQA; Nano excludes FEVER. MS MARCO is licensed for non-commercial use, so it was validation-only in our distillation: it supplied no training targets, negatives, or generation seeds, although Nano's pretrained base has prior exposure to it.
+We measured encoding and search throughput on Natural Questions using one Qdrant Edge shard on an eight-vCPU VM. With a warm page cache, Stella reached 22 queries/s, Nano 605, and Zero 653. At the recorded VM rate, this implies \$4.91, \$0.18, and \$0.17 per million queries, respectively. The encoders used search settings that achieved different relevance scores in the Natural Questions sweep. Nano and Zero reached similar throughput once search was included [20].
 
-![Per-dataset retention of Stella's retrieval score by Zero and Nano over 15 BEIR datasets](figures/f2_per_dataset.png)
+Potential savings depend on how often a query benefits from Nano. We tested this on 12 BEIR-15 datasets. We used relevance judgments to pick the roughly 15% of queries per dataset where Nano helped most. The selector assigned Nano to those queries and Zero to the rest. The combined score was 0.5163 nDCG@10, close to the 0.5161 from using Nano for every query. Choosing the better of Nano and Zero for each query scored 0.5473, compared with 0.5580 for always using Stella [18].
 
-**Figure A1.** Retention per dataset. Datasets with disclosed Stella training exposure are ArguAna, FiQA, and FEVER; the four originally held-out sets are FEVER, DBpedia-entity, and the CQADupStack android and english forums.
+Choosing an encoder from query text proved harder. At the same share of Nano requests, they gained at most 0.005 nDCG@10 over random selection [18].
 
-**Partitions.** The six-set suite is NFCorpus, SCIDOCS, SciFact, TREC-COVID, FiQA, and ArguAna. "Clean-four" means the first four, which have no disclosed Stella overlap; it is not a causal contamination estimate. Four datasets were held out and evaluated once: FEVER, DBpedia-entity, and the CQADupStack android and english forums. Two other forums, physics and programmers, select table penalties and routing settings and were reused during model construction.
+## 7. How retrieval quality varies across datasets
 
-**Nano's registered contrasts** report nDCG@10 differences and used a fixed sequence with one-sided 2.5% lower bounds. "Established" means the bound cleared zero; "unresolved" means it did not; "descriptive" rows were registered as reports, not tests. Intervals resample queries with the models fixed.
+### Nano against compact dense retrievers
 
-| Contrast | Partition | Score difference | Outcome |
-|---|---|---:|---|
-| Nano − bge-small | clean-four | +0.0176; lower bound +0.0037 | established |
-| Nano − bge-small | all six | +0.0274; lower bound +0.0173 | established |
-| Nano − LEAF | all six | +0.0162; lower bound +0.0065 | established |
-| Nano − LEAF | clean-four | −0.0011; lower bound −0.0145 | unresolved |
-| Nano − bge-small | held-out non-double-exposure aggregate, dataset weighted | +0.0032 [−0.0069, +0.0134] | descriptive |
-| Nano − bge-small | held-out non-double-exposure aggregate, query pooled | −0.0121 [−0.0219, −0.0024] | descriptive |
-| Nano − LEAF | held-out non-double-exposure aggregate | −0.0389 [−0.0488, −0.0290] | descriptive |
+Nano searched Stella's index. We compared it with bge-small, its original backbone used as a standalone retriever. We also compared it with LEAF, a compact distilled query encoder that searches its teacher's Arctic-M index [5, 17].
 
-The registered non-double-exposure aggregate uses DBpedia-entity weighted one half, the android and english forums one quarter each, FEVER excluded as the double-exposure sensitivity row.
+![Registered differences in nDCG@10 with one-sided lower confidence bounds. Nano cleared the superiority threshold against bge-small in both groups and against LEAF in the six-dataset group.](figures/manuscript/figure-4.png)
 
-**Zero's registered contrasts** report nDCG@10 differences and used a Holm correction across the family. The dense comparison tests whether Zero exceeds LightRetriever's dense path under per-task prompts, whose six-set nDCG@10 is 0.4583. Zero scores below that reference and does not confirmatorily beat BM25.
+**Figure 4.** Nano minus each baseline in nDCG@10, in registered test order. Dots show estimates and ticks show one-sided 97.5% lower bounds from query resampling with fixed models. A bound above zero met the superiority threshold. The four-dataset group included NFCorpus, SCIDOCS, SciFact, and TREC-COVID, with no disclosed Stella training exposure. The six-dataset group added ArguAna and FiQA, both listed in Stella's training disclosure [14, 17].
 
-| Contrast, all six | Score difference | Raw 95% interval | Outcome |
-|---|---:|---|---|
-| Zero − LightRetriever dense | −0.0243 | [−0.0405, −0.0086] | below LightRetriever |
-| Zero − BM25 | +0.0165 | [+0.0017, +0.0311] | unresolved; p=.0149 fails Holm .0083 |
-| Zero + BM25 (convex) − OpenSearch | +0.0043 | [−0.0063, +0.0151] | unresolved |
+Nano cleared the registered superiority threshold against bge-small in both tests (Figure 4). Its advantage over LEAF depended on which datasets were included. The effect of prior training exposure remains open. Both baselines scored higher on the broader BEIR-15 average [2, 17].
 
-The registered clean-four sensitivity is descriptive: −0.0443 [−0.0675, −0.0212], −0.0311 [−0.0517, −0.0109], and −0.0107 [−0.0262, +0.0043]. Unresolved superiority does not establish equivalence. The confirmatory fusion used convex score fusion with development-fitted weight 0.8 at depth 1000. Later distribution-based score fusion at 100 candidates is a deployability choice, not a new confirmation.
+On the held-out data, Nano scored close to bge-small when DBpedia-entity and the combined CQADupStack result counted equally. LEAF led Nano with those weights. When every query counted equally, bge-small also led Nano. Appendix B gives the estimates and weighting details [17].
 
-**The held-out four**, copied from their one-shot published aggregate (registered):
+### Zero compared with BM25
 
-| System | FEVER | DBpedia | Android | English |
-|---|---:|---:|---:|---:|
-| Nano | 0.6231 | 0.4190 | 0.4774 | 0.4298 |
-| Zero | 0.6978 | 0.3900 | 0.4431 | 0.3690 |
-| Stella | 0.8207 | 0.4603 | 0.5275 | 0.5183 |
-| bge-small | 0.8662 | 0.4003 | 0.4761 | 0.4558 |
-| LEAF | 0.8671 | 0.4520 | 0.5260 | 0.4707 |
-| BM25 | 0.5036 | 0.3045 | 0.3952 | 0.3481 |
-| Zero + BM25 | 0.7559 | 0.4030 | 0.4629 | 0.4016 |
-| Nano + BM25 | 0.6879 | 0.4296 | 0.4750 | 0.4323 |
+Zero outscored BM25 on the matched MS MARCO benchmark and on the descriptive BEIR-15 average. The separate registered comparison remained unresolved. The comparison on datasets without disclosed Stella training exposure favored BM25. A lexical baseline is therefore still useful when testing Zero on another workload [2, 17, 19].
 
-**Precision.** All released encoders run in fp32 through the published loader.
+## 8. Conclusion
 
-## Appendix B. Reproduction
+A dense index built with a large embedding model can serve some queries without running a neural network at query time. Zero demonstrated this on Stella's index. Nano retained more of Stella's retrieval relevance than Zero and reduced encoding time by running a smaller transformer for each query. Both used the document vectors already in the index.
 
-**Closed-form table student.** Let $X$ contain token counts divided by query token count, $Y$ the original model's own query vectors, and $W_0$ its normalized outputs for individual tokens encoded between special tokens. Fit
+The strongest original retriever in our registered comparison produced the weakest fitted lookup table. Ranking the fitted tables on separate judged queries gave a better guide to their retrieval quality. On the uncompressed MS MARCO index, Zero encoded queries about 62 times as fast as Nano. Once search was included, Zero's median latency was only 6% lower. The selected settings retained at least 99% of each encoder's own exact nDCG@10. Binary quantization preserved more of the encoding advantage.
 
-$$
-\min_W \|XW-Y\|_F^2 + \lambda\|W-W_0\|_F^2.
-$$
+For a search team, the practical question is how much traffic can move to a cheaper encoder at the relevance the application needs. Exact retrieval on representative judged queries helps identify request types where a cheaper encoder meets the relevance target. After tuning search for each encoder, measuring encoding and search together shows what the change saves. Teams can use Zero where it meets the target and retain the original encoder for other requests without re-encoding the corpus.
 
-The anchor includes the original model's pooling and output projection. Student tokenization includes special tokens, has no query prefix, and truncates at 512 tokens; mean pooling and L2 normalization follow lookup. Block conjugate gradient solves the normal equations, requiring every output column to pass relative-residual tolerance 1e-6 in fp32 or 1e-8 in fp64. Penalties range from 1e-4 to 1e-1, with one decade extension when development selection lands at an edge. Exact development nDCG@10 selects the penalty before six-set scoring. The fit list was cleaned after an earlier version had 1.31% held-out-query overlap. One checkpoint in the expanded model list, arctic-embed-m-v1, stopped at the convergence gate and is excluded from the 26. Encoder exposure was documented for the registered model list; the exploratory expansion was not individually audited.
+## Appendix A. Run settings
 
-**Closed-form transformer student.** Frozen bge-small revision 5c38ec7c supplies masked-mean states from layers 12, 8, and 4. Concatenating a constant bias feature yields $F$ with 1,153 columns. A dense solve fits
+### Model fitting and training
 
-$$
-\min_A \|FA-Y\|_F^2 + \lambda\frac{\operatorname{tr}(F^\top F)}{1153}\|A\|_F^2.
-$$
+Stella. We pinned ffeb2b7e, stored normalized 1,024-dimensional document vectors in fp16, and used cosine similarity. Query encoding used fp32, the s2p_query prompt, and a maximum length of 512. The fitted students used no query prefix [1, 8, 14].
 
-The bias is regularized; predictions are normalized. Penalty selection matches the table. bge-small is itself an entry in the model list sharing this backbone. The bge-small transformer student retains 1.008 of bge-small's own retrieval score; the gte-small transformer student, whose model is nearly a linear image of the backbone, retains 0.978 of gte-small's own score. Removing bge-small changes the selection score gaps reported in Section 4 by less than 0.06. The original model's query prompts apply to targets, while students have no query prefix.
+Fitted candidates. We swept λ from 10⁻⁴ to 10⁻¹ and extended the range by one decade if selection reached an endpoint. Tokenization included special tokens and truncated at 512 tokens. The conjugate-gradient residual tolerance was 10⁻⁶ in fp32 and 10⁻⁸ in fp64. We used attention-masked means for the transformer features and froze bge-small at revision 5c38ec7c. The list of teachers includes bge-small, so that fitted transformer shares its teacher's backbone [1, 15]. An exact rerun requires recovering or reconstructing the cleaned fitting-query list and verifying it against the recorded hash [1].
 
-**Zero: data and distillation.** The pool has 338,076 usable query-document pairs and 220,632 query-only rows from Amazon ESCI, FEVER-train, HotpotQA-train, SQuAD-train, Mr. TyDi English, NQ Open, and TriviaQA. Training sources permit commercial derived weights, with attribution where required. The distillation phase also uses 924,704 short document spans as pseudo-queries. Table rows start from Stella's normalized token-in-context outputs; scalar weights start from inverse document frequency. Stella targets and document vectors stay frozen.
+Full training. Zero ran 16,000 steps of alignment and teacher-score matching at batch 512, then 2,500 contrastive steps with 32,768 bank negatives plus supplied negatives. We masked known positives and candidates whose Stella score exceeded the positive document's score minus 0.02. Nano used AdamW at batch 32 over three learning-rate cycles from 10⁻⁴ to 10⁻⁵. The released model is the endpoint of the third cycle. The companion configs pin the losses, sampling, schedules, and source manifests [1].
 
-The first phase runs 16,000 steps, batch 512, with ordinary count pooling. Half the batch comes from query-only rows and pseudo-queries with cosine alignment loss. Paired queries combine cosine alignment and KL divergence against Stella's score distribution over a positive and 31 distractors from a document bank; the extra-text cosine mean is added separately. Cosine and KL weights are 1, temperature 0.02. Adam learning rates are 3e-3 for rows and 1e-2 for weights. A row penalty of 1e-3 anchors initialization, divided by one plus the row's update count.
+Nano initialization. We randomly sampled 60,000 queries from Nano's training pool using seed 21. We fitted the projection on 50,000 and chose the penalty on the remaining 10,000 by comparing vector error. With the penalty fixed, we refitted the projection on all 60,000 queries [1].
 
-**Zero: ranking and export.** The second phase runs 2,500 contrastive steps from that checkpoint. InfoNCE uses 32,768 bank negatives plus provided negatives, at temperature 0.02. Known positives and candidates scoring above the positive's Stella score minus 0.02 are masked. Adam peaks at 1e-3 for rows and 1e-2 for weights, with 200 warmup steps and linear decay to a tenth. The row penalty anchors the phase's starting checkpoint. Both phases use seed 0 and a bank of 2,000,000 document vectors.
+Nano training data. The pool contained 3,486,034 unique queries, including 834,462 generated from passages, and 6,070,049 eligible document passages. Seven of the 12 query forms used generated text. We screened and monitored training on separate judged queries from BRIGHT, MedicalQARetrieval, LEDGER, and LegalBench [1].
 
-Development selected the two-phase recipe, then square-root count pooling for its unchanged table. Export folds scalar weights into rows and applies per-row absolute-maximum int8 quantization with fp32 scales. A token appearing $c$ times contributes $\sqrt{c}$ times its dequantized row before normalization. Unupdated rows retain initialization. Development comprises NQ, HotpotQA, two CQADupStack forums, and two training-source slices..
+Synthetic training data. We used Qwen3-8B-AWQ revision 4da05a8e at temperature 0.8 and top-p 0.95 with thinking disabled. Finance and health prompts used Wikipedia passages. The other generated forms used HotpotQA passages. The filters checked length, duplication, held-out overlap, and spans of five or more copied words. We used Stella to encode the accepted queries [1].
 
-**Nano: data and initialization.** The deduplicated pool contains 3,486,034 query texts: 403,443 real queries from ESCI, HotpotQA, Mr. TyDi, NQ Open, SQuAD, and TriviaQA; 999,744 PAQ questions; 1,248,385 harvested texts; and 834,462 generated queries. Harvested text comes from Wikipedia, arXiv metadata, and the licensed document pool. Sampling gives equal presentation shares to 12 forms: factoid, how-to, claim, argument, finance, title, keyword, health, product, comparison, yes/no, and conversational. The 6,070,049 eligible documents replay in reshuffled epochs. FEVER is excluded. Queries have no student prefix; document examples use `passage: `; Stella supplies corresponding query or document targets.
+### Retrieval and timing benchmarks
 
-Qwen3-8B-AWQ revision 4da05a8e generates seven forms with thinking disabled, temperature 0.8, top-p 0.95, and passage-derived seeds. Finance and health use Wikipedia passages; other forms use HotpotQA. Filtering applies length checks, exact and near-duplicate handling, document hold-outs, overlap screens, and copied-span rejection. Pinned prompts, sampling limits, filters, and source manifests remain in the companion repository.
+BEIR-15 adds FEVER, DBpedia-entity, CQADupStack, MS MARCO, NQ, HotpotQA, Webis-Touche2020, Quora, and Climate-FEVER to the six-dataset suite. The descriptive BEIR-15 score weights datasets equally. CQADupStack counts as one dataset after forum aggregation and includes both forums used for development.
 
-The bge-small backbone uses revision 5c38ec7c. Its three-layer features project to 1,024 dimensions, then masked mean pooling and normalization. Ridge initialization uses 60,000 queries, seed 21, and a 50,000/10,000 split to select normalized squared-L2 error over penalties 1e-6 to 1; the selected 0.001 penalty is refitted on all queries. The affine projection commutes with mean pooling.
+MS MARCO supplied no training targets, negatives, or generation seeds. Nano's pretrained backbone had prior exposure. We reconstructed the million-passage identifier list from the pinned public corpus and development judgments using seed 20260930. Its SHA-256 hash matched the recorded value. Binary sweeps tested oversampling of one, two, and four [1, 2, 13].
 
-**Nano: optimization and selection.** Backbone and projection train against normalized Stella vectors with squared-L2 loss, alternating three query batches and one document batch. AdamW uses batch 32, seed 0, betas (0.9, 0.999), epsilon 1e-8, matrix weight decay 0.01, zero decay for one-dimensional parameters, and gradient clipping at norm 1. Forward passes use bf16; loss uses fp32. Three cycles decay from 1e-4 to 1e-5, with 64,000-example warmup in the first. The released third cycle-end checkpoint follows 199,999,721 example presentations. Registered screening and monitoring use an equally weighted four-family development macro: six BRIGHT slices, MedicalQARetrieval, LEDGER, and LegalBench CorporateLobbying and ConsumerContractsQA. Defaults remain when comparisons are unresolved. Full configuration, generation prompts, selection rules, and artifact hashes are retained in the repository.
+The encoding benchmark used 100 queries of five to 12 words, warmed inference, batch size one, and four CPU threads on an Apple M5 Pro [9].
 
-**Search protocol.** Qdrant 1.19.1 uses cosine HNSW with m=16, ef_construct=100, indexing threshold 1 KB, and ef from 16 to 512. Graphs for the comparison across embedding models cover FiQA, SCIDOCS (25,657 documents), and TREC-COVID (171,332), uncompressed, with two seeded insertion-order builds per workload. Search requests 11 results before the registered self-hit drop. Recovery counts a returned document when its exact score reaches the exact 10th-neighbor score within cosine tolerance 1e-4. NumPy parity is checked on 200 queries per encoder; embedding models below 0.995 are excluded. This removes tas-b, whose SCIDOCS transformer student parity is 0.994. The arctic-embed-l mean-pooling control is outside the model-list statistics.
+The exploratory VM benchmark used 30-second runs with batch size one and one, two, four, or eight worker threads. We report the highest throughput observed for each encoder at the recorded VM rate of \$0.395 per hour. Zero used the highest-scoring setting in the Natural Questions search sweep, which retained 98.5% of its own exact nDCG@10. Nano and Zero saw NQ Open training questions. The benchmark used Natural Questions test queries [20].
 
-The smallest student ef reaching the relative nDCG loss of the original model's own query encoder at ef=64, divided by 64, is computed per build and averaged. Recovery uses the analogous rule. Failure by ef=512 is censored, with multiplier at least eight. SCIDOCS addition, tie handling, parity threshold, and exclusion amendments preceded analysis of results for any embedding model; dated methods retain their history. Gap-predictor intervals resample each embedding model with all its workload results. The distance ratio uses a 5,000-document neighbor sample; family-held-out ridge prediction uses standardized features and unit penalty.
+With one worker, Zero completed 640 queries/s in the run with a primed page cache and 42 queries/s in the run that started without priming [20].
 
-LightRetriever replication uses the released Qwen2.5-1.5B adapter and primary web-search instruction, comparing lookup and full query encoding over the same document vectors under the search protocol for the comparison across embedding models. The repository pins its revision and prompt.
+Zero footprint. At export, we folded the learned weights into the rows and stored them as int8 to reduce the table size. The complete 90.1 MiB package includes the int8 rows and an fp16 reference table. The measured loader expands the selected table to fp32, and peak process memory was 360 MiB under the encoding protocol [8, 9].
 
-**Instance and timing workloads.** FiQA uses all 57,638 documents and 648 queries. The MS MARCO diagnostic keeps every judged-positive passage for 6,980 development queries, then uniformly samples without replacement to 1,000,000 passages from the 8,841,823-passage corpus, seed 20260930. MS MARCO is validation-only, supplying no distillation targets, negatives, or generation seeds; Nano's pretrained backbone has prior exposure.
+### Graph search
 
-The registered instance sweep checks exact parity against NumPy and measures warmed encoding and search separately, sequentially. Compressed sweeps use oversampling one, two, and four. The separate encoding sample contains 100 five-to-12-word queries, batch one, four CPU threads, Apple M5 Pro.
+The exploratory comparison used FiQA, SCIDOCS, and TREC-COVID. For each embedding model and workload, we built two indexes with different insertion orders in Qdrant 1.19.1, using cosine similarity and HNSW with m=16 and ef_construct=100 [10]. We swept hnsw_ef from 16 to 512 and computed breadth ratios per build against the original encoder at 64.
 
-## Appendix C. Embedding models and prospective scores
+The exact-search agreement check used 200 queries per encoder with a threshold of 0.995. The fitted tas-b transformer failed the check on SCIDOCS, leaving 25 models. A returned document counted toward recovery if its exact cosine score was at least the exact tenth neighbor's score minus 10⁻⁴. The FiQA size control retained judged positives, sampled to 25,657 documents, and rebuilt both graphs [1, 16, 17].
 
-**Original model list.** All scores are six-set exact nDCG@10. Pool is document-vector pooling: cls denotes the classification-token representation, and mean denotes mean pooling. Reg. marks the ten registered embedding models; Expl. marks the exploratory expansion. Pinned revisions and prompts are in the companion configurations.
+## Appendix B. Additional evaluation results
 
-| Encoder | Dim. | Pool | Original | Table student | Transformer student | Status |
-|---|---:|---|---:|---:|---:|---|
-| bge-small-en-v1.5 | 384 | cls | 0.5042 | 0.3581 | 0.5084 | Expl. |
-| arctic-embed-s | 384 | cls | 0.4993 | 0.3516 | 0.2594 | Expl. |
-| gte-small | 384 | mean | 0.4838 | 0.2903 | 0.4733 | Expl. |
-| arctic-embed-xs | 384 | cls | 0.4662 | 0.3440 | 0.2779 | Expl. |
-| e5-small-v2 | 384 | mean | 0.4544 | 0.3203 | 0.3367 | Expl. |
-| minilm-l12 | 384 | mean | 0.4219 | 0.3138 | 0.3229 | Expl. |
-| minilm-l6 | 384 | mean | 0.4142 | 0.3267 | 0.3088 | Expl. |
-| multi-qa-minilm-l6 | 384 | mean | 0.4008 | 0.3406 | 0.3094 | Expl. |
-| msmarco-minilm-l6 | 384 | mean | 0.3281 | 0.2905 | 0.1962 | Expl. |
-| gte-base-en-v1.5 | 768 | cls | 0.5331 | 0.3252 | 0.2618 | Reg. |
-| arctic-embed-m-v1.5 | 768 | cls | 0.5263 | 0.3279 | 0.1874 | Reg. |
-| bge-base-en-v1.5 | 768 | cls | 0.5259 | 0.3529 | 0.3249 | Reg. |
-| bge-base-en-v1 | 768 | cls | 0.5131 | 0.3004 | 0.2773 | Expl. |
-| gte-base | 768 | mean | 0.5063 | 0.2762 | 0.2314 | Expl. |
-| e5-base-v1 | 768 | mean | 0.4934 | 0.3126 | 0.2345 | Expl. |
-| e5-base-v2 | 768 | mean | 0.4669 | 0.2930 | 0.2241 | Reg. |
-| contriever-msmarco | 768 | mean | 0.3909 | 0.3270 | 0.1879 | Expl. |
-| tas-b | 768 | cls | 0.3262 | 0.2115 | 0.0868 | Expl. |
-| contriever | 768 | mean | 0.2846 | 0.1864 | 0.0590 | Expl. |
-| gte-large-en-v1.5 | 1024 | cls | 0.5970 | 0.2455 | 0.2229 | Reg. |
-| stella-400M-v5 | 1024 | mean | 0.5745 | 0.3974 | 0.2505 | Reg. |
-| mxbai-embed-large-v1 | 1024 | cls | 0.5368 | 0.2605 | 0.2641 | Reg. |
-| bge-large-en-v1.5 | 1024 | cls | 0.5329 | 0.2845 | 0.2679 | Reg. |
-| arctic-embed-l | 1024 | cls | 0.5289 | 0.3034 | 0.1564 | Reg. |
-| gte-large | 1024 | mean | 0.5129 | 0.2481 | 0.2249 | Expl. |
-| e5-large-v2 | 1024 | mean | 0.4735 | 0.2585 | 0.1743 | Reg. |
+![Exact nDCG@10 for eight retrieval systems on FEVER, DBpedia-entity, and the Android and English CQADupStack forums.](figures/manuscript/figure-b1.png)
 
-**Prospective model list (exploratory).** Eight encoders were fixed before encoding. Predictions from the original 26 were committed by hash before student fitting, with each command verifying that hash. The e5-base-unsupervised table stopped at the convergence gate at penalty 1e-5; its completed transformer student remains included. Each student column pairs actual and predicted six-set nDCG@10.
+**Figure B1.** Exact nDCG@10 for eight systems on the four held-out datasets. Stella and Zero had FEVER training exposure. Nano's training excluded FEVER [17].
 
-| Encoder | Dim. | Original | Table student, actual / predicted | Transformer student, actual / predicted |
-|------------------------------|------:|--------:|-----------------------|-----------------------|
-| bge-large-en v1 | 1024 | 0.5237 | 0.2613 / 0.2883 | 0.2481 / 0.2103 |
-| e5-large | 1024 | 0.4914 | 0.2875 / 0.2757 | 0.2243 / 0.1825 |
-| nomic-embed-text-v1 | 768 | 0.4851 | 0.3684 / 0.2945 | 0.2418 / 0.2336 |
-| e5-base-unsupervised | 768 | 0.4562 | stopped / 0.2833 | 0.1178 / 0.2087 |
-| all-MiniLM-L12-v1 | 384 | 0.4115 | 0.3256 / 0.3171 | 0.3340 / 0.3062 |
-| msmarco-distilbert-base-v4 | 768 | 0.3436 | 0.3071 / 0.2395 | 0.1734 / 0.1117 |
-| msmarco-bert-base-dot-v5 | 768 | 0.3239 | 0.2127 / 0.2318 | 0.1032 / 0.0947 |
-| paraphrase-MiniLM-L6-v2 | 384 | 0.3001 | 0.2566 / 0.2738 | 0.2447 / 0.2103 |
+We evaluated eight systems once on FEVER, DBpedia-entity, and the Android and English CQADupStack forums. The descriptive contrasts exclude FEVER because Stella and Zero had seen it during training. We gave half the weight to DBpedia-entity and a quarter to each forum. Nano scored 0.0032 nDCG@10 above bge-small (95% interval −0.0069 to +0.0134) and 0.0389 below LEAF (−0.0488 to −0.0290). Weighting each query equally put Nano 0.0121 below bge-small (−0.0219 to −0.0024) [17].
 
-## References
+Zero's registered six-dataset gain over BM25 was 0.0165 nDCG@10 (raw 95% interval +0.0017 to +0.0311). Superiority remained unresolved because p=0.0149 exceeded the Holm cutoff of 0.0083. In the descriptive four-dataset comparison, BM25 led by 0.0311 (95% interval 0.0109 to 0.0517) [17].
 
-- [BGE] BAAI. bge-small-en-v1.5. Model card and pretrained model. [Model repository](https://huggingface.co/BAAI/bge-small-en-v1.5).
-- [QED] Yuxuan Wang and Hong Lyu. Query Encoder Distillation via Embedding Alignment is a Strong Baseline Method to Boost Dense Retriever Online Efficiency. SustaiNLP Workshop at ACL, 2023. [arXiv:2306.11550](https://arxiv.org/abs/2306.11550).
-- [EmbedDistill] Seungyeon Kim, Ankit Singh Rawat, Manzil Zaheer, et al. EmbedDistill: A Geometric Knowledge Distillation for Information Retrieval. 2023. [arXiv:2301.12005](https://arxiv.org/abs/2301.12005).
-- [LEAF] Robin Vujanic and Thomas Rueckstiess. LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations. 2025, revised 2026. [arXiv:2509.12539](https://arxiv.org/abs/2509.12539).
-- [LightRetriever] Guangyuan Ma, Yongliang Ma, Xuanrui Gou, Zhenpeng Su, Ming Zhou, and Songlin Hu. LightRetriever: A LLM-based Text Retrieval Architecture with Extremely Faster Query Inference. ICLR, 2026. [arXiv:2505.12260](https://arxiv.org/abs/2505.12260).
-- [Model2Vec] MinishLab. Model2Vec: Fast State-of-the-Art Static Embeddings. Software. [Repository](https://github.com/MinishLab/model2vec).
-- [StaticEmb] Tom Aarsen. Train 400x faster Static Embedding Models with Sentence Transformers. Hugging Face, 15 January 2025. [Blog post](https://huggingface.co/blog/static-embeddings).
-- [pyNIFE] Stephan Tulkens. pyNIFE: Nearly Inference Free Embeddings in Python. Software, 2025. [Repository](https://github.com/stephantul/pynife).
-- [Cho and Hariharan 2019] Jang Hyun Cho and Bharath Hariharan. On the Efficacy of Knowledge Distillation. ICCV, 2019. [Proceedings](https://openaccess.thecvf.com/content_ICCV_2019/html/Cho_On_the_Efficacy_of_Knowledge_Distillation_ICCV_2019_paper.html).
-- [PROD] Zhenghao Lin, Yeyun Gong, Xiao Liu, et al. PROD: Progressive Distillation for Dense Retrieval. WWW, 2023. [arXiv:2209.13335](https://arxiv.org/abs/2209.13335).
-- [HNSW] Yury A. Malkov and Dmitry A. Yashunin. Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs. IEEE TPAMI 42(4), 2020. [arXiv:1603.09320](https://arxiv.org/abs/1603.09320).
-- [OOD-DiskANN] Shikhar Jaiswal, Ravishankar Krishnaswamy, Ankit Garg, Harsha Vardhan Simhadri, and Sheshansh Agrawal. OOD-DiskANN: Efficient and Scalable Graph ANNS for Out-of-Distribution Queries. 2022. [arXiv:2211.12850](https://arxiv.org/abs/2211.12850).
-- [RoarGraph] Meng Chen, Kai Zhang, Zhenying He, Yinan Jing, and X. Sean Wang. RoarGraph: A Projected Bipartite Graph for Efficient Cross-Modal Approximate Nearest Neighbor Search. PVLDB 17(11): 2735-2749, 2024. [Paper](https://www.vldb.org/pvldb/vol17/p2735-chen.pdf).
-- [Arabzadeh et al.] Negar Arabzadeh, Xinyi Yan, and Charles L. A. Clarke. Predicting Efficiency/Effectiveness Trade-offs for Dense vs. Sparse Retrieval Strategy Selection. CIKM, 2021. [arXiv:2109.10739](https://arxiv.org/abs/2109.10739).
-- [QPP] Guglielmo Faggioli, Thibault Formal, Stefano Marchesin, Stéphane Clinchant, Nicola Ferro, and Benjamin Piwowarski. Query Performance Prediction for Neural IR: Are We There Yet? 2023. [arXiv:2302.09947](https://arxiv.org/abs/2302.09947).
-- [DBSF] Qdrant contributors. Hybrid queries: distribution-based score fusion. Qdrant documentation. [Page](https://qdrant.tech/documentation/concepts/hybrid-queries/).
-- [Qdrant 1.19.1] Qdrant contributors. Binary query encoding and vector-index search implementation, v1.19.1. [Tagged source](https://github.com/qdrant/qdrant/tree/v1.19.1).
-- [Stella] Stella-en-400M-v5. Model card for `NovaSearch/stella_en_400M_v5`. [Model page](https://huggingface.co/NovaSearch/stella_en_400M_v5).
-- [BEIR] BEIR contributors. BEIR retrieval benchmark, datasets, and evaluation software. [Repository](https://github.com/beir-cellar/beir).
-- [Index migration] Qdrant contributors. Migrate to a New Embedding Model with Zero Downtime in Qdrant. Qdrant documentation. [Migration procedures](https://qdrant.tech/documentation/tutorials-operations/embedding-model-migration/).
+On descriptive BEIR-15, Nano, bge-small, and LEAF scored 0.5081, 0.5171, and 0.5402 nDCG@10, respectively. Zero scored 0.4572 and BM25 scored 0.4006 [2].
+
+## References and implementation links
+
+[1] [Companion research snapshot, source 540e2bb0. Methods, training code, inference paths, and evidence map.](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m15/PAPER_EVIDENCE_MAP.md) [Lookup-table implementation](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m15src/e8_towers.py). [Transformer projection implementation](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m15src/e19_head_screen.py). [Full model results](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m15/PAPER.md#appendix-c-embedding-models-and-prospective-scores). [Layer comparison](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m10_head_width_probe_mac.json). [Zero training](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m7src/train.py). [Search sweep](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m15_e2_ann_msmarco1m.json). [Nano training](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m10src/nano10.py). [Query generation templates](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m10src/forms.py). [Nano development comparison](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m10_contrast_A4-A3.json). [Query form counts](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m10_exposure_table.json). [Nano build record](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m13_build_record.json). [Zero pooling test](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m7_lever4_pooling_p35w-2m-s2500.json). [Zero pooling recheck](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m7_lever4_pooling_p4n-teacher16-a.json).
+
+[2] [Broad descriptive BEIR-15 aggregate.](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m20_beir15_run.json)
+
+[3] [Wang and Lyu. Query Encoder Distillation via Embedding Alignment is a Strong Baseline Method to Boost Dense Retriever Online Efficiency. 2023.](https://arxiv.org/abs/2306.11550)
+
+[4] [Kim et al. EmbedDistill: A Geometric Knowledge Distillation for Information Retrieval. 2023.](https://arxiv.org/abs/2301.12005)
+
+[5] [Vujanic and Rueckstiess. LEAF: Knowledge Distillation of Text Embedding Models with Teacher-Aligned Representations.](https://arxiv.org/abs/2509.12539)
+
+[6] [MinishLab. Model2Vec.](https://github.com/MinishLab/model2vec)
+
+[7] [Tulkens. pyNIFE.](https://github.com/stephantul/pynife)
+
+[8] Released model artifacts. [Constella Zero](https://huggingface.co/Qdrant/constella-zero), [Constella Nano](https://huggingface.co/Qdrant/constella-nano), and [Stella document encoder](https://huggingface.co/Qdrant/stella-en-400M-v5-doc-onnx). [Zero inference implementation](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m11/release/zero_encoder.py).
+
+[9] [Registered query-encoding timing receipt.](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m15_e1_latency.json)
+
+[10] [Malkov and Yashunin. Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs.](https://arxiv.org/abs/1603.09320)
+
+[11] [Jaiswal et al. OOD-DiskANN: Efficient and Scalable Graph ANNS for Out-of-Distribution Queries.](https://arxiv.org/abs/2211.12850)
+
+[12] [Chen et al. RoarGraph: A Projected Bipartite Graph for Efficient Cross-Modal Approximate Nearest Neighbor Search. PVLDB, 2024.](https://www.vldb.org/pvldb/vol17/p2735-chen.pdf)
+
+[13] [BEIR benchmark and evaluation software.](https://github.com/beir-cellar/beir)
+
+[14] [Stella-en-400M-v5 model card.](https://huggingface.co/NovaSearch/stella_en_400M_v5)
+
+[15] [bge-small-en-v1.5 model card.](https://huggingface.co/BAAI/bge-small-en-v1.5)
+
+[16] [Qdrant 1.19.1 search dispatch, including the unfiltered full-scan condition.](https://github.com/qdrant/qdrant/blob/v1.19.1/lib/segment/src/index/hnsw_index/hnsw/read_view/dispatch.rs) [Qdrant 1.19.1 release notes.](https://github.com/qdrant/qdrant/releases/tag/v1.19.1)
+
+[17] Registered comparisons and held-out evaluation. [Complete results](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m15/PAPER.md#appendix-a-registered-evaluations). [Nano registration](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/1ee3760def23365864781df537460f30a42863d0/m10/final_run_registry.json). [Zero decision rules](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/d24c704077210f3ddd065ff7709f35a3f42ced85/m7/LEDGER.md#statistics-pre-registered). [Held-out registration](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/fe8dec22cd10b6a73fe67cbf73351c37208afb58/m20/REGISTRATION.md). [Released encoder benchmarks](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/m21/BENCHMARKS.md#exact-search-retrieval-quality-dense-and-lexical-systems).
+
+[18] [Published registered routing aggregate, including its dataset membership and always-Stella reference.](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m15_e5_oracle.json) [Query-text routing results](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/540e2bb089a30c83225156945a76b1537beedcd3/results/m15_e6_router.json).
+
+[19] Matched Zero and Qdrant BM25 benchmark. [Benchmark receipt](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/964d3b164b037d87cd5ed816ff35890505cb5c76/results/m15_bm25_zero_msmarco1m.json) and [benchmark runner](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/964d3b164b037d87cd5ed816ff35890505cb5c76/m15src/bm25_zero_msmarco1m.py).
+
+[20] Qdrant Edge throughput on Natural Questions. [Warm-cache receipt](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/02b49de2ae04e4012d5219782433a7d539b27103/results/m15_talk_throughput_nq_gcp-c4-standard-8-warm_e2e.json). [Unprimed-cache receipt](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/02b49de2ae04e4012d5219782433a7d539b27103/results/m15_talk_throughput_nq_gcp-c4-standard-8-cold_e2e.json). [Natural Questions search sweep](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/02b49de2ae04e4012d5219782433a7d539b27103/results/m15_talk_edge_nq.json). [Benchmark methods](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/02b49de2ae04e4012d5219782433a7d539b27103/m15/MEASUREMENTS.md#L746-L772).

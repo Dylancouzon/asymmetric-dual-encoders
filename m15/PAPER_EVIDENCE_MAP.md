@@ -4,9 +4,25 @@
 payloads were not changed for this rewrite. [EVIDENCE.md](EVIDENCE.md) gives numerical cards;
 [LEARNINGS.md](LEARNINGS.md) covers alternative lessons from the complete history.
 
-## Current manuscript: v22 (2026-10-02)
+## Current manuscript (2026-11-21)
 
-This table governs v22. The sections that follow map earlier drafts and use their section and figure numbers; they remain the trail for any number v22 inherited.
+The [current paper](PAPER.md) and [PDF](latex/paper.pdf) use the section and reference numbers in this table. The October tables retain the provenance of earlier versions.
+
+| Manuscript location | Source of record | Scope |
+|---|---|---|
+| Abstract, §5, Table 2, and Figure 3: shared-index latency, relevance, and the 0.68 target | [MS MARCO search sweep](../results/m15_e2_ann_msmarco1m.json), [evidence C10](EVIDENCE.md#c10-does-the-saving-survive-the-search-msmarco1m) | Exploratory selection from the registered sweep; one million passages with judged positives preserved |
+| §2 and Figure 2: teacher comparison, vector agreement, and fitted-model selection | [Registered table comparison](../results/m15_e8_towers.json), [fitted projections](../results/m15_e19_head_screen.json), [vector agreement](../results/m15_e11_mechanism.json), [selection](../results/m15_e21_width_model.json), [follow-up](../results/m15_e24_prospective_amend1.json) | Ten registered table fits, with exploratory expansion and follow-up |
+| §3 and Appendix A: fitting and training | [Methods](MEASUREMENTS.md), [Nano build](../results/m13_build_record.json), [query-form comparison](../results/m10_contrast_A4-A3.json), [Zero pooling test](../results/m7_lever4_pooling_p35w-2m-s2500.json) | Fitted candidates and released models use distinct training procedures |
+| §4 and Table 1: released encoders, BEIR-15 quality, and query encoding | [BEIR-15 aggregate](../results/m20_beir15_run.json), [encoding receipt](../results/m15_e1_latency.json) | Descriptive exact-search quality and a separate CPU encoding benchmark |
+| §5: matched BM25 comparison, FiQA, and search breadth across models | [BM25 rerun](../results/m15_bm25_zero_msmarco1m.json), [FiQA search sweep](../results/m15_e2_ann_fiqa.json), [cross-model search](../results/m15_e20_ann_spaces.json), [FiQA size control](../results/m15_e23_fiqa25k.json) | Separate exploratory analyses; each comparison retains its own settings and quality target |
+| §6: training costs, lexical fusion, and routing | [Evidence C13](EVIDENCE.md#c13-teacher-choice-consequences-and-component-build-costs), [BEIR-15 aggregate](../results/m20_beir15_run.json), [routing opportunity](../results/m15_e5_oracle.json), [query-text routing](../results/m15_e6_router.json) | Nano optimization measured; Zero retraining estimated; relevance-guided routing uses hindsight |
+| §6 and Appendix A: Natural Questions throughput, VM cost, and cache comparison | [Primed run](../results/m15_talk_throughput_nq_gcp-c4-standard-8-warm_e2e.json), [unprimed run](../results/m15_talk_throughput_nq_gcp-c4-standard-8-cold_e2e.json), [Natural Questions search sweep](../results/m15_talk_edge_nq.json) | Exploratory; one eight-vCPU VM, one in-process Edge shard, different relevance across encoders |
+| §7, Figure 4, and Appendix B: comparisons and held-out results | [Nano final run](../results/m10_final_run.json), [Zero final run](../results/m7_final_run.json), [published held-out aggregate](../results/m13_reserved_run.json) | Registered test groups and descriptive held-out contrasts |
+| Appendix A: input availability and MS MARCO reconstruction | [Reproduction instructions](REPRODUCE_INPUTS.md), [provenance audit](PROVENANCE_AUDIT.md) | Rebuilt passage IDs match the recorded hash; the cleaned fitting-query list still requires recovery |
+
+## October manuscript: v22 (2026-10-02)
+
+This table records the v22 manuscript.
 
 | v22 location / claim | Source of record | Label and scope |
 |---|---|---|

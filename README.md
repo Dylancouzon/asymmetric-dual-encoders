@@ -13,6 +13,7 @@ bge-small by **+0.017648 nDCG@10** (one-sided 2.5% lower bound +0.003674).
 
 For the story, read [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md).
 Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md).
+Read the [Constella whitepaper (PDF)](m15/latex/paper.pdf).
 
 ## Quickstart
 

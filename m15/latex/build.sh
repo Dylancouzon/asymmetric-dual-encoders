@@ -1,80 +1,77 @@
 #!/bin/sh
-# Build the arXiv LaTeX source and PDF from m15/PAPER.md: sh m15/latex/build.sh
-set -e
+# Rebuild the manuscript from m15/PAPER.md: sh m15/latex/build.sh
+set -eu
 cd "$(dirname "$0")"
 mkdir -p figures
-cp ../figures/*.pdf figures/
-# Drop the internal draft banner; point images at the PDF figures.
-paper_title=$(sed -n '1s/^# //p' ../PAPER.md)
-sed -e '1{/^# /d;}' -e '/^\*\*Draft v[0-9]*/d' -e 's#(figures/\([a-z0-9_]*\)\.png)#(figures/\1.pdf)#g' ../PAPER.md > paper.md
-# Use each bold "**Figure N.** ..." paragraph as its figure's LaTeX caption (pandoc takes the
-# caption from the image's alt text) and drop the duplicate paragraph.
-python3 - <<'PY'
-import re
-s = open("paper.md").read()
-s = re.sub(r"!\[[^\]]*\]\((figures/[^)]+)\)\n\n\*\*Figure [A-Z]?\d+\.\*\* ([^\n]+)",
-           lambda m: "![" + m.group(2).replace("[", "(").replace("]", ")") + "](" + m.group(1) + ")", s)
-open("paper.md", "w").write(s)
-PY
-pandoc paper.md -s -o paper.tex --from markdown+tex_math_dollars+pipe_tables \
-  -V documentclass=article -V fontsize=10pt -V geometry:margin=1in -V colorlinks=true \
-  -V author="Constella authors" -V date="October 2026" \
-  --metadata title="$paper_title"
-# Keep compact tables and their captions together, and figures within their research sections.
+cp ../figures/manuscript/*.png figures/
+
 python3 - <<'PY'
 import json
 import re
 from pathlib import Path
-p = Path("paper.tex")
-s = p.read_text()
-# Keep the author roster in one source and lay it out in two columns with contact details.
+
+source = Path("../PAPER.md").read_text()
+title_line, body = source.split("\n", 1)
+title = title_line.removeprefix("# ")
 roster = json.loads(Path("../AUTHORS.json").read_text())
-def tex_escape(value):
-    return re.sub(r"([&%$#_{}])", r"\\\1", value)
-author_cells = [tex_escape(a["name"]) + r"\\" + "\n" +
-                r"{\small\href{mailto:" + a["email"] + r"}{\nolinkurl{" + a["email"] + "}}}"
-                for a in roster["authors"]]
-author_rows = [" & ".join(r"\begin{tabular}{c}" + cell + r"\end{tabular}"
-                          for cell in author_cells[i:i+2])
-               for i in range(0, len(author_cells), 2)]
-author_block = (r"\author{\begin{tabular}{cc}" + "\n" +
-                (r"\\[0.8em]" + "\n").join(author_rows) + "\n" +
-                r"\end{tabular}\\[0.6em]" + tex_escape(roster["affiliation"]) + "}")
-s = s.replace(r"\author{Constella authors}", author_block)
-s = s.replace(r"\hypersetup{", r"\hypersetup{" + "\n  pdfauthor={" +
-              ", ".join(tex_escape(a["name"]) for a in roster["authors"]) + "},", 1)
-s = s.replace(r"\usepackage{longtable,booktabs,array}",
-              r"\usepackage{longtable,booktabs,array}" + "\n" + r"\usepackage{needspace,placeins}")
-s = s.replace(r"\begin{document}",
-              r"\widowpenalty=10000" + "\n" + r"\clubpenalty=10000" + "\n" + r"\begin{document}")
-# Captions include the method; reserve enough room for them and each compact table.
-for number, lines in ((1, 16), (2, 11), (3, 13), ("B", 18), ("B1", 12), ("C", 22), ("D", 24), ("E", 20), ("F", 24)):
-    caption = rf"\textbf{{Table {number}.}}"
-    s = s.replace(caption, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + caption)
-s = s.replace(r"\subsection{Appendix A.",
-              r"\FloatBarrier" + "\n" + r"\setcounter{figure}{0}" + "\n" +
-              r"\renewcommand{\thefigure}{A\arabic{figure}}" + "\n" + r"\subsection{Appendix A.")
-s = s.replace(r"\subsection{Appendix B.", r"\FloatBarrier" + "\n" + r"\subsection{Appendix B.")
-for heading in (r"\subsubsection{5.3 Is the effort predictable?}",
-                r"\subsection{7. Discussion}", r"\subsection{8. Limitations}", r"\textbf{Variation across datasets.}"):
-    s = s.replace(heading, r"\FloatBarrier" + "\n" + heading)
-for heading in ("4. Lexical fusion", "6. Serving compatibility"):
-    needle = r"\subsection{" + heading
-    s = s.replace(needle, r"\FloatBarrier" + "\n" + needle)
-s = s.replace(r"\subsubsection{3.2 Query precision", r"\FloatBarrier" + "\n" +
-              r"\subsubsection{3.2 Query precision")
-s = s.replace("The strongest registered teacher,", r"\FloatBarrier" + "\n" +
-              "The strongest registered teacher,")
-s = s.replace("Our results establish four findings:",
-              r"\Needspace{8\baselineskip}" + "\n" + "Our results establish four findings:")
-s = s.replace("The originally reserved four,", r"\Needspace{20\baselineskip}" + "\n" +
-              "The originally reserved four,")
-for paragraph, lines in ((r"\textbf{The held-out four}", 16),
-                         ("For the other seven features,", 23),
-                         ("The original Zero tests used", 17),
-                         ("The graph-free precision control uses", 16)):
-    s = s.replace(paragraph, rf"\Needspace{{{lines}\baselineskip}}" + "\n" + paragraph)
-p.write_text(s)
+names = [author["name"] for author in roster["authors"]]
+byline = ", ".join(names[:-1]) + ", and " + names[-1] + ". " + roster["affiliation"] + "."
+metadata = {"title": title, "author": byline, "lang": "en", "secnumdepth": 0}
+header = "\n".join(f"{name}: {json.dumps(value)}" for name, value in metadata.items())
+
+# Let LaTeX keep images and their printed captions together.
+body = re.sub(
+    r"!\[[^\n]*\]\(figures/manuscript/([^\n()]+)\)\n\n\*\*Figure B?\d+\.\*\* ([^\n]+)",
+    lambda match: f"![{match[2]}](figures/{match[1]}){{width=100%}}",
+    body,
+)
+body = re.sub(
+    r"(?m)^\*\*Table \d+\.\*\* ",
+    "Table: ",
+    body,
+)
+exponents = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹", "-0123456789")
+body = re.sub(
+    r"10([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+)",
+    lambda match: "$10^{" + match[1].translate(exponents) + "}$",
+    body,
+)
+body = body.replace("λ", r"$\lambda$")
+Path("paper.md").write_text(f"---\n{header}\n---\n{body}")
 PY
+
+pandoc paper.md --standalone --from markdown+tex_math_dollars+pipe_tables --to latex \
+  -V documentclass=article -V fontsize=10pt -V geometry:margin=1in \
+  -V colorlinks=true -o paper.tex
+
+python3 - <<'PY'
+from pathlib import Path
+
+paper = Path("paper.tex")
+text = paper.read_text()
+text = text.replace(
+    r"\begin{document}",
+    "\n".join((r"\usepackage{float,needspace}", r"\widowpenalty=10000",
+               r"\clubpenalty=10000", r"\begin{document}")),
+)
+text = text.replace(r"\begin{figure}", r"\begin{figure}[H]")
+text = text.replace(
+    r"\subsection{Appendix B.",
+    "\n".join((r"\setcounter{figure}{0}", r"\renewcommand{\thefigure}{B\arabic{figure}}",
+               r"\subsection{Appendix B.")),
+)
+table_starts = text.split(r"\begin{longtable}")
+assert len(table_starts) == 4, "Expected three manuscript tables"
+text = table_starts[0] + "".join(
+    rf"\Needspace{{{rows}\baselineskip}}" + "\n" + r"\begin{longtable}" + section
+    for rows, section in zip((12, 16, 11), table_starts[1:])
+)
+text = text.replace("Against BM25, the lexical baseline,",
+                    r"\Needspace{12\baselineskip}" + "\nAgainst BM25, the lexical baseline,")
+text = text.replace(r"\textbf{Lookup table.}",
+                    r"\Needspace{9\baselineskip}" + "\n" + r"\textbf{Lookup table.}")
+paper.write_text(text)
+PY
+
 tectonic -X compile paper.tex --keep-logs > build.log 2>&1 || { tail -30 build.log; exit 1; }
 echo "built $(pwd)/paper.pdf"
