@@ -17,13 +17,9 @@
 <div class="step"><p class="sn">04</p><p class="st">Solve and ship</p><p class="sd">carry (ef, os) with the encoder choice</p></div>
 </div>
 <p class="src">Solved on BEIR NQ: 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential; nDCG@10 floor, times in ms, ef · os, ef ≥ 64. Exploratory.</p>
-<aside>[~2 min] You need 0.55 nDCG@10 and a 3 ms p95. Which encoder ships?
+<aside>[~2 min] Suppose I need 0.55 nDCG@10 and a 3 ms p95. Which encoder would you ship from this sweep? [Give the room and Zoom a moment to decide. Point to Nano's row.] I'd take Nano with those search settings. If I raise the relevance floor to the bottom row and keep the same latency budget, every tested setting misses a requirement. I'd need the team to choose which constraint it can change.
 
-[Ask with the teacher slide still visible. Take a guess from the room or Zoom and repeat it aloud.] [click] [Point to Nano's row.]
+On my traffic, I'd agree on those limits up front. I'd judge a batch of actual queries and run each encoder with exact search. If the exact rankings miss my relevance floor, I'd try a different encoder before I spend time on the graph. Then I'd vary search breadth and oversampling and time encoding and search together. For the settings that meet both limits, I'd take the lowest median and ship the graph settings with the encoder. I'd check the result again at the traffic level I expect to serve. Tonight's sweep ran sequentially.
 
-In this sweep, I'd ship Nano with the settings in that row. If the relevance requirement goes up and the latency budget stays put, look what happens at the bottom. Every tested setting misses at least one requirement. I'd take that result back to the team and ask which constraint we can change.
-
-On my own traffic I'd agree on both limits before looking at a timing chart. Start with queries you can judge. Exact search shows me what each encoder can put near the top before I adjust the graph. If that ranking is already poor, I'd try another encoder before spending time tuning search.
-
-I time encoding and search together on every request as I vary breadth and oversampling. I use p95 to see which settings fit my latency budget. Among the ones that also make the relevance cut, I take the lowest median. I carry those search settings with the encoder. I'd check the result under the traffic I expect to serve. Tonight's sweep ran one request at a time.</aside>
+And trying it on your own data takes a few lines.</aside>
 </section>

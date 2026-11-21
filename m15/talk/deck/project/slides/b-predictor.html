@@ -5,5 +5,5 @@
 <div class="kv" style="flex:1"><p class="k2">75 model × workload pairs</p><p class="v2">ρ = −0.64</p><p class="d2">with the table’s recall gap; family-held-out prediction ρ = +0.64</p></div>
 <div class="kv" style="flex:1"><p class="k2">Recurs beyond tables</p><p class="v2">−3.6 pp</p><p class="d2">LightRetriever lookup vs full query encoder recall on FiQA, 4× ef to match</p></div>
 </div>
-<aside>[~0.5 min] I compare the teacher query's nearest-passage distance with the typical distance between neighboring passages. A larger ratio tended to predict a larger recovery loss for the table, so I use it as a clue before fitting. The lookup path in LightRetriever also needed a wider search on FiQA, even though it was trained jointly with its document encoder.</aside>
+<aside>[~0.5 min] I compare the teacher query's distance to its nearest passage with the typical distance between neighboring passages. A larger ratio tended to predict a bigger drop in exact-neighbor recovery with the fitted table. The jointly trained lookup path in LightRetriever also needed wider search on FiQA.</aside>
 </section>

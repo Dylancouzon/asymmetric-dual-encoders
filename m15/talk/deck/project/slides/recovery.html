@@ -8,11 +8,9 @@
 </div>
 </div>
 <p class="src">Chart: Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization, one build, M5 Pro, exploratory. Paper: Qdrant 1.19.1, uncompressed, two builds per model, exploratory.</p>
-<aside>[~2 min] [Trace the first Stella point and the last Zero point. Give Zoom time to find both.]
+<aside>[~2 min] [Point to the first Stella point and the last Zero point. Give the audience time to find both.] I kept the links between passages fixed. A new query vector can change which passages look promising as I follow those links. I held oversampling at four and let search explore more of the graph. Even at the widest setting, Zero found a smaller share of its own exact neighbors than Stella found at the narrowest setting.
 
-I left the links between passage vectors alone. The query vector can change which passages look promising as search walks those links. Here I held oversampling at four and gave each encoder more room to explore. At the widest setting I tried, Zero still found a smaller share of its own exact neighbors than Stella did at the first setting.
+I saw the same need for wider search in the paper's experiments with uncompressed vectors. The size of the difference depended on the collection. That changes how I'd roll out a new query encoder. I'd start with my existing graph settings, then give the new encoder its own sweep. I want to know what it costs to get back the candidates it can find with exact search.
 
-I saw the same kind of extra work in the paper's tests across models with uncompressed vectors. How much work it took depended on the collection. If I swap in a new encoder, the graph settings I tuned for the old encoder are a starting point. I'd run the sweep again before promising a latency improvement.
-
-There's a second question to ask when you turn that setting up. The graph can find more of an encoder's exact neighbors while the page the user wants stays where it was. I use the exact check to see what search recovered and the relevance judgments to see whether it helped. Let's try both on a question you care about.</aside>
+The recovery number here is about finding those candidates. A wider search can find more of them without moving the page I'd open any higher. I brought three questions so we can look at the actual results and see where a wider search helps.</aside>
 </section>

@@ -1,24 +1,13 @@
 <section id="live" class="s demo" data-transition="fade">
-<div class="live"><div class="dot"></div><p>LIVE</p></div>
-<div class="head"><h2>Your Turn</h2></div>
-<p class="sub">Send me a query in the Zoom chat or shout one.</p>
-<aside>[~4 min] Give me something you'd look up in Wikipedia. Call it out here or put it in the Zoom chat.
+<div class="head"><h2>Live: Four Rankers on One Shard</h2></div>
+<div class="live"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:40px;margin-top:24px">Stella, Nano, Zero and BM25 on one Qdrant Edge shard, on this laptop.</p>
+<aside>[~4 min] [Share the demo, open Live, and leave the exact check off for the first two queries. Use the recorded fallback if live search is unavailable and the recording shows these queries.]
 
-[Share the demo and open Live. Wait for a query. Read it aloud, enter it, and run all four columns. Use the recorded fallback if live search is unavailable.]
+[Enter "how far is the moon from the earth" on the NQ index. Read the query aloud and run all four rankers.] I'm looking for a distance. BM25 starts with "Far side of the Moon." That has several of the words I'm after. My question asks for a distance. Zero brings up the Moon articles with the table we saw earlier. [Point to the results and give Zoom viewers a moment to read them.]
 
-What's the answer you were hoping to find? Let's look at the first passage each encoder offers. BM25 gives us something to compare against from a term search on the same passages.
+[Read "movies where the dog dies at the end" aloud, enter it, and run all four rankers.] Zero puts "John Dies at the End" first. I can see why the words gave it a good score. I asked for a plot involving the dog. Stella and Nano put "Hachi: A Dog's Tale" first. That's the page I'd open. [Pause on the top hits.]
 
-[Point to the encode and search timings. Read the titles and opening lines aloud. Give the person who supplied the query time to respond.]
+[Read "why is the sky blue" aloud and enter it. Enable the exact check. Run at hnsw_ef 64, then at 1024. Keep oversampling fixed. Point to the recovery counts before and after, then to the search times.] I'm giving the graph more room to look. Zero still finds eight of its own exact top 10. Stella and Nano find all of theirs. Each column checks against its own list, so a full count can mean different pages. I'd need a reason to pay for that extra search time.
 
-Which one would you open? Hold onto that answer while I give the graph a little more work to do.
-
-[Turn on the exact check. Lower hnsw_ef and rerun. Then raise it and rerun. Leave oversampling fixed. Point to the change in search time and recovery for one dense encoder.]
-
-Each dense column checks itself against its own exact results. Two columns can each recover all ten and still offer different pages. When I gave search more room, did it move a passage you'd open any higher?
-
-[Let the room and Zoom compare the results. If the recovery count holds steady, show what the wider search cost. Take a second query if time allows.]
-
-I'd ask that same question on a batch of judged searches from my own traffic. That batch can also help much earlier, when I'm choosing what to put in the index.
-
-[Return to the deck.]</aside>
+[Return to the deck.] I'd use examples like these to decide what to judge in a batch. Then I'd use that batch to choose both an encoder and its search settings.</aside>
 </section>

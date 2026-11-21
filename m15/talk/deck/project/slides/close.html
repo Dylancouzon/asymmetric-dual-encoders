@@ -1,18 +1,13 @@
 <section id="close" class="s alt" data-transition="fade">
-<div class="grow"></div>
-<p class="stmt" style="width:1500px">Keep your index.
-<span class="tr">Make the query encoder a dial.</span></p>
-<div class="fl" style="gap:56px;margin-top:64px;align-items:flex-end">
-<div class="col" style="gap:16px">
-<p class="code">pip install "fastembed&gt;=0.9.0"</p>
-</div>
-<div style="width:260px;height:260px;border-radius:16px;background:#f0f3fa"></div>
-</div>
-<p class="note" style="margin-top:16px">[QR: paper preview and repository]</p>
-<div class="grow"></div>
-<aside>[~1 min] On Monday, I'd start with queries your team can argue about. Pick a few where someone can look at the first page and tell you exactly which result should have been there. Give the cheaper encoder that batch. You'll have something concrete to put in front of the person who'd otherwise have to schedule a new index build.
+<div class="head"><h2>Keep Your Index. <span class="tr">Make the Query Encoder a Dial.</span></h2></div>
+<p class="code" style="white-space:pre;font-size:32px;margin-top:40px;padding:32px 40px;font-variant-ligatures:none">from fastembed import TextEmbedding
 
-[Leave the FastEmbed command visible. Show the paper and repository QR if available.]
+index = TextEmbedding("Qdrant/stella-en-400M-v5-doc-onnx")
+query = TextEmbedding("Qdrant/constella-zero")  <span class="mut"># or constella-nano</span>
 
-The models are in FastEmbed and on Hugging Face. The paper has the measurements if you want to see how I got them. Thanks for lending me your queries here in London and on Zoom.</aside>
+client.upload_collection("docs", list(index.embed(docs)))
+client.query_points("docs", query=next(query.embed([q])))</p><p class="code" style="font-size:32px;margin-top:24px;display:inline-block;font-variant-ligatures:none">pip install "fastembed&gt;=0.9.0"</p>
+<aside>[~1 min] [Leave the FastEmbed example visible. Point to the two model roles and the install command.] I make passage vectors with Stella's document model. For the query I can pick Zero or Nano against those passage vectors. FastEmbed 0.9.0 or later gives me those models.
+
+Thanks for joining me here and on Zoom. On Monday, I'd start by judging a batch of my own queries. Pick the pages you'd expect to come back, then see where the cheaper encoder ranks them.</aside>
 </section>

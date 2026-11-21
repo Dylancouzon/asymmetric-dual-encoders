@@ -1,27 +1,10 @@
-<section id="order" class="s" data-transition="fade">
-<div class="head"><h2>Zero Cannot See Word Order</h2></div>
-<div class="fl" style="gap:40px;margin-top:40px">
-<div class="col" style="gap:20px"><p class="qchip">paris to rome</p><p class="qchip">rome to paris</p></div>
-<p class="arr">→</p>
-<div class="fl" style="gap:14px"><p class="tok">paris</p><p class="tok">rome</p><p class="tok">to</p></div>
-<p class="arr">→</p>
-<div class="col" style="gap:8px"><p class="big tr" style="font-size:72px">identical</p><p class="cap mono">Zero query vectors</p></div>
-</div>
-<div class="fragment fl" style="gap:48px;margin-top:88px;border-top:2px solid #303547;padding-top:48px">
-<div class="col" style="gap:4px"><p class="eyebrow" style="color:#c9cede">Stella</p><p class="num" style="font-size:150px">4<span class="mut"> / 24</span></p></div>
-<p class="lead" style="width:900px">reversal pairs ranked right both ways · Nano 2 · Zero 0</p>
-</div>
-<aside>[~1.5 min] [Point to each route as you read it.]
+<section id="order" class="s foot" data-transition="fade">
+<div class="head"><h2>Reverse the Query, and Zero's Vector Does Not Move</h2></div>
+<div style="margin-top:32px"><svg width="1664" height="560" viewBox="0 0 1664 560"><line x1="60" y1="470" x2="500" y2="470" stroke="#c9cede" stroke-width="6"/><line x1="60" y1="470" x2="498.4" y2="432.5" stroke="#c9cede" stroke-width="6" opacity="0.55"/><text x="60" y="380" font-size="44" fill="#c9cede" text-anchor="start" font-weight="600">Stella</text><text x="60" y="300" font-size="88" fill="#fcfdff" text-anchor="start" font-weight="700">4.9°</text><line x1="620" y1="470" x2="1060" y2="470" stroke="#9494ff" stroke-width="6"/><line x1="620" y1="470" x2="1059.6" y2="451.0" stroke="#9494ff" stroke-width="6" opacity="0.55"/><text x="620" y="380" font-size="44" fill="#9494ff" text-anchor="start" font-weight="600">Nano</text><text x="620" y="300" font-size="88" fill="#fcfdff" text-anchor="start" font-weight="700">2.5°</text><line x1="1180" y1="470" x2="1620" y2="470" stroke="#ff516b" stroke-width="6"/><line x1="1180" y1="470" x2="1620.0" y2="470.0" stroke="#ff516b" stroke-width="6" opacity="0.55"/><text x="1180" y="380" font-size="44" fill="#ff516b" text-anchor="start" font-weight="600">Zero</text><text x="1180" y="300" font-size="88" fill="#fcfdff" text-anchor="start" font-weight="700">0.0°</text><text x="0" y="60" font-size="34" fill="#c9cede" text-anchor="start" font-weight="400">"paris to rome" vs "rome to paris": median angle between the two query vectors, 24 pairs</text></svg></div>
+<p class="src">Median over 24 frozen reversal pairs (m15/talk/word_order_pairs.json) of the angle between the two query vectors; Zero's are identical. results/m15_talk_slide_data.json. Exploratory.</p>
+<aside>[~1.5 min] [Read the two routes and pause between them.] If I mix up "Paris to Rome" and "Rome to Paris," I may be waiting at the wrong airport. Zero gathers the same rows with the same weights for both. It makes exactly the same vector, so it gives both directions the same ranking.
 
-"Paris to Rome." "Rome to Paris." If I get those mixed up, I'm at the wrong airport. Which input to Zero's sum changed?
+[Point to Stella's marker.] Even Stella barely moved. The median change in this small reversal test was 4.9 degrees, and Nano moved less. In retrieval terms, across 24 pairs Stella ranked the right passage first in both directions on four, Nano on two, and Zero on none. A small change can matter if two passages are close in score. I still have to look at which one comes back first.
 
-[Pause for a response.]
-
-The same rows go into that sum with the same weights. If search put the outbound trip first, it will put that trip first again when I ask for the return.
-
-I made a small exploratory test out of that. I gave each pair two passages, one for each direction. A model passed if it got both queries right. Stella changed its query vector on every reversal. I wanted to see how often that change sent the right passage to the top.
-
-[click] [Let the room read the result.]
-
-Every Stella win here was a unit conversion. That was enough to change what I'd put in a test set. If people need to search for directions, add a few pairs where the same words ask for different answers. Check the passage they get back.</aside>
+I'd put both directions in my test set if users cared about routes. I'd give each its own expected answer and check both rankings. That distinction between a nearby vector and a useful ranking mattered when I trained the table.</aside>
 </section>

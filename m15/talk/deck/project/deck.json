@@ -17,18 +17,18 @@
   "cover",
   "cost",
   "arch",
-  "cloud",
+  "bench",
   "zero-mech",
   "order",
   "distill",
+  "worst",
   "nano",
-  "bench",
+  "cloud",
   "bet",
   "race",
   "split",
   "recovery",
   "live",
-  "worst",
   "recipe",
   "close",
   "flops",
@@ -51,28 +51,28 @@
    "start": "cost"
   },
   "family": {
-   "description": "One Stella index, three query encoders, and what each costs per million queries.",
+   "description": "One Stella index, three query encoders, and how much ranking each keeps.",
    "start": "arch"
   },
   "build": {
-   "description": "How Zero and Nano work and how they were trained on a desktop GPU.",
+   "description": "How Zero and Nano work, their limit, how they were trained, and how to pick a teacher.",
    "start": "zero-mech"
   },
-  "quality": {
-   "description": "How much of Stella's relevance survives.",
-   "start": "bench"
-  },
   "catch": {
-   "description": "The bet, the live race, why cheaper queries need a wider search, and the live type-off.",
+   "description": "The bet, the race replay, why cheaper queries need a wider search, and the live demo.",
    "start": "bet"
   },
   "monday": {
-   "description": "Screen by measuring, the four-step recipe, and the close.",
-   "start": "worst"
+   "description": "Choose by measuring: the recipe, and how to start.",
+   "start": "recipe"
   },
   "backup": {
    "description": "Hidden backup slides for questions.",
    "start": "flops"
+  },
+  "cost2": {
+   "description": "What encoding costs per million queries.",
+   "start": "cloud"
   }
  },
  "faces": {

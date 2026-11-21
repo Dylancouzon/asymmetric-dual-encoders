@@ -13,5 +13,5 @@
 <div class="host" style="width:1664px;height:30px"><p class="axl" style="left:184px;top:0;width:80px">10³</p><p class="axl" style="left:479px;top:0;width:80px">10⁵</p><p class="axl" style="left:774px;top:0;width:80px">10⁷</p><p class="axl" style="left:1069px;top:0;width:80px">10⁹</p><p class="axl" style="left:1364px;top:0;width:80px">10¹¹</p></div>
 </div>
 <p class="src">Estimate: 2·P·T + 4·L·T²·d per forward pass, P = matmul weights (Nano’s head runs per token); median over 100 real queries of 5–12 words. Zero: 2 FLOPs per gathered value plus normalization.</p>
-<aside>[~0.5 min] I estimate the transformer arithmetic from the matrix multiplies and attention, including Stella's prompt tokens. Zero still pays for loading rows, pooling, and normalization, so I use measured timings to see what the change saves on a device.</aside>
+<aside>[~0.5 min] I estimate the transformer arithmetic from matrix multiplies and attention, including Stella's prompt tokens. Zero still gathers rows, pools them, and normalizes the result, so I time the full encode on the device.</aside>
 </section>

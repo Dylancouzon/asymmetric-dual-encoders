@@ -74,31 +74,29 @@ write("arch", " foot", "Three Query Encoders Search One Index",
       "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
       "Zero: 2 FLOPs per gathered value plus normalization.")
 
-# 3. cloud: dollars per million on a log scale, VMs as squares
+# 3. cloud: CPU per million queries (machine-normalized), dollars as labels, ratios as the outcome
 g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
-rows = [("Stella", 6.07, "$6.07", 56, GRAY), ("Nano", 0.236, "$0.24", 3, VIO), ("Zero", 0.0016, "$0.0016", 1, RED)]
-x0, x1, lo, hi = 200, 1000, math.log10(0.001), math.log10(10)
+rows = [("Stella", 123.0, "123 vCPU-h · $6.07", GRAY), ("Nano", 4.786, "4.8 vCPU-h · $0.24", VIO),
+        ("Zero", 0.03296, "2 vCPU-min · $0.0016", RED)]
+x0, x1, lo, hi = 200, 1060, math.log10(0.01), math.log10(300)
 X = lambda v: x0 + (math.log10(v) - lo) / (hi - lo) * (x1 - x0)
-g.append(t(x0, 30, "$ per 1M queries (log scale)", 26, MUT))
-g.append(t(1100, 30, "VMs for 1,000 queries/s", 26, MUT))
-for i, (n, v, lab, vms, c) in enumerate(rows):
+g.append(t(x0, 30, "CPU time to encode 1M queries (log scale)", 26, MUT))
+for i, (n, v, lab, c) in enumerate(rows):
     y = 80 + i * 150
     g.append(t(0, y + 52, n, 40, c, "start", 600))
     g.append(f'<rect x="{x0}" y="{y + 10}" width="{X(v) - x0:.0f}" height="60" rx="8" fill="{c}"/>')
-    g.append(t(X(v) + 16, y + 52, lab, 36, WHITE, "start", 600))
-    for k in range(vms):
-        cx, cy = 1100 + (k % 14) * 38, y + (k // 14) * 26 - 10
-        g.append(f'<rect x="{cx}" y="{cy + 10}" width="30" height="20" rx="4" fill="{c}"/>')
-    if vms == 1:
-        g.append(t(1150, y + 28, "1 VM, 1.5% used", 28, WHITE))
-for d in (0.001, 0.01, 0.1, 1, 10):
-    g.append(t(X(d), 520, f"${d:g}", 24, MUT, "middle", 400, True))
+    g.append(t(X(v) + 16, y + 52, lab, 34, WHITE, "start", 600))
+for d, lab in ((0.01, "0.01"), (0.1, "0.1"), (1, "1"), (10, "10"), (100, "100 vCPU-h")):
+    g.append(t(X(d), 520, lab, 24, MUT, "middle", 400, True))
+g.append(t(1664, 230, "26×", 96, VIO, "end", 700))
+g.append(t(1664, 380, "3,700×", 96, RED, "end", 700))
+g.append(t(1664, 440, "less CPU than Stella", 30, GRAY, "end"))
 g.append("</svg>")
 write("cloud", " foot", "Encoding 1M Queries: $6.07, $0.24, or $0.0016",
-      '<div style="margin-top:40px">' + "".join(g) + "</div>"
-      '',
-      "GCP c4-standard-8, us-east1, on-demand $0.395/h. Encoding only, batch 1, 8 processes × 1 ONNX Runtime thread "
-      "(Zero: NumPy), 30 s closed loop on NQ queries; dollars assume a saturated VM. Exploratory.")
+      '<div style="margin-top:40px">' + "".join(g) + "</div>",
+      "GCP c4-standard-8 (8 vCPU), us-east1, on-demand $0.395/h, at peak throughput: batch 1, 8 processes × 1 ONNX "
+      "Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries. vCPU-hours = 8 / queries per second × 1M / 3600. "
+      "Encoding only. Exploratory.")
 
 # 4. distill (merged with zero-train): frozen targets, two steps, one table
 box = lambda x, w, title, sub, c: (
@@ -151,55 +149,61 @@ write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space",
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
 
-# 6. bench: the dial, encode time vs relevance kept, one index
+# 6. bench: Constella against models that need their own index; absolute BEIR-15 nDCG@10
 W, H, L, R, T, B = 1664, 600, 140, 80, 30, 90
-xl, xh, yl, yh = math.log10(0.02), math.log10(60), 0.75, 1.02
+xl, xh, yl, yh = math.log10(0.02), math.log10(60), 0.38, 0.58
 PX = lambda v: L + (math.log10(v) - xl) / (xh - xl) * (W - L - R)
 PY = lambda v: T + (yh - v) / (yh - yl) * (H - T - B)
 g = [f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
-for v in (0.8, 0.9, 1.0):
+for v in (0.40, 0.45, 0.50, 0.55):
     g.append(f'<line x1="{L}" x2="{W - R}" y1="{PY(v):.0f}" y2="{PY(v):.0f}" stroke="{LINE}" stroke-width="2"/>')
-    g.append(t(L - 16, PY(v) + 9, f"{v:.0%}", 26, MUT, "end", 400, True))
+    g.append(t(L - 16, PY(v) + 9, f"{v:.2f}", 26, MUT, "end", 400, True))
 for d, lab in ((0.03, "0.03"), (0.3, "0.3"), (3, "3"), (30, "30")):
     g.append(t(PX(d), H - B + 44, lab, 26, MUT, "middle", 400, True))
 g.append(t((L + W - R) / 2, H - 8, "median query encode time, ms (log)", 26, GRAY, "middle"))
-g.append(t(L, 22, "BEIR-15 nDCG@10, share of Stella", 26, GRAY))
-pts = [("Stella", 31.6, 1.0, GRAY, "100%"), ("Nano", 2.25, 0.905, VIO, "90.5%"), ("Zero", 0.044, 0.814, RED, "81.4%")]
-g.append(f'<polyline points="{" ".join(f"{PX(x):.0f},{PY(y):.0f}" for _, x, y, _, _ in pts)}" fill="none" stroke="{LINE}" stroke-width="3" stroke-dasharray="10 8"/>')
-for n, x, y, c, lab in pts:
+g.append(t(L, 22, "BEIR-15 nDCG@10", 26, GRAY))
+g.append(f'<line x1="{L}" x2="{W - R}" y1="{PY(0.4006):.0f}" y2="{PY(0.4006):.0f}" stroke="{MUT}" stroke-width="3" stroke-dasharray="4 10"/>')
+g.append(t(W - R, PY(0.4006) - 14, "BM25 · 0.401", 28, MUT, "end"))
+for n, x, y, dx, dy, anc in (("LEAF", 1.39, 0.5402, 0, -30, "middle"), ("bge-small", 2.57, 0.5171, 34, 10, "start")):
+    g.append(f'<rect x="{PX(x) - 13:.0f}" y="{PY(y) - 13:.0f}" width="26" height="26" fill="none" stroke="{MUT}" stroke-width="4" transform="rotate(45 {PX(x):.0f} {PY(y):.0f})"/>')
+    g.append(t(PX(x) + dx, PY(y) + dy, f"{n} · own index", 26, MUT, anc))
+pts = [("Stella", 31.6, 0.5614, GRAY, -34), ("Nano", 2.25, 0.5081, VIO, 62), ("Zero", 0.044, 0.4572, RED, 62)]
+for n, x, y, c, dy in pts:
     g.append(f'<circle cx="{PX(x):.0f}" cy="{PY(y):.0f}" r="18" fill="{c}"/>')
-    g.append(t(PX(x), PY(y) - 34, f"{n} · {lab}", 32, c, "middle", 600))
-g.append(t(PX(0.044) - 20, PY(0.814) + 70, "with BM25 fusion: 87.9%", 28, RED, "start", 600))
+    g.append(t(PX(x), PY(y) + dy, n, 34, c, "middle", 600))
+g.append(t(PX(0.044) + 34, PY(0.4933) + 10, "+ BM25 fusion · 0.493", 28, RED, "start", 600))
+g.append(f'<line x1="{PX(0.044):.0f}" y1="{PY(0.4572) - 20:.0f}" x2="{PX(0.044):.0f}" y2="{PY(0.4933) + 6:.0f}" stroke="{RED}" stroke-width="3" stroke-dasharray="6 6"/>')
 g.append("</svg>")
 write("bench", " foot", "One Index, Three Price Points",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      "Exact search, nDCG@10, unweighted mean of 15 BEIR datasets (registered descriptive evaluation); Stella 0.5614. "
-      "Encode: M5 Pro CPU p50. Fusion adds a sparse branch (DBSF over 100 candidates per branch).")
+      "Exact search, nDCG@10, unweighted mean of 15 BEIR datasets (registered descriptive evaluation). Circles share "
+      "Stella's index; diamonds use their own index. Encode: M5 Pro CPU p50. Fusion adds a sparse branch (DBSF over "
+      "100 candidates per branch).")
 
 # 7. split: whole-request bars on one millisecond axis
 W, L0, AX = 1664, 230, 2.2
 SX = lambda v: L0 + v / AX * 820
-g = [f'<svg width="{W}" height="520" viewBox="0 0 {W} 520">']
+g = [f'<svg width="{W}" height="580" viewBox="0 0 {W} 580">']
 g.append(t(SX(0), 30, "median request, ms", 26, MUT))
 g.append(f'<rect x="{SX(0) + 300}" y="10" width="28" height="20" rx="4" fill="{TEAL}"/>')
 g.append(t(SX(0) + 338, 30, "encode", 26, MUT))
 g.append(f'<rect x="{SX(0) + 490}" y="10" width="28" height="20" rx="4" fill="{ORG}"/>')
 g.append(t(SX(0) + 528, 30, "search", 26, MUT))
 g.append(t(1420, 30, "nDCG@10", 26, MUT))
-for i, (n, tot, enc, nd, c, star) in enumerate([("Nano", 2.04, 0.807, "0.579", VIO, ""),
-                                                ("Zero", 0.86, 0.041, "0.510", RED, "*")]):
+for i, (n, tot, enc, nd, c, star) in enumerate([("Nano", 2.04, 0.807, "0.579", VIO, "99.2% of exact"),
+                                                ("Zero", 0.86, 0.041, "0.510", RED, "98.5%, misses target")]):
     y = 80 + i * 150
     g.append(t(0, y + 54, n, 44, c, "start", 600))
     g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(tot * enc) - SX(0):.0f}" height="64" fill="{TEAL}"/>')
     g.append(f'<rect x="{SX(tot * enc):.0f}" y="{y + 10}" width="{SX(tot) - SX(tot * enc):.0f}" height="64" fill="{ORG}"/>')
     g.append(t(SX(tot) + 18, y + 56, f"{tot} ms", 40, WHITE, "start", 600))
     g.append(t(1420, y + 56, nd, 40, WHITE, "start", 600))
-    if star:
-        g.append(t(1420, y + 96, "98.5% of exact", 26, RED))
+    g.append(t(1420, y + 100, star, 32 if star.startswith("98") else 26, RED if star.startswith("98") else GRAY, "start", 600 if star.startswith("98") else 400))
 y = 440
 g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
 g.append(t(SX(0), y + 54, "20.8 ms (off scale)", 34, GRAY))
 g.append(t(1420, y + 56, "0.631", 40, WHITE, "start", 600))
+g.append(t(1420, y + 96, "99.0% of exact", 26, GRAY))
 for v in (0, 1, 2):
     g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="80" y2="360" stroke="{LINE}" stroke-width="2"/>')
     g.append(t(SX(v), 395, str(v), 24, MUT, "middle", 400, True))
@@ -209,4 +213,101 @@ write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×",
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10; "
       "Zero misses that at every tested point (best shown: ef 1024, os 8). Exploratory.")
+# 8. zero-mech: real rows Zero gathers for one query, pooled, next to Stella's vector
+import json as _json
+SD = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_slide_data.json").read_text())
+ex = SD["zero_example"]
+
+
+def strip(x, y, vals, w=760, h=46):
+    m = max(abs(v) for v in vals) or 1
+    cw = w / len(vals)
+    out = []
+    for k, v in enumerate(vals):
+        a = min(abs(v) / m, 1)
+        c = RED if v > 0 else TEAL
+        out.append(f'<rect x="{x + k * cw:.1f}" y="{y}" width="{cw - 2:.1f}" height="{h}" fill="{c}" opacity="{0.12 + 0.88 * a:.2f}"/>')
+    return "".join(out)
+
+
+g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
+for i, r in enumerate(ex["rows"]):
+    y = 20 + i * 64
+    g.append(t(200, y + 34, r["token"], 32, MUT if r["token"].startswith("[") else WHITE, "end", 600, True))
+    g.append(strip(230, y, r["row"]))
+g.append(t(230, 500, "one table row per token (first 48 of 1,024 dims)", 26, MUT))
+g.append(f'<path d="M1010 40 Q1060 40 1060 120 L1060 340 Q1060 420 1010 420" fill="none" stroke="{MUT}" stroke-width="3"/>')
+g.append(t(1100, 210, "√count-weighted", 30, WHITE, "start", 600))
+g.append(t(1100, 252, "mean, then L2", 30, WHITE, "start", 600))
+g.append(t(1100, 330, "Zero", 32, RED, "start", 600))
+g.append(strip(1100, 344, ex["zero_vector"], w=560))
+g.append(t(1100, 450, "Stella", 32, GRAY, "start", 600))
+g.append(strip(1100, 464, ex["stella_vector"], w=560))
+g.append(t(1100, 580, f"cosine {ex['cos_zero_stella']:.2f}", 44, WHITE, "start", 700))
+g.append("</svg>")
+write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup",
+      '<div style="margin-top:24px">' + "".join(g) + "</div>",
+      "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\". "
+      "Colour: sign and size of each value, scaled per strip. Stella: its query vector with prompt. results/m15_talk_slide_data.json.")
+
+# 9. order: the angle between a query and its reversal, per encoder
+oc = SD["order_cosine"]
+ang = {k: math.degrees(math.acos(min(1.0, v["median_cos"]))) for k, v in oc.items()}
+g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
+for i, (k, n, c) in enumerate((("stella-query", "Stella", GRAY), ("nano", "Nano", VIO), ("zero", "Zero", RED))):
+    ox, oy, Lr = 60 + i * 560, 470, 440
+    a = math.radians(ang[k])
+    g.append(f'<line x1="{ox}" y1="{oy}" x2="{ox + Lr}" y2="{oy}" stroke="{c}" stroke-width="6"/>')
+    g.append(f'<line x1="{ox}" y1="{oy}" x2="{ox + Lr * math.cos(a):.1f}" y2="{oy - Lr * math.sin(a):.1f}" stroke="{c}" stroke-width="6" opacity="0.55"/>')
+    g.append(t(ox, 380, n, 44, c, "start", 600))
+    g.append(t(ox, 300, f"{ang[k]:.1f}°", 88, WHITE, "start", 700))
+g.append(t(0, 60, "\"paris to rome\" vs \"rome to paris\": median angle between the two query vectors, 24 pairs", 30, GRAY))
+g.append("</svg>")
+write("order", " foot", "Reverse the Query, and Zero's Vector Does Not Move",
+      '<div style="margin-top:32px">' + "".join(g) + "</div>",
+      "Median over 24 frozen reversal pairs (m15/talk/word_order_pairs.json) of the angle between the two query "
+      "vectors; Zero's are identical. results/m15_talk_slide_data.json. Exploratory.")
+
+# 10. worst: slope chart, teacher score vs its fitted table, ten registered models
+REG = [("gte-base-en-v1.5", .5331, .3252), ("arctic-embed-m-v1.5", .5263, .3279), ("bge-base-en-v1.5", .5259, .3529),
+       ("e5-base-v2", .4669, .2930), ("gte-large-en-v1.5", .5970, .2455), ("stella-400M-v5", .5745, .3974),
+       ("mxbai-embed-large-v1", .5368, .2605), ("bge-large-en-v1.5", .5329, .2845), ("arctic-embed-l", .5289, .3034),
+       ("e5-large-v2", .4735, .2585)]
+lx, rx, top, bot = 420, 1240, 80, 560
+YL = lambda v: top + (0.61 - v) / (0.61 - 0.23) * (bot - top)   # one nDCG scale for both columns
+YR = YL
+g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
+g.append(t(lx, 40, "model itself", 30, GRAY, "middle", 600))
+g.append(t(rx, 40, "its lookup table", 30, GRAY, "middle", 600))
+for x in (lx, rx):
+    g.append(f'<line x1="{x}" y1="{top - 10}" x2="{x}" y2="{bot + 10}" stroke="{LINE}" stroke-width="3"/>')
+for n, a, b in sorted(REG, key=lambda r: r[0] in ("gte-large-en-v1.5", "stella-400M-v5")):
+    c, w, op = (RED, 6, 1) if n == "gte-large-en-v1.5" else (WHITE, 6, 1) if n == "stella-400M-v5" else ("#4a5068", 3, 1)
+    g.append(f'<line x1="{lx}" y1="{YL(a):.0f}" x2="{rx}" y2="{YR(b):.0f}" stroke="{c}" stroke-width="{w}" opacity="{op}"/>')
+    g.append(f'<circle cx="{lx}" cy="{YL(a):.0f}" r="8" fill="{c}"/><circle cx="{rx}" cy="{YR(b):.0f}" r="8" fill="{c}"/>')
+for n, a, b, c in (("gte-large", .5970, .2455, RED), ("Stella", .5745, .3974, WHITE)):
+    g.append(t(lx - 24, YL(a) + 11, f"{n} {a:.3f}", 32, c, "end", 600))
+    g.append(t(rx + 24, YR(b) + 11, f"{b:.3f}", 32, c, "start", 600))
+g.append(t(rx + 24, 620, "nDCG@10, six BEIR sets", 26, MUT))
+g.append("</svg>")
+write("worst", " foot", "The Best Retriever Made the Weakest Table",
+      '<div style="margin-top:24px">' + "".join(g) + "</div>",
+      "Ten registered models, mean nDCG@10 over six BEIR datasets, exact search: each model, then its fitted lookup "
+      "table (min ‖XW − Y‖² + λ‖W − W₀‖², 4-7 min on one A100). Rank correlation across all 26 models: +0.09.")
+
+# 11. live: prepared queries, no call for Zoom input
+write("live", " demo", "Live: Four Rankers on One Shard",
+      '<div class="live"><div class="dot"></div><p>LIVE</p></div>'
+      '<p class="sub" style="font-size:40px;margin-top:24px">Stella, Nano, Zero and BM25 on one Qdrant Edge shard, on this laptop.</p>')
+
+# 12. close: how simple it is, with FastEmbed
+code = ("from fastembed import TextEmbedding\n\n"
+        "index = TextEmbedding(\"Qdrant/stella-en-400M-v5-doc-onnx\")\n"
+        "query = TextEmbedding(\"Qdrant/constella-zero\")  <span class=\"mut\"># or constella-nano</span>\n\n"
+        "client.upload_collection(\"docs\", list(index.embed(docs)))\n"
+        "client.query_points(\"docs\", query=next(query.embed([q])))")
+write("close", " alt", "Keep Your Index. <span class=\"tr\">Make the Query Encoder a Dial.</span>",
+      f'<p class="code" style="white-space:pre;font-size:32px;margin-top:40px;padding:32px 40px;font-variant-ligatures:none">{code}</p>'
+      '<p class="code" style="font-size:32px;margin-top:24px;display:inline-block;font-variant-ligatures:none">pip install "fastembed&gt;=0.9.0"</p>')
+
 print("rebuilt")

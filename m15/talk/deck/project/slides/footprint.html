@@ -11,5 +11,5 @@
 <div class="kv" style="flex:1"><p class="k2 tr">Stella → Zero</p><p class="v2">718× faster · no transformer</p></div>
 </div>
 <p class="src">Apple M5 Pro CPU, ONNX Runtime 4 threads (Zero: NumPy), batch 1, 100 real queries of 5–12 words, 3 fresh processes. Model load with warm file cache. Zero’s files include an fp16 reference table; its 31 MB int8 table expands to 125 MB fp32 at load.</p>
-<aside>[~0.5 min] Zero's download contains an int8 table and an fp16 reference copy. The released loader expands the int8 rows into fp32, which helps explain why Zero's process peaked above Nano's in memory on the laptop.</aside>
+<aside>[~0.5 min] Zero's download contains an int8 table and an fp16 reference copy. The released loader expands the int8 rows to fp32, which helps explain why Zero used more peak process memory than Nano on this laptop.</aside>
 </section>

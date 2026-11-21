@@ -13,5 +13,5 @@
 <div class="kv" style="flex:1"><p class="k2">Table</p><p class="v2">31 MB int8</p></div>
 </div>
 <p class="src">p = softmax of scores over the candidate set. Retrain time is a historical estimate. All training sources permit commercial derived weights.</p>
-<aside>[~0.75 min] I start the rows from Stella's token encodings and the scalar weights from inverse document frequency. In the alignment pass, paired examples match Stella's candidate-score distribution as well as its query vector. The ranking pass uses a frozen pool of negatives and masks known positives and other candidates Stella scores close to the positive.</aside>
+<aside>[~0.75 min] I initialize the rows with Stella's token encodings and give rare tokens more weight using inverse document frequency. In the first pass I match Stella's vectors and, for paired examples, its score distribution over candidates. In the ranking pass I draw from a fixed bank and exclude known positives and candidates Stella scores close to the positive or higher.</aside>
 </section>
