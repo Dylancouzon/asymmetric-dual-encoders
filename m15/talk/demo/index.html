@@ -6,7 +6,7 @@
 <title>Constella Live</title>
 <style>
 :root{--bg:#0b0f19;--bg2:#141b33;--panel:#121827;--line:rgba(255,255,255,.13);--txt:#f0f3fa;--mut:#9aa0b5;--sub:#c9cede;
---red:#ff516b;--redd:#dc244c;--vio:#9494ff;--grn:#7ee2b8;--sans:"Mona Sans",-apple-system,"Helvetica Neue",Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+--red:#ff516b;--redd:#dc244c;--vio:#9494ff;--grn:#7ee2b8;--enc:#3fc1a5;--srch:#f5a623;--stl:#c9cede;--sans:"Mona Sans",-apple-system,"Helvetica Neue",Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
 *{box-sizing:border-box;margin:0}
 body{background:linear-gradient(165deg,var(--bg2) 0%,var(--bg) 45%,#090c14 100%);color:var(--txt);font-family:var(--sans);min-height:100vh;padding:36px 56px}
 header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
@@ -22,7 +22,8 @@ header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
 .lane.base{border-style:dashed;background:#0d1220}
 .nm{font-size:34px;font-weight:700}.ds{font:500 17px var(--mono);color:var(--mut);margin-top:4px}
 .track{height:54px;border-radius:12px;background:#0b0f19;border:2px solid var(--line);position:relative;overflow:hidden}
-.fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#4a34b8,var(--vio))}
+.fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#6b7088,var(--stl))}
+.lane.n .fill{background:linear-gradient(90deg,#4a34b8,var(--vio))}
 .lane.z .fill{background:linear-gradient(90deg,#8f1d38,var(--red))}
 .lane.base .fill{background:#3a4157}
 .cnt{position:absolute;left:16px;top:50%;transform:translateY(-50%);font:700 24px var(--mono);text-shadow:0 1px 4px #000}
@@ -31,7 +32,7 @@ header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
 .k{font:500 15px var(--mono);color:var(--mut);letter-spacing:1px;text-transform:uppercase}
 .v{font:700 30px var(--mono)}
 .split{grid-column:1/3;height:14px;border-radius:7px;background:#0b0f19;display:flex;overflow:hidden;margin-top:6px}
-.split i{display:block;height:100%}.e{background:var(--vio)}.s{background:var(--red)}
+.split i{display:block;height:100%}.e{background:var(--enc)}.s{background:var(--srch)}
 .legend{display:flex;gap:28px;margin-top:22px;font:500 18px var(--mono);color:var(--sub);align-items:center}
 .sw{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:8px;vertical-align:-3px}
 .clock{margin-left:auto;font:700 30px var(--mono)}
@@ -52,7 +53,7 @@ header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
 .ch .nm{font-size:28px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .chip{font:600 16px var(--mono);border-radius:8px;padding:5px 10px;border:2px solid var(--line);background:#1a2233}
-.chip.e{border-color:var(--vio);color:#dde0ff;background:#1d1d3d}.chip.s{border-color:var(--redd);color:#ffd0d8;background:#2a1520}
+.chip.e{border-color:var(--enc);color:#c9f5ea;background:#10261f}.chip.s{border-color:var(--srch);color:#ffe4b8;background:#2a1f0d}
 .chip.r{border-color:#3d8f72;color:#c9f5e3;background:#12261f}
 .hit{padding:10px 0;border-top:1px solid var(--line)}
 .hit .t{font-size:19px;font-weight:650;margin-bottom:3px}
@@ -70,8 +71,8 @@ header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
 <section class="view on" id="race">
   <div class="lanes" id="lanes"></div>
   <div class="legend">
-    <span><i class="sw" style="background:var(--vio)"></i>query encoding</span>
-    <span><i class="sw" style="background:var(--red)"></i>graph search</span>
+    <span><i class="sw" style="background:var(--enc)"></i>query encoding</span>
+    <span><i class="sw" style="background:var(--srch)"></i>graph search</span>
     <button class="btn go" id="go">Start (space)</button><button class="btn" id="reset">Reset (r)</button>
     <span class="clock" id="clock">0.0 s</span>
   </div>
@@ -89,7 +90,7 @@ header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
 </section>
 
 <script>
-const LANES=[["stella","Stella","400M transformer",""],["nano","Nano","34.5M transformer",""],["zero","Zero","lookup table","z"],["bm25","BM25","lexical baseline","base"]];
+const LANES=[["stella","Stella","400M transformer",""],["nano","Nano","34.5M transformer","n"],["zero","Zero","lookup table","z"],["bm25","BM25","lexical baseline","base"]];
 const $=s=>document.querySelector(s), fmt=n=>n.toLocaleString("en-US");
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.v));
 function show(v){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id===v));if(v==="live")$("#q").focus()}
