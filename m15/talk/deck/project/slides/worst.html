@@ -1,0 +1,22 @@
+<section id="worst" class="s foot" data-transition="fade">
+<div class="head"><h2>The Best of Ten Retrievers Made the Weakest Table</h2></div>
+<div class="fl" style="align-items:flex-start;gap:64px">
+<div class="host" style="width:980px;height:600px">
+<svg aria-label="Scatter of ten embedding models: retrieval score of the original model against retrieval score of its fitted lookup table. gte-large has the highest original score and the lowest table score; Stella has the highest table score." style="position:absolute;left:0;top:0" width="980" height="600" viewBox="0 0 980 600"><line x1="60" y1="550" x2="970" y2="550" stroke="#303547" stroke-width="3"/><line x1="60" y1="20" x2="60" y2="550" stroke="#303547" stroke-width="3"/><circle cx="527" cy="276" r="12" fill="#656b7f"/><circle cx="489" cy="269" r="12" fill="#656b7f"/><circle cx="487" cy="204" r="12" fill="#656b7f"/><circle cx="155" cy="360" r="12" fill="#656b7f"/><circle cx="887" cy="484" r="16" fill="#ff516b"/><circle cx="760" cy="89" r="16" fill="#fcfdff"/><circle cx="548" cy="445" r="12" fill="#656b7f"/><circle cx="526" cy="382" r="12" fill="#656b7f"/><circle cx="504" cy="333" r="12" fill="#656b7f"/><circle cx="192" cy="450" r="12" fill="#656b7f"/></svg>
+<p class="axl" style="left:70px;top:560px;width:700px">original model nDCG@10 →</p>
+<p class="axl" style="left:76px;top:0;width:500px">lookup-table nDCG@10 ↑</p>
+<p style="position:absolute;left:557px;top:464px;width:300px;text-align:right;font-size:28px;font-weight:600;color:#ff516b">gte-large-en-v1.5</p>
+<p style="position:absolute;left:500px;top:67px;width:230px;text-align:right;font-size:30px;font-weight:600;color:#fcfdff">Stella</p>
+</div>
+<div class="col" style="width:600px;gap:28px;margin-top:40px">
+<p class="cap">One cheap fit per model:</p>
+<p class="eq" style="font-size:32px;white-space:nowrap">min ‖XW − Y‖² + λ‖W − W₀‖²</p>
+<p class="num" style="font-size:88px">4–7 min</p>
+<p class="cap">per model on one A100. Then measure ranking on judged queries.</p>
+</div>
+</div>
+<p class="src">Ten registered models, six BEIR datasets, exact search. Full 26-model study in the paper.</p>
+<aside>[~1.75 min] I'd expected the strongest retriever to give me the strongest cheap student. To test that, I fitted one lookup table for each of 10 public embedding models in the registered comparison. Each model kept its own document index. The equation shows the ridge fit for those screening tables. X is the token counts divided by the number of tokens in the query, and Y is the model's own query vectors. I fit the rows so the pooled vectors approach Y. The penalty keeps the rows close to what the teacher outputs when I encode each token alone.
+
+Each screen took four to seven minutes on an A100. Then I measured exact ranking on six BEIR datasets. [Point to gte-large, then Stella.] The farther a dot is to the right, the better the original retriever. The higher it is, the better the table. gte-large is farthest to the right and gave me the weakest table of these 10 models. Stella gave me the strongest table. Even close agreement with the teacher's query vectors could go with worse ranking. Once a fit takes minutes, I can spend my time measuring the ranking I want on the queries I serve.</aside>
+</section>

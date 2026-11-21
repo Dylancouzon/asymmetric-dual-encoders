@@ -1,0 +1,9 @@
+<section id="zero-def" class="s alt" data-transition="fade">
+<div class="grow"></div>
+<div class="eb"><div class="rule"></div><p class="eyebrow">Tonight’s definition</p></div>
+<p class="stmt" style="width:1500px">Zero compute: <span class="tr">no neural network</span> encodes the query.</p>
+<div class="grow"></div>
+<aside>[~0.75 min] By "zero compute" I mean zero neural inference at query time. I still tokenize the text, look up rows, and average them. That work takes microseconds on my laptop. The search starts as soon as I have a vector, and the graph still has to find neighbors for it.
+
+I can do the expensive work ahead of time because I know which document vectors I'm going to search. That gives me a target for the table. It also gives me a target for a small transformer, if I want to spend a little more on the query.</aside>
+</section>

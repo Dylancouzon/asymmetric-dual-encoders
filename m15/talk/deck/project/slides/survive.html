@@ -1,0 +1,21 @@
+<section id="survive" class="s foot" data-transition="fade">
+<div class="head"><h2>How Much Relevance Survives</h2></div>
+<div class="fl" style="align-items:flex-end;gap:110px;height:560px;margin-left:120px">
+<div class="col" style="align-items:center;gap:14px"><p class="v" style="font-size:44px;font-weight:600">0.561</p><div style="width:220px;height:449px;border-radius:14px 14px 0 0;background:#c9cede"></div></div>
+<div class="col" style="align-items:center;gap:14px"><p class="v" style="font-size:44px;font-weight:600">0.508</p><div style="width:220px;height:406px;border-radius:14px 14px 0 0;background:#9494ff"></div></div>
+<div class="col" style="align-items:center;gap:14px"><p class="v" style="font-size:44px;font-weight:600">0.457</p><div style="width:220px;height:366px;border-radius:14px 14px 0 0;background:#ff516b"></div></div>
+<div class="col" style="align-items:center;gap:14px"><p class="v mut" style="font-size:44px;font-weight:600">0.401</p><div style="width:220px;height:320px;border-radius:14px 14px 0 0;background:#0b0f19;border:3px dashed #656b7f;border-bottom:none;box-sizing:border-box"></div></div>
+</div>
+<div class="fl" style="gap:110px;margin-left:120px;border-top:3px solid #303547;padding-top:20px">
+<div style="width:220px"><p class="v" style="font-size:36px;font-weight:600;text-align:center">Stella</p><p class="cap mono" style="text-align:center">reference</p></div>
+<div style="width:220px"><p class="v" style="font-size:36px;font-weight:600;text-align:center">Nano</p><p class="cap mono" style="text-align:center">90.5%</p></div>
+<div style="width:220px"><p class="v" style="font-size:36px;font-weight:600;text-align:center">Zero</p><p class="cap mono" style="text-align:center">81.4%</p></div>
+<div style="width:220px"><p class="v mut" style="font-size:36px;font-weight:600;text-align:center">BM25</p><p class="cap mono" style="text-align:center">lexical</p></div>
+</div>
+<p class="src">nDCG@10, exact search, mean of 15 BEIR datasets. Registered descriptive evaluation.</p>
+<aside>[~2.0 min] For this chart, I score every candidate against the documents exactly. That way I can see what each encoder does to the ranking before I introduce graph search. The bars are the mean nDCG@10 across 15 BEIR datasets, with each dataset getting the same weight. This was a registered descriptive evaluation.
+
+Use Stella as the reference. Nano keeps 90.5% of its score, and Zero keeps 81.4%. Both score higher than the BM25 baseline on this average. If you run search for one of those workloads, the average is a poor substitute for your own row. Quora is a duplicate-question task, where a query can look a lot like the question it should find. Zero keeps 95% of Stella's score there. On TREC-COVID and FiQA it keeps about two thirds. The cheaper encoder can cross your relevance floor on one workload and fall short on another.
+
+I'd use the exact numbers to decide which encoders deserve a place in the latency test. Once I put the graph back into the request, a second question comes up. How much of that encoding time do I get to keep?</aside>
+</section>

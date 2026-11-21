@@ -1,0 +1,3 @@
+Show BM25 in a separate callout because its matched run timed whole requests (BM25 0.66 ms at 0.4895 nDCG@10, Zero 1.11 ms at 0.6094). [Matched result](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_bm25_zero_msmarco1m.json)
+
+Keep **19×** for encoding plus search on the binary index, using summed component medians (Stella 21.3 ms at 0.7226, Zero 1.11 ms at 0.6116). [Paper](/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/m15/PAPER.md:139)

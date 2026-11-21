@@ -1,0 +1,26 @@
+{
+  "v": 5,
+  "createdOnFiles": {"v": 1, "at": "2026-11-21T03:35:16Z"},
+  "lists": "css",
+  "format": {"v": 1, "shared": ["project/deck.css"]},
+  "title": "Zero-Compute Dual Encoders",
+  "cover": "cover",
+  "order": ["cover", "every-query", "forever", "zero-def", "dial", "device", "copy", "zero-mech", "order", "nano", "survive", "bet", "race", "recovery", "live", "worst", "recipe", "close", "b-datasets", "b-msmarco", "b-edge", "b-routing"],
+  "sections": {
+    "opening": {"description": "Title.", "start": "cover"},
+    "bill": {"description": "Documents are encoded once, but every query runs a 400M model; zero compute means no neural network at query time.", "start": "every-query"},
+    "family": {"description": "One Stella index, three query encoders, and what fits on a device.", "start": "dial"},
+    "build": {"description": "How Zero and Nano were trained to copy Stella's query vectors, on a desktop GPU and one cloud run.", "start": "copy"},
+    "quality": {"description": "How much of Stella's relevance survives.", "start": "survive"},
+    "catch": {"description": "The bet, the live race, why cheaper queries need a wider search, and the live type-off.", "start": "bet"},
+    "monday": {"description": "Screen by measuring, the four-step recipe, and the close.", "start": "worst"},
+    "backup": {"description": "Hidden backup slides for questions.", "start": "b-datasets"}
+  },
+  "faces": {
+    "mona-sans": {"family": "Mona Sans", "href": "https://fonts.googleapis.com/css2?family=Mona+Sans:wght@200..900&display=swap"},
+    "jetbrains-mono": {"family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"}
+  },
+  "designSystems": [
+    {"title": "Qdrant Design System (old)", "namespace": "qdrant", "artifact": "https://claude.ai/artifact/D5ZBsN8vkqSm1gkHyDk4Qb", "version": null, "copiedAt": "2026-11-21T03:35:16Z"}
+  ]
+}

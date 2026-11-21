@@ -1,0 +1,23 @@
+<section id="live" class="s demo" data-transition="fade">
+<div class="live"><div class="dot"></div><p>LIVE</p></div>
+<div class="head"><h2>Your Turn</h2></div>
+<p class="sub">Send me a query in the Zoom chat or shout one.</p>
+<div class="row" style="margin-top:48px">
+<div class="card"><p class="tag">WATCH</p><h3>Encode vs search time</h3></div>
+<div class="card"><p class="tag">TURN</p><h3>hnsw_ef up and down</h3></div>
+<div class="card"><p class="tag">CHECK</p><h3>Own exact top 10 found</h3></div>
+</div>
+<aside>[~4.0 min] [Switch to the demo and open Live. Take a query from the room or Zoom chat. Enter it and run all four columns.]
+
+You can give me something you'd look up in Wikipedia. Stella, Nano, and Zero all search the same document vectors. BM25 gives us a lexical reference over the same passages. Watch the split between encoding and search, then look at the first passage each column returns. Read the title and the first line with me. Which one would you open?
+
+[Read the first results aloud. Ask what the audience wanted to find. Switch on the exact check and compare the dense columns.]
+
+This count is specific to each encoder. In the Zero column I'm asking how many of Zero's exact top 10 the graph found. If Stella and Zero both recover all 10, their exact lists can still be different. Now I'll change hnsw_ef and run the same text again. We keep the encoder and index in place, so we can see what changing the search breadth buys on this query.
+
+[Lower hnsw_ef and rerun. Raise it and rerun. Read out the search times and exact-neighbor counts that appear. If the first query barely changes, take another from the room or Zoom. Use the recorded fallback if live search is unavailable.]
+
+Watch the search segment after I turn the setting up. Check whether the extra time brought any of the exact neighbors back. If the count stays put, compare what we spent for the same recall. I'd use a set of judged queries to decide whether the trade holds across my traffic. That same set can save me time before I even pick a teacher.
+
+[Return to the deck.]</aside>
+</section>

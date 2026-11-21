@@ -1,0 +1,10 @@
+<section id="recovery" class="s foot" data-transition="fade">
+<div class="head"><h2>Cheaper Queries Need a Wider Search</h2></div>
+<p class="lead">[Chart pending the NQ benchmark: share of each encoder’s own exact top 10 recovered, as hnsw_ef grows.]</p>
+<p class="src">[2.7M NQ passages, Qdrant Edge, binary quantization with rescoring. Exploratory.]</p>
+<aside>[~1.5 min] All three dense encoders walk the same HNSW graph. Its links connect document vectors. To measure how well an encoder searches it, I first run an exact search with that encoder's vector and save its top 10. Then I count how many of those documents come back through the graph at each setting of hnsw_ef. Stella has its own reference list. So do Nano and Zero.
+
+[If the recovery chart is available, use this paragraph and trace a fixed hnsw_ef across the curves.] This is the Wikipedia index from the race, with binary quantization and rescoring. Where Zero's curve sits lower at the same hnsw_ef, it finds a smaller share of its own exact neighbors than Stella finds of its own.
+
+In the paper's graph tests, fitted tables often needed a wider search to match the teacher's recovery rate. Each encoder had its own exact neighbors as the reference. A wider search takes time and can get a ranking closer to what that encoder returns with an exact scan. I'd still use judged relevance to decide whether those are the documents I want. We can watch the exact-neighbor count change on a query from the room.</aside>
+</section>

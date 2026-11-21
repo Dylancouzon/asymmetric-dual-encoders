@@ -1,0 +1,19 @@
+<section id="order" class="s" data-transition="fade">
+<div class="head"><h2>Zero Cannot See Word Order</h2></div>
+<div class="fl" style="gap:40px;margin-top:40px">
+<div class="col" style="gap:20px"><p class="qchip">paris to rome</p><p class="qchip">rome to paris</p></div>
+<p class="arr">→</p>
+<div class="fl" style="gap:14px"><p class="tok">paris</p><p class="tok">rome</p><p class="tok">to</p></div>
+<p class="arr">→</p>
+<div class="col" style="gap:8px"><p class="big tr" style="font-size:72px">identical</p><p class="cap mono">Zero query vectors</p></div>
+</div>
+<div class="fragment fl" style="gap:48px;margin-top:88px;border-top:2px solid #303547;padding-top:48px">
+<div class="col" style="gap:4px"><p class="eyebrow" style="color:#c9cede">Stella</p><p class="num" style="font-size:150px">4<span class="mut"> / 24</span></p></div>
+<p class="lead" style="width:820px">pairs where Stella ranked the right passage first in both directions</p>
+</div>
+<aside>[~1.75 min] Suppose I want to go from Paris to Rome. If I reverse those cities, I'd like a different ticket. Zero gets the same bag of tokens either way. I look up the same rows with the same weights. Both queries produce exactly the same vector.
+
+I wanted to see how much a contextual encoder would gain here. I wrote 24 pairs of queries where reversing the direction changes the answer. I gave each pair two passages, one intended for each direction. I counted a pair as a success only if the right passage came first on both queries. Stella changed its vector on every reversal. [click] Stella ranked the right passage first in both directions on 4 of 24 pairs. All four successes were unit conversions.
+
+That's a small exploratory test. The query and passage pairs are in the repository. For Zero, this kind of reversal disappears during pooling. For Stella, a change in the query vector was easy to measure. Getting both rankings right was harder. Nano gives me a way to keep a contextual encoder on the query side at a smaller cost.</aside>
+</section>

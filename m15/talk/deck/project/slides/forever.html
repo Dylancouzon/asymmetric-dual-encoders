@@ -1,0 +1,13 @@
+<section id="forever" class="s" data-transition="fade">
+<div class="head"><h2>Documents Once, Queries Forever</h2></div>
+<div class="host" style="width:1664px;height:640px">
+<svg aria-label="Cumulative compute over time. Document encoding is a single step at the start and then stays flat. Query encoding starts at zero and rises without end, crossing above the document line." style="position:absolute;left:0;top:0" width="1664" height="640" viewBox="0 0 1664 640"><line x1="80" y1="580" x2="1600" y2="580" stroke="#303547" stroke-width="3"/><line x1="80" y1="40" x2="80" y2="580" stroke="#303547" stroke-width="3"/><polyline points="80,580 140,580 140,300 1600,300" fill="none" stroke="#9aa0b5" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><line x1="140" y1="580" x2="1560" y2="60" stroke="#ff516b" stroke-width="8" stroke-linecap="round" stroke-dasharray="1520 1520" stroke-dashoffset="0"><animate attributeName="stroke-dashoffset" from="1520" to="0" dur="2.6s" begin="0s"/></line></svg>
+<p class="axl" style="left:96px;top:596px;width:300px">time →</p>
+<p class="axl" style="left:96px;top:8px;width:420px">cumulative compute</p>
+<p style="position:absolute;left:180px;top:236px;width:520px;font-size:32px;font-weight:600;color:#c9cede">Documents: encoded once</p>
+<p style="position:absolute;left:1180px;top:232px;width:480px;font-size:32px;font-weight:600;color:#ff516b">Queries: every search, forever</p>
+</div>
+<aside>[~1.5 min] [Let the query line draw.] Follow the line that flattens out. I pay for each document when I index it. Then I get to reuse its vector, the HNSW graph, and the quantized codes on every search. Those assets can last for years. The other line keeps rising because fresh queries keep coming in. An agent can make several searches to finish one task, so I can pay that query cost several times before the user gets an answer.
+
+The same asymmetry makes a model migration awkward. If I change the document encoder, I have to go back to the corpus, re-embed it, and rebuild the index. If I need to keep search online, I can end up running both indexes and both ingestion pipelines while I check the new ranking. That's a lot of work to get a cheaper query. What if I could change the query encoder and keep using the index I already serve?</aside>
+</section>
