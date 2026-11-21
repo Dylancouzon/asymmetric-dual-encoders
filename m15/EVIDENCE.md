@@ -837,6 +837,24 @@ Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed s
 
 **Cannot show.** Throughput under load; other engines or graph settings.
 
+## C26. Edge encode-plus-search on nq (2,681,468 passages)
+
+**Label:** exploratory (talk). **Source:** `results/m15_talk_edge_nq.json`
+
+**Claim.** Each encoder at its fastest Qdrant Edge setting within 1% of its own exact nDCG@10, binary quantization with rescoring, one in-process shard.
+
+| encoder | encode p50 ms | exact nDCG@10 | ef / oversampling | ANN nDCG@10 | total p50 ms | own top-10 recovery |
+|---|---|---|---|---|---|---|
+| stella | 20.504 | 0.6371 | 256 / 4 | 0.6309 | 20.780 | 0.954 |
+| nano | 1.627 | 0.5838 | 512 / 4 | 0.5790 | 2.044 | 0.933 |
+| zero | 0.032 | 0.5173 | 1024 / 8 (best; misses 1%) | 0.5097 | 0.856 | 0.951 |
+| zero-edge | 0.255 | 0.5173 | 1024 / 8 (best; misses 1%) | 0.5097 | 1.021 | 0.951 |
+| bm25 | - | - | - | 0.3012 | 1.117 | - |
+
+Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed separately per query; totals are per-query sums. Transformers run ONNX Runtime CPU, 4 threads. zero-edge retrieves Zero's rows from an Edge shard. Selected = fastest median total within 1% of the encoder's own exact nDCG@10.
+
+**Cannot show.** Throughput under load; other engines or graph settings; NQ training-question exposure (NQ Open train questions were in Zero's and Nano's pools; the run uses NQ test queries).
+
 ## C27. One-time index cost: BEIR NQ on a desktop GPU
 
 **Label:** exploratory (talk). **Source:** `results/m15_talk_nq_parity.json`; shard file times `m15/talk/nq_shard_times.txt`

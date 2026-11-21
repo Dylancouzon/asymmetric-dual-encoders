@@ -395,6 +395,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** One GPU, one corpus, fp32 compute; fp16 or bf16 compute would be faster but changes the registered path.
 - **Use:** Talk cost slide; paper deployment-cost section.
 
+### L43. On 2.7M passages, a 51x faster encoder buys a 2.4x faster request, and the graph tax grows
+
+- **Observation:** On BEIR NQ (2,681,468 passages, Qdrant Edge, binary quantization with fp16 rescoring, M5 Pro, sequential), median encode times are Stella 20.5 ms, Nano 1.63 ms and Zero 0.032 ms (Nano/Zero 51x). At each encoder's selected setting, median request totals are Stella 20.8 ms (ef 256, os 4, nDCG@10 0.6309 of exact 0.6371), Nano 2.04 ms (ef 512, os 4, 0.5790 of 0.5838) and Zero 0.86 ms at its best tested point (ef 1024, os 8, 0.5097 of 0.5173, 98.5%, missing its 99% target; own top-10 recovery 0.951). Search becomes 87% of Zero's request. Nano at ef 64, os 4 (1.74 ms, 0.5542) beats Zero's best quality at twice its time. BM25 in the same shard: 0.3012, 1.12 ms.
+- **Decision:** Present the encoder as one variable in an (encoder, ef, oversampling) choice solved against a quality floor, not as a speedup. Report Zero's miss on both FiQA and NQ.
+- **Evidence:** C26 (NQ), `results/m15_talk_edge_nq.json`; related L10, L12, L41.
+- **Strength/reach:** One corpus, one graph build, sequential laptop timing; quality numbers are exact-match validated against M20.
+- **Use:** Talk bet, race, split, recovery and recipe slides; paper deployment section.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

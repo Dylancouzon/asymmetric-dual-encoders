@@ -751,6 +751,12 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   on the RTX 3080. NQ Open training questions were in Zero's and Nano's pools; the run uses NQ test
   queries. Script `m15src/talk_edge.py` (and `m15src/talk_encode_nq.py`); receipts
   `results/m15_talk_edge_<dataset>.json`.
+  NQ notes (2026-11-21): exact nDCG@10 for Stella, Nano and Zero on the box vectors equals the
+  committed M20 rows to every printed digit (0.6371, 0.5838, 0.5173), which checks the vectors end to
+  end. Edge BM25 (0.3012) is a different implementation from M20's BM25 row (0.2916). The ef 32 rows
+  ran first after each encoder's exact pass streamed 5.5 GB through memory, so their search times
+  include cold page-cache reads of the on-disk fp16 vectors (0.5-0.8 ms against 0.10 ms at ef 64);
+  their quality columns are unaffected and no selected setting uses ef 32.
 - **T4 cloud throughput.** GCP c4-standard-8, us-east1-b, on-demand list price $0.395/h checked
   2026-11-21 (the encode receipt stores the run's 0.40 placeholder; dollars are recomputed at 0.395).
   Encode mode: W processes with one ONNX Runtime thread each (Zero: NumPy), closed loop, batch 1,
