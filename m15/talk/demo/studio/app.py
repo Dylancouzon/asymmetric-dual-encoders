@@ -113,9 +113,9 @@ def calibrate():
             ts.append((time.perf_counter() - t0) * 1000)
         calib["encode_ms"][name] = float(np.median(ts))
     calib["step"] = "measuring quality"
-    for name in ENCODERS:
-        bench.want(name, *state["search"][name])
     while any(bench.status(n, *state["search"][n])["ndcg10"] is None for n in ENCODERS):
+        for name in ENCODERS:
+            bench.want(name, *state["search"][name])
         time.sleep(0.2)
     work.start()
     calib["ready"], calib["step"] = True, "ready"
@@ -123,42 +123,60 @@ def calibrate():
 
 
 # ---- routing: plan four times a second ---------------------------------------------------------------
-router = {"plan": None, "headroom": 0.8, "costs": {}, "over": 0}
-service_p95 = {}                                         # encoder -> p95 of its own encode + search time, ms
+router = {"plan": None, "headroom": 0.8, "costs": {}, "adjusted": 0.0}
+probes = collections.deque(maxlen=5000)                  # (t, encoder, encode_ms) timed under the live load
 config_since = {name: 0.0 for name in ENCODERS}          # when each encoder's search setting last changed
 
 
-def live_search_ms(name, now):
-    """Median shard time of this encoder's recent served searches at its current setting (None if too few)."""
-    xs = [d[6] for d in work.recent(work.done, 3.0, now) if d[2] == name and d[0] >= config_since[name]]
-    return float(np.median(xs)) if len(xs) >= 20 else None
+def live_search_ms(name, recent):
+    """Mean shard time of this encoder's recent served searches at its current setting (None if too few)."""
+    xs = [d[6] for d in recent if d[2] == name and d[0] >= config_since[name]]
+    return float(np.mean(xs)) if len(xs) >= 20 else None
 
 
-def service_time(name, now, idle_ms):
-    """p95 of this encoder's own processing time (encode + search, no queueing) under the current load. Sticky: with
-    no recent traffic it relaxes toward the idle-machine time within a few seconds, so an encoder cannot flap."""
-    xs = [d[5] + d[6] for d in work.recent(work.done, 3.0, now) if d[2] == name]
-    prev = service_p95.get(name, idle_ms)
-    service_p95[name] = float(np.percentile(xs, 95)) if len(xs) >= 10 else idle_ms + (prev - idle_ms) * 0.9
-    return service_p95[name]
+def probe_loop():
+    """Twice a second, time one encode per encoder under whatever load the machine carries, so Auto knows what an
+    encoder would cost right now even while it serves no traffic."""
+    i = 0
+    while True:
+        time.sleep(0.5)
+        if not calib["ready"]:
+            continue
+        for name in ENCODERS:
+            i += 1
+            t0 = time.perf_counter()
+            encoders[name].encode([data["q_texts"][i % len(data["q_texts"])]])
+            probes.append((time.time(), name, (time.perf_counter() - t0) * 1000))
+
+
+def service_time(name, recent, search_ms, now):
+    """Tail of this encoder's own processing time (encode + search, no queueing) under the current load, from served
+    searches and probes (10 s of probes: an encoder's time under load varies too much to judge from a few). A traffic
+    change clears the probes, since they were timed under the old load. An agent task waits for the slowest of its searches, so the tail percentile rises with
+    fan-out: P(max of k <= x) = F(x)^k >= 0.95 needs F(x) >= 0.95^(1/k)."""
+    xs = [d[5] + d[6] for d in recent if d[2] == name]
+    xs += [p[2] + search_ms for p in Workload.recent(probes, 10.0, now) if p[1] == name]
+    q = 100 * 0.95 ** (1 / max(1, state["fanout"]))
+    return float(np.percentile(xs, q)) if len(xs) >= 5 else calib["encode_ms"].get(name, 0.0) + search_ms
 
 
 def costs_now():
     """Each encoder's quality and cost at its current search setting: measured when available, else estimated."""
-    out, now = {}, time.time()
+    now = time.time()
+    out, recent = {}, work.recent(work.done, 3.0, now)
     for name in ENCODERS:
         ef, oversampling = state["search"][name]
         st = bench.status(name, ef, oversampling)
         est_q, est_ms = sweep_estimate(name, ef, oversampling)
         quality = st["ndcg10"] if st["ndcg10"] is not None else est_q
         # Search time: live from served searches; else the sweep's warm timing; else the bench (off-grid settings).
-        live = live_search_ms(name, now)
+        live = live_search_ms(name, recent)
         in_sweep = (name, int(ef), float(oversampling)) in SWEEP
         search_ms = live if live is not None else est_ms if in_sweep else st["search_ms"] if st["search_ms"] is not None else est_ms
         out[name] = {"quality": quality, "measured": st["ndcg10"] is not None, "done": st["done"],
                      "total": st["total"], "search_ms": search_ms, "ef": ef, "oversampling": oversampling,
                      "encode_per_s": calib["encode_per_s"].get(name, 1.0),
-                     "service_p95_ms": service_time(name, now, calib["encode_ms"].get(name, 0.0) + search_ms)}
+                     "service_ms": service_time(name, recent, search_ms, now)}
     return out
 
 
@@ -174,26 +192,37 @@ def plan_loop():
         router["costs"] = costs
         rate = work.offered_rate(now)
         if state["route"] == "split":
-            work.shares, work.admit, router["plan"] = dict(state["split"]), 1.0, None
+            # Manual split: no shedding, so the room sees what a fixed split does to latency.
+            work.shares, work.admit, work.deadline_ms, router["plan"] = dict(state["split"]), 1.0, float("inf"), None
             continue
-        # Headroom from measured p95 (per agent task when searches come in groups): back off fast, recover slowly.
-        source = work.tasks if state["fanout"] > 1 else work.done
-        lat = [r[1] for r in work.recent(source, 2.0, now)]
-        p95 = float(np.percentile(lat, 95)) if len(lat) >= 20 else 0.0
-        router["over"] = router["over"] + 1 if p95 > state["target_ms"] else 0
-        h = router["headroom"]
-        if router["over"] >= 2:                   # two readings in a row over target: back off, harder when far over
-            h = max(0.4, h * (0.9 if p95 > 1.3 * state["target_ms"] else 0.97))
-        elif p95 < 0.7 * state["target_ms"]:     # comfortably under: recover in a few seconds
-            h = min(0.85, h + 0.02)
-        router["headroom"] = h
-        p = allocator.plan(max(rate, 1.0),
-                           [allocator.EncoderCost(n, c["quality"], c["encode_per_s"], c["search_ms"], c["service_p95_ms"])
+        if rate <= 0:                             # paused: keep the last plan while the queue drains
+            continue
+        # Headroom from measured p95 (per agent task when searches come in groups), once per fresh second of
+        # completions: re-reading overlapping windows would punish the same slow requests several times.
+        # Shedding by deadline keeps latency bounded at once; it also says the plan is too optimistic.
+        target = state["target_ms"]
+        work.deadline_ms = 0.8 * target
+        if now - router["adjusted"] >= 1.0:
+            router["adjusted"] = now
+            source = work.tasks if state["fanout"] > 1 else work.done
+            lat = [r[1] for r in work.recent(source, 1.0, now)]
+            expired = len(work.recent(work.expired, 1.0, now, key=lambda t: t))
+            if len(lat) >= 10:
+                p95 = float(np.percentile(lat, 95))
+                h = router["headroom"]
+                if p95 > target or expired > 0.01 * rate:          # over target or shedding late: back off
+                    h = max(0.3, h * (0.85 if p95 > 1.3 * target or expired > 0.1 * rate else 0.95))
+                elif p95 < 0.7 * target and not expired:            # comfortably under: recover slowly
+                    h = min(0.85, h + 0.01)
+                router["headroom"] = h
+        p = allocator.plan(rate,
+                           [allocator.EncoderCost(n, c["quality"], c["encode_per_s"], c["search_ms"], c["service_ms"])
                             for n, c in costs.items()],
-                           floor=state["floor"], target_ms=state["target_ms"], headroom=h)
+                           floor=state["floor"], target_ms=state["target_ms"], headroom=router["headroom"],
+                           shard_reserved=bench.shard_busy)
         router["plan"] = p
         work.shares = dict(p.shares)
-        work.admit = 1.0 if rate <= 0 else min(1.0, p.serve_rate / rate)
+        work.admit = min(1.0, p.serve_rate / rate)
 
 
 # ---- stats and the timeline --------------------------------------------------------------------------
@@ -213,13 +242,17 @@ def snapshot():
     last1 = [d for d in last2 if now - d[0] <= 1.0]
     lat = [d[1] for d in last2]
     tasks = [t[1] for t in work.recent(work.tasks, 2.0, now)]
-    quality = [d[3] for d in work.recent(work.done, 3600, now, limit=600)]     # the last 600 served searches
+    # Served quality over the last 3 s, or the last 600 searches when traffic is light: fewer would be mostly noise.
+    quality = [d[3] for d in work.recent(work.done, 3.0, now)]
+    if len(quality) < 600:
+        quality = [d[3] for d in work.recent(work.done, 3600, now, limit=600)]
     p = router["plan"]
     by = {n: sum(1 for d in last1 if d[2] == n) for n in ENCODERS}
     return {
         "t": now, "ready": calib["ready"], "step": calib["step"], **{k: state[k] for k in state},
         "offered": work.offered_rate(now), "arrived_per_s": len(work.recent(work.arrived, 1.0, now, key=lambda t: t)),
-        "served_per_s": len(last1), "dropped_per_s": len(work.recent(work.dropped, 1.0, now, key=lambda t: t)),
+        "served_per_s": len(last1), "dropped_per_s": len(work.recent(work.dropped, 1.0, now, key=lambda t: t)) +
+                                                    len(work.recent(work.expired, 1.0, now, key=lambda t: t)),
         "queue": len(work.queue), "p95_ms": float(np.percentile(lat, 95)) if lat else 0.0,
         "task_p95_ms": float(np.percentile(tasks, 95)) if tasks else 0.0,
         "ndcg10": float(np.mean(quality)) if quality else 0.0, "n_quality": len(quality),
@@ -249,7 +282,7 @@ def index():
 @app.get("/stats")
 def stats():
     s = HISTORY[-1] if HISTORY else snapshot()
-    keep = ("t", "offered", "served_per_s", "p95_ms", "task_p95_ms", "target_ms", "ndcg10", "floor", "by", "fanout")
+    keep = ("t", "arrived_per_s", "served_per_s", "p95_ms", "task_p95_ms", "target_ms", "ndcg10", "floor", "by", "fanout")
     return {**s, "history": [{k: h[k] for k in keep} for h in list(HISTORY)[-240:]]}
 
 
@@ -278,6 +311,8 @@ def update(body: dict):
             new = [min(max(int(ef), 4), 4096), min(max(float(oversampling), 1.0), 16.0)]
             if new != state["search"][name]:
                 state["search"][name], config_since[name] = new, time.time()
+    if any(before[k] != state[k] for k in ("rate", "spike", "peak", "fanout", "paused", "pattern")):
+        probes.clear()
     marker = _describe(before, state)
     if marker:
         EVENTS.append((time.time(), marker))
@@ -310,6 +345,6 @@ def _describe(a, b):
 
 if __name__ == "__main__":
     import uvicorn
-    for target in (calibrate, plan_loop, sample_loop):
+    for target in (calibrate, plan_loop, probe_loop, sample_loop):
         threading.Thread(target=target, daemon=True, name=target.__name__).start()
     uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("PORT", "8767")), log_level="warning")

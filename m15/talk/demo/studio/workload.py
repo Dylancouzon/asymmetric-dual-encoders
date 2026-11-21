@@ -3,7 +3,8 @@
 Arrivals follow a fixed seeded trace (exponential gaps, query ids), shaped by the controls: rate, a steady /
 daily-wave / bursts pattern, a spike switch, and agent tasks (one task = several searches issued together, done
 when the slowest returns). One FIFO queue feeds a pool of worker threads; each request is encoded by the chosen
-encoder, searched on the shared Edge shard, and scored against the NQ judgments.
+encoder, searched on the shared Edge shard, and scored against the NQ judgments. A request that has already waited
+past its deadline is shed instead of served: it would miss the latency target anyway.
 """
 import collections
 import math
@@ -30,11 +31,13 @@ class Workload:
         # (t, latency_ms, encoder, ndcg, queue_ms, encode_ms, search_ms, shard_wait_ms)
         self.done = collections.deque(maxlen=100_000)
         self.arrived = collections.deque(maxlen=100_000)
-        self.dropped = collections.deque(maxlen=100_000)
+        self.dropped = collections.deque(maxlen=100_000)     # shed at arrival (admission or full queue)
+        self.expired = collections.deque(maxlen=100_000)     # shed in the queue, past the deadline
         self.tasks = collections.deque(maxlen=50_000)      # (t, latency of the slowest search in an agent task)
         self._groups = {}
         self.shares = {"stella": 1.0, "nano": 0.0, "zero": 0.0}   # dispatch weights, set by the router
         self.admit = 1.0                                           # share of arrivals admitted (shedding < 1)
+        self.deadline_ms = float("inf")                            # longest queue wait worth serving
         self.epoch = time.time()                                   # origin of the wave / bursts pattern
         self._rng = random.Random(1)
 
@@ -72,7 +75,7 @@ class Workload:
                     arrival = wall - (now - nxt)
                     group = None
                     if fanout > 1:
-                        group = [fanout, 0.0]
+                        group = [fanout, 0.0, False]       # searches left, slowest latency, any shed
                     admitted = self._rng.random() < self.admit and len(self.queue) + fanout <= MAX_QUEUE
                     for j in range(fanout):
                         self.arrived.append(arrival)
@@ -84,10 +87,6 @@ class Workload:
                     nxt += float(self.gaps[k % len(self.gaps)]) * fanout / rate
                 self.cv.notify_all()
             time.sleep(max(0.0, min(0.005, nxt - time.perf_counter())))
-
-    def clear_queue(self):
-        with self.cv:
-            self.queue.clear()
 
     # ---- serving -------------------------------------------------------------------------------------
     def pick_encoder(self) -> str:
@@ -105,6 +104,12 @@ class Workload:
                     self.cv.wait(0.05)
                 qi, t_arrival, group = self.queue.popleft()
             t0 = time.perf_counter()
+            if (t0 - t_arrival) * 1000 > self.deadline_ms:
+                self.expired.append(time.time())
+                if group is not None:
+                    with self.cv:
+                        group[0], group[2] = group[0] - 1, True
+                continue
             name = self.pick_encoder()
             ef, oversampling = self.state["search"][name]
             vector = self.encoders[name].encode([self.queries[qi]])[0]
@@ -119,7 +124,7 @@ class Workload:
                 with self.cv:
                     group[0] -= 1
                     group[1] = max(group[1], latency)
-                    if group[0] == 0:
+                    if group[0] == 0 and not group[2]:
                         self.tasks.append((time.time(), group[1]))
 
     # ---- recent windows ------------------------------------------------------------------------------

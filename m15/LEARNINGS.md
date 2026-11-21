@@ -419,6 +419,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** One VM type, one process with threads, 30 s per point; other deployments (several processes, Qdrant server, GPU encoders) can move the ceiling.
 - **Use:** Talk cost slide; paper deployment section.
 
+### L46. Capacity measured one encoder at a time overstates a mixed load; a request deadline holds the latency target
+
+- **Observation:** In the workload studio (NQ, one Edge shard, 14 worker threads in one process, M5 Pro), the allocator planned a Nano and Zero mix for 2,000/s at 57% encode and 60% shard utilization, yet the queue held about 250 requests and p95 swung between 10 and 200 ms every few seconds. Capacities came from saturating each encoder alone; a mix also contends for the Python interpreter lock, so it saturates earlier. Headroom feedback alone turned the gap into a limit cycle (9 of 20 seconds over a 150 ms target). Shedding any request that has waited past 80% of the target, and backing off headroom when that happens, gave 0 of 20 seconds over target. Stella's encode time under a 300/s Nano load ranged from 50 to 280 ms, so a three-second tail estimate readmitted it every few seconds.
+- **Decision:** Plan with the measured costs, but bound latency with a per-request deadline and treat late shedding as the signal that the plan is optimistic. Judge an idle encoder from probes timed under the live load over 10 s, and use the tail percentile that matches the slowest search of an agent task.
+- **Evidence:** `m15/talk/demo/studio/` (commit after 8563483); stress runs in the session scratchpad. Demo observations, not measurements.
+- **Strength/reach:** One laptop, one process, simulated traffic; the mechanism (deadline shedding over an approximate cost model) is standard and should carry over, the numbers will not.
+- **Use:** Live demo; talk Q&A on routing.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

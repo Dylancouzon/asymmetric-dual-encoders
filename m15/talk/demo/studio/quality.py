@@ -33,6 +33,7 @@ class QualityBench:
         self.search_ms = {}                  # (encoder, ef, oversampling) -> mean shard time per search
         self.progress = {}                   # (encoder, ef, oversampling) -> searches done so far
         self.wanted = {}                     # encoder -> the setting it should be measured at
+        self.shard_busy = 0.0                # share of shard time the bench uses right now (0 when idle)
         threading.Thread(target=self._run, daemon=True, name="quality-bench").start()
 
     def want(self, encoder: str, ef: int, oversampling: float):
@@ -50,12 +51,13 @@ class QualityBench:
                 time.sleep(0.05)
                 continue
             self._measure(todo[0])
+            self.shard_busy = 0.0
 
     def _measure(self, key):
         encoder, ef, oversampling = key
         if encoder not in self.vectors:      # one-time cost per encoder (Stella: a few seconds)
             self.vectors[encoder] = self.encoders[encoder].encode(self.texts)
-        total_ndcg, total_ms = 0.0, 0.0
+        total_ndcg, total_ms, t_start = 0.0, 0.0, time.perf_counter()
         for i, vector in enumerate(self.vectors[encoder]):
             if self.wanted.get(encoder) != key:              # superseded by a newer setting: discard
                 self.progress.pop(key, None)
@@ -65,6 +67,7 @@ class QualityBench:
             total_ndcg += ndcg10(self.relevant[i], [self.doc_ids[p] for p in ids])
             total_ms += ms
             self.progress[key] = i + 1
+            self.shard_busy = total_ms / (time.perf_counter() - t_start) / 1000
             time.sleep(max(0.0, self.interval - (time.perf_counter() - t0)))
         self.search_ms[key] = total_ms / self.n
         self.scores[key] = total_ndcg / self.n

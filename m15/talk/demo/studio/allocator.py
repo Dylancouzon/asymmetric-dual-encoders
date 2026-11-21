@@ -10,8 +10,8 @@ bound throughput on one machine, and the encoders stress them differently:
 A plan picks fractions f (summing to 1) that maximize the average nDCG@10 of served searches, subject to
 
   average nDCG  >= floor                                  quality comes first
-  rate * sum(f_i / encode_capacity_i)      <= headroom    encode stays below saturation
-  rate * sum(f_i * search_ms_i) / 1000     <= headroom    the shard stays below saturation
+  rate * sum(f_i / encode_capacity_i)      <= headroom              encode stays below saturation
+  rate * sum(f_i * search_ms_i) / 1000     <= headroom - reserved   the shard stays below saturation
 
 Headroom (< 1) leaves room for queueing so latency stays under target; the caller tunes it from measured p95.
 If no mix serves the whole rate at the floor, the plan is the floor-meeting mix that sustains the most traffic,
@@ -29,7 +29,7 @@ class EncoderCost:
     quality: float          # nDCG@10 at its current search setting (measured on judged queries)
     encode_per_s: float     # encodes per second this machine sustains for this encoder (measured at startup)
     search_ms: float        # shard time per search at its current ef / oversampling (measured live)
-    service_ms: float       # p95 of its own processing time (encode + search, no queueing) right now
+    service_ms: float       # tail of its own processing time (encode + search, no queueing) right now
 
 
 @dataclass(frozen=True)
@@ -52,7 +52,9 @@ def _grid(n: int, step: float) -> np.ndarray:
     return np.array(rows, dtype=np.float64) / k
 
 
-def plan(rate: float, encoders: list, floor: float, target_ms: float, headroom: float, step: float = 0.01) -> Plan:
+def plan(rate: float, encoders: list, floor: float, target_ms: float, headroom: float, shard_reserved: float = 0.0,
+         step: float = 0.01) -> Plan:
+    """shard_reserved: share of shard time already taken by other work (here, the background quality bench)."""
     F = _grid(len(encoders), step)
     q = np.array([e.quality for e in encoders])
     inv_cap = np.array([1.0 / e.encode_per_s for e in encoders])
@@ -61,11 +63,13 @@ def plan(rate: float, encoders: list, floor: float, target_ms: float, headroom: 
     too_slow = np.array([e.service_ms > 0.7 * target_ms for e in encoders])
 
     quality = F @ q
-    load_per_rate = np.maximum(F @ inv_cap, F @ shard_s)                  # the tighter of the two resources
+    # Load as a share of headroom, from the tighter of the two resources.
+    shard_room = max(headroom - shard_reserved, 1e-3)
+    load_per_rate = np.maximum(F @ inv_cap / headroom, F @ shard_s / shard_room)
     usable = ~(F[:, too_slow] > 0).any(axis=1) if too_slow.any() else np.ones(len(F), bool)
     meets_floor = (quality >= floor - 1e-9) & usable
 
-    fits = meets_floor & (rate * load_per_rate <= headroom)
+    fits = meets_floor & (rate * load_per_rate <= 1)
     if fits.any():
         # Best quality that fits; among equals, the lightest load (more slack for bursts).
         idx = np.flatnonzero(fits)
@@ -75,12 +79,12 @@ def plan(rate: float, encoders: list, floor: float, target_ms: float, headroom: 
         # Overloaded: the floor-meeting mix that sustains the most traffic; the rest is shed.
         idx = np.flatnonzero(meets_floor)
         i = idx[np.argmin(load_per_rate[idx])]
-        status, served = "overloaded", min(rate, headroom / load_per_rate[i])
+        status, served = "overloaded", min(rate, 1 / load_per_rate[i])
     else:
         # The floor is above what any usable mix delivers: serve the best quality, and say so.
         idx = np.flatnonzero(usable) if usable.any() else np.arange(len(F))
         i = idx[np.lexsort((load_per_rate[idx], -quality[idx]))[0]]
-        status, served = "floor unreachable", min(rate, headroom / load_per_rate[i])
+        status, served = "floor unreachable", min(rate, 1 / load_per_rate[i])
 
     f = F[i]
     return Plan(shares={e.name: float(x) for e, x in zip(encoders, f)}, quality=float(quality[i]),
@@ -105,5 +109,7 @@ if __name__ == "__main__":
     assert high.status == "floor unreachable", high
     tight = plan(40, costs(0.74, 0.510), floor=0.50, target_ms=10, headroom=0.8)
     assert tight.shares["stella"] == 0.0, tight                                   # Stella alone takes 30 ms
+    busy = plan(2000, costs(0.16, 0.480), floor=0.50, target_ms=150, headroom=0.95, shard_reserved=0.5)
+    assert busy.shard_util <= 0.45 + 1e-9, busy                                 # the bench keeps its shard time
     print("allocator self-check passed:", {k: round(v, 2) for k, v in narrow.shares.items()},
           f"encode {narrow.encode_util:.0%} shard {narrow.shard_util:.0%}")
