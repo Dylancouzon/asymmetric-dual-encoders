@@ -46,9 +46,12 @@ def avg_words(texts):
 
 def build(dataset):
     import qdrant_edge as E
+    from datasets import load_dataset
     data = load_public(dataset)
     vecs, prov = doc_vectors(dataset, data)
     avg_len = avg_words(data["doc_texts"])
+    corpus = load_dataset(data["pins"]["source"], "corpus", revision=data["pins"]["revision"])["corpus"]
+    titles, bodies = corpus["title"], corpus["text"]
     bm25 = E.Bm25(E.Bm25Config(avg_len=avg_len))
     path = EDGE / dataset
     if path.exists():
@@ -70,7 +73,8 @@ def build(dataset):
             text = data["doc_texts"][i]
             pts.append(E.Point(id=i, vector={"stella": vecs[i].astype(np.float32),
                                              "bm25": bm25.embed_document(text)},
-                               payload={"doc_id": data["doc_ids"][i], "text": text[:TEXT_CHARS]}))
+                               payload={"doc_id": data["doc_ids"][i], "title": titles[i] or "",
+                                        "text": (bodies[i] or "")[:TEXT_CHARS]}))
         shard.update(E.UpdateOperation.upsert_points(pts))
         if lo % 204800 == 0:
             print(f"upserted {hi}/{len(vecs)} in {time.time() - t0:.0f}s", flush=True)
@@ -159,6 +163,12 @@ def exact_topk(q, vecs, k=10, chunk=262_144):
     return np.take_along_axis(best_i, order, 1), np.take_along_axis(best_s, order, 1)
 
 
+def per_query_ndcg(run, qrels, q_ids):
+    import pytrec_eval
+    s = pytrec_eval.RelevanceEvaluator(qrels, {"ndcg_cut.10"}).evaluate(run)
+    return [round(s[q]["ndcg_cut_10"], 4) if q in s else 0.0 for q in q_ids]
+
+
 def bench(dataset):
     import qdrant_edge as E
     import encoders15
@@ -189,6 +199,7 @@ def bench(dataset):
         ex_i, ex_s = exact_topk(qv, vecs)
         exact = score_run(run_of([zip(a, b) for a, b in zip(ex_i, ex_s)]), qrels)["ndcg@10"]
         rows = {"encode_ms_p50": statistics.median(enc_ms), "exact_ndcg10": exact, "settings": []}
+        raw = {}
         for ef in EFS:
             for os_ in OVERSAMPLING:
                 params = E.SearchParams(hnsw_ef=ef, quantization=E.QuantizationSearchParams(
@@ -205,6 +216,7 @@ def bench(dataset):
                     res.append([(h.id, h.score) for h in hits])
                     recov.append(len({h.id for h in hits} & set(ex_i[qi].tolist())) / 10)
                 tot = [a + b for a, b in zip(enc_ms, srch_ms)]
+                raw[(ef, os_)] = (srch_ms, res)
                 rows["settings"].append({
                     "ef": ef, "oversampling": os_,
                     "ndcg10": score_run(run_of(res), qrels)["ndcg@10"],
@@ -215,6 +227,13 @@ def bench(dataset):
                 print(name, rows["settings"][-1], flush=True)
         ok = [s for s in rows["settings"] if s["ndcg10"] >= 0.99 * exact]
         rows["selected"] = min(ok, key=lambda s: s["total_ms_p50"]) if ok else None
+        pick = rows["selected"] or max(rows["settings"], key=lambda s: s["ndcg10"])
+        srch_ms, res = raw[(pick["ef"], pick["oversampling"])]
+        # Per-query arrays for the demo's race replay, at the selected (else best) setting.
+        rows["per_query"] = {"ef": pick["ef"], "oversampling": pick["oversampling"],
+                             "encode_ms": [round(x, 4) for x in enc_ms],
+                             "search_ms": [round(x, 4) for x in srch_ms],
+                             "ndcg10": per_query_ndcg(run_of(res), qrels, q_ids)}
         out[name] = rows
     bm = E.Bm25(E.Bm25Config(avg_len=meta["bm25_avg_len"]))
     for t in q_texts[:20]:
@@ -227,13 +246,15 @@ def bench(dataset):
         tot.append((time.perf_counter() - t0) * 1000)
         res.append([(h.id, h.score) for h in hits])
     out["bm25"] = {"ndcg10": score_run(run_of(res), qrels)["ndcg@10"],
-                   "total_ms_p50": statistics.median(tot), "total_ms_p95": float(np.percentile(tot, 95))}
+                   "total_ms_p50": statistics.median(tot), "total_ms_p95": float(np.percentile(tot, 95)),
+                   "per_query": {"total_ms": [round(x, 4) for x in tot],
+                                 "ndcg10": per_query_ndcg(run_of(res), qrels, q_ids)}}
     write_result(REPO / f"results/m15_talk_edge_{dataset}.json", {
         "status": "COMPLETE", "analysis": "exploratory", "dataset": dataset,
         "n_queries": len(q_ids), "n_docs": len(ids), "index": meta, "results": out,
         "protocol": "Warmed, sequential, one process on the Apple M5 Pro. Encoding and search timed "
                     "separately per query; totals are per-query sums. Transformers run ONNX Runtime "
-                    "CPU, 4 threads. Zero retrieves its rows from an Edge shard. Selected = fastest "
+                    "CPU, 4 threads. zero-edge retrieves Zero's rows from an Edge shard. Selected = fastest "
                     "median total within 1% of the encoder's own exact nDCG@10.",
         "receipt": receipt(__file__, {"doc_vectors": prov}, started,
                            ("onnxruntime", "tokenizers", "qdrant-edge"))})
