@@ -30,10 +30,11 @@
   "recovery",
   "recipe",
   "live",
-  "takeaways",
   "close",
+  "byo",
   "thanks",
   "plan",
+  "takeaways",
   "race",
   "solved",
   "flops",
@@ -76,8 +77,8 @@
    "start": "recovery"
   },
   "monday": {
-   "description": "What to take home and how to start.",
-   "start": "takeaways"
+   "description": "Use the Constella models, then train your own for an existing index.",
+   "start": "close"
   },
   "backup": {
    "description": "Hidden backup slides for questions.",

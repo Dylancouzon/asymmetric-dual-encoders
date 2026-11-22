@@ -348,7 +348,7 @@ code = _code(lambda sp, K, F, S_, C_, V, T_, P_: "\n".join([
     sp(V, "query") + " = " + sp(F, "next") + "(" + sp(V, "zero") + "." + sp(F, "embed") + "([" + sp(S_, '"how far is the moon?"') + "]))",
     sp(V, "hits") + " = " + sp(V, "client") + "." + sp(F, "query_points") + "(" + sp(S_, '"wiki"') + ", " + sp(V, "query") + "=" + sp(V, "query") + ")",
 ]))
-write("close", " alt", "Keep Your Index. <span class=\"tr\">Make the Query Encoder a Dial.</span>",
+write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>",
       f'<pre style="margin-top:36px;background:#1E1E1E;color:#D4D4D4;border-radius:16px;padding:36px 44px;font-family:JetBrains Mono,monospace;'
       f'font-size:32px;line-height:1.5;font-variant-ligatures:none;border:2px solid #303547">{code}</pre>'
       '<p style="margin-top:24px;font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none">'
@@ -415,33 +415,34 @@ def arr(x1, y1, x2, y2, c=MUT):
             f'<path d="M{x2} {y2} L{hx + px:.0f} {hy + py:.0f} L{hx - px:.0f} {hy - py:.0f}z" fill="{c}"/>')
 
 
-# cost v8: one index encode against one week of queries, same-size blocks
-_CR = _json.loads(Path(_R + "m15_talk_crossover.json").read_text())["results"]
-_x = _CR["encoders"]["stella"]["crossover_queries"]
-_week = 7 * 86400 * 100 / _x                          # index-sized blocks of Stella query encoding in a week at 100/s
-SQ, GAP, Y0 = 180, 24, 60
-g = ['<svg width="1664" height="400" viewBox="0 0 1664 400">',
-     f'<rect x="0" y="{Y0}" width="{SQ}" height="{SQ}" rx="14" fill="{GRAY}"/>',
-     t(0, Y0 + SQ + 64, "Your index", 40, GRAY, "start", 600), t(0, Y0 + SQ + 110, "encoded once", 32, MUT)]
-X1 = 330
-for k in range(math.ceil(_week)):
-    w = SQ * min(1, _week - k)
-    g.append(f'<rect x="{X1 + k * (SQ + GAP)}" y="{Y0}" width="{w:.0f}" height="{SQ}" rx="14" fill="{RED}"/>')
-g += [t(X1, Y0 + SQ + 64, "One week of queries", 40, RED, "start", 600), t(X1, Y0 + SQ + 110, "Stella, 100 per second", 32, MUT), "</svg>"]
-write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
-      '<div style="margin-top:120px">' + "".join(g) + "</div>",
-      f"BEIR NQ, analytic FLOPs (2·P·T + attention): 2,681,468 passages, mean {_CR['doc_tokens_mean']:.0f} tokens, no prompt, "
-      f"against the mean of the 3,452 NQ test queries with Stella's query prompt. Each block is one corpus encode of compute; "
-      f"one week at 100 queries/s is {_week:.1f}. Measured: the index took 5.3 GPU-hours on one RTX 3080. Exploratory.",
-      note="<aside>[~1.5 min] I built tonight's passage index on my desktop. It took about five GPU-hours of steady encoding. "
-      "In real time it took six and a half hours, including a memory spill and a crash. I could go and make tea while that job ran. "
-      "I'd rather my users didn't have time to do the same.\n\n[Point to the grey block.] That's the index: 2.68 million passages, "
-      "paid for once. [Point to the red blocks.] Every question also goes through Stella before Qdrant can search. A question is "
-      f"much shorter than a passage, so each one is cheap. But they never stop. At a hundred queries a second, I spend a whole "
-      f"index worth of compute on questions about every 27 hours. Over one week, that's {_week:.0f} more blocks. And that encode "
-      "sits on the path of every request, roughly 20 milliseconds on this laptop, against a quarter of a millisecond for the "
-      "search itself.\n\nIf an agent calls search several times to answer one question, those encodes all sit on the path to "
-      "the answer. I wanted to make that part cheaper. What else could search the passage vectors I'd already paid to make?</aside>")
+# cost v9: the same 24-layer Stella serves two jobs with opposite deadlines (concept agreed with Astra)
+def _tower(cx, y0):
+    return "".join(f'<rect x="{cx - 170}" y="{y0 + k * 11}" width="340" height="7" rx="3" fill="{GRAY}" '
+                   f'opacity="{0.55 + 0.45 * (k % 4 == 0)}"/>' for k in range(24))
+
+
+def _down(cx, y1, y2, c):
+    return f'<line x1="{cx}" y1="{y1}" x2="{cx}" y2="{y2 - 14}" stroke="{c}" stroke-width="5"/><path d="M{cx} {y2} l-11 -17 l22 0z" fill="{c}"/>'
+
+
+CL, CR = 400, 1264
+g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">',
+     t(CL, 36, "Once, at indexing", 40, GRAY, "middle", 700), t(CR, 36, "Every query", 40, RED, "middle", 700)]
+for r in range(5):
+    for c in range(12):
+        g.append(f'<rect x="{CL - 262 + c * 44}" y="{70 + r * 22}" width="36" height="12" rx="3" fill="{GRAY}" opacity="0.8"/>')
+g.append(f'<rect x="{CR - 310}" y="84" width="620" height="68" rx="34" fill="#1a2233" stroke="{RED}" stroke-width="3"/>')
+g.append(t(CR, 129, "cheap flights paris to rome", 32, WHITE, "middle", 600, True))
+g += [_down(CL, 180, 226, MUT), _down(CR, 180, 226, RED), _tower(CL, 240), _tower(CR, 240),
+      t(832, 362, "Stella, 24 layers", 32, WHITE, "middle", 600), t(832, 404, "435M parameters", 30, MUT, "middle"),
+      _down(CL, 518, 562, MUT), _down(CR, 518, 562, RED),
+      t(CL, 618, "5.3 GPU-hours", 48, WHITE, "middle", 700), t(CR, 618, "20.5 ms", 48, RED, "middle", 700),
+      "</svg>"]
+write("cost", " foot", "Same Encoder, Different Deadlines",
+      '<div style="margin-top:8px">' + "".join(g) + "</div>",
+      "BEIR NQ: 2,681,468 passages encoded once with Stella fp32 on one RTX 3080 (5.3 GPU-hours at a steady 141 passages/s). "
+      "Query: Stella with its prompt, median encode over the 3,452 NQ test queries, M5 Pro CPU, before a 0.23 ms Qdrant Edge "
+      "search. Exploratory.")
 
 # arch v8: the paper's Figure 1 layout; one ingestion path, three query paths, each with its own search width
 _FL = _json.loads(Path(_R + "m15_talk_flops.json").read_text())["results"]
@@ -651,6 +652,26 @@ for i, (a, b) in enumerate(_TK):
 g.append("</svg>")
 write("takeaways", "", "What to Take Home", '<div style="margin-top:24px">' + "".join(g) + "</div>")
 
+# byo: already have a frozen index? train a Zero or Nano for it (details in the paper)
+_ST = (("Keep your document encoder and index", "nothing is re-encoded"),
+       ("Encode real queries with your query model", "its vectors are the training targets"),
+       ("Train Zero, Nano, or both", "Zero ≈ 20 min on one GPU, Nano ≈ $95"),
+       ("Judge them on your own queries", "exact nDCG@10, then sweep ef"))
+g = ['<svg width="1180" height="620" viewBox="0 0 1180 620">']
+for i, (a, b) in enumerate(_ST):
+    y = 40 + i * 150
+    g.append(t(0, y + 40, f"0{i + 1}", 44, RED, "start", 700, True))
+    g.append(t(110, y + 40, a, 46, WHITE, "start", 700))
+    g.append(t(110, y + 90, b, 32, GRAY))
+g.append("</svg>")
+_q = _qr("paper")
+write("byo", " foot", "Already Have an Index? Train Your Own",
+      '<div class="row" style="gap:80px;margin-top:24px;align-items:center">' + "".join(g)
+      + f'<div class="col" style="gap:20px;align-items:center"><div style="background:#fff;border-radius:16px;padding:12px">{_q}</div>'
+      '<p style="font-size:34px;font-weight:600;color:#fcfdff">Full recipe: the paper</p></div></div>',
+      "Costs are Constella's, for a Stella index: Zero trained on one RTX 3080 once its targets existed (computing Stella's "
+      "targets took 8-12 h); Nano took 57.3 A100-hours. Training sources must allow commercial use of derived weights. Exploratory.")
+
 # Speaker notes: talking_points.md is the one source; it replaces every note written above.
 _TP = (Path(__file__).parent / "talking_points.md").read_text()
 for sec in re.split(r"^## ", _TP, flags=re.M)[1:]:
@@ -662,7 +683,7 @@ for sec in re.split(r"^## ", _TP, flags=re.M)[1:]:
     assert html.count("<aside>") == 1, sid
     f.write_text(re.sub(r"<aside>.*?</aside>", lambda m: note, html, flags=re.S))
 
-for sid in ("plan", "solved"):                                  # backup slides stay out of the main run
+for sid in ("plan", "solved", "takeaways"):                                  # backup slides stay out of the main run
     f = S / f"{sid}.html"
     f.write_text(re.sub(r'<section id="(\w[\w-]*)" class="([^"]*)"[^>]*>', r'<section id="\1" class="\2" hidden>', f.read_text(), count=1))
 

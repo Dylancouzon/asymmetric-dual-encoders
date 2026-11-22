@@ -1,5 +1,5 @@
 <section id="close" class="s alt" data-transition="fade">
-<div class="head"><h2>Keep Your Index. <span class="tr">Make the Query Encoder a Dial.</span></h2></div>
+<div class="head"><h2>Use the Constella Models <span class="tr">Today</span></h2></div>
 <pre style="margin-top:36px;background:#1E1E1E;color:#D4D4D4;border-radius:16px;padding:36px 44px;font-family:JetBrains Mono,monospace;font-size:32px;line-height:1.5;font-variant-ligatures:none;border:2px solid #303547"><span style="color:#C586C0">from</span> fastembed <span style="color:#C586C0">import</span> <span style="color:#4EC9B0">TextEmbedding</span>
 
 <span style="color:#6A9955"># 1. Index once with Stella's document model</span>
@@ -11,9 +11,10 @@
 <span style="color:#9CDCFE">query</span> = <span style="color:#DCDCAA">next</span>(<span style="color:#9CDCFE">zero</span>.<span style="color:#DCDCAA">embed</span>([<span style="color:#CE9178">"how far is the moon?"</span>]))
 <span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>)</pre><p style="margin-top:24px;font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p>
 <aside>[~1 min]
+Why it matters: you can try this on Monday with a few lines of code.
 - [Comment 1] Index once with Stella's document model in FastEmbed.
 - [Comment 2] Query the same collection with Zero. To try Nano, change one model name.
 - [pip line] FastEmbed 0.9.0 or later.
-- Monday: pull a batch of real queries, judge the passages you want back, compare the encoders on your index.
-[Advance to the thank-you slide.]</aside>
+- Start with real queries: judge the passages you want back and compare the three encoders on your index.
+Next: and if your index was built with a different model?</aside>
 </section>

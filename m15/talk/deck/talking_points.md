@@ -11,13 +11,14 @@ One section per slide, in talk order. `rebuild.py` copies each section into that
 Next: I started by timing two jobs that run on very different schedules.
 
 ## cost · ~1.5 min
-Why it matters: query encoding is the bill that never stops.
-- [Grey block] Tonight's index: 2.68M NQ passages, encoded once with Stella. 5.3 GPU-hours on my desktop (6.5 hours real time, including a crash). I made tea.
-- [Red blocks] Every question also goes through Stella before Qdrant can search. One question is cheap. They never stop.
-- Each red block is one whole index worth of compute. At 100 queries/s you spend one block every 27 hours: 6 more index encodes per week.
-- It is also on the latency path: about 20 ms to encode a query on this laptop, a quarter of a millisecond to search.
-- Agents make it worse: several searches per answer, each one waits for an encode.
-Next: so what else could search the passage vectors I already paid for?
+Why it matters: one model, two jobs with opposite deadlines. Only one of them can wait.
+- [Left] Tonight's index: 2.68M NQ passages through Stella, once. 5.3 GPU-hours on my desktop (6.5 hours real time, including a crash). Nobody waits; I made tea.
+- [Right] Every question goes through the very same 24-layer, 435M-parameter model before Qdrant can search. Five or six words through the same stack.
+- [20.5 ms] On this laptop that encode takes 20.5 ms. The Qdrant search after it takes a quarter of a millisecond.
+- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours.
+- Agents multiply it: several searches per answer, each one waits for an encode.
+- The left side is a sunk cost. The right side is where a cheaper model would pay off, if it could still search the same index.
+Next: what if only the right tower changed?
 
 ## arch · ~1.5 min
 Why it matters: you keep the index and change only the query side.
@@ -162,20 +163,27 @@ Next: let me show you.
 - [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.
 - Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.
-Next: four things to take home.
-
-## takeaways · ~1 min
-- [01] Measure the whole request. 51 times faster encoding became 2.4 times faster search.
-- [02] Pick the encoder and its search width together. Zero needs a wider search.
-- [03] Set the quality floor before you tune. It decides which encoder ships.
-- [04] One index lets every request pick its encoder. That makes routing free to try.
-Next: here is how little code it takes.
+Next: how to use it.
 
 ## close · ~1 min
+Why it matters: you can try this on Monday with a few lines of code.
 - [Comment 1] Index once with Stella's document model in FastEmbed.
 - [Comment 2] Query the same collection with Zero. To try Nano, change one model name.
 - [pip line] FastEmbed 0.9.0 or later.
-- Monday: pull a batch of real queries, judge the passages you want back, compare the encoders on your index.
+- Start with real queries: judge the passages you want back and compare the three encoders on your index.
+Next: and if your index was built with a different model?
+
+## byo · ~1.25 min
+Why it matters: the method is not tied to Stella. If you have a frozen index, you can train its cheap query encoders.
+- [01] Keep your document encoder and your index. Nothing is re-encoded, ever.
+- [02] Encode a large set of real queries with your current query model, with its prompt and preprocessing. Those vectors are the targets. For Nano, add passages encoded by your document model.
+  - A hosted model works if it returns the same vectors.
+  - Before training, fit a quick lookup table to check your model teaches well (remember gte-large).
+- [03] Train:
+  - Zero: one row per token of your tokenizer, start from your model's token encodings, align then rank. About 20 minutes on one GPU once the targets exist. For Stella the targets took 8 to 12 hours.
+  - Nano: a small backbone, three pooled layers, a projection to your vector size, trained on your model's vectors. No relevance labels needed. About $95 of A100 time for ours.
+- [04] Judge on your own queries: exact nDCG@10 per encoder, then sweep ef and oversampling. Then set your floor and let a router pick.
+- [QR] The paper has every detail: data, losses, steps, and what failed.
 [Advance to the thank-you slide.]
 
 ## thanks · ~0.5 min
