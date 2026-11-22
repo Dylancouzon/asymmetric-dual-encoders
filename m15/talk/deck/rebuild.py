@@ -735,9 +735,16 @@ for sec in re.split(r"^## ", _TP, flags=re.M)[1:]:
     sid, mins = [x.strip() for x in head.split("·")]
     f = S / f"{sid}.html"
     html = f.read_text()
-    note = f"<aside>[{mins}]\n" + body.strip().replace("&", "&amp;").replace("<", "&lt;") + "</aside>"
+    text = f"[{mins}]\n" + body.strip().replace("&", "&amp;").replace("<", "&lt;")
+    note = "<aside>" + text.replace("\n", "<br>\n") + "</aside>"       # the deck page shows <br> as a line break
     assert html.count("<aside>") == 1, sid
     f.write_text(re.sub(r"<aside>.*?</aside>", lambda m: note, html, flags=re.S))
+
+for f in sorted(S.glob("*.html")):                             # backup notes not in talking_points.md: same line breaks
+    html = f.read_text()
+    m = re.search(r"<aside>(.*?)</aside>", html, re.S)
+    if m and "<br>" not in m.group(1) and "\n" in m.group(1).strip():
+        f.write_text(html.replace(m.group(0), "<aside>" + m.group(1).strip().replace("\n", "<br>\n") + "</aside>"))
 
 for sid in ("plan", "solved", "takeaways"):                                  # backup slides stay out of the main run
     f = S / f"{sid}.html"

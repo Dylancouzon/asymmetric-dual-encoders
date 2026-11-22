@@ -1,16 +1,16 @@
 <section id="live" class="s demo" data-transition="fade">
 <div class="head"><h2>Live: An Auto Router on One Index</h2></div>
 <div class="live"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:40px;margin-top:24px">2.68M passages, real NQ questions, judged answers, on this laptop.</p>
-<aside>[~4 min]
-[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]
-- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions, every answer scored against judged answers.
-- Two rules: quality floor first, then the latency target. It never drops a query.
-- [40/s] Quiet: everything on Stella with the widest search.
-- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency stays under the line; quality dips a little.
-- [Drag to about 1,500] Zero mixes in, and the search narrows by itself. Same index, nothing re-encoded.
-- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows. Quality first, as asked.
-- [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.
-- [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.
-- Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.
+<aside>[~4 min]<br>
+[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]<br>
+- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions, every answer scored against judged answers.<br>
+- Two rules: quality floor first, then the latency target. It never drops a query.<br>
+- [40/s] Quiet: everything on Stella with the widest search.<br>
+- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency stays under the line; quality dips a little.<br>
+- [Drag to about 1,500] Zero mixes in, and the search narrows by itself. Same index, nothing re-encoded.<br>
+- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows. Quality first, as asked.<br>
+- [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.<br>
+- [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.<br>
+- Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.<br>
 Next: how to use it.</aside>
 </section>

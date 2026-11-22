@@ -10,11 +10,11 @@
 <span style="color:#9CDCFE">zero</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/constella-zero"</span>)
 <span style="color:#9CDCFE">query</span> = <span style="color:#DCDCAA">next</span>(<span style="color:#9CDCFE">zero</span>.<span style="color:#DCDCAA">embed</span>([<span style="color:#CE9178">"how far is the moon?"</span>]))
 <span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>)</pre><p style="margin-top:24px;font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p>
-<aside>[~1 min]
-Why it matters: you can try this on Monday with a few lines of code.
-- [Comment 1] Index once with Stella's document model in FastEmbed.
-- [Comment 2] Query the same collection with Zero. To try Nano, change one model name.
-- [pip line] FastEmbed 0.9.0 or later.
-- Start with real queries: judge the passages you want back and compare the three encoders on your index.
+<aside>[~1 min]<br>
+Why it matters: you can try this on Monday with a few lines of code.<br>
+- [Comment 1] Index once with Stella's document model in FastEmbed.<br>
+- [Comment 2] Query the same collection with Zero. To try Nano, change one model name.<br>
+- [pip line] FastEmbed 0.9.0 or later.<br>
+- Start with real queries: judge the passages you want back and compare the three encoders on your index.<br>
 Next: and if your index was built with a different model?</aside>
 </section>
