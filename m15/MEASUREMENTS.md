@@ -727,7 +727,7 @@ also appears in that model's own setting, where the lookup path is learned, not 
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
 
 
-## Talk measurements T1-T7 (exploratory, 2026-11-20 and 2026-11-21)
+## Talk measurements T1-T8 (exploratory, 2026-11-20 and 2026-11-21)
 
 Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
 exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
@@ -795,3 +795,10 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   dequantized Zero rows it gathers (first 48 dimensions, for drawing), Zero's pooled vector, and its
   cosine with Stella's and Nano's query vectors. Script `m15src/talk_slide_data.py`; receipt
   `results/m15_talk_slide_data.json`.
+- **T8 query compute of 25 open retrievers.** T2's formula applied to the 25 E8/E8x towers (arctic-embed-l-mean,
+  a pooling variant, left out): layer count, width and feed-forward size from each config.json at its pinned
+  revision; gated feed-forward blocks (gte-*-en-v1.5) count 3·d·ff weights; T is the median over E1's 100 medium
+  queries with each model's query prefix, counted with Stella's uncased WordPiece tokenizer, which all 26 towers
+  share (E8/E8x preflight). Quality: each tower's own six-set nDCG@10 from E8/E8x; Constella's from the M20 table on
+  the same six datasets (Stella 0.5744 and bge-small 0.5042 match the E8/E8x values). Script
+  `m15src/talk_flops_field.py`; receipt `results/m15_talk_flops_field.json`.

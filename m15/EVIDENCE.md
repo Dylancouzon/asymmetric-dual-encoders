@@ -899,3 +899,44 @@ Example "cheap flights paris to rome": cosine with Stella 0.878 (Zero), 0.963 (N
 One process, W threads sharing one Qdrant Edge shard, each encoder at its C26 selected setting (Zero at its best tested point), batch 1, 30 s per point. Cold: rescoring read fp16 vectors from the VM's network disk.
 
 **Cannot show.** Several processes or shards; Qdrant server; GPU encoders; other instance types.
+
+## C30. Constella among 25 open retrievers by query compute
+
+**Label:** exploratory (analytic estimate; descriptive scores). **Source:** `results/m15_talk_flops_field.json`, `results/m15_e8_towers.json`, `results/m15_e8x_towers.json`, `results/m20_beir15_run.json`
+
+**Claim.** On six BEIR datasets, Nano (0.532) ranks with base-size retrievers at small-model compute, and Zero (0.434) ranks above all four MiniLM models with no forward pass. Stella saw FiQA and ArguAna in training; on the other four datasets Zero trails BM25.
+
+| model | median tokens | median FLOPs per query | six-BEIR nDCG@10 |
+|---|---|---|---|
+| minilm-l6 | 12 | 2.56e+08 | 0.4142 |
+| msmarco-minilm-l6 | 12 | 2.56e+08 | 0.3281 |
+| multi-qa-minilm-l6 | 12 | 2.56e+08 | 0.4008 |
+| arctic-embed-xs | 20 | 4.28e+08 | 0.4662 |
+| gte-small | 12 | 5.12e+08 | 0.4838 |
+| minilm-l12 | 12 | 5.12e+08 | 0.4219 |
+| e5-small-v2 | 14 | 5.98e+08 | 0.4544 |
+| arctic-embed-s | 20 | 8.57e+08 | 0.4993 |
+| bge-small-en-v1.5 | 20 | 8.57e+08 | 0.5042 |
+| tas-b | 12 | 1.02e+09 | 0.3262 |
+| contriever | 12 | 2.04e+09 | 0.2846 |
+| contriever-msmarco | 12 | 2.04e+09 | 0.3909 |
+| gte-base | 12 | 2.04e+09 | 0.5063 |
+| e5-base-v1 | 14 | 2.39e+09 | 0.4934 |
+| e5-base-v2 | 14 | 2.39e+09 | 0.4669 |
+| gte-base-en-v1.5 | 12 | 2.72e+09 | 0.5331 |
+| arctic-embed-m-v1.5 | 20 | 3.41e+09 | 0.5263 |
+| bge-base-en-v1 | 20 | 3.41e+09 | 0.5131 |
+| bge-base-en-v1.5 | 20 | 3.41e+09 | 0.5259 |
+| gte-large | 12 | 7.26e+09 | 0.5129 |
+| e5-large-v2 | 14 | 8.47e+09 | 0.4735 |
+| gte-large-en-v1.5 | 12 | 9.68e+09 | 0.5970 |
+| arctic-embed-l | 20 | 1.21e+10 | 0.5289 |
+| bge-large-en-v1.5 | 20 | 1.21e+10 | 0.5329 |
+| mxbai-embed-large-v1 | 20 | 1.21e+10 | 0.5368 |
+| **Zero** (Stella index) | 12 | 2.76e+04 | 0.4339 |
+| **Nano** (Stella index) | 12 | 5.41e+08 | 0.5317 |
+| **Stella** (Stella index) | 31 | 2.51e+10 | 0.5744 |
+
+Formula: 2*P_matmul*T + 4*L*T^2*d; gated FFN 3*d*ff, else 2*d*ff; query prefix included. Tokens: Stella's uncased WordPiece tokenizer (shared by all 26 towers) on the 100 medium E1 queries with each model's query prefix. Scores: each model on its own index (E8/E8x six-set ceilings); Constella rows from the M20 BEIR-15 table on the same six datasets.
+
+**Cannot show.** Measured encode time; batching or GPU serving; the four datasets without teacher exposure for the 16 E8x models; any superiority claim (descriptive means, no intervals).

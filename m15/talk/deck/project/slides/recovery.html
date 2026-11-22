@@ -8,5 +8,5 @@ I saw a need for wider search with uncompressed vectors as well. In the paper's 
 
 I also measured how much nDCG each encoder lost relative to its own exact search. On TREC-COVID, only 12 of the 25 tables needed a wider search to match the teacher's loss. Finding one more exact neighbour can leave the first useful result right where it was. Before I pay for a wider search, I want to know what it does for the results someone would open.
 
-I brought a few queries to try on this shard. Let's look at the pages the rankers return and see what changes when I widen the search.</aside>
+So the encoder and the search width are one decision, and the right answer changes with traffic. I didn't want to make that call by hand, so I let a router make it. Let me show you on this laptop.</aside>
 </section>
