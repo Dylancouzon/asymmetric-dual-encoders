@@ -23,7 +23,6 @@ input[type=range]{width:100%;accent-color:#9494ff;height:1.9rem;margin:.1rem 0}i
 .mix{display:grid;grid-template-columns:6rem 1fr 3.75rem;align-items:center;gap:.6rem;font-size:1.3rem}.mix b{text-align:right}
 .enc{display:grid;grid-template-columns:5rem 1fr 4.5rem;align-items:center;gap:.5rem;font-size:1.25rem;margin:.35rem 0 0}
 .enc select{font:inherit;font-size:1.15rem;background:#0b0f19;color:var(--txt);border:2px solid var(--line);border-radius:.5rem;padding:.1rem .3rem}
-.enc .q{grid-column:2/-1;font-size:1.05rem;color:var(--mut);margin-top:-.3rem}
 .hint{font-size:1.15rem;color:var(--mut);margin:.25rem 0}
 details summary{font-size:1.05rem;letter-spacing:.19rem;color:var(--mut);cursor:pointer;font-weight:600}
 .tg{display:grid;grid-template-columns:auto 1fr;gap:.9rem;align-items:center;margin-top:.4rem}
@@ -67,13 +66,13 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
       <div class="mix"><span><span class="dot" style="background:var(--stella)"></span>Stella</span><input id="w_stella" type="range" min="0" max="100"><b id="w_stella_v"></b></div>
       <div class="mix"><span><span class="dot" style="background:var(--nano)"></span>Nano</span><input id="w_nano" type="range" min="0" max="100"><b id="w_nano_v"></b></div>
       <div class="mix"><span><span class="dot" style="background:var(--zero)"></span>Zero</span><input id="w_zero" type="range" min="0" max="100"><b id="w_zero_v"></b></div></div>
-    <div class="hint" id="autohint">Serves every query. Picks the encoder mix and search width with the best quality at or above the floor that fits the target.</div></div>
+    </div>
   <div class="card"><h2>QUALITY FLOOR · FIRST <b id="floor_v"></b></h2><input id="floor" type="range" min="30" max="70">
     <h2 style="margin-top:.5rem">P95 TARGET · THEN <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
   <div class="card"><h2>HNSW SEARCH <span class="sm" id="search_by" style="letter-spacing:0"></span></h2>
-    <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><select id="os_stella"></select><div class="q" id="q_stella"></div></div>
-    <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><select id="os_nano"></select><div class="q" id="q_nano"></div></div>
-    <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><select id="os_zero"></select><div class="q" id="q_zero"></div></div></div>
+    <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><select id="os_stella"></select></div>
+    <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><select id="os_nano"></select></div>
+    <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><select id="os_zero"></select></div></div>
   <details><summary>MORE</summary>
     <div class="seg" id="pattern"><button data-v="steady">steady</button><button data-v="wave">daily wave</button><button data-v="bursts">bursts</button></div>
     <div class="tg" id="spike_g"><button id="spike">Spike</button><div><label>size <b id="peak_v"></b></label><input id="peak" type="range" min="2" max="50"></div></div>
@@ -87,14 +86,14 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
     <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d"></div></div>
     <div class="panel t"><div class="k">machine load</div><div class="v" id="load">–</div><div class="d" id="load_d"></div></div>
   </div>
-  <div class="panel plan"><span class="k" id="plan_k">auto plan</span><div class="bar" id="bar"></div><span class="chip" id="chip"></span><div class="util" id="util"></div></div>
+  <div class="panel plan"><span class="k" id="plan_k">auto</span><div class="bar" id="bar"></div><span class="chip" id="chip"></span><div class="util" id="util"></div></div>
   <div class="charts">
-    <div class="panel chart"><div class="k" id="latk">p95 latency · dashed: target</div><canvas id="c_lat"></canvas></div>
-    <div class="panel chart"><div class="k">searches/s served, by encoder · dashed: arriving</div><canvas id="c_qps"></canvas></div>
+    <div class="panel chart"><div class="k" id="latk">p95 latency vs target</div><canvas id="c_lat"></canvas></div>
+    <div class="panel chart"><div class="k">searches/s by encoder vs arriving</div><canvas id="c_qps"></canvas></div>
   </div>
   <div class="charts">
     <div class="panel"><table><thead><tr><th>encoder</th><th>ef · os</th><th>nDCG@10</th><th>encodes/s max</th><th>search</th><th>plan</th><th>actual</th></tr></thead><tbody id="enc_tbl"></tbody></table></div>
-    <div class="panel chart"><div class="k">ranking quality of served searches, nDCG@10 · dashed: floor</div><canvas id="c_ndcg"></canvas></div>
+    <div class="panel chart"><div class="k">nDCG@10 of served searches vs floor</div><canvas id="c_ndcg"></canvas></div>
   </div>
 </div></div>
 <script>
@@ -195,7 +194,7 @@ function draw() {
 
 // ---- numbers ------------------------------------------------------------------------------------------
 function render(s) {
-  $("sub").textContent = s.ready ? `${s.n_docs >= 1e6 ? (s.n_docs / 1e6).toFixed(2) + "M" : s.n_docs.toLocaleString()} ${s.dataset} passages · one Stella index · Qdrant Edge · this laptop` : `starting: ${s.step}…`;
+  $("sub").textContent = s.ready ? "" : `starting: ${s.step}…`;
   if (Date.now() - editing > 800) {       // don't fight the control being moved
     $("rate").value = xOfRate(s.rate); $("rate_v").textContent = Math.round(s.rate).toLocaleString() + " searches/s";
     $("floor").value = Math.round(s.floor * 100); $("floor_v").textContent = "nDCG " + s.floor.toFixed(2);
@@ -207,34 +206,34 @@ function render(s) {
   }
   document.querySelectorAll("#route button").forEach(b => b.classList.toggle("on", b.dataset.v === s.route));
   document.querySelectorAll("#pattern button").forEach(b => b.classList.toggle("on", b.dataset.v === s.pattern));
-  $("splits").style.display = s.route === "split" ? "block" : "none"; $("autohint").style.display = s.route === "auto" ? "block" : "none";
+  $("splits").style.display = s.route === "split" ? "block" : "none";
   $("pause").textContent = s.paused ? "Start" : "Pause"; $("pause").classList.toggle("paused", s.paused);
   $("spike").classList.toggle("on", s.spike); $("agent").classList.toggle("on", s.fanout > 1);
   for (const e of ENC) { const c = s.costs[e]; if (!c) continue;
-    $("q_" + e).textContent = `ef ${s.search[e][0]} · ×${s.search[e][1]} · nDCG@10 ${c.quality.toFixed(3)} on ${s.dataset}`;
     $("ef_" + e).disabled = $("os_" + e).disabled = s.route === "auto"; }
   $("search_by").textContent = s.route === "auto" ? "set by auto" : "ef · oversampling";
   // tiles
   $("arr").textContent = Math.round(s.offered).toLocaleString();   // requested; a full queue holds the replay back
-  $("flow1").innerHTML = `searches/s arriving · <b>${s.served_per_s.toLocaleString()}</b> served`;
+  $("flow1").innerHTML = `searches/s · <b>${s.served_per_s.toLocaleString()}</b> served`;
   const late = s.oldest_ms > s.target_ms;
-  $("flow2").innerHTML = `waiting <b class="${late ? "bad" : ""}">${s.waiting.toLocaleString()}</b> · oldest <b class="${late ? "bad" : ""}">${ms(s.oldest_ms)}</b>`;
+  $("flow2").innerHTML = s.waiting > 50 ? `<b class="${late ? "bad" : ""}">${s.waiting.toLocaleString()}</b> waiting · oldest <b class="${late ? "bad" : ""}">${ms(s.oldest_ms)}</b>` : "";
   const agent = s.fanout > 1, lat = agent ? s.task_p95_ms : s.p95_ms, over = lat > s.target_ms;
-  $("p95k").textContent = agent ? `p95 per agent task (${s.fanout} searches)` : "p95 latency";
-  $("latk").textContent = (agent ? "p95 per agent task" : "p95 latency") + " · dashed: target";
+  $("p95k").textContent = agent ? `p95 per task of ${s.fanout}` : "p95 latency";
+  $("latk").textContent = (agent ? "p95 per agent task" : "p95 latency") + " vs target";
   $("p95").textContent = ms(lat); $("p95").style.color = over ? "var(--bad)" : "var(--ok)";
-  $("verdict").textContent = s.paused && !s.served_per_s ? "paused" : over ? `OVER ${Math.round(s.target_ms)} ms TARGET` : `under ${Math.round(s.target_ms)} ms target`;
+  $("verdict").textContent = s.paused && !s.served_per_s ? "paused" : over ? "over target" : "";
   $("verdict").style.color = over ? "var(--bad)" : "var(--mut)"; $("gt").classList.toggle("over", over); gauge(lat, s.target_ms);
   $("ndcg").textContent = s.ndcg10.toFixed(2); $("ndcg").style.color = s.ndcg10 < s.floor && s.n_quality > 100 ? "var(--bad)" : "var(--txt)";
-  $("ndcg_d").textContent = `nDCG@10, last ${s.n_quality.toLocaleString()} searches · floor ${s.floor.toFixed(2)}`;
-  $("load").textContent = s.cores.toFixed(1); $("load_d").textContent = `of ${s.cores_total} cores busy`;
+  $("ndcg_d").textContent = `nDCG@10 · floor ${s.floor.toFixed(2)}`;
+  $("load").textContent = s.cores.toFixed(1); $("load_d").textContent = `of ${s.cores_total} cores`;
   // plan
   const p = s.plan, shares = p ? p.shares : Object.fromEntries(ENC.map(e => [e, s.split[e] / (ENC.reduce((a, o) => a + s.split[o], 0) || 1)]));
-  $("plan_k").textContent = s.route === "auto" ? "auto plan" : "split";
+  $("plan_k").textContent = s.route === "auto" ? "auto" : "split";
   $("bar").innerHTML = ENC.filter(e => shares[e] > 0.004).map(e => `<div style="width:${100 * shares[e]}%;background:${COL[e]}">${shares[e] > 0.08 ? `${Math.round(100 * shares[e])}% ${NAME[e]}` : ""}</div>`).join("");
   const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "floor unreachable": ["#2a1f0a", "#f5a623"], "over target to keep floor": ["#2a1f0a", "#f5a623"], "over capacity at this floor": ["#2a1520", "#ff516b"], manual: ["#1d1d3d", "#9494ff"]}[status];
-  $("chip").textContent = {"over target to keep floor": "floor first · latency may exceed target", "over capacity at this floor": "over capacity at this floor · queue growing"}[status] || status; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
-  $("util").textContent = p ? `search ef ${p.preset[0]} ×${p.preset[1]} · expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · search ${Math.round(100 * p.shard_util)}% of capacity · headroom ${Math.round(100 * s.headroom)}%` : "";
+  $("chip").textContent = {"over target to keep floor": "floor first · latency may exceed target", "over capacity at this floor": "over capacity · queue growing", manual: ""}[status] ?? (status === "ok" ? "" : status);
+  $("chip").style.display = $("chip").textContent ? "" : "none"; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
+  $("util").textContent = p ? `ef ${p.preset[0]} ×${p.preset[1]} · expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · shard ${Math.round(100 * p.shard_util)}%` : "";
   // encoders
   $("enc_tbl").innerHTML = ENC.map(e => { const c = s.costs[e] || {}; return `<tr><td><span class="dot" style="background:${COL[e]}"></span>${NAME[e]}</td>
     <td class="sm">${s.search[e][0]} · ×${s.search[e][1]}</td><td>${c.quality ? c.quality.toFixed(3) : "–"}</td>
