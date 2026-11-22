@@ -17,7 +17,7 @@ Read the [Constella whitepaper (PDF)](m15/latex/paper.pdf).
 
 ## Live demo: workload studio
 
-![Workload studio at 1,500 searches/s on NQ: Auto serves 66% Nano and 34% Zero at HNSW ef 256, p95 99 ms under a 150 ms target, nDCG@10 0.55](m15/talk/demo/studio/screenshot.png)
+![Workload studio at 1,500 searches/s on NQ: Auto serves 65% Nano and 35% Zero at HNSW ef 256, p95 13 ms under a 150 ms target, nDCG@10 0.54](m15/talk/demo/studio/screenshot.png)
 
 One Qdrant Edge index, three query encoders, live traffic. The studio replays judged BEIR questions on your
 machine and an auto-router picks the encoder mix and the HNSW search width for every query: Stella when

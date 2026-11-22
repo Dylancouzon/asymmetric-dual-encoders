@@ -2,7 +2,7 @@
 
 With a large encoder, encoding the query is most of the cost of a dense search: Stella takes about 28 ms per query on a laptop CPU, the search under 1 ms. Constella keeps one Stella document index and lets each query pick its encoder: Stella (best ranking, about 80 queries/s on a laptop), Nano (a 35M-parameter transformer, about 1,300/s) or Zero (a lookup table, about 17,000/s). The workload studio shows what that buys under real traffic. It replays a BEIR dataset's judged questions against one [Qdrant Edge](https://qdrant.tech/documentation/edge/) shard on your machine, scores every answer, and lets an auto-router choose the encoder mix and the HNSW search width live.
 
-![Workload studio at 1,500 searches/s on NQ: Auto serves 66% Nano and 34% Zero at HNSW ef 256, p95 99 ms under a 150 ms target, nDCG@10 0.55](screenshot.png)
+![Workload studio at 1,500 searches/s on NQ: Auto serves 65% Nano and 35% Zero at HNSW ef 256, p95 13 ms under a 150 ms target, nDCG@10 0.54](screenshot.png)
 
 ## Run it
 
