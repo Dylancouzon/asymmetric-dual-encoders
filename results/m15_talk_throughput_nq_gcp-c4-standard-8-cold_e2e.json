@@ -1,0 +1,169 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory",
+  "label": "gcp-c4-standard-8",
+  "price_per_hour_usd": 0.395,
+  "seconds": 30,
+  "machine": {
+    "platform": "Linux-7.0.0-1017-gcp-x86_64-with-glibc2.39",
+    "cpus": 8,
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           52 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  8\nOn-line CPU(s) list:                     0-7\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8581C CPU @ 2.30GHz\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                2\nBogoMIPS:                                4600.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd arat avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm md_clear serialize tsxldtrk amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               192 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                8 MiB (4 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):               "
+  },
+  "results": {
+    "encode": {},
+    "e2e": {
+      "stella": {
+        "1": {
+          "completed": 111,
+          "qps": 3.7,
+          "p50_ms": 268.21444899997005,
+          "p95_ms": 291.82872349974787,
+          "p99_ms": 305.909240800338,
+          "ef": 256,
+          "oversampling": 4.0,
+          "usd_per_million": 29.654654654654657
+        },
+        "2": {
+          "completed": 229,
+          "qps": 7.633333333333334,
+          "p50_ms": 262.7553039992563,
+          "p95_ms": 287.56065019988455,
+          "p99_ms": 294.8612030803997,
+          "ef": 256,
+          "oversampling": 4.0,
+          "usd_per_million": 14.374090247452694
+        },
+        "4": {
+          "completed": 449,
+          "qps": 14.966666666666667,
+          "p50_ms": 266.634351999528,
+          "p95_ms": 302.47946199997386,
+          "p99_ms": 320.60053940018406,
+          "ef": 256,
+          "oversampling": 4.0,
+          "usd_per_million": 7.331106161841129
+        },
+        "8": {
+          "completed": 616,
+          "qps": 20.533333333333335,
+          "p50_ms": 390.0537300000906,
+          "p95_ms": 450.3512254998441,
+          "p99_ms": 483.7834083000418,
+          "ef": 256,
+          "oversampling": 4.0,
+          "usd_per_million": 5.343614718614719
+        }
+      },
+      "nano": {
+        "1": {
+          "completed": 1227,
+          "qps": 40.9,
+          "p50_ms": 26.50940500006982,
+          "p95_ms": 34.76462190010352,
+          "p99_ms": 37.54535094016319,
+          "ef": 512,
+          "oversampling": 4.0,
+          "usd_per_million": 2.682694919858734
+        },
+        "2": {
+          "completed": 3060,
+          "qps": 102.0,
+          "p50_ms": 21.821589499722904,
+          "p95_ms": 33.252851999850456,
+          "p99_ms": 37.07244486035961,
+          "ef": 512,
+          "oversampling": 4.0,
+          "usd_per_million": 1.0757080610021785
+        },
+        "4": {
+          "completed": 6511,
+          "qps": 217.03333333333333,
+          "p50_ms": 15.23568900029204,
+          "p95_ms": 41.176623499723064,
+          "p99_ms": 57.651297399661296,
+          "ef": 512,
+          "oversampling": 4.0,
+          "usd_per_million": 0.505554702298674
+        },
+        "8": {
+          "completed": 18231,
+          "qps": 607.7,
+          "p50_ms": 12.722452999696543,
+          "p95_ms": 18.855654999697435,
+          "p99_ms": 22.340515100040648,
+          "ef": 512,
+          "oversampling": 4.0,
+          "usd_per_million": 0.1805532700711243
+        }
+      },
+      "zero": {
+        "1": {
+          "completed": 1260,
+          "qps": 42.0,
+          "p50_ms": 22.934884000278544,
+          "p95_ms": 38.71744204921015,
+          "p99_ms": 44.143077670250975,
+          "ef": 1024,
+          "oversampling": 8.0,
+          "usd_per_million": 2.6124338624338623
+        },
+        "2": {
+          "completed": 3309,
+          "qps": 110.3,
+          "p50_ms": 19.449473999884503,
+          "p95_ms": 38.43611140018765,
+          "p99_ms": 46.071757559875564,
+          "ef": 1024,
+          "oversampling": 8.0,
+          "usd_per_million": 0.9947617608542358
+        },
+        "4": {
+          "completed": 6584,
+          "qps": 219.46666666666667,
+          "p50_ms": 12.833287000376004,
+          "p95_ms": 49.61428774945485,
+          "p99_ms": 69.58094680004253,
+          "ef": 1024,
+          "oversampling": 8.0,
+          "usd_per_million": 0.49994937221547187
+        },
+        "8": {
+          "completed": 18848,
+          "qps": 628.2666666666667,
+          "p50_ms": 11.723503499979415,
+          "p95_ms": 25.184468099860165,
+          "p99_ms": 33.253278779893584,
+          "ef": 1024,
+          "oversampling": 8.0,
+          "usd_per_million": 0.1746427560837578
+        }
+      }
+    }
+  },
+  "protocol": "Closed loop, batch 1. encode: processes, ORT 1 thread each. e2e: threads sharing one encoder and one Edge shard. usd_per_million = price_per_hour / (qps * 3600) * 1e6.",
+  "receipt": {
+    "script": "m15src/talk_throughput.py",
+    "script_sha256": "ca402d212557350c0b005941a83245a3c493258c765f1ddf0f8132c8e6b08da2",
+    "git_commit": "",
+    "m15src_dirty": false,
+    "started_utc": "2026-11-21T15:44:57Z",
+    "finished_utc": "2026-11-21T15:51:19Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-7.0.0-1017-gcp-x86_64-with-glibc2.39",
+      "python": "3.12.3"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "onnxruntime": "1.29.0",
+      "tokenizers": "0.22.2",
+      "qdrant-edge": null
+    },
+    "seed": 20260930,
+    "inputs": {
+      "dataset": "nq"
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "63872958c811fca7562799fc2a496c79c93bd1ad4dbc778a0ad5978f848ec1e5"
+  }
+}

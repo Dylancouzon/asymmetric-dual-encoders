@@ -1,0 +1,145 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory",
+  "label": "gcp-c4-standard-8",
+  "price_per_hour_usd": 0.4,
+  "seconds": 30,
+  "machine": {
+    "platform": "Linux-7.0.0-1017-gcp-x86_64-with-glibc2.39",
+    "cpus": 8,
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           52 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  8\nOn-line CPU(s) list:                     0-7\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8581C CPU @ 2.30GHz\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                2\nBogoMIPS:                                4600.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd arat avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid cldemote movdiri movdir64b fsrm md_clear serialize tsxldtrk amx_bf16 avx512_fp16 amx_tile amx_int8 arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               192 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                8 MiB (4 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):               "
+  },
+  "results": {
+    "encode": {
+      "stella": {
+        "1": {
+          "completed": 108,
+          "qps": 3.6,
+          "p50_ms": 271.49568700002646,
+          "p95_ms": 301.2814994999644,
+          "p99_ms": 322.5065949400493,
+          "usd_per_million": 30.8641975308642
+        },
+        "2": {
+          "completed": 214,
+          "qps": 7.133333333333334,
+          "p50_ms": 273.7858759999767,
+          "p95_ms": 300.7417335500122,
+          "p99_ms": 325.04734741004427,
+          "usd_per_million": 15.57632398753894
+        },
+        "4": {
+          "completed": 422,
+          "qps": 14.066666666666666,
+          "p50_ms": 277.4265600000376,
+          "p95_ms": 307.32578874990963,
+          "p99_ms": 329.49027671001886,
+          "usd_per_million": 7.898894154818326
+        },
+        "8": {
+          "completed": 542,
+          "qps": 18.066666666666666,
+          "p50_ms": 434.7087759999795,
+          "p95_ms": 493.0822823000142,
+          "p99_ms": 525.5717464300325,
+          "usd_per_million": 6.150061500615006
+        }
+      },
+      "nano": {
+        "1": {
+          "completed": 4017,
+          "qps": 133.9,
+          "p50_ms": 7.302243000026465,
+          "p95_ms": 8.680089600056817,
+          "p99_ms": 10.336456919967532,
+          "usd_per_million": 0.8298066550493736
+        },
+        "2": {
+          "completed": 5562,
+          "qps": 185.4,
+          "p50_ms": 10.498231499980193,
+          "p95_ms": 12.297769699915762,
+          "p99_ms": 13.941667189957343,
+          "usd_per_million": 0.5993048064245475
+        },
+        "4": {
+          "completed": 10190,
+          "qps": 339.6666666666667,
+          "p50_ms": 11.425158999998075,
+          "p95_ms": 13.331083650001574,
+          "p99_ms": 14.978002499972263,
+          "usd_per_million": 0.32711808963035655
+        },
+        "8": {
+          "completed": 13929,
+          "qps": 464.3,
+          "p50_ms": 17.080878000115263,
+          "p95_ms": 19.66437179989952,
+          "p99_ms": 22.749076239888378,
+          "usd_per_million": 0.23930887596620962
+        }
+      },
+      "zero": {
+        "1": {
+          "completed": 481956,
+          "qps": 16065.2,
+          "p50_ms": 0.059459999874889036,
+          "p95_ms": 0.07950824999625183,
+          "p99_ms": 0.09046899981512979,
+          "usd_per_million": 0.006916260682164624
+        },
+        "2": {
+          "completed": 951187,
+          "qps": 31706.233333333334,
+          "p50_ms": 0.06018499993842852,
+          "p95_ms": 0.08058799994614674,
+          "p99_ms": 0.0922981399935452,
+          "usd_per_million": 0.0035043932826387806
+        },
+        "4": {
+          "completed": 1933267,
+          "qps": 64442.23333333333,
+          "p50_ms": 0.059219999911874766,
+          "p95_ms": 0.07953599993015814,
+          "p99_ms": 0.09094234003896426,
+          "usd_per_million": 0.0017241970888311514
+        },
+        "8": {
+          "completed": 2022682,
+          "qps": 67422.73333333334,
+          "p50_ms": 0.11369200001354329,
+          "p95_ms": 0.14554599988514383,
+          "p99_ms": 0.1645411900017279,
+          "usd_per_million": 0.0016479769599637183
+        }
+      }
+    },
+    "e2e": {}
+  },
+  "protocol": "Closed loop, batch 1. encode: processes, ORT 1 thread each. e2e: threads sharing one encoder and one Edge shard. usd_per_million = price_per_hour / (qps * 3600) * 1e6.",
+  "receipt": {
+    "script": "m15src/talk_throughput.py",
+    "script_sha256": "ca402d212557350c0b005941a83245a3c493258c765f1ddf0f8132c8e6b08da2",
+    "git_commit": "",
+    "m15src_dirty": false,
+    "started_utc": "2026-11-21T04:34:07Z",
+    "finished_utc": "2026-11-21T04:48:12Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-7.0.0-1017-gcp-x86_64-with-glibc2.39",
+      "python": "3.12.3"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "onnxruntime": "1.29.0",
+      "tokenizers": "0.22.2",
+      "qdrant-edge": null
+    },
+    "seed": 20260930,
+    "inputs": {
+      "dataset": "nq"
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "63872958c811fca7562799fc2a496c79c93bd1ad4dbc778a0ad5978f848ec1e5"
+  }
+}

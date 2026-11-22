@@ -1,0 +1,1207 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory",
+  "question": "Does each encoder rank the intended passage first in both word orders?",
+  "results": {
+    "stella-query": {
+      "pairs_both_directions_correct": 4,
+      "directions_correct": 28,
+      "n_pairs": 24,
+      "rows": [
+        {
+          "id": "flight-paris-rome",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.87292,
+              0.87565
+            ],
+            [
+              0.87269,
+              0.87712
+            ]
+          ]
+        },
+        {
+          "id": "usd-eur",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.85637,
+              0.85073
+            ],
+            [
+              0.84852,
+              0.85485
+            ]
+          ]
+        },
+        {
+          "id": "java-python",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.74017,
+              0.7577
+            ],
+            [
+              0.73884,
+              0.76278
+            ]
+          ]
+        },
+        {
+          "id": "mysql-postgres",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.80179,
+              0.79043
+            ],
+            [
+              0.80039,
+              0.79456
+            ]
+          ]
+        },
+        {
+          "id": "dog-bites-man",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.74703,
+              0.75149
+            ],
+            [
+              0.74264,
+              0.7554
+            ]
+          ]
+        },
+        {
+          "id": "celsius-fahrenheit",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.7433,
+              0.73525
+            ],
+            [
+              0.73337,
+              0.74476
+            ]
+          ]
+        },
+        {
+          "id": "london-edinburgh-train",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.80437,
+              0.80817
+            ],
+            [
+              0.80594,
+              0.81192
+            ]
+          ]
+        },
+        {
+          "id": "windows-mac",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.69355,
+              0.7055
+            ],
+            [
+              0.69688,
+              0.71189
+            ]
+          ]
+        },
+        {
+          "id": "kg-lb",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.85299,
+              0.83631
+            ],
+            [
+              0.84115,
+              0.84411
+            ]
+          ]
+        },
+        {
+          "id": "teacher-student-email",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.76255,
+              0.78445
+            ],
+            [
+              0.75659,
+              0.78632
+            ]
+          ]
+        },
+        {
+          "id": "brazil-germany-2014",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.77896,
+              0.8158
+            ],
+            [
+              0.77893,
+              0.81739
+            ]
+          ]
+        },
+        {
+          "id": "loan-bank-customer",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.8082,
+              0.793
+            ],
+            [
+              0.7771,
+              0.77656
+            ]
+          ]
+        },
+        {
+          "id": "csv-json",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.83022,
+              0.79142
+            ],
+            [
+              0.83777,
+              0.80422
+            ]
+          ]
+        },
+        {
+          "id": "nyc-boston-drive",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.73759,
+              0.74344
+            ],
+            [
+              0.74019,
+              0.74791
+            ]
+          ]
+        },
+        {
+          "id": "parent-child-gift",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.60702,
+              0.69397
+            ],
+            [
+              0.60424,
+              0.70426
+            ]
+          ]
+        },
+        {
+          "id": "hdmi-usbc",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.84319,
+              0.83396
+            ],
+            [
+              0.84007,
+              0.83852
+            ]
+          ]
+        },
+        {
+          "id": "spanish-english",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.75997,
+              0.76516
+            ],
+            [
+              0.75547,
+              0.76583
+            ]
+          ]
+        },
+        {
+          "id": "landlord-tenant-notice",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.73984,
+              0.72168
+            ],
+            [
+              0.7372,
+              0.72378
+            ]
+          ]
+        },
+        {
+          "id": "cat-chases-mouse",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.72955,
+              0.75651
+            ],
+            [
+              0.72596,
+              0.75213
+            ]
+          ]
+        },
+        {
+          "id": "tokyo-osaka",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.82644,
+              0.82216
+            ],
+            [
+              0.82515,
+              0.82189
+            ]
+          ]
+        },
+        {
+          "id": "employee-employer-reference",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.75953,
+              0.60715
+            ],
+            [
+              0.75803,
+              0.61352
+            ]
+          ]
+        },
+        {
+          "id": "aws-gcp",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.80818,
+              0.81236
+            ],
+            [
+              0.81031,
+              0.81588
+            ]
+          ]
+        },
+        {
+          "id": "miles-km",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.8313,
+              0.8171
+            ],
+            [
+              0.81934,
+              0.82282
+            ]
+          ]
+        },
+        {
+          "id": "france-spain-border-wine",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.84677,
+              0.85834
+            ],
+            [
+              0.8448,
+              0.85955
+            ]
+          ]
+        }
+      ]
+    },
+    "nano": {
+      "pairs_both_directions_correct": 2,
+      "directions_correct": 26,
+      "n_pairs": 24,
+      "rows": [
+        {
+          "id": "flight-paris-rome",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.86504,
+              0.86796
+            ],
+            [
+              0.8646,
+              0.86767
+            ]
+          ]
+        },
+        {
+          "id": "usd-eur",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.80731,
+              0.81565
+            ],
+            [
+              0.81027,
+              0.81749
+            ]
+          ]
+        },
+        {
+          "id": "java-python",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.74901,
+              0.76505
+            ],
+            [
+              0.74804,
+              0.76691
+            ]
+          ]
+        },
+        {
+          "id": "mysql-postgres",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.76782,
+              0.76362
+            ],
+            [
+              0.76857,
+              0.76393
+            ]
+          ]
+        },
+        {
+          "id": "dog-bites-man",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.67449,
+              0.6735
+            ],
+            [
+              0.66321,
+              0.65957
+            ]
+          ]
+        },
+        {
+          "id": "celsius-fahrenheit",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.69622,
+              0.69105
+            ],
+            [
+              0.69553,
+              0.69653
+            ]
+          ]
+        },
+        {
+          "id": "london-edinburgh-train",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.79507,
+              0.80006
+            ],
+            [
+              0.79438,
+              0.80006
+            ]
+          ]
+        },
+        {
+          "id": "windows-mac",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.70485,
+              0.71751
+            ],
+            [
+              0.703,
+              0.71833
+            ]
+          ]
+        },
+        {
+          "id": "kg-lb",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.79345,
+              0.79479
+            ],
+            [
+              0.79151,
+              0.79297
+            ]
+          ]
+        },
+        {
+          "id": "teacher-student-email",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.65073,
+              0.66701
+            ],
+            [
+              0.65389,
+              0.66964
+            ]
+          ]
+        },
+        {
+          "id": "brazil-germany-2014",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.76809,
+              0.80339
+            ],
+            [
+              0.7666,
+              0.80292
+            ]
+          ]
+        },
+        {
+          "id": "loan-bank-customer",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.76825,
+              0.77037
+            ],
+            [
+              0.76563,
+              0.76682
+            ]
+          ]
+        },
+        {
+          "id": "csv-json",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.76161,
+              0.72897
+            ],
+            [
+              0.76208,
+              0.7304
+            ]
+          ]
+        },
+        {
+          "id": "nyc-boston-drive",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.70556,
+              0.71362
+            ],
+            [
+              0.70543,
+              0.71324
+            ]
+          ]
+        },
+        {
+          "id": "parent-child-gift",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.59458,
+              0.67977
+            ],
+            [
+              0.59562,
+              0.67895
+            ]
+          ]
+        },
+        {
+          "id": "hdmi-usbc",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.84164,
+              0.83422
+            ],
+            [
+              0.83992,
+              0.83321
+            ]
+          ]
+        },
+        {
+          "id": "spanish-english",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.75195,
+              0.75844
+            ],
+            [
+              0.7524,
+              0.75887
+            ]
+          ]
+        },
+        {
+          "id": "landlord-tenant-notice",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.71601,
+              0.68731
+            ],
+            [
+              0.71465,
+              0.68819
+            ]
+          ]
+        },
+        {
+          "id": "cat-chases-mouse",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.67505,
+              0.71741
+            ],
+            [
+              0.68166,
+              0.71991
+            ]
+          ]
+        },
+        {
+          "id": "tokyo-osaka",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.80159,
+              0.79808
+            ],
+            [
+              0.80029,
+              0.79675
+            ]
+          ]
+        },
+        {
+          "id": "employee-employer-reference",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.69857,
+              0.55398
+            ],
+            [
+              0.6977,
+              0.55753
+            ]
+          ]
+        },
+        {
+          "id": "aws-gcp",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.70579,
+              0.71342
+            ],
+            [
+              0.70411,
+              0.71234
+            ]
+          ]
+        },
+        {
+          "id": "miles-km",
+          "ab_correct": true,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.73424,
+              0.73001
+            ],
+            [
+              0.72839,
+              0.72845
+            ]
+          ]
+        },
+        {
+          "id": "france-spain-border-wine",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": false,
+          "scores": [
+            [
+              0.85133,
+              0.86228
+            ],
+            [
+              0.85097,
+              0.86186
+            ]
+          ]
+        }
+      ]
+    },
+    "zero": {
+      "pairs_both_directions_correct": 0,
+      "directions_correct": 24,
+      "n_pairs": 24,
+      "rows": [
+        {
+          "id": "flight-paris-rome",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.75905,
+              0.76109
+            ],
+            [
+              0.75905,
+              0.76109
+            ]
+          ]
+        },
+        {
+          "id": "usd-eur",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.64951,
+              0.66835
+            ],
+            [
+              0.64951,
+              0.66835
+            ]
+          ]
+        },
+        {
+          "id": "java-python",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.56958,
+              0.58241
+            ],
+            [
+              0.56958,
+              0.58241
+            ]
+          ]
+        },
+        {
+          "id": "mysql-postgres",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.46996,
+              0.46413
+            ],
+            [
+              0.46996,
+              0.46413
+            ]
+          ]
+        },
+        {
+          "id": "dog-bites-man",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.58595,
+              0.57725
+            ],
+            [
+              0.58595,
+              0.57725
+            ]
+          ]
+        },
+        {
+          "id": "celsius-fahrenheit",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.49036,
+              0.49686
+            ],
+            [
+              0.49036,
+              0.49686
+            ]
+          ]
+        },
+        {
+          "id": "london-edinburgh-train",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.74595,
+              0.75183
+            ],
+            [
+              0.74595,
+              0.75183
+            ]
+          ]
+        },
+        {
+          "id": "windows-mac",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.57846,
+              0.59559
+            ],
+            [
+              0.57846,
+              0.59559
+            ]
+          ]
+        },
+        {
+          "id": "kg-lb",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.61767,
+              0.61721
+            ],
+            [
+              0.61767,
+              0.61721
+            ]
+          ]
+        },
+        {
+          "id": "teacher-student-email",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.5167,
+              0.53865
+            ],
+            [
+              0.5167,
+              0.53865
+            ]
+          ]
+        },
+        {
+          "id": "brazil-germany-2014",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.63957,
+              0.65669
+            ],
+            [
+              0.63957,
+              0.65669
+            ]
+          ]
+        },
+        {
+          "id": "loan-bank-customer",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.5695,
+              0.6016
+            ],
+            [
+              0.5695,
+              0.6016
+            ]
+          ]
+        },
+        {
+          "id": "csv-json",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.42521,
+              0.40993
+            ],
+            [
+              0.42521,
+              0.40993
+            ]
+          ]
+        },
+        {
+          "id": "nyc-boston-drive",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.58305,
+              0.58727
+            ],
+            [
+              0.58305,
+              0.58727
+            ]
+          ]
+        },
+        {
+          "id": "parent-child-gift",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.52623,
+              0.56508
+            ],
+            [
+              0.52623,
+              0.56508
+            ]
+          ]
+        },
+        {
+          "id": "hdmi-usbc",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.76417,
+              0.75173
+            ],
+            [
+              0.76417,
+              0.75173
+            ]
+          ]
+        },
+        {
+          "id": "spanish-english",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.69232,
+              0.69698
+            ],
+            [
+              0.69232,
+              0.69698
+            ]
+          ]
+        },
+        {
+          "id": "landlord-tenant-notice",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.63898,
+              0.60523
+            ],
+            [
+              0.63898,
+              0.60523
+            ]
+          ]
+        },
+        {
+          "id": "cat-chases-mouse",
+          "ab_correct": false,
+          "ba_correct": true,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.56856,
+              0.62684
+            ],
+            [
+              0.56856,
+              0.62684
+            ]
+          ]
+        },
+        {
+          "id": "tokyo-osaka",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.74321,
+              0.73638
+            ],
+            [
+              0.74321,
+              0.73638
+            ]
+          ]
+        },
+        {
+          "id": "employee-employer-reference",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.60614,
+              0.51238
+            ],
+            [
+              0.60614,
+              0.51238
+            ]
+          ]
+        },
+        {
+          "id": "aws-gcp",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.48912,
+              0.48483
+            ],
+            [
+              0.48912,
+              0.48483
+            ]
+          ]
+        },
+        {
+          "id": "miles-km",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.63925,
+              0.6325
+            ],
+            [
+              0.63925,
+              0.6325
+            ]
+          ]
+        },
+        {
+          "id": "france-spain-border-wine",
+          "ab_correct": true,
+          "ba_correct": false,
+          "identical_query_vectors": true,
+          "scores": [
+            [
+              0.83582,
+              0.83316
+            ],
+            [
+              0.83582,
+              0.83316
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "receipt": {
+    "script": "m15src/talk_word_order.py",
+    "script_sha256": "6926b2cadc38874dd056e5dd875b5dc558f90f3f6a08a5f11d7a939e592c0b71",
+    "git_commit": "ba452d90b0e532f8657e9897c5685776f82784d6",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-21T03:12:46Z",
+    "finished_utc": "2026-11-21T03:12:53Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "onnxruntime": "1.29.0",
+      "tokenizers": "0.22.2"
+    },
+    "seed": 20260930,
+    "inputs": {
+      "pairs": {
+        "path": "m15/talk/word_order_pairs.json",
+        "sha256": "0f8715f940e1e9777ce50f362fc01fe7fb860a9b8c8e94f67cd83b1513a68649"
+      }
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "63872958c811fca7562799fc2a496c79c93bd1ad4dbc778a0ad5978f848ec1e5"
+  }
+}

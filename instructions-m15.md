@@ -4,6 +4,59 @@ Previously M14; moved 2026-09-10. One paper is the default. Runs after M13's mea
 normally M14's release; runs on the zero-only frontier if nano does not land. Release is optional,
 credible evidence is not. Working files belong under `m15/` when writing starts.
 
+**Amended 2026-09-30 (Dylan).** The whitepaper is a research paper, not a benchmark report or a
+competitor overview. It leads with the findings, their implications and what the design makes
+possible. The project's comparator bars were release gates and are not the paper's goals: the
+registered contrasts and the reserved-four result appear in full as the pre-registered test in the
+evaluation section, and bge-small, LEAF and BM25 appear as reference points. A failed approach
+enters only where it carries significant value; the repository keeps the full trail. The evidence
+list below is the evidence base the paper may draw on, not required paper content.
+
+## Goals and success criteria (Dylan, 2026-09-30 and 2026-10-01)
+
+The paper succeeds when it meets all of these; score drafts against them.
+
+- **New knowledge for IR.** Findings a researcher would cite, not a retention table or a frontier.
+- **Research paper, not a benchmark report.** Lead with findings, implications and decisions they
+  support; comparator contrasts go in the evaluation section or an appendix.
+- **Interesting to read.** A human reader should want to keep going: a clear question, worked
+  examples, one idea per paragraph, inventories in appendices.
+- **Every statement proven.** Each claim traces to a committed result a reader can check; the repo
+  will be public, so evidence is human-readable (`m15/EVIDENCE.md`). External references are welcome.
+- **Raises Qdrant's reputation in IR.** Careful, honest, negative results included; ideally shows
+  what the engine makes possible, not only that it was used.
+- **Lean.** No over-engineering in experiments or scaffolding; reviews report only what matters to
+  these goals.
+- **Target reader:** Codex `gpt-6-sol` reviews drafts as the IR reader; `gpt-6-astra` checks
+  correctness.
+
+**Owner clarification, 2026-10-01.** Existing paper content is expendable: remove findings or
+sections that contribute little to the research question. The goal is to improve Qdrant's image
+within the search engineering community through useful, credible research, not to sell Qdrant.
+The owner authorizes independent research, challenges to assumptions, and concrete improvements;
+commit and push coherent batches often so the full review and revision remain auditable.
+
+**Owner direction check, 2026-10-01.** The owner challenges whether the cost/teacher framing
+overfocuses on one part of the project and asks whether Constella's interchangeable query tiers
+and near-zero encoding fit the paper. Reassess the whole research object independently. Explain
+what the design makes possible and measure its consequences; prior art is not a reason to hide a
+useful capability. Keep “zero latency” distinct from no transformer inference and warmed encoding,
+and distinguish compatible encoder selection from timed model loading or production failover.
+
+## Persistent owner direction
+
+Read `m15/OWNER_PREFERENCES.md` before each paper revision. It records the owner's audience,
+readability requirements, research constraints, tentative ideas, and auditability preferences.
+Update it when the owner gives new direction; do not record agent recommendations as owner
+endorsements. In particular, define models at first use, narrate experiments before giving settings,
+and distinguish generalizable conclusions from recipe-specific observations and diagnostics.
+
+**Full-history selection, 2026-10-01.** Read `m15/LEARNINGS.md` before choosing paper content. It
+synthesizes potential lessons from all past milestones with evidence, production decisions, and
+limits. Keep it broader than the manuscript. The paper must stand alone without internal file
+citations and make the value to a production search engineer explicit. Owner rejects the term
+“search service,” verbosity, and a measurement inventory with no clear reader benefit.
+
 ## Deliverable
 
 An empirical study of replacing the query encoder while preserving a pretrained document index:
@@ -12,7 +65,7 @@ negative results, limitations and the comparator table intentionally kept off mo
 
 ## Evidence and claims
 
-- Headline = pre-registered clean-4 (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) for both zero
+- Registered test (formerly the headline; see the 2026-09-30 amendment) = pre-registered clean-4 (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) for both zero
   and nano; always show all six. No re-picking after results. Disclose stella's ArguAna/FiQA/FEVER
   exposure. Clean-4 means no disclosed overlap; all-six minus clean-four is partition sensitivity.
 - Teacher choice is an empirical counterexample to selecting on tower quality, not a universal

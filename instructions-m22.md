@@ -4,6 +4,8 @@
 mandate so that M20 stays evaluation-only. Runs after `m20/STATUS.md` reports the reserved four and
 BEIR-15 complete. No new measurement, no training, no protected access.
 
+**Owner note (2026-10-07).** FastEmbed 0.9.0 includes the models and dtype fix; M23 is complete. Official release work remains deferred at Dylan's request. The PyPI availability check is satisfied; install-line and card updates remain M22 work. This note starts no card update, publication, or storage retirement.
+
 ## Deliverables
 
 1. **Card revision** of `Qdrant/constella-nano` (moved from `DylanCouzon/` under R25, `m22/HUB_TRANSFER.md`) as a later revision of the existing
@@ -21,7 +23,18 @@ BEIR-15 complete. No new measurement, no training, no protected access.
    `pip install fastembed` once a PyPI release contains qdrant/fastembed#751 (owner decision,
    2026-09-30, `m22/UPSTREAM_FASTEMBED.md`); the "requires the Constella preview branch" banner
    sentence goes with it.
-3. **Storage-retirement request.** Only after Hub download verification and after M20's archive is
+3. **Zero card training description (logged 2026-09-30, found during M15).** The Zero card says the
+   table "was trained by L2 regression against Stella query embeddings"
+   (`m11/release/MODEL_CARD.md:184`, and the live `Qdrant/constella-zero` card). The recipe is
+   different: phase B uses cosine to the teacher's query vector plus a top-32 KL ranking loss plus
+   InfoNCE over a 2M-vector bank (temperature 0.02, false-negative margin 0.02), with learned
+   per-token weights seeded from IDF and folded into the rows at export; phase A continues for
+   2,500 steps (`m7/RECIPE.md:46-91`). Correct the card from the recipe. The card's 338,076 usable
+   pairs against the recipe's 340,850 pairs also needs a one-line reconciliation from
+   `m7/LEDGER.md`. `research/constella-in-plain-english.md` ("trained by regression") gets the same
+   fix, and its line 141 ("seven candidates with complete learnability rows") should say nine
+   complete pairs, per `results/m7_learnability_report.json`.
+4. **Storage-retirement request.** Only after Hub download verification and after M20's archive is
    verified at both targets may M22 recommend retiring the three Runpod volumes. Deletion requires
    an explicit owner ruling; it is not inferable from any handoff.
 
@@ -30,3 +43,8 @@ BEIR-15 complete. No new measurement, no training, no protected access.
 Standing `CLAUDE.md` rules. Comparator per-dataset absolutes remain unpublished on cards unless the
 owner rules otherwise (2026-09-15 decision); the whitepaper (M15) carries the full comparator table.
 Descriptive rows are labelled as such; unresolved superiority is never written as equivalence.
+
+**Owner note (2026-10-01).** Showcase hot-swappability in the official model cards: all three query
+paths (Stella, Nano, Zero) verified against the same populated Qdrant collections with no rebuild
+between encoder batches, so a request can select any path; cite the M15 E2 receipts. Describe it as a
+capability (compatible encoder selection), not timed model loading or failover.

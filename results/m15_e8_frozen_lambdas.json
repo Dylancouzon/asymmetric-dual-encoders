@@ -1,0 +1,61 @@
+{
+  "frozen_utc": "2026-09-30T03:50:44Z",
+  "configs": {
+    "stella-400M-v5": {
+      "lambda": 0.01,
+      "dev_macro_2": 0.34372112121876397,
+      "dev_ceiling_macro_2": 0.48064436128316335
+    },
+    "arctic-embed-l": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.25855093912104476,
+      "dev_ceiling_macro_2": 0.49318813191211364
+    },
+    "arctic-embed-l-mean": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.2216920770773902,
+      "dev_ceiling_macro_2": 0.46856657058217677
+    },
+    "arctic-embed-m-v1.5": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.3018599112685916,
+      "dev_ceiling_macro_2": 0.4733555261739402
+    },
+    "bge-base-en-v1.5": {
+      "lambda": 0.01,
+      "dev_macro_2": 0.30733441092744274,
+      "dev_ceiling_macro_2": 0.44814049572281045
+    },
+    "bge-large-en-v1.5": {
+      "lambda": 0.01,
+      "dev_macro_2": 0.27593451876742003,
+      "dev_ceiling_macro_2": 0.448838305588826
+    },
+    "e5-base-v2": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.23410574975396362,
+      "dev_ceiling_macro_2": 0.3927141369849875
+    },
+    "e5-large-v2": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.21924431667775074,
+      "dev_ceiling_macro_2": 0.3888065531291668
+    },
+    "gte-base-en-v1.5": {
+      "lambda": 0.01,
+      "dev_macro_2": 0.27482516203597845,
+      "dev_ceiling_macro_2": 0.4393876716624394
+    },
+    "gte-large-en-v1.5": {
+      "lambda": 0.001,
+      "dev_macro_2": 0.2038898996083526,
+      "dev_ceiling_macro_2": 0.4709190960884849
+    },
+    "mxbai-embed-large-v1": {
+      "lambda": 0.01,
+      "dev_macro_2": 0.2504654384013658,
+      "dev_ceiling_macro_2": 0.44355924410480324
+    }
+  },
+  "stopped_at_dev": []
+}

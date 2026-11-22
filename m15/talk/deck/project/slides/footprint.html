@@ -1,0 +1,15 @@
+<section id="footprint" class="s foot" hidden>
+<div class="head"><h2>What Ships to the Device</h2></div>
+<table class="dtab" style="margin-top:24px">
+<tr class="hd"><th style="width:16%;text-align:left">Encoder</th><th style="width:14%;text-align:right">Params</th><th style="width:15%;text-align:right">Files</th><th style="width:16%;text-align:right">Peak RSS</th><th style="width:15%;text-align:right">Model load</th><th style="width:24%;text-align:right">Encode p50 / p95</th></tr>
+<tr><td>Stella</td><td style="text-align:right">435M</td><td style="text-align:right">1,670 MiB</td><td style="text-align:right">2,812 MiB</td><td style="text-align:right">2.17 s</td><td style="text-align:right">31.6 / 53.0 ms</td></tr>
+<tr class="hl"><td style="color:#9494ff">Nano</td><td style="text-align:right">34.5M</td><td style="text-align:right">132 MiB</td><td style="text-align:right">317 MiB</td><td style="text-align:right">0.31 s</td><td style="text-align:right">2.25 / 2.44 ms</td></tr>
+<tr class="hz"><td style="color:#ff516b">Zero</td><td style="text-align:right">31.3M values</td><td style="text-align:right">90 MiB</td><td style="text-align:right">360 MiB</td><td style="text-align:right">0.22 s</td><td style="text-align:right">0.044 / 0.057 ms</td></tr>
+</table>
+<div class="row" style="gap:48px;margin-top:56px">
+<div class="kv" style="flex:1"><p class="k2">Stella → Nano</p><p class="v2">14× faster · 9× less RAM</p></div>
+<div class="kv" style="flex:1"><p class="k2 tr">Stella → Zero</p><p class="v2">718× faster · no transformer</p></div>
+</div>
+<p class="src">Apple M5 Pro CPU, ONNX Runtime 4 threads (Zero: NumPy), batch 1, 100 real queries of 5–12 words, 3 fresh processes. Model load with warm file cache. Zero’s files include an fp16 reference table; its 31 MB int8 table expands to 125 MB fp32 at load.</p>
+<aside>[~0.5 min] Zero's download contains an int8 table and an fp16 reference copy. The released loader expands the int8 rows to fp32, which helps explain why Zero used more peak process memory than Nano on this laptop.</aside>
+</section>

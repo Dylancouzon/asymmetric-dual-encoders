@@ -1,0 +1,106 @@
+{
+  "cover": {
+    "minutes": 0.75,
+    "notes": "Say someone offers me a cheaper query encoder on Monday. How much work do I have to do before I can see if it helps? [Pause. Trace the query paths toward the index.] If I have to embed my whole corpus again, that experiment can sit in the backlog for a while. I wanted to see how far I could get with the index I already had. I'm Dylan Couzon. I do research in Developer Relations at Qdrant. Thanks for joining me in London and on Zoom. I started by timing two jobs that happen on very different schedules."
+  },
+  "cost": {
+    "minutes": 1.5,
+    "notes": "[Trace the corpus job, then the path of a new request.] I built tonight's index on my desktop. The estimate on the slide uses the part of the run where the machine behaved itself. In real time, it took six and a half hours, including a memory spill and a crash. I'd have to do that job again if I changed how I represented the passages.\n\nThe query job starts while someone's waiting. On a cache miss, I need a vector before search can look for neighbors. If an agent calls search several times to answer one question, it can put several fresh encodes on the path to that answer. Each one gives me a place to save time.\n\nThe corpus job can run on its own schedule. The query has whatever time the user gives it. So I kept the passage vectors I'd already paid for and asked what else could search them."
+  },
+  "arch": {
+    "minutes": 1.5,
+    "notes": "[Follow one passage into the index. Then trace the incoming query paths.] I can send a request through Nano, then send the next one through Stella. Both query the same passage vectors in the same graph. If the rankings get worse, I can switch back on the next request. I call the family Constella.\n\nSay I run search for a shop. I could try Zero for suggestions while someone types, then give the search more compute when they pause or submit. I'd test those stages separately. Someone choosing a suggestion and someone looking for a product page can have different expectations. Either way, I get to test the policy with one copy of the catalog.\n\nI can get a dot product from any vector of the right length. I still need those scores to put useful passages near the top. Zero is where I pushed this idea furthest. Here's what it does with an actual query."
+  },
+  "zero-mech": {
+    "minutes": 1.5,
+    "notes": "[Read the flight query. Follow \"cheap\" to its table row and then to the pooled vector.] Stella's tokenizer gives me an ID for each piece of text. I use that ID to fetch a vector. Those strips are real rows from the released table. When I load the table, I use the stored scales to expand the integer rows into floating-point values. That buys me a short request path at the cost of keeping the expanded rows in memory.\n\nAt query time I gather those rows, average them with weights, and normalize the result. I weight each row by the square root of its token count. Each extra \"cheap\" adds less weight than the one before it. That's the whole query computation.\n\n[Point to the two output vectors.] I got a cosine of 0.88 against Stella for this query. Nano reaches 0.96 on the same text. That's agreement on this example. What happens if I keep the words and reverse the trip?"
+  },
+  "order": {
+    "minutes": 1.5,
+    "notes": "[Read the two routes and pause between them.] If I mix up \"Paris to Rome\" and \"Rome to Paris,\" I may be waiting at the wrong airport. Zero gathers the same rows with the same weights for both. It makes exactly the same vector, so it gives both directions the same ranking.\n\n[Point to Stella's marker.] Even Stella barely moved. The median change in this small reversal test was 4.9 degrees, and Nano moved less. A small change can matter if two passages are close in score. I still have to look at which one comes back first.\n\nI'd put both directions in my test set if users cared about routes. I'd give each its own expected answer and check both rankings. That distinction between a nearby vector and a useful ranking mattered when I trained the table."
+  },
+  "distill": {
+    "minutes": 2,
+    "notes": "[Start with Stella's saved targets.] I initialized each row with Stella's vector for that token on its own. Inverse document frequency gave rarer terms more weight to start with. Then I let training change the rows and their weights together. The passage vectors stayed fixed, so the table had to learn to work with the index as it was.\n\n[Follow the two training stages.] First I taught the table to match Stella's vectors. When I had a query paired with a passage, I also asked it to match Stella's scores across the candidates. I cared about that second signal because a vector can be close to Stella's and still put a different passage first. Then I trained Zero to score relevant passages higher than negatives in a fixed pool. I excluded known positives and candidates Stella scored near or above the positive. Some of those candidates could answer the question, too.\n\nI folded the learned weights into the rows before export. With the teacher targets ready, I estimated about 20 minutes to retrain on my desktop GPU. A new teacher adds hours of target preparation. Once I have those targets, I can reuse them. With Nano, I wanted a student that could use word order, so I gave it a small transformer."
+  },
+  "nano": {
+    "minutes": 1.75,
+    "notes": "[Trace the layer outputs into the projection.] I started Nano with bge-small. Its last layer gives me fewer features than there are coordinates in Stella's vector. A linear projection can make the output longer. With only that last layer as input, the output can still vary along only as many directions as the input has. I pooled features from earlier layers as well, then joined them before the projection. That gave the projection more directions to work with.\n\nI fit the projection first, then trained it along with the backbone. I used Stella's query vectors for query text and its document vectors for passages. That gave me targets without relevance labels. I sampled different ways people ask for things. Some queries read like a title. Others use keywords or ask a full question.\n\nI tried the recipe on the desktop. The final run cost about $95 in rented GPU time. I paid that once. To see what it buys at serving time, I have to look at the rankings it produces."
+  },
+  "bench": {
+    "minutes": 2,
+    "notes": "[Give the room and Zoom a moment to read the plot. Point to the models that share the Stella index.] I ran exact search for the relevance scores. That lets me test how well each query encoder ranks the passages before I tune the graph. I measured encode time separately, which helps me decide which operating points are worth a closer look.\n\n[Point to bge-small and LEAF.] Those models score higher than Nano here, and each uses its own passage vectors. They answer a different deployment question for me. If I can build a new index, I can change both encoders. If I'm testing against the index I have, I'd start with Nano for submitted searches and try Zero where query compute costs me the most. I'd judge each on my own traffic. An average across datasets can hide the collections where a cheap encoder struggles.\n\n[Point to the BM25 line and the fusion callout.] BM25 gives me a lexical reference on the same passages. When I combined its results with Zero's, I got 0.493. That option adds a sparse search and a merge to each request. I'd time both if I planned to serve it. First I wanted a price for the encoding step on its own."
+  },
+  "cloud": {
+    "minutes": 1.5,
+    "notes": "[Point to Zero's bar and give people a moment to compare.] I rented a VM and sent requests as fast as its workers could finish them, one query per batch. I used that throughput to estimate the CPU capacity it takes to encode a million queries. Zero comes out to about two vCPU-minutes. That adds up time across cores.\n\nI used the VM's hourly rate of $0.395 to price the same work. The dollars on the slide assume I can keep the machine busy at the measured rate. If I rent a dedicated machine and send it fewer queries, I still pay for the idle hours. I'd size it against the rate I expect to serve, with room for bursts. I'd also check whether I can make the vectors in the process that already handles search.\n\nThat's the bill for making vectors. I still have to get passages back to the user. I want you to bet on how much time is left to save."
+  },
+  "bet": {
+    "minutes": 0.75,
+    "notes": "On the laptop I stopped the encoding clock as soon as I had a vector. I'd still be looking at the spinner at that point. [click] How much faster do you think the median request gets if I swap Nano for Zero? I'll start the clock when the encoder gets the query and stop it when the passages come back. Pick a multiplier. [Take one spoken guess from the room. Give people on Zoom time to make their own guess. Save the spoken guess for the split slide.] Let's see where the time goes."
+  },
+  "race": {
+    "minutes": 3,
+    "notes": "[Share the demo window. Open Race and press Space. Play the recorded fallback if the replay is unavailable.] I timed each encoder on the same questions over one Stella index. I ran one encoder at a time. Qdrant Edge ran in the same process on this laptop. I lined up the timings so we can follow the same question in each lane. Each bar covers the time from query text to retrieved passages.\n\n[Follow one request in each lane. Pause to let Zoom viewers catch up.] Watch the change in color. That's the moment I hand the vector to search. Stella is still making a vector for much of the bar. Zero gets to the handoff almost immediately. Then it has to walk the graph and get the passages back. Watch where Zero spends its time after that handoff.\n\n[Let the replay finish. Hold on the finish clock.] Over the whole batch, Zero finished about 2.3 times as fast as Nano. One slow request can add a lot to that total. The bet was about the request in the middle. I worked that out from the same run. [Return to split and repeat the guess.]"
+  },
+  "split": {
+    "minutes": 1.75,
+    "notes": "[Pause on the median bars after repeating the guess.] Zero was 2.4 times as fast as Nano for the median request. I added the encoding and search times for each request first, then took the median. The rankings changed as well. [Give the audience time to compare the relevance scores.] I'd want to know whether users could live with that drop before I took the faster setting.\n\nI gave each encoder its own exact search baseline. I wanted to know how much of its relevance score survived when I switched to graph search. Nano and Stella met the target. Zero kept 98.5% of its own exact score at its best tested setting and fell short. [Point out Zero's row and the target in the footnote.]\n\nEdge uses compact binary codes to shortlist passages, then rescores the candidates with their vectors. I can ask it to rescore more candidates. Before that can help a passage, the graph has to find it. I wanted to see how far I'd need to widen the search."
+  },
+  "recovery": {
+    "minutes": 2,
+    "notes": "[Point to the first Stella point and the last Zero point. Give the audience time to find both.] I kept the links between passages fixed. A new query vector can change which passages look promising as I follow those links. I held oversampling at four and let search explore more of the graph. Even at the widest setting, Zero found a smaller share of its own exact neighbors than Stella found at the narrowest setting.\n\nI saw the same need for wider search in the paper's experiments with uncompressed vectors. The size of the difference depended on the collection. That changes how I'd roll out a new query encoder. I'd start with my existing graph settings, then give the new encoder its own sweep. I want to know what it costs to get back the candidates it can find with exact search.\n\nThe recovery number here is about finding those candidates. A wider search can find more of them without moving the page I'd open any higher. I brought three questions so we can look at the actual results and see where a wider search helps."
+  },
+  "live": {
+    "minutes": 4,
+    "notes": "[Share the demo, open Live, and leave the exact check off for the first two queries. Use the recorded fallback if live search is unavailable and the recording shows these queries.]\n\n[Enter \"how far is the moon from the earth\" on the NQ index. Read the query aloud and run all four rankers.] I'm looking for a distance. BM25 starts with \"Far side of the Moon.\" That has several of the words I'm after. My question asks for a distance. Zero brings up the Moon articles with the table we saw earlier. [Point to the results and give Zoom viewers a moment to read them.]\n\n[Read \"movies where the dog dies at the end\" aloud, enter it, and run all four rankers.] Zero puts \"John Dies at the End\" first. I can see why the words gave it a good score. I asked for a plot involving the dog. Stella and Nano put \"Hachi: A Dog's Tale\" first. That's the page I'd open. [Pause on the top hits.]\n\n[Read \"why is the sky blue\" aloud and enter it. Enable the exact check. Run at hnsw_ef 64, then at 1024. Keep oversampling fixed. Point to the recovery counts before and after, then to the search times.] I'm giving the graph more room to look. Zero still finds eight of its own exact top 10. Stella and Nano find all of theirs. Each column checks against its own list, so a full count can mean different pages. I'd need a reason to pay for that extra search time.\n\n[Return to the deck.] I'd use examples like these to decide what to judge in a batch. Then I'd use that batch to choose both an encoder and its search settings."
+  },
+  "recipe": {
+    "minutes": 2,
+    "notes": "Suppose I need 0.55 nDCG@10 and a 3 ms p95. Which encoder would you ship from this sweep? [Give the room and Zoom a moment to decide. Point to Nano's row.] I'd take Nano with those search settings. If I raise the relevance floor to the bottom row and keep the same latency budget, every tested setting misses a requirement. I'd need the team to choose which constraint it can change.\n\nOn my traffic, I'd agree on those limits up front. I'd judge a batch of actual queries and run each encoder with exact search. If the exact rankings miss my relevance floor, I'd try a different encoder before I spend time on the graph. Then I'd vary search breadth and oversampling and time encoding and search together. For the settings that meet both limits, I'd take the lowest median and ship the graph settings with the encoder. I'd check the result again at the traffic level I expect to serve. Tonight's sweep ran sequentially.\n\nThere's one decision I'd bring forward if I were building my own table. Before I commit to a document encoder, I'd test what kind of table its query vectors teach."
+  },
+  "worst": {
+    "minutes": 1.25,
+    "notes": "[Trace the gte-large line, then the Stella line.] I expected to pick the teacher that ranked best on its own. In this comparison, gte-large started at the top and its fitted table finished at the bottom. Stella started lower and gave me the strongest table of the group. Each table searched its own teacher's index. That is the pair I'd have to live with if I shipped it.\n\nI can screen a candidate by fitting token rows to its query vectors and keeping the rows close to its individual token encodings. The fit takes minutes on an A100. I'd build a small evaluation index for each candidate. I'd judge the teacher and its table on the same queries before committing to a full build. With Stella I can skip the fitting step for a first trial. The two query encoders are ready to try."
+  },
+  "close": {
+    "minutes": 1,
+    "notes": "[Leave the FastEmbed example visible. Point to the two model roles and the install command.] I make passage vectors with Stella's document model. For the query I can pick Zero or Nano against those passage vectors. FastEmbed 0.9.0 or later gives me those models.\n\nThanks for joining me here and on Zoom. On Monday, I'd start by judging a batch of my own queries. Pick the pages you'd expect to come back, then see where the cheaper encoder ranks them."
+  },
+  "flops": {
+    "minutes": 0.5,
+    "notes": "I estimate the transformer arithmetic from matrix multiplies and attention, including Stella's prompt tokens. Zero still gathers rows, pools them, and normalizes the result, so I time the full encode on the device."
+  },
+  "footprint": {
+    "minutes": 0.5,
+    "notes": "Zero's download contains an int8 table and an fp16 reference copy. The released loader expands the int8 rows to fp32, which helps explain why Zero used more peak process memory than Nano on this laptop."
+  },
+  "zero-train": {
+    "minutes": 0.75,
+    "notes": "I initialize the rows with Stella's token encodings and give rare tokens more weight using inverse document frequency. In the first pass I match Stella's vectors and, for paired examples, its score distribution over candidates. In the ranking pass I draw from a fixed bank and exclude known positives and candidates Stella scores close to the positive or higher."
+  },
+  "b-datasets": {
+    "minutes": 0.5,
+    "notes": "Zero retained a much larger share of Stella's score on Quora than on FiQA, so I'd judge it on the queries my users send. The students also used different training pools, which makes it hard to attribute the differences to model size."
+  },
+  "b-msmarco": {
+    "minutes": 0.75,
+    "notes": "I kept all judged positives and sampled the other passages for this diagnostic. The bars add separate encoding and search medians at settings near each encoder's own exact relevance. In the separate whole-request comparison, Zero took longer than BM25 and scored higher on the relevance judgments."
+  },
+  "b-edge": {
+    "minutes": 0.5,
+    "notes": "I stored Zero's rows as Qdrant Edge points and fetched them by token ID before pooling. The vectors matched the released encoder on the checked queries. Point lookup added about a quarter of a millisecond on this laptop compared with NumPy."
+  },
+  "b-routing": {
+    "minutes": 0.5,
+    "notes": "I used relevance judgments to estimate how much I could gain by picking between Zero and Nano for each query. At the same share of Nano requests, the tested query features barely beat random routing. I'd start by choosing how much compute to spend based on what the user is doing, such as typing or submitting."
+  },
+  "b-teachers": {
+    "minutes": 0.5,
+    "notes": "Teacher quality and vector width together gave me a better estimate of fitted table quality on this model list. The e5 tables matched their teachers' vectors more closely than Stella's table matched Stella, yet gave worse retrieval scores. I'd choose using the fitted table's retrieval scores."
+  },
+  "b-predictor": {
+    "minutes": 0.5,
+    "notes": "I compare the teacher query's distance to its nearest passage with the typical distance between neighboring passages. A larger ratio tended to predict a bigger drop in exact-neighbor recovery with the fitted table. The jointly trained lookup path in LightRetriever also needed wider search on FiQA."
+  }
+}

@@ -1,0 +1,5 @@
+Focused re-review (read-only) of the fixes for your three P1 findings on m15/MEASUREMENTS.md (your review: m15/REVIEWS/2026-09-30-astra-measurements-review.md). Repository /Users/dylanc/Documents/GitHub/asymetric-dual-encoders, branch m15-whitepaper, commit 4ac2b62. The fixes are in `git diff 39c9b54 HEAD -- m15/MEASUREMENTS.md m15src/`.
+
+Access rules: read only the files in that diff, your review file, m8src/blockcg.py, m15src/common.py, and bench/core.py. Never read anything under work/ or results/, no recursive searches, no web searches, no runs.
+
+Goal and rule: confirm whether each of the three P1 findings is resolved correctly, and report any NEW correctness defect the fixes introduce that would change a number or break the pre-evaluation freeze. Essential-only (Dylan, 2026-09-15): nothing else, no style notes; if the fixes are correct, say so plainly. Output: one line per finding (resolved / not resolved, with file:line), any new defect with severity, the files you opened, and a one-line verdict. Under 400 words.

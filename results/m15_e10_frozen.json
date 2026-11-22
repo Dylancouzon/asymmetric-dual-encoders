@@ -1,0 +1,75 @@
+{
+  "status": "FROZEN",
+  "measurement": "E10 routers",
+  "features": {
+    "f1_fertility": {
+      "spearman_with_gain": 0.06219091353339545,
+      "sign": 1.0,
+      "thresholds": {
+        "0.1": 1.6666666666666667,
+        "0.25": 1.4,
+        "0.5": 1.2
+      }
+    },
+    "f2_pooled_norm": {
+      "spearman_with_gain": -0.05677092632002787,
+      "sign": -1.0,
+      "thresholds": {
+        "0.1": -1.8874632596969603,
+        "0.25": -2.1107635498046875,
+        "0.5": -2.4542269706726074
+      }
+    },
+    "f3_words": {
+      "spearman_with_gain": 0.024766817937779684,
+      "sign": 1.0,
+      "thresholds": {
+        "0.1": 15.0,
+        "0.25": 11.0,
+        "0.5": 8.0
+      }
+    },
+    "f4_margin": {
+      "spearman_with_gain": -0.12072691853930695,
+      "sign": -1.0,
+      "thresholds": {
+        "0.1": -0.029718333482742297,
+        "0.25": -0.040828779339790344,
+        "0.5": -0.05902087688446045
+      }
+    },
+    "f5_agreement": {
+      "spearman_with_gain": -0.0660500878725586,
+      "sign": -1.0,
+      "thresholds": {
+        "0.1": -0.0,
+        "0.25": -1.0,
+        "0.5": -3.0
+      }
+    }
+  },
+  "fit_forums": [
+    "cqadup-physics",
+    "cqadup-programmers"
+  ],
+  "receipt": {
+    "script": "m15src/e10_router.py",
+    "script_sha256": "6bf7171559d683f7701ea7ba3cc66bf6d2f2edb918e2a737a946c0e4d0a9f776",
+    "git_commit": "e872f33ee5ac9cea55251962e628efa84111005e",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T16:38:01Z",
+    "finished_utc": "2026-09-30T16:38:07Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

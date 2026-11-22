@@ -13,13 +13,30 @@ bge-small by **+0.017648 nDCG@10** (one-sided 2.5% lower bound +0.003674).
 
 For the story, read [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md).
 Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md).
+Read the [Constella whitepaper (PDF)](m15/latex/paper.pdf).
+
+## Live demo: workload studio
+
+![Workload studio at 1,500 searches/s on NQ: Auto serves 66% Nano and 34% Zero at HNSW ef 256, p95 99 ms under a 150 ms target, nDCG@10 0.55](m15/talk/demo/studio/screenshot.png)
+
+One Qdrant Edge index, three query encoders, live traffic. The studio replays judged BEIR questions on your
+machine and an auto-router picks the encoder mix and the HNSW search width for every query: Stella when
+traffic is quiet, Nano and Zero as it climbs, the floor on ranking quality held and no query dropped.
+
+```bash
+.venv/bin/pip install -r m15/talk/demo/studio/requirements.txt
+.venv/bin/python m15src/talk_edge.py build fiqa      # downloads the document vectors, builds the index
+.venv/bin/python m15/talk/demo/studio/app.py         # open http://127.0.0.1:8767
+```
+
+Setup, controls and how the router decides: [`m15/talk/demo/studio/`](m15/talk/demo/studio/README.md).
 
 ## Quickstart
 
-The three native registrations are merged into upstream FastEmbed ([#751](https://github.com/qdrant/fastembed/pull/751)) but not yet in a PyPI release. Until then, install the preview branch, which also returns Nano's vectors as fp32:
+FastEmbed registers all three models. Zero runs on FastEmbed's NumPy static path ([#832](https://github.com/qdrant/fastembed/pull/832)), with output identical to the released int8 table:
 
 ```bash
-pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview" qdrant-client
+pip install "fastembed>=0.9.0" qdrant-client
 ```
 
 This indexes with Stella, then queries the same in-memory Qdrant collection with Nano and Zero;
@@ -116,6 +133,7 @@ These are query-encoder timings, not Qdrant or end-to-end workload latency.
 | `m7src/`, `m9src/`, `m10src/` | training and evaluation harnesses |
 | `research/` | narrative, literature, licensing and reviews |
 | `results/` | committed results and frozen evidence |
+| `m15/talk/demo/studio/` | the workload studio: live auto-routing over one Qdrant Edge index |
 
 **Never overwrite `results/perquery.json`: its frozen comparator vectors cannot be rebuilt.** Start
 with `m7/FINDINGS.md`, `m8/FINDINGS.md`, `m9/FINDINGS.md`, `m10/FINDINGS.md` and

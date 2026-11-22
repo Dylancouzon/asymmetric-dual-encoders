@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constella Live</title>
+<style>
+:root{--bg:#0b0f19;--bg2:#141b33;--panel:#121827;--line:rgba(255,255,255,.13);--txt:#f0f3fa;--mut:#9aa0b5;--sub:#c9cede;
+--red:#ff516b;--redd:#dc244c;--vio:#9494ff;--grn:#7ee2b8;--enc:#3fc1a5;--srch:#f5a623;--stl:#c9cede;--sans:"Mona Sans",-apple-system,"Helvetica Neue",Arial,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+body{background:linear-gradient(165deg,var(--bg2) 0%,var(--bg) 45%,#090c14 100%);color:var(--txt);font-family:var(--sans);min-height:100vh;padding:36px 56px}
+header{display:flex;align-items:center;gap:28px;margin-bottom:28px}
+.tabs{display:flex;gap:8px}
+.tab{font:600 18px var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--mut);background:none;border:2px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer}
+.tab.on{color:var(--txt);border-color:var(--redd);background:rgba(220,36,76,.12)}
+.ctx{font:500 18px var(--mono);color:var(--sub);margin-left:auto;text-align:right;line-height:1.5}
+.ctx b{color:var(--txt)}
+.view{display:none}.view.on{display:block}
+/* race */
+.lanes{display:flex;flex-direction:column;gap:18px}
+.lane{display:grid;grid-template-columns:270px 1fr 360px;gap:28px;align-items:center;background:linear-gradient(180deg,rgba(30,38,58,.7),rgba(17,23,36,.7));border:2px solid var(--line);border-radius:18px;padding:22px 28px}
+.lane.base{border-style:dashed;background:#0d1220}
+.nm{font-size:34px;font-weight:700}.ds{font:500 17px var(--mono);color:var(--mut);margin-top:4px}
+.track{height:54px;border-radius:12px;background:#0b0f19;border:2px solid var(--line);position:relative;overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#6b7088,var(--stl))}
+.lane.n .fill{background:linear-gradient(90deg,#4a34b8,var(--vio))}
+.lane.z .fill{background:linear-gradient(90deg,#8f1d38,var(--red))}
+.lane.base .fill{background:#3a4157}
+.cnt{position:absolute;left:16px;top:50%;transform:translateY(-50%);font:700 24px var(--mono);text-shadow:0 1px 4px #000}
+.done{position:absolute;right:16px;top:50%;transform:translateY(-50%);font:600 20px var(--mono);color:var(--grn)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.k{font:500 15px var(--mono);color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.v{font:700 30px var(--mono)}
+.split{grid-column:1/3;height:14px;border-radius:7px;background:#0b0f19;display:flex;overflow:hidden;margin-top:6px}
+.split i{display:block;height:100%}.e{background:var(--enc)}.s{background:var(--srch)}
+.legend{display:flex;gap:28px;margin-top:22px;font:500 18px var(--mono);color:var(--sub);align-items:center}
+.sw{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:8px;vertical-align:-3px}
+.clock{margin-left:auto;font:700 30px var(--mono)}
+.btn{font:600 18px var(--mono);color:var(--txt);background:#1a2233;border:2px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer}
+.btn.go{border-color:var(--redd);background:rgba(220,36,76,.16)}
+.foot{margin-top:18px;font:500 16px var(--mono);color:var(--mut)}
+/* live */
+.qbar{display:flex;gap:16px;align-items:center}
+#q{flex:1;font:500 34px var(--sans);color:var(--txt);background:#0d1220;border:2px solid var(--line);border-radius:14px;padding:18px 24px;outline:none}
+#q:focus{border-color:var(--vio)}
+.ctl{display:flex;gap:26px;align-items:center;margin:18px 0 22px;font:500 17px var(--mono);color:var(--sub)}
+.seg{display:flex;gap:6px}.seg button{font:600 17px var(--mono);color:var(--mut);background:#111824;border:2px solid var(--line);border-radius:9px;padding:7px 12px;cursor:pointer}
+.seg button.on{color:var(--txt);border-color:var(--vio);background:rgba(148,148,255,.15)}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.col{background:linear-gradient(180deg,rgba(30,38,58,.7),rgba(17,23,36,.7));border:2px solid var(--line);border-radius:16px;padding:18px;min-height:560px}
+.col.base{border-style:dashed;background:#0d1220}
+.ch{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.ch .nm{font-size:28px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font:600 16px var(--mono);border-radius:8px;padding:5px 10px;border:2px solid var(--line);background:#1a2233}
+.chip.e{border-color:var(--enc);color:#c9f5ea;background:#10261f}.chip.s{border-color:var(--srch);color:#ffe4b8;background:#2a1f0d}
+.chip.r{border-color:#3d8f72;color:#c9f5e3;background:#12261f}
+.hit{padding:10px 0;border-top:1px solid var(--line)}
+.hit .t{font-size:19px;font-weight:650;margin-bottom:3px}
+.hit .x{font-size:15.5px;color:var(--sub);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.same{outline:2px solid rgba(126,226,184,.0)}
+.err{color:var(--red);font:500 20px var(--mono);margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+  <div class="tabs"><button class="tab on" data-v="race">1 Race</button><button class="tab" data-v="live">2 Live</button></div>
+  <div class="ctx" id="ctx">Qdrant Edge, in-process on this laptop</div>
+</header>
+
+<section class="view on" id="race">
+  <div class="lanes" id="lanes"></div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--enc)"></i>query encoding</span>
+    <span><i class="sw" style="background:var(--srch)"></i>graph search</span>
+    <button class="btn go" id="go">Start (space)</button><button class="btn" id="reset">Reset (r)</button>
+    <span class="clock" id="clock">0.0 s</span>
+  </div>
+  <p class="foot" id="rfoot"></p>
+</section>
+
+<section class="view" id="live">
+  <div class="qbar"><input id="q" placeholder="Ask Wikipedia anything…" autocomplete="off"><button class="btn go" id="run">Search</button></div>
+  <div class="ctl">
+    <span>hnsw_ef</span><div class="seg" id="ef"></div>
+    <span>oversampling</span><div class="seg" id="os"></div>
+    <span>exact check</span><div class="seg" id="ex"></div>
+  </div>
+  <div class="cols" id="cols"></div>
+</section>
+
+<script>
+const LANES=[["stella","Stella","400M transformer",""],["nano","Nano","34.5M transformer","n"],["zero","Zero","lookup table","z"],["bm25","BM25","lexical baseline","base"]];
+const $=s=>document.querySelector(s), fmt=n=>n.toLocaleString("en-US");
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.v));
+function show(v){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.v===v));document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id===v));if(v==="live")$("#q").focus()}
+const med=a=>{const s=[...a].sort((x,y)=>x-y);return s[s.length>>1]};
+
+// ---------- race: replay of measured per-query times ----------
+let R=null, t0=null, acc=0, raf=null;
+fetch("/race").then(r=>r.json()).then(d=>{
+  if(d.error){$("#lanes").innerHTML=`<p class="err">${d.error}</p>`;return}
+  R=d; $("#ctx").innerHTML=`<b>${fmt(d.n_docs)}</b> ${d.corpus} · one Stella index · <b>${fmt(d.n_queries)}</b> judged ${d.qset} queries<br>Qdrant Edge, in-process on this laptop`;
+  $("#lanes").innerHTML=LANES.map(([k,n,ds,c])=>{
+    const L=d.lanes[k], pq=L.per_query, tot=k==="bm25"?pq.total_ms:pq.encode_ms.map((e,i)=>e+pq.search_ms[i]);
+    L._cum=[];let s=0;for(const x of tot){s+=x;L._cum.push(s)}
+    L._nd=pq.ndcg10;L._ms=med(tot);
+    const enc=k==="bm25"?0:med(pq.encode_ms), sr=k==="bm25"?L._ms:med(pq.search_ms), ep=100*enc/(enc+sr);
+    const set=k==="bm25"?"whole request":`ef ${pq.ef} · os ${pq.oversampling}${L.selected?"":" (best; misses 1%)"}`;
+    return `<div class="lane ${c}" id="L-${k}"><div><div class="nm">${n}</div><div class="ds">${ds}<br>${set}</div></div>
+      <div class="track"><div class="fill"></div><span class="cnt">0</span><span class="done"></span></div>
+      <div class="stats"><div><div class="k">ms / query</div><div class="v">${L._ms<10?L._ms.toFixed(2):L._ms.toFixed(1)}</div></div>
+      <div><div class="k">nDCG@10</div><div class="v nd">–</div></div>
+      <div class="split" title="encode vs search">${k==="bm25"?'<i class="s" style="width:100%;background:#656b7f"></i>':`<i class="e" style="width:${ep}%"></i><i class="s" style="width:${100-ep}%"></i>`}</div></div></div>`}).join("");
+  $("#rfoot").textContent="Replay of per-query times measured one system at a time on this laptop (warmed, sequential). Each encoder at its fastest setting within 1% of its own exact nDCG@10. BM25 is timed as one whole request. Exploratory.";
+});
+function frame(){
+  const t=acc+(t0?performance.now()-t0:0); $("#clock").textContent=(t/1000).toFixed(1)+" s";
+  let all=true;
+  for(const [k] of LANES){const L=R.lanes[k],n=L._cum.length;let lo=0,hi=n;while(lo<hi){const m=(lo+hi)>>1;if(L._cum[m]<=t)lo=m+1;else hi=m}
+    const el=$("#L-"+k);el.querySelector(".fill").style.width=(100*lo/n)+"%";el.querySelector(".cnt").textContent=fmt(lo)+" / "+fmt(n);
+    if(lo){let s=0;for(let i=0;i<lo;i++)s+=L._nd[i];el.querySelector(".nd").textContent=(s/lo).toFixed(3)}
+    if(lo===n){el.querySelector(".done").textContent="done in "+(L._cum[n-1]/1000).toFixed(1)+" s"}else all=false}
+  if(t0&&!all)raf=requestAnimationFrame(frame);
+}
+function toggle(){if(!R)return;if(t0){acc+=performance.now()-t0;t0=null;cancelAnimationFrame(raf);$("#go").textContent="Resume (space)"}else{t0=performance.now();$("#go").textContent="Pause (space)";frame()}}
+function reset(){t0=null;acc=0;cancelAnimationFrame(raf);$("#go").textContent="Start (space)";if(R)frame();document.querySelectorAll(".done").forEach(e=>e.textContent="");document.querySelectorAll(".nd").forEach(e=>e.textContent="–")}
+$("#go").onclick=toggle;$("#reset").onclick=reset;
+
+// ---------- live ----------
+const S={ef:128,os:2,ex:0};
+function seg(id,vals,key,lab=v=>v){$(id).innerHTML=vals.map(v=>`<button data-v="${v}" class="${S[key]==v?'on':''}">${lab(v)}</button>`).join("");
+  $(id).querySelectorAll("button").forEach(b=>b.onclick=()=>{S[key]=+b.dataset.v;seg(id,vals,key,lab);if($("#q").value)search()})}
+seg("#ef",[32,64,128,256,512,1024],"ef");seg("#os",[1,2,4,8],"os");seg("#ex",[0,1],"ex",v=>v?"on":"off");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ms=x=>x<1?x.toFixed(3):x<10?x.toFixed(2):x.toFixed(1);
+async function search(){
+  const q=$("#q").value.trim(); if(!q)return;
+  const r=await fetch(`/search?q=${encodeURIComponent(q)}&ef=${S.ef}&oversampling=${S.os}&exact=${S.ex}`).then(r=>r.json());
+  $("#cols").innerHTML=LANES.map(([k,n,ds,c])=>{const L=r.lanes[k];
+    return `<div class="col ${c}"><div class="ch"><span class="nm">${n}</span><span class="ds">${ds}</span></div>
+    <div class="chips">${L.encode_ms!=null?`<span class="chip e">encode ${ms(L.encode_ms)} ms</span>`:""}<span class="chip s">search ${ms(L.search_ms)} ms</span>
+    ${L.recovered!=null?`<span class="chip r">${L.recovered}/10 of its exact top 10</span>`:""}</div>
+    ${L.hits.map(h=>`<div class="hit">${h.title?`<div class="t">${esc(h.title)}</div>`:""}<div class="x">${esc(h.text)}</div></div>`).join("")}</div>`}).join("");
+}
+$("#run").onclick=search;$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")search()});
+document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(e.key==="1")show("race");if(e.key==="2")show("live");if(e.key===" "){e.preventDefault();toggle()}if(e.key==="r")reset()});
+const P=new URLSearchParams(location.search);
+if(P.get("q")){show("live");$("#q").value=P.get("q");if(P.get("ef"))S.ef=+P.get("ef");if(P.get("ex"))S.ex=+P.get("ex");seg("#ef",[32,64,128,256,512,1024],"ef");seg("#ex",[0,1],"ex",v=>v?"on":"off");search()}
+</script>
+</body>
+</html>

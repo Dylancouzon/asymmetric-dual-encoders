@@ -1,0 +1,17 @@
+<section id="zero-train" class="s foot" hidden>
+<div class="head"><h2>Training Zero on a Desktop GPU</h2></div>
+<table class="dtab" style="margin-top:16px;font-size:24px">
+<tr class="hd"><th style="width:11%;text-align:left">Phase</th><th style="width:13%;text-align:left">Steps</th><th style="width:52%;text-align:left">Objective</th><th style="width:24%;text-align:left">Data</th></tr>
+<tr><td>Init</td><td>—</td><td>W₀[t] = Ê_S(t) · token weight ← IDF</td><td>30,522 tokens</td></tr>
+<tr class="hz"><td>1 · Align</td><td>16,000 × 512</td><td>all: 1 − cos(z, Ê_S) · pairs: + KL(p_S ‖ p_z), τ 0.02, 1 pos + 31 distractors</td><td>338k pairs, 221k queries, 925k spans</td></tr>
+<tr class="hz"><td>2 · Rank</td><td>2,500</td><td>InfoNCE over 32,768 bank negatives, τ 0.02, false-negative mask</td><td>338k query–doc pairs</td></tr>
+<tr><td>Export</td><td>—</td><td>fold weights into rows · int8 per row + fp32 scale</td><td>31 MB table</td></tr>
+</table>
+<div class="row" style="gap:48px;margin-top:40px">
+<div class="kv" style="flex:1"><p class="k2">Hardware</p><p class="v2">RTX 3080 · 10 GB</p></div>
+<div class="kv" style="flex:1"><p class="k2">Retrain with prepared targets</p><p class="v2">≈ 20 min</p></div>
+<div class="kv" style="flex:1"><p class="k2">Table</p><p class="v2">31 MB int8</p></div>
+</div>
+<p class="src">p = softmax of scores over the candidate set. Retrain time is a historical estimate. All training sources permit commercial derived weights.</p>
+<aside>[~0.75 min] I initialize the rows with Stella's token encodings and give rare tokens more weight using inverse document frequency. In the first pass I match Stella's vectors and, for paired examples, its score distribution over candidates. In the ranking pass I draw from a fixed bank and exclude known positives and candidates Stella scores close to the positive or higher.</aside>
+</section>

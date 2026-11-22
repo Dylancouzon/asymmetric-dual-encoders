@@ -1,0 +1,17 @@
+<section id="flops" class="s foot" hidden>
+<div class="head"><h2>Zero Compute, in FLOPs</h2></div>
+<table class="dtab" style="margin-top:24px">
+<tr class="hd"><th style="width:22%;text-align:left">Query encoder</th><th style="width:30%;text-align:left">Per-query operation</th><th style="width:14%;text-align:right">Tokens</th><th style="width:17%;text-align:right">FLOPs</th><th style="width:17%;text-align:right">vs Zero</th></tr>
+<tr><td>Stella</td><td>24 × 1024 transformer, gated FFN</td><td style="text-align:right">31</td><td style="text-align:right">25.1 G</td><td style="text-align:right">≈ 900,000×</td></tr>
+<tr><td>Nano</td><td>12 × 384 transformer</td><td style="text-align:right">12</td><td style="text-align:right">0.54 G</td><td style="text-align:right">≈ 19,000×</td></tr>
+<tr class="hz"><td style="color:#ff516b">Zero</td><td>12 row gathers + sum</td><td style="text-align:right">12</td><td style="text-align:right">28 K</td><td style="text-align:right">1×</td></tr>
+</table>
+<div class="col" style="gap:18px;margin-top:40px">
+<div class="fl" style="gap:24px"><p class="lname" style="width:160px;font-size:32px">Stella</p><div style="width:1088px;height:44px;border-radius:8px;background:#c9cede"></div><p class="spec" style="white-space:nowrap">25.1 GFLOPs</p></div>
+<div class="fl" style="gap:24px"><p class="lname" style="width:160px;font-size:32px">Nano</p><div style="width:844px;height:44px;border-radius:8px;background:#9494ff"></div><p class="spec" style="white-space:nowrap">0.54 GFLOPs</p></div>
+<div class="fl" style="gap:24px"><p class="lname" style="width:160px;font-size:32px">Zero</p><div style="width:213px;height:44px;border-radius:8px;background:#ff516b"></div><p class="spec" style="white-space:nowrap">28 KFLOPs</p></div>
+<div class="host" style="width:1664px;height:30px"><p class="axl" style="left:184px;top:0;width:80px">10³</p><p class="axl" style="left:479px;top:0;width:80px">10⁵</p><p class="axl" style="left:774px;top:0;width:80px">10⁷</p><p class="axl" style="left:1069px;top:0;width:80px">10⁹</p><p class="axl" style="left:1364px;top:0;width:80px">10¹¹</p></div>
+</div>
+<p class="src">Estimate: 2·P·T + 4·L·T²·d per forward pass, P = matmul weights (Nano’s head runs per token); median over 100 real queries of 5–12 words. Zero: 2 FLOPs per gathered value plus normalization.</p>
+<aside>[~0.5 min] I estimate the transformer arithmetic from matrix multiplies and attention, including Stella's prompt tokens. Zero still gathers rows, pools them, and normalizes the result, so I time the full encode on the device.</aside>
+</section>

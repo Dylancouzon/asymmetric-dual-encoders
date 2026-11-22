@@ -1,0 +1,676 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E11 (exploratory)",
+  "scope": "exploratory mechanism probe; n = 10 checkpoints; no p-values",
+  "checkpoints": [
+    "stella-400M-v5",
+    "arctic-embed-l",
+    "arctic-embed-m-v1.5",
+    "bge-base-en-v1.5",
+    "bge-large-en-v1.5",
+    "e5-base-v2",
+    "e5-large-v2",
+    "gte-base-en-v1.5",
+    "gte-large-en-v1.5",
+    "mxbai-embed-large-v1"
+  ],
+  "spearman": {
+    "additivity_six_vs_six_table": -0.06666666666666665,
+    "additivity_six_vs_retention_all6": 0.28484848484848485,
+    "additivity_dev_vs_six_table": -0.006060606060606061,
+    "additivity_dev_vs_retention_all6": 0.33333333333333326,
+    "order_cos_six_vs_six_table": -0.2727272727272727,
+    "order_cos_six_vs_retention_all6": 0.10303030303030303
+  },
+  "configs": {
+    "stella-400M-v5": {
+      "additivity_six": 0.7827776968479156,
+      "additivity_dev": 0.7959941327571869,
+      "order_cos_six": 0.9436499277750651,
+      "six_table": 0.39738121822679684,
+      "retention_all6": 0.6917110084682231,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7771098613739014,
+          "order_cos": 0.9683001637458801,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.8118817210197449,
+          "order_cos": 0.9730228185653687,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7968941926956177,
+          "order_cos": 0.9402952790260315,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.7566534280776978,
+          "order_cos": 0.8661563992500305,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7761867642402649,
+          "order_cos": 0.9635077118873596,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7779402136802673,
+          "order_cos": 0.9506171941757202,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7823476791381836,
+          "order_cos": 0.9270414113998413,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.8096405863761902,
+          "order_cos": 0.9455355405807495,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "arctic-embed-l": {
+      "additivity_six": 0.7170647382736206,
+      "additivity_dev": 0.7503264844417572,
+      "order_cos_six": 0.8739455143610636,
+      "six_table": 0.3033809133834615,
+      "retention_all6": 0.5736191665029106,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.6958097219467163,
+          "order_cos": 0.8831223845481873,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.7851428985595703,
+          "order_cos": 0.942814290523529,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7303041815757751,
+          "order_cos": 0.8600153923034668,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.6544594168663025,
+          "order_cos": 0.7697895169258118,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.674544095993042,
+          "order_cos": 0.8860355019569397,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7621281147003174,
+          "order_cos": 0.9018959999084473,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7343522310256958,
+          "order_cos": 0.8672938346862793,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.7663007378578186,
+          "order_cos": 0.8908149600028992,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "arctic-embed-l-mean": {
+      "additivity_six": 0.756459097067515,
+      "additivity_dev": 0.7849518656730652,
+      "order_cos_six": 0.8896219333012899,
+      "six_table": 0.27638161890695895,
+      "retention_all6": 0.5448460924804167,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7305792570114136,
+          "order_cos": 0.8973401784896851,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.8094820380210876,
+          "order_cos": 0.9497400522232056,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7681347131729126,
+          "order_cos": 0.8749459385871887,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.7214826345443726,
+          "order_cos": 0.8012368679046631,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7146071791648865,
+          "order_cos": 0.899406909942627,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7944687604904175,
+          "order_cos": 0.9150616526603699,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7722399234771729,
+          "order_cos": 0.8819754719734192,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.7976638078689575,
+          "order_cos": 0.9028807282447815,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "arctic-embed-m-v1.5": {
+      "additivity_six": 0.7511171599229177,
+      "additivity_dev": 0.7696184515953064,
+      "order_cos_six": 0.892659972111384,
+      "six_table": 0.3278676157517864,
+      "retention_all6": 0.6229548442464247,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7278859615325928,
+          "order_cos": 0.9046090841293335,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.7965335249900818,
+          "order_cos": 0.9517448544502258,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7560213208198547,
+          "order_cos": 0.8762809038162231,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.715204119682312,
+          "order_cos": 0.8005915284156799,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.721026599407196,
+          "order_cos": 0.9050840735435486,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7900314331054688,
+          "order_cos": 0.9176493883132935,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7411771416664124,
+          "order_cos": 0.8704834580421448,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.7980597615242004,
+          "order_cos": 0.9086549878120422,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "bge-base-en-v1.5": {
+      "additivity_six": 0.8058336079120636,
+      "additivity_dev": 0.816429078578949,
+      "order_cos_six": 0.9222231904665629,
+      "six_table": 0.3529108001800629,
+      "retention_all6": 0.6711041741909165,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7958401441574097,
+          "order_cos": 0.9316830635070801,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.8213922381401062,
+          "order_cos": 0.9559249877929688,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.8206048607826233,
+          "order_cos": 0.9075533747673035,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.8006477952003479,
+          "order_cos": 0.8738306760787964,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7714278101921082,
+          "order_cos": 0.9401659965515137,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.8250887989997864,
+          "order_cos": 0.9241810441017151,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7996113896369934,
+          "order_cos": 0.899480402469635,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.8332467675209045,
+          "order_cos": 0.9238921403884888,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "bge-large-en-v1.5": {
+      "additivity_six": 0.7914933264255524,
+      "additivity_dev": 0.8076418042182922,
+      "order_cos_six": 0.9207454522450765,
+      "six_table": 0.2845373756039062,
+      "retention_all6": 0.533962809215949,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7966974377632141,
+          "order_cos": 0.9344459772109985,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.809370756149292,
+          "order_cos": 0.9543690085411072,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.8040025234222412,
+          "order_cos": 0.9079428911209106,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.7606615424156189,
+          "order_cos": 0.8551502823829651,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7756227254867554,
+          "order_cos": 0.9382299184799194,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.8026049733161926,
+          "order_cos": 0.9343346357345581,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7909821271896362,
+          "order_cos": 0.9050911664962769,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.8243014812469482,
+          "order_cos": 0.9250388741493225,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "e5-base-v2": {
+      "additivity_six": 0.8965848783651987,
+      "additivity_dev": 0.9026853442192078,
+      "order_cos_six": 0.9548157354195913,
+      "six_table": 0.29297262548901326,
+      "retention_all6": 0.6274774656028599,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.8976084589958191,
+          "order_cos": 0.9570908546447754,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.9026526212692261,
+          "order_cos": 0.9763239026069641,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.9005473852157593,
+          "order_cos": 0.9477075934410095,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.8814948797225952,
+          "order_cos": 0.9293967485427856,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.8872379660606384,
+          "order_cos": 0.9632184505462646,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.9099679589271545,
+          "order_cos": 0.9551568627357483,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.8977769613265991,
+          "order_cos": 0.9468640685081482,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.9075937271118164,
+          "order_cos": 0.9533800482749939,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "e5-large-v2": {
+      "additivity_six": 0.8873880704243978,
+      "additivity_dev": 0.8931828141212463,
+      "order_cos_six": 0.952035148938497,
+      "six_table": 0.2585154132528187,
+      "retention_all6": 0.5459214276881582,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.8886765837669373,
+          "order_cos": 0.9593135714530945,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.8968350887298584,
+          "order_cos": 0.9741249680519104,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.8910111784934998,
+          "order_cos": 0.9464461803436279,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.8836777806282043,
+          "order_cos": 0.9208200573921204,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.8651722073554993,
+          "order_cos": 0.9600380659103394,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.8989555835723877,
+          "order_cos": 0.9514680504798889,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.8881979584693909,
+          "order_cos": 0.9442142248153687,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.8981676697731018,
+          "order_cos": 0.9517731666564941,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "gte-base-en-v1.5": {
+      "additivity_six": 0.703590085109075,
+      "additivity_dev": 0.7130430936813354,
+      "order_cos_six": 0.8919527431329092,
+      "six_table": 0.32516428787003987,
+      "retention_all6": 0.6098959657500157,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7060937285423279,
+          "order_cos": 0.8950191140174866,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.7249226570129395,
+          "order_cos": 0.938605546951294,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7088800072669983,
+          "order_cos": 0.8886513710021973,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.6718763709068298,
+          "order_cos": 0.8168154954910278,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.6919828653335571,
+          "order_cos": 0.9083841443061829,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7177848815917969,
+          "order_cos": 0.9042407870292664,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.6912656426429749,
+          "order_cos": 0.8719592690467834,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.734820544719696,
+          "order_cos": 0.8847520351409912,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "gte-large-en-v1.5": {
+      "additivity_six": 0.7329868276913961,
+      "additivity_dev": 0.7194817364215851,
+      "order_cos_six": 0.9227295418580373,
+      "six_table": 0.24549633091813186,
+      "retention_all6": 0.41122279907199993,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.715630829334259,
+          "order_cos": 0.9215974807739258,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.7547221779823303,
+          "order_cos": 0.9520854353904724,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7162748575210571,
+          "order_cos": 0.9079368710517883,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.7594485282897949,
+          "order_cos": 0.8925536274909973,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7052692770957947,
+          "order_cos": 0.926986575126648,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7465752959251404,
+          "order_cos": 0.9352172613143921,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.6876521706581116,
+          "order_cos": 0.8870511054992676,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.7513113021850586,
+          "order_cos": 0.9096325039863586,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    },
+    "mxbai-embed-large-v1": {
+      "additivity_six": 0.7771410445372263,
+      "additivity_dev": 0.7872728705406189,
+      "order_cos_six": 0.9306543171405792,
+      "six_table": 0.26051796283936396,
+      "retention_all6": 0.4853114046387207,
+      "per_set": {
+        "scifact": {
+          "additivity": 0.7749753594398499,
+          "order_cos": 0.9393048286437988,
+          "n_queries": 300,
+          "n_multiword": 300
+        },
+        "nfcorpus": {
+          "additivity": 0.8024295568466187,
+          "order_cos": 0.9589000940322876,
+          "n_queries": 323,
+          "n_multiword": 220
+        },
+        "fiqa": {
+          "additivity": 0.7841267585754395,
+          "order_cos": 0.9199590086936951,
+          "n_queries": 648,
+          "n_multiword": 648
+        },
+        "arguana": {
+          "additivity": 0.7619599103927612,
+          "order_cos": 0.8801733255386353,
+          "n_queries": 1406,
+          "n_multiword": 1406
+        },
+        "scidocs": {
+          "additivity": 0.7555091381072998,
+          "order_cos": 0.9421131610870361,
+          "n_queries": 1000,
+          "n_multiword": 1000
+        },
+        "trec-covid": {
+          "additivity": 0.7838455438613892,
+          "order_cos": 0.9434754848480225,
+          "n_queries": 50,
+          "n_multiword": 50
+        },
+        "cqadup-programmers": {
+          "additivity": 0.7635548114776611,
+          "order_cos": 0.9103572368621826,
+          "n_queries": 876,
+          "n_multiword": 876
+        },
+        "cqadup-physics": {
+          "additivity": 0.8109909296035767,
+          "order_cos": 0.9330381751060486,
+          "n_queries": 1039,
+          "n_multiword": 1039
+        }
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e11_mechanism.py",
+    "script_sha256": "ee0d1767e0be4d638d1cdbfe6ab56769779dc0ee12fc73a06d67cfc689de38d9",
+    "git_commit": "0cb7c41681ff658deba9b2c762d848e1452dc993",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T07:35:59Z",
+    "finished_utc": "2026-09-30T07:35:59Z",
+    "machine": {
+      "chip": "",
+      "platform": "Linux-6.8.0-100-generic-x86_64-with-glibc2.35",
+      "python": "3.12.14"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "torch": "2.8.0+cu126",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

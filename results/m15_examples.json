@@ -1,0 +1,181 @@
+{
+  "status": "COMPLETE",
+  "measurement": "worked examples (exploratory)",
+  "dataset": "scifact",
+  "note": "rank None = not in the top 100",
+  "examples": {
+    "49": {
+      "text": "ADAR1 binds to Dicer to cleave pre-miRNA.",
+      "zero_tokens": [
+        "ada",
+        "##r",
+        "##1",
+        "binds",
+        "to",
+        "dice",
+        "##r",
+        "to",
+        "cl",
+        "##ea",
+        "##ve",
+        "pre",
+        "-",
+        "mir",
+        "##na",
+        "."
+      ],
+      "fertility": 2.2857142857142856,
+      "zero_first_relevant_rank": 1,
+      "nano_first_relevant_rank": 1
+    },
+    "94": {
+      "text": "Albendazole is used to treat lymphatic filariasis.",
+      "zero_tokens": [
+        "al",
+        "##ben",
+        "##da",
+        "##zo",
+        "##le",
+        "is",
+        "used",
+        "to",
+        "treat",
+        "l",
+        "##ym",
+        "##pha",
+        "##tic",
+        "fi",
+        "##lar",
+        "##ias",
+        "##is",
+        "."
+      ],
+      "fertility": 2.5714285714285716,
+      "zero_first_relevant_rank": null,
+      "nano_first_relevant_rank": 2
+    },
+    "659": {
+      "text": "Ivermectin is used to treat lymphatic filariasis.",
+      "zero_tokens": [
+        "iv",
+        "##er",
+        "##me",
+        "##ct",
+        "##in",
+        "is",
+        "used",
+        "to",
+        "treat",
+        "l",
+        "##ym",
+        "##pha",
+        "##tic",
+        "fi",
+        "##lar",
+        "##ias",
+        "##is",
+        "."
+      ],
+      "fertility": 2.5714285714285716,
+      "zero_first_relevant_rank": null,
+      "nano_first_relevant_rank": 2
+    },
+    "660": {
+      "text": "Ivermectin is used to treat onchocerciasis.",
+      "zero_tokens": [
+        "iv",
+        "##er",
+        "##me",
+        "##ct",
+        "##in",
+        "is",
+        "used",
+        "to",
+        "treat",
+        "on",
+        "##cho",
+        "##cer",
+        "##cia",
+        "##sis",
+        "."
+      ],
+      "fertility": 2.5,
+      "zero_first_relevant_rank": null,
+      "nano_first_relevant_rank": 2
+    },
+    "300": {
+      "text": "Cytosolic proteins bind to iron-responsive elements on mRNAs coding for DMT1. Cytosolic proteins bind to iron-responsive elements on mRNAs coding for proteins involved in iron uptake.",
+      "zero_tokens": [
+        "cy",
+        "##tos",
+        "##olic",
+        "proteins",
+        "bind",
+        "to",
+        "iron",
+        "-",
+        "responsive",
+        "elements",
+        "on",
+        "mrna",
+        "##s",
+        "coding",
+        "for",
+        "d",
+        "##mt",
+        "##1",
+        ".",
+        "cy",
+        "##tos",
+        "##olic",
+        "proteins",
+        "bind",
+        "to",
+        "iron",
+        "-",
+        "responsive",
+        "elements",
+        "on",
+        "mrna",
+        "##s",
+        "coding",
+        "for",
+        "proteins",
+        "involved",
+        "in",
+        "iron",
+        "up",
+        "##take",
+        "."
+      ],
+      "fertility": 1.5769230769230769,
+      "zero_first_relevant_rank": null,
+      "nano_first_relevant_rank": 2
+    }
+  },
+  "receipt": {
+    "script": "m15src/examples.py",
+    "script_sha256": "14903b0ae5a7fc666e8e864be90a35d86854f6113cd07e64561543d17c1caa61",
+    "git_commit": "6be78205b5e072fdda7c8d31fab3be938e9f9168",
+    "m15src_dirty": true,
+    "started_utc": "2026-09-30T08:24:04Z",
+    "finished_utc": "2026-09-30T08:24:12Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "source": "artifacts/demo-stella/scifact/doc_vecs.npy",
+        "sha256": "db0c3c6890eb1ebbe611f036310f3d400cdadba98d012bcfdc56833807fc037a"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

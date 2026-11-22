@@ -1,0 +1,9 @@
+<section id="b-predictor" class="s" hidden>
+<div class="head"><p class="eyebrow">Backup</p><h2>The Graph Tax Is Predictable</h2></div>
+<div class="fxbox"><p class="fx">r = d(q, NN_D(q)) / d(x, NN_D(x))</p><p class="fxl">teacher’s own queries vs typical document-to-document neighbor distance</p></div>
+<div class="row" style="gap:48px;margin-top:24px">
+<div class="kv" style="flex:1"><p class="k2">75 model × workload pairs</p><p class="v2">ρ = −0.64</p><p class="d2">with the table’s recall gap; family-held-out prediction ρ = +0.64</p></div>
+<div class="kv" style="flex:1"><p class="k2">Recurs beyond tables</p><p class="v2">−3.6 pp</p><p class="d2">LightRetriever lookup vs full query encoder recall on FiQA, 4× ef to match</p></div>
+</div>
+<aside>[~0.5 min] I compare the teacher query's distance to its nearest passage with the typical distance between neighboring passages. A larger ratio tended to predict a bigger drop in exact-neighbor recovery with the fitted table. The jointly trained lookup path in LightRetriever also needed wider search on FiQA.</aside>
+</section>

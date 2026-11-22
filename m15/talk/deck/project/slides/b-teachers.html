@@ -1,0 +1,9 @@
+<section id="b-teachers" class="s" hidden>
+<div class="head"><p class="eyebrow">Backup</p><h2>What Predicts a Good Table</h2></div>
+<div class="row" style="gap:48px">
+<div class="kv" style="flex:1"><p class="k2">Rank correlation, 26 models</p><p class="v2">ρ = +0.09</p><p class="d2">teacher nDCG vs table nDCG, 95% interval −0.39 to +0.52</p></div>
+<div class="kv" style="flex:1"><p class="k2">Holding dimension fixed</p><p class="v2">β_quality +0.63 · β_dim −0.64</p><p class="d2">standardized, table student, exploratory</p></div>
+<div class="kv" style="flex:1"><p class="k2">Cosine agreement misleads</p><p class="v2">0.90 vs 0.78</p><p class="d2">e5 tables matched their teachers more closely than Stella’s table did, and ranked worse</p></div>
+</div>
+<aside>[~0.5 min] Teacher quality and vector width together gave me a better estimate of fitted table quality on this model list. The e5 tables matched their teachers' vectors more closely than Stella's table matched Stella, yet gave worse retrieval scores. I'd choose using the fitted table's retrieval scores.</aside>
+</section>

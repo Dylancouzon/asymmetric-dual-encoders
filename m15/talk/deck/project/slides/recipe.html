@@ -1,0 +1,11 @@
+<section id="recipe" class="s" data-transition="fade">
+<div class="head"><h2>The Monday Recipe</h2></div>
+<div class="fxbox" style="margin-top:24px;padding:36px 48px"><p class="fx" style="font-size:40px;white-space:pre">(e, ef, os)* = argmin p50<span class="mut">_total</span></p><p class="fx" style="font-size:40px;white-space:pre">        s.t.  nDCG@10 ≥ <span class="tr">floor</span>,  p95<span class="mut">_total</span> ≤ <span class="tr">budget</span></p></div><div class="steps" style="margin-top:56px"><div class="step"><p class="sn">01</p><p class="st">Judge queries</p><p class="sd">sampled from your traffic</p></div><div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">each encoder, your index</p></div><div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">time encode + search</p></div><div class="step"><p class="sn">04</p><p class="st">Ship the winner</p><p class="sd">with its ef and os</p></div></div>
+<aside>[~1.75 min] [Point to the two constraints.] I'd agree on a relevance floor and a tail latency budget before I tune anything. Then I'd look for the lowest end-to-end median among the settings that meet both. The encoder, ef, and oversampling are one decision. The cheapest encoder can send me off to do more search work.
+
+I'd start by sampling real queries from my traffic and judging which passages answer them. Then I'd run exact search with each encoder on the same index and score nDCG@10. That tells me how each encoder ranks my passages before I ask the graph to find them. If the exact results miss my floor, I'd look at those rankings before spending time on a sweep.
+
+For the sweep I'd vary ef and oversampling. I'd time encoding and search together and record both the median and the p95. Of the combinations that pass, I'd ship the one with the lowest median. Its ef and oversampling go with it. I'd check that configuration again at the load I expect to serve.
+
+You need 0.55 nDCG@10 and a 3 ms p95. Which encoder ships?</aside>
+</section>

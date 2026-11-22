@@ -1,0 +1,5 @@
+<section id="b-edge" class="s" hidden>
+<div class="head"><p class="eyebrow">Backup</p><h2>The Encoder Can Be a Collection</h2></div>
+<p class="lead" style="width:1500px">Zero’s 30,522 rows fit in a Qdrant Edge shard. Encoding becomes a point lookup by token id plus a mean: identical vectors to the released encoder (max difference 0 on 500 queries).</p>
+<aside>[~0.5 min] I stored Zero's rows as Qdrant Edge points and fetched them by token ID before pooling. The vectors matched the released encoder on the checked queries. Point lookup added about a quarter of a millisecond on this laptop compared with NumPy.</aside>
+</section>

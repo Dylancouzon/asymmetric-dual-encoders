@@ -1,0 +1,2562 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E21 (exploratory, pre-specified before running; existing data)",
+  "scope": "26 related checkpoints, three width levels, two closed-form student recipes; hypothesis about width, not a mechanism; no new scoring",
+  "rosters": {
+    "pooled": {
+      "head": {
+        "all6": {
+          "n": 26,
+          "outcome": "six_head_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.1187023453996241,
+              "std_beta": [
+                0.34453206730234004
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.1638789154222864,
+                  0.6454778956133376
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.17196581196581195,
+                "mae": 0.08063072614317629
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.048888888888888885,
+                "mae": 0.07396235852505534
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.6952799821653763,
+              "std_beta": [
+                0.685864987248987,
+                -0.832517746961023
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.4041804959602215,
+                  0.9650117525688637
+                ],
+                [
+                  -1.1361800076694464,
+                  -0.600019770639204
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.6909401709401709,
+                "mae": 0.04598568877543325
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7326495726495725,
+                "mae": 0.04247160065747809
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.8636027465832938,
+              "std_beta": [
+                0.28123454994755065,
+                -0.22280767730575132,
+                0.7081628315677134
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.012468234378549978,
+                  0.6353298010585277
+                ],
+                [
+                  -0.5909078042745134,
+                  0.09533907677029022
+                ],
+                [
+                  0.3609453605733921,
+                  0.9855797430297498
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.7654700854700854,
+                "mae": 0.04099177438886299
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.8393162393162392,
+                "mae": 0.03590751948409455
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9095075432739398,
+              "std_beta": [
+                0.7082668135186481,
+                -0.9954880554688359,
+                0.5801462618827092,
+                0.32725882336076767,
+                0.3505205679512786,
+                0.42525858649969167,
+                0.2550439542580796,
+                0.2991398102248849,
+                0.20374480058837896,
+                0.1827012337368657
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9722313614411998,
+              "std_beta": [
+                0.26712127216367726,
+                -0.3504432725892917,
+                0.39283455145118035,
+                0.09827958586469579,
+                0.28367480050706423,
+                0.19487774671363045,
+                0.17954193171348432,
+                0.20619475380025437,
+                0.10600205006163928,
+                0.013997339072421384,
+                0.5879301885859355
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.09264957264957263,
+            "student_vs_teacher_bootstrap95": [
+              -0.35857043893569085,
+              0.5065463917525771
+            ],
+            "student_vs_width": -0.535788708696585,
+            "teacher_vs_width": 0.6121740643152427,
+            "partial_student_vs_teacher_given_width": 0.578119658119658,
+            "dev_vs_student": 0.844102564102564
+          },
+          "within_width": {
+            "384": {
+              "n": 9,
+              "spearman_student_vs_teacher": 0.4666666666666666,
+              "bootstrap95": [
+                -0.47368421052631576,
+                1.0
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6727272727272726,
+              "bootstrap95": [
+                -0.025316455696202535,
+                1.0
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.3571428571428572,
+              "bootstrap95": [
+                -0.7647058823529412,
+                0.8666666666666666
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.28542220524618356
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.28542220524618356
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-s",
+              "student": 0.25936302698135144,
+              "regret": 0.24899479858019685
+            },
+            "dev_screen": {
+              "pick": "gte-small",
+              "student": 0.4733134231908204,
+              "regret": 0.03504440237072787
+            }
+          },
+          "best_student": {
+            "name": "bge-small-en-v1.5",
+            "student": 0.5083578255615483
+          }
+        },
+        "clean4": {
+          "n": 26,
+          "outcome": "six_head_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.07222031088494174,
+              "std_beta": [
+                0.2687383688365721
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.28263054547643535,
+                  0.5887879173367866
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.4044444444444444,
+                "mae": 0.08669845976433083
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.2512820512820513,
+                "mae": 0.07949278575556563
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.7081944892086078,
+              "std_beta": [
+                0.6272217445368032,
+                -0.8743480479632241
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.31077026045788536,
+                  0.8896783882525576
+                ],
+                [
+                  -1.1443525477161571,
+                  -0.6482700365964263
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.7094017094017094,
+                "mae": 0.05219895229087172
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7641025641025642,
+                "mae": 0.04668186247985333
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.8070744227640974,
+              "std_beta": [
+                0.31709358360535495,
+                -0.407037027406683,
+                0.5427699360898335
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.02255507387095015,
+                  0.7179008355084566
+                ],
+                [
+                  -0.8890455572334112,
+                  -0.051127130239783186
+                ],
+                [
+                  0.07396445600297888,
+                  0.8633713732158362
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.6868376068376068,
+                "mae": 0.050185404873747154
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7517948717948718,
+                "mae": 0.04240261344086656
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9107301407983946,
+              "std_beta": [
+                0.7179499883650226,
+                -1.0378154763621725,
+                0.5457260046635057,
+                0.3303533477193532,
+                0.45674966297015923,
+                0.3151813442297909,
+                0.2593743484391694,
+                0.2438685535150572,
+                0.20092951846029344,
+                0.20034181185272998
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9577688261199919,
+              "std_beta": [
+                0.33592370952684514,
+                -0.4792151166474049,
+                0.38351650913243424,
+                0.132060317797423,
+                0.398862101159244,
+                0.11567454502525301,
+                0.19399058273482847,
+                0.16337934822184363,
+                0.11628557271746953,
+                0.05424644181632342,
+                0.5091398667937184
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": -0.043418803418803414,
+            "student_vs_teacher_bootstrap95": [
+              -0.4881701718800042,
+              0.4017227839931153
+            ],
+            "student_vs_width": -0.6398182882534236,
+            "teacher_vs_width": 0.6121740643152427,
+            "partial_student_vs_teacher_given_width": 0.5227350427350427,
+            "dev_vs_student": 0.7429059829059829
+          },
+          "within_width": {
+            "384": {
+              "n": 9,
+              "spearman_student_vs_teacher": 0.4666666666666666,
+              "bootstrap95": [
+                -0.47368421052631576,
+                1.0
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.5878787878787878,
+              "bootstrap95": [
+                -0.1446540880503145,
+                1.0
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.3214285714285715,
+              "bootstrap95": [
+                -0.7307692307692308,
+                0.8666666666666666
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.30368320793053577
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.30368320793053577
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-s",
+              "student": 0.264904764551311,
+              "regret": 0.24430924992723263
+            },
+            "dev_screen": {
+              "pick": "gte-small",
+              "student": 0.4676070146969291,
+              "regret": 0.04160699978161453
+            }
+          },
+          "best_student": {
+            "name": "bge-small-en-v1.5",
+            "student": 0.5092140144785436
+          }
+        }
+      },
+      "table": {
+        "all6": {
+          "n": 26,
+          "outcome": "recipe1_six_table_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.13723869372328434,
+              "std_beta": [
+                0.370457411483808
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.2956867135927775,
+                  0.7189237999173334
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.14871794871794874,
+                "mae": 0.04414154570503514
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.06324786324786325,
+                "mae": 0.04125749185973257
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.47797867511703707,
+              "std_beta": [
+                0.6328555965023925,
+                -0.6399943662992694
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.05736521280345439,
+                  0.8900722748761143
+                ],
+                [
+                  -0.9459312462525634,
+                  -0.3193529723389615
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.40307692307692305,
+                "mae": 0.02831407208568965
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.5008547008547009,
+                "mae": 0.02798094716240793
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.7774522715804394,
+              "std_beta": [
+                0.2264724387751236,
+                -0.24017223460037607,
+                0.7008879718984842
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.1826571148741066,
+                  0.583413151544562
+                ],
+                [
+                  -0.624446190546324,
+                  0.10614391484316113
+                ],
+                [
+                  0.31095825350922734,
+                  1.0117040534046344
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.8023931623931623,
+                "mae": 0.023028325952970198
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.8133333333333332,
+                "mae": 0.02206042409291625
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.8067611119759304,
+              "std_beta": [
+                1.000612421493871,
+                -0.6694325015463867,
+                -0.022070868722278834,
+                0.28194670593230414,
+                -0.01447792136428125,
+                -0.41062842764471924,
+                0.1855524951840802,
+                -0.19521855504705649,
+                0.27514554597350116,
+                0.04571727331410229
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9198708662363673,
+              "std_beta": [
+                0.29718537547226076,
+                -0.22545343067205714,
+                -0.014994011738978361,
+                0.041182639262159475,
+                0.00868537636820802,
+                -0.23838512112216956,
+                0.06450559787334322,
+                -0.1386975972783824,
+                0.15537052846102573,
+                -0.22339785032429854,
+                0.5729514476251463
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.09059829059829058,
+            "student_vs_teacher_bootstrap95": [
+              -0.38516554370663725,
+              0.5214872713003209
+            ],
+            "student_vs_width": -0.44158010343357373,
+            "teacher_vs_width": 0.6121740643152427,
+            "partial_student_vs_teacher_given_width": 0.45094017094017086,
+            "dev_vs_student": 0.8782905982905982
+          },
+          "within_width": {
+            "384": {
+              "n": 9,
+              "spearman_student_vs_teacher": 0.5,
+              "bootstrap95": [
+                -0.40869565217391307,
+                0.9999999999999998
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6848484848484848,
+              "bootstrap95": [
+                0.019607843137254898,
+                0.9622641509433963
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.07142857142857144,
+              "bootstrap95": [
+                -0.8695652173913043,
+                0.9565217391304348
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "gte-small",
+              "student": 0.2903316542459501,
+              "regret": 0.10704956398084675
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.39738121822679684,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "stella-400M-v5",
+            "student": 0.39738121822679684
+          }
+        },
+        "clean4": {
+          "n": 26,
+          "outcome": "recipe1_six_table_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.053481006759136474,
+              "std_beta": [
+                0.23125960900930456
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.2768403893769346,
+                  0.6210730497731926
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.2622222222222222,
+                "mae": 0.05151529017407748
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.21025641025641023,
+                "mae": 0.04773767805638663
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.3388173081838123,
+              "std_beta": [
+                0.4713793094263853,
+                -0.5856567014498051
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.008109222162812834,
+                  0.776649569814117
+                ],
+                [
+                  -0.8432468143160019,
+                  -0.22197531823126015
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.26837606837606837,
+                "mae": 0.04372154976222382
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.45572649572649565,
+                "mae": 0.040943810525432264
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.500758596593996,
+              "std_beta": [
+                0.17254171854996647,
+                -0.29164382137824013,
+                0.5154044133319344
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.1956275060737007,
+                  0.5353781097856253
+                ],
+                [
+                  -0.6179374531937559,
+                  0.11438821053659098
+                ],
+                [
+                  0.1564224472881515,
+                  0.8070124553002803
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.48512820512820504,
+                "mae": 0.03908656781086332
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.591111111111111,
+                "mae": 0.035150652310915964
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.8289364090749178,
+              "std_beta": [
+                0.9345655545207001,
+                -0.6411712272387764,
+                -0.21033234353845037,
+                0.18300449875498634,
+                0.11484177965679726,
+                -0.7209338405292863,
+                -0.07971791539897889,
+                -0.3343829265980205,
+                -0.009414113010675795,
+                0.048222767775248726
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.869672619188442,
+              "std_beta": [
+                0.5124227956980333,
+                -0.37472916917685795,
+                -0.20608535879764492,
+                0.03851644145845678,
+                0.12874260770076681,
+                -0.6175666683180353,
+                -0.1523609442200644,
+                -0.30046339908096975,
+                -0.08129385749408029,
+                -0.11327941127250955,
+                0.3438413494901203
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.05777777777777777,
+            "student_vs_teacher_bootstrap95": [
+              -0.3607964297974597,
+              0.4704751165930289
+            ],
+            "student_vs_width": -0.40156872668094357,
+            "teacher_vs_width": 0.6121740643152427,
+            "partial_student_vs_teacher_given_width": 0.41811965811965807,
+            "dev_vs_student": 0.6827350427350427
+          },
+          "within_width": {
+            "384": {
+              "n": 9,
+              "spearman_student_vs_teacher": 0.41666666666666663,
+              "bootstrap95": [
+                -0.35185185185185186,
+                0.8974358974358972
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6121212121212121,
+              "bootstrap95": [
+                -0.07692307692307693,
+                0.9629629629629629
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.07142857142857144,
+              "bootstrap95": [
+                -0.8823529411764706,
+                0.8867924528301889
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.1364636281994699
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.1364636281994699
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "gte-small",
+              "student": 0.2829621559849963,
+              "regret": 0.11747271775472357
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.37265976202425094,
+              "regret": 0.027775111715468925
+            }
+          },
+          "best_student": {
+            "name": "arctic-embed-xs",
+            "student": 0.40043487373971987
+          }
+        }
+      }
+    },
+    "pooled_without_backbone": {
+      "head": {
+        "all6": {
+          "n": 25,
+          "outcome": "six_head_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.12700493265434487,
+              "std_beta": [
+                0.3563775142378444
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.23077482673864877,
+                  0.6817381979604864
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.11461538461538462,
+                "mae": 0.06862305574803088
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.08153846153846152,
+                "mae": 0.06330371590120588
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.6784608208694054,
+              "std_beta": [
+                0.7297178554278125,
+                -0.8311671905067618
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.3762768639801278,
+                  1.0272594867702725
+                ],
+                [
+                  -1.1524430747515286,
+                  -0.5668807064456082
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.6776923076923077,
+                "mae": 0.04194061030366811
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7176923076923076,
+                "mae": 0.03983809198341709
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.8332806412899901,
+              "std_beta": [
+                0.3514973831945445,
+                -0.28142409200847357,
+                0.6428833492886514
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.035239711940720446,
+                  0.7260017339428417
+                ],
+                [
+                  -0.674763311897436,
+                  0.0645336174773106
+                ],
+                [
+                  0.2825047359362266,
+                  0.9399546487376366
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.7407692307692308,
+                "mae": 0.0406420664221402
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.8084615384615383,
+                "mae": 0.03403548300643323
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.8878798034178919,
+              "std_beta": [
+                0.7928819163141723,
+                -1.0507461111905718,
+                0.5331729943665473,
+                0.34573208033364333,
+                0.3927758427539028,
+                0.4835998087385222,
+                0.3106061049188571,
+                0.33321914203930086,
+                0.2245210302261684,
+                0.18532121173531782
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9636721866341915,
+              "std_beta": [
+                0.31868562667812683,
+                -0.39425252002937866,
+                0.38726406212075876,
+                0.10995002159115803,
+                0.3288453982419145,
+                0.2334813014422328,
+                0.21959806310801186,
+                0.23955072234692437,
+                0.12313518086963407,
+                0.011804767152382309,
+                0.5857321345576204
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.09230769230769231,
+            "student_vs_teacher_bootstrap95": [
+              -0.3712809051763512,
+              0.5259143309862001
+            ],
+            "student_vs_width": -0.49288825329170494,
+            "teacher_vs_width": 0.6357603466461941,
+            "partial_student_vs_teacher_given_width": 0.5346153846153846,
+            "dev_vs_student": 0.8253846153846154
+          },
+          "within_width": {
+            "384": {
+              "n": 8,
+              "spearman_student_vs_teacher": 0.2380952380952381,
+              "bootstrap95": [
+                -0.7721518987341773,
+                1.0
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6727272727272726,
+              "bootstrap95": [
+                -0.025316455696202535,
+                1.0
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.3571428571428572,
+              "bootstrap95": [
+                -0.7647058823529412,
+                0.8666666666666666
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.25037780287545575
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.25037780287545575
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-s",
+              "student": 0.25936302698135144,
+              "regret": 0.21395039620946898
+            },
+            "dev_screen": {
+              "pick": "gte-small",
+              "student": 0.4733134231908204,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "gte-small",
+            "student": 0.4733134231908204
+          }
+        },
+        "clean4": {
+          "n": 25,
+          "outcome": "six_head_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.07035966521574111,
+              "std_beta": [
+                0.2652539636192854
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.36086494491113214,
+                  0.6114319897371716
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.4123076923076923,
+                "mae": 0.07693021125182047
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.33076923076923076,
+                "mae": 0.07087266190614065
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.6876929364866591,
+              "std_beta": [
+                0.6602651301883629,
+                -0.8794129251865593
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.2678624560664646,
+                  0.9436256753260649
+                ],
+                [
+                  -1.1673236488255334,
+                  -0.6246400986012525
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.6823076923076923,
+                "mae": 0.04969321083589691
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7476923076923078,
+                "mae": 0.04554885253472254
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.7651351545938493,
+              "std_beta": [
+                0.39276706529252886,
+                -0.49060474098167406,
+                0.45468202943389
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.030085517254136118,
+                  0.8371014915686422
+                ],
+                [
+                  -0.9996728129414483,
+                  -0.1077853757912775
+                ],
+                [
+                  -0.04826693726670819,
+                  0.7939806743420483
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.6553846153846155,
+                "mae": 0.048924082014628605
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7338461538461539,
+                "mae": 0.04163973524673652
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.8879597206296932,
+              "std_beta": [
+                0.8027016181469365,
+                -1.1006238675125006,
+                0.5026237132799788,
+                0.3517496203494278,
+                0.5159888190694608,
+                0.353158886070009,
+                0.3114768589058915,
+                0.26824823095708195,
+                0.22140054061009512,
+                0.20845450367238963
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9438230174312388,
+              "std_beta": [
+                0.39559454213882583,
+                -0.537010882432361,
+                0.3773579529433903,
+                0.14932596877784127,
+                0.4611032434080602,
+                0.1384271043450641,
+                0.23334461999007586,
+                0.1878320039880105,
+                0.13435874466559944,
+                0.05948713733618382,
+                0.502862847802462
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": -0.04461538461538461,
+            "student_vs_teacher_bootstrap95": [
+              -0.5065738592420727,
+              0.4104048311346462
+            ],
+            "student_vs_width": -0.6071040528501648,
+            "teacher_vs_width": 0.6357603466461941,
+            "partial_student_vs_teacher_given_width": 0.4723076923076923,
+            "dev_vs_student": 0.7115384615384615
+          },
+          "within_width": {
+            "384": {
+              "n": 8,
+              "spearman_student_vs_teacher": 0.2380952380952381,
+              "bootstrap95": [
+                -0.7721518987341773,
+                1.0
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.5878787878787878,
+              "bootstrap95": [
+                -0.1446540880503145,
+                1.0
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.3214285714285715,
+              "bootstrap95": [
+                -0.7307692307692308,
+                0.8666666666666666
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.26207620814892124
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.26207620814892124
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-s",
+              "student": 0.264904764551311,
+              "regret": 0.2027022501456181
+            },
+            "dev_screen": {
+              "pick": "gte-small",
+              "student": 0.4676070146969291,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "gte-small",
+            "student": 0.4676070146969291
+          }
+        }
+      },
+      "table": {
+        "all6": {
+          "n": 25,
+          "outcome": "recipe1_six_table_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.13134074014025898,
+              "std_beta": [
+                0.362409630308383
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.32488096186677295,
+                  0.7166347757966238
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.20923076923076922,
+                "mae": 0.043884579451174494
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.09846153846153846,
+                "mae": 0.040915419084804894
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.4459664028173004,
+              "std_beta": [
+                0.6444080032308178,
+                -0.6278126671292508
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  0.019471255069023027,
+                  0.9147223067159259
+                ],
+                [
+                  -0.9560857616653646,
+                  -0.28046207948118346
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.35,
+                "mae": 0.029748579341127138
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.46307692307692305,
+                "mae": 0.02916484236729944
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.7653735750847874,
+              "std_beta": [
+                0.22125823749203033,
+                -0.22223561998859873,
+                0.7132885974136984
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.2534360664740775,
+                  0.5963168574285737
+                ],
+                [
+                  -0.6383015273096978,
+                  0.15817227108018367
+                ],
+                [
+                  0.3172910749767981,
+                  1.0389522616103362
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.7738461538461539,
+                "mae": 0.023894090887304813
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.7938461538461539,
+                "mae": 0.022478654924216697
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.7949095977735743,
+              "std_beta": [
+                1.0326998930819975,
+                -0.6755508579326636,
+                -0.011554494652153984,
+                0.2948870757471069,
+                -0.012498704948493195,
+                -0.4192414615006125,
+                0.189361629496157,
+                -0.1986791457752195,
+                0.2852703180334083,
+                0.0506708398258234
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9181808379741198,
+              "std_beta": [
+                0.2599903237450257,
+                -0.16751050378679289,
+                -0.04899180932071249,
+                0.013991733884697408,
+                -0.0001334685071712454,
+                -0.24668695260388182,
+                0.06693342675688836,
+                -0.15072637260403712,
+                0.14784282904904533,
+                -0.25455582426194273,
+                0.6016154230492488
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.08230769230769232,
+            "student_vs_teacher_bootstrap95": [
+              -0.41452768210665875,
+              0.526492157403543
+            ],
+            "student_vs_width": -0.4089662500319047,
+            "teacher_vs_width": 0.6357603466461941,
+            "partial_student_vs_teacher_given_width": 0.4053846153846154,
+            "dev_vs_student": 0.87
+          },
+          "within_width": {
+            "384": {
+              "n": 8,
+              "spearman_student_vs_teacher": 0.28571428571428575,
+              "bootstrap95": [
+                -0.7440765985069783,
+                0.9999999999999998
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6848484848484848,
+              "bootstrap95": [
+                0.019607843137254898,
+                0.9622641509433963
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.07142857142857144,
+              "bootstrap95": [
+                -0.8695652173913043,
+                0.9565217391304348
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "gte-small",
+              "student": 0.2903316542459501,
+              "regret": 0.10704956398084675
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.39738121822679684,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "stella-400M-v5",
+            "student": 0.39738121822679684
+          }
+        },
+        "clean4": {
+          "n": 25,
+          "outcome": "recipe1_six_table_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.04811481568501874,
+              "std_beta": [
+                0.21935089624849596
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.28568711647457556,
+                  0.613854444364361
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.3153846153846154,
+                "mae": 0.05231510965129488
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.2369230769230769,
+                "mae": 0.04782956057903347
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.3074807093743046,
+              "std_beta": [
+                0.4753898029269529,
+                -0.5700191360142101
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.044508254054486704,
+                  0.8051412284428271
+                ],
+                [
+                  -0.8667503955459944,
+                  -0.15409387861241886
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.17307692307692307,
+                "mae": 0.04587957407574565
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.3815384615384615,
+                "mae": 0.042716280029006806
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.4780629052389348,
+              "std_beta": [
+                0.16615481676871438,
+                -0.27362617372657394,
+                0.5212664815327249
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.24979818363074743,
+                  0.5615545690496794
+                ],
+                [
+                  -0.629243588731275,
+                  0.17867232466313804
+                ],
+                [
+                  0.15619909807852958,
+                  0.8242299645923203
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.41615384615384615,
+                "mae": 0.04083249314414527
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.5376923076923077,
+                "mae": 0.03637212404907298
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.8206991503358094,
+              "std_beta": [
+                0.9543785372089543,
+                -0.6349458230566646,
+                -0.1887142169269683,
+                0.187869868096374,
+                0.11755569695131382,
+                -0.7342361841181848,
+                -0.08152388311196317,
+                -0.34166224513645155,
+                -0.00930309042019372,
+                0.04994891216349605
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.8650232251301913,
+              "std_beta": [
+                0.49103271929680214,
+                -0.33030565453114497,
+                -0.21116304359339857,
+                0.019434420823954895,
+                0.12497035935480688,
+                -0.6307659888056181,
+                -0.1549364536103665,
+                -0.31290795272459215,
+                -0.09170979898692024,
+                -0.13307651411884489,
+                0.3607513111304004
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=contriever",
+              "family=e5",
+              "family=gte",
+              "family=minilm",
+              "family=mxbai",
+              "family=stella",
+              "family=tas-b",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.07307692307692308,
+            "student_vs_teacher_bootstrap95": [
+              -0.3586128113809878,
+              0.4891849441316193
+            ],
+            "student_vs_width": -0.35124428681418846,
+            "teacher_vs_width": 0.6357603466461941,
+            "partial_student_vs_teacher_given_width": 0.44076923076923075,
+            "dev_vs_student": 0.6630769230769231
+          },
+          "within_width": {
+            "384": {
+              "n": 8,
+              "spearman_student_vs_teacher": 0.3571428571428572,
+              "bootstrap95": [
+                -0.5999999999999999,
+                0.9746835443037977
+              ]
+            },
+            "768": {
+              "n": 10,
+              "spearman_student_vs_teacher": 0.6121212121212121,
+              "bootstrap95": [
+                -0.07692307692307693,
+                0.9629629629629629
+              ]
+            },
+            "1024": {
+              "n": 7,
+              "spearman_student_vs_teacher": 0.07142857142857144,
+              "bootstrap95": [
+                -0.8823529411764706,
+                0.8867924528301889
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.1364636281994699
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.1364636281994699
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "gte-small",
+              "student": 0.2829621559849963,
+              "regret": 0.11747271775472357
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.37265976202425094,
+              "regret": 0.027775111715468925
+            }
+          },
+          "best_student": {
+            "name": "arctic-embed-xs",
+            "student": 0.40043487373971987
+          }
+        }
+      }
+    },
+    "registered_ten": {
+      "head": {
+        "all6": {
+          "n": 10,
+          "outcome": "six_head_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.05657267808476185,
+              "std_beta": [
+                0.23785011684832316
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.28371207961968725,
+                  0.6649286494498338
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.8060606060606059,
+                "mae": 0.052536816286079965
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.5757575757575757,
+                "mae": 0.047571512739008434
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.20497089030989235,
+              "std_beta": [
+                0.388460898173012,
+                -0.413620381118202
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.4222551157779607,
+                  0.8285021888707502
+                ],
+                [
+                  -0.9455927475896311,
+                  0.5397985310816896
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.29696969696969694,
+                "mae": 0.0506466992223078
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.11515151515151514,
+                "mae": 0.047465984686135304
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.6125074615161852,
+              "std_beta": [
+                -0.2719963607364805,
+                0.3609968262041433,
+                1.0349856176003194
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -2.587189249469288,
+                  0.3023135016599078
+                ],
+                [
+                  -0.30717686960511065,
+                  2.114082662658545
+                ],
+                [
+                  0.48615040064155557,
+                  3.213894327165356
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.41818181818181815,
+                "mae": 0.06141619970575478
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.34545454545454546,
+                "mae": 0.05213578587113823
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9919286410068408,
+              "std_beta": [
+                0.07285883376351134,
+                -0.4669551539543869,
+                1.0295731346284438,
+                0.27135637422883135,
+                0.5540560123233501,
+                0.7102433528984138,
+                0.6035821228129636
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9972136746615767,
+              "std_beta": [
+                -0.07549604464316154,
+                -0.8480617101035215,
+                1.2845796821020152,
+                -0.0738484250596396,
+                0.7141353437999902,
+                0.8724549903735455,
+                0.949087620699992,
+                -0.5892130316647738
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": 0.17575757575757575,
+            "student_vs_teacher_bootstrap95": [
+              -0.559748427672956,
+              0.6666666666666665
+            ],
+            "student_vs_width": -0.21320071635561041,
+            "teacher_vs_width": 0.497468338163091,
+            "partial_student_vs_teacher_given_width": 0.2727272727272727,
+            "dev_vs_student": 0.709090909090909
+          },
+          "within_width": {
+            "768": {
+              "n": 4,
+              "spearman_student_vs_teacher": 0.0,
+              "bootstrap95": [
+                -0.7777777777777779,
+                0.7777777777777779
+              ]
+            },
+            "1024": {
+              "n": 6,
+              "spearman_student_vs_teacher": 0.3714285714285715,
+              "bootstrap95": [
+                -1.0,
+                0.8000000000000002
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.10196777670694493
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.2229356203153647,
+              "regret": 0.10196777670694493
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-m-v1.5",
+              "student": 0.1873531362511576,
+              "regret": 0.13755026077115204
+            },
+            "dev_screen": {
+              "pick": "bge-base-en-v1.5",
+              "student": 0.32490339702230964,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "bge-base-en-v1.5",
+            "student": 0.32490339702230964
+          }
+        },
+        "clean4": {
+          "n": 10,
+          "outcome": "six_head_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.005296866781055454,
+              "std_beta": [
+                -0.07277957667543528
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.5278180242804533,
+                  0.4061722420190771
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.6848484848484848,
+                "mae": 0.04239517364454633
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.8181818181818182,
+                "mae": 0.04275153949912712
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.17545266335474352,
+              "std_beta": [
+                0.08849469945884397,
+                -0.4429053947699581
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.5986565338364306,
+                  0.5625967972510066
+                ],
+                [
+                  -0.9753175251298912,
+                  0.5071586351159233
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.11515151515151514,
+                "mae": 0.04276926994413236
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.2121212121212121,
+                "mae": 0.04311851039595368
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.49830000081094994,
+              "std_beta": [
+                -0.49934651071882324,
+                0.24654408955952675,
+                0.9211908715655841
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -2.9804885923447357,
+                  0.19835237459843352
+                ],
+                [
+                  -0.464933008708251,
+                  2.1052058072455435
+                ],
+                [
+                  0.271377037431289,
+                  3.5586616448405137
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.1515151515151515,
+                "mae": 0.0652544849602186
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.13939393939393938,
+                "mae": 0.050283323844992844
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9800236897758935,
+              "std_beta": [
+                0.11535187485893628,
+                -0.5825153327086758,
+                1.0593583700073002,
+                0.634746299831553,
+                0.4683480028019586,
+                0.6170252902324355,
+                0.6709221317912001
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.988143463980124,
+              "std_beta": [
+                -0.06853466021886674,
+                -1.0548986129779858,
+                1.3754401257317483,
+                0.20686340770732403,
+                0.6667670498798614,
+                0.8180873401289835,
+                1.0991777411727608,
+                -0.7303321871122899
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": -0.23636363636363633,
+            "student_vs_teacher_bootstrap95": [
+              -0.7987421383647799,
+              0.5384615384615384
+            ],
+            "student_vs_width": -0.3553345272593507,
+            "teacher_vs_width": 0.497468338163091,
+            "partial_student_vs_teacher_given_width": -0.006060606060606061,
+            "dev_vs_student": 0.4787878787878787
+          },
+          "within_width": {
+            "768": {
+              "n": 4,
+              "spearman_student_vs_teacher": -0.6000000000000001,
+              "bootstrap95": [
+                -0.7777777777777779,
+                -0.3333333333333334
+              ]
+            },
+            "1024": {
+              "n": 6,
+              "spearman_student_vs_teacher": 0.14285714285714288,
+              "bootstrap95": [
+                -0.9393939393939392,
+                0.9999999999999999
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.11720052351981686
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.20553080654800787,
+              "regret": 0.11720052351981686
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "arctic-embed-m-v1.5",
+              "student": 0.18626566753518692,
+              "regret": 0.1364656625326378
+            },
+            "dev_screen": {
+              "pick": "bge-base-en-v1.5",
+              "student": 0.32273133006782473,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "bge-base-en-v1.5",
+            "student": 0.32273133006782473
+          }
+        }
+      },
+      "table": {
+        "all6": {
+          "n": 10,
+          "outcome": "recipe1_six_table_macro_all6",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.031209036892965836,
+              "std_beta": [
+                0.17666079614041375
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.6869282582705873,
+                  0.8718885538657078
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.8303030303030302,
+                "mae": 0.05044109306468243
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.8666666666666665,
+                "mae": 0.04718513984618306
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.24118102581363987,
+              "std_beta": [
+                0.355813104364742,
+                -0.49200359598563
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.4371274792370847,
+                  1.0431579202193293
+                ],
+                [
+                  -0.969200917882371,
+                  -0.018303632123954885
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.2121212121212121,
+                "mae": 0.0439785870175342
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.01818181818181818,
+                "mae": 0.038450387042769034
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.8812739507199939,
+              "std_beta": [
+                0.01673357615838404,
+                -0.14495934907703334,
+                0.888712320356344
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.8089394762786651,
+                  0.39762305636629125
+                ],
+                [
+                  -0.6868180167349327,
+                  0.26809490204424313
+                ],
+                [
+                  0.3092185800679673,
+                  1.592310828902632
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.8545454545454544,
+                "mae": 0.040286221089200006
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.8909090909090909,
+                "mae": 0.026525688107977265
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9761054536794184,
+              "std_beta": [
+                -0.5519319366482069,
+                -0.4207105456797821,
+                0.03828275027719603,
+                -0.6985068145731285,
+                -0.047679151147246406,
+                -0.19966279014285113,
+                0.8867164034301918
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9765993502460771,
+              "std_beta": [
+                -0.6650165767399691,
+                -0.47917620033567326,
+                0.061003212728524776,
+                -0.8648305505053037,
+                -0.07540976427367721,
+                -0.21345143592862872,
+                1.0332294310562724,
+                -0.18298180028246408
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": -0.09090909090909088,
+            "student_vs_teacher_bootstrap95": [
+              -0.8749999999999999,
+              0.7125
+            ],
+            "student_vs_width": -0.497468338163091,
+            "teacher_vs_width": 0.497468338163091,
+            "partial_student_vs_teacher_given_width": 0.24848484848484845,
+            "dev_vs_student": 0.9030303030303028
+          },
+          "within_width": {
+            "768": {
+              "n": 4,
+              "spearman_student_vs_teacher": 0.19999999999999998,
+              "bootstrap95": [
+                -1.0,
+                0.7777777777777779
+              ]
+            },
+            "1024": {
+              "n": 6,
+              "spearman_student_vs_teacher": -0.08571428571428573,
+              "bootstrap95": [
+                -1.0,
+                1.0
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.24549633091813186,
+              "regret": 0.15188488730866498
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.39738121822679684,
+              "regret": 0.0
+            }
+          },
+          "best_student": {
+            "name": "stella-400M-v5",
+            "student": 0.39738121822679684
+          }
+        },
+        "clean4": {
+          "n": 10,
+          "outcome": "recipe1_six_table_macro_clean4",
+          "models": {
+            "M1_teacher": {
+              "r2_in_sample": 0.07005967727020368,
+              "std_beta": [
+                -0.2646878865195856
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.7730976767420855,
+                  0.5698089807527614
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": -0.38181818181818183,
+                "mae": 0.04541029216002921
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": -0.6606060606060605,
+                "mae": 0.04297379939845793
+              }
+            },
+            "M2_teacher_width": {
+              "r2_in_sample": 0.37327807765243504,
+              "std_beta": [
+                -0.049400045169261025,
+                -0.5912421289248029
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -0.577633250037902,
+                  0.7768140593581201
+                ],
+                [
+                  -0.9810959703763913,
+                  -0.14105059878012277
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.18787878787878787,
+                "mae": 0.0352363773149046
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.18787878787878787,
+                "mae": 0.03469025225955091
+              }
+            },
+            "M4_teacher_width_dev": {
+              "r2_in_sample": 0.7464647880717095,
+              "std_beta": [
+                -0.3083066571359873,
+                -0.3262539987214124,
+                0.678582682634021
+              ],
+              "std_beta_bootstrap95": [
+                [
+                  -1.6149330520305816,
+                  0.3160450254182224
+                ],
+                [
+                  -0.8169205337948492,
+                  0.23550635615765245
+                ],
+                [
+                  -0.017584091603877684,
+                  2.023032475821327
+                ]
+              ],
+              "leave_one_family_out": {
+                "spearman_pred_vs_actual": 0.5272727272727272,
+                "mae": 0.047261423787188485
+              },
+              "leave_one_checkpoint_out": {
+                "spearman_pred_vs_actual": 0.6848484848484848,
+                "mae": 0.033439256835958796
+              }
+            },
+            "M3_teacher_width_family": {
+              "r2_in_sample": 0.9882536199826842,
+              "std_beta": [
+                -0.617256505469196,
+                -0.48404214193554485,
+                -0.24643665738508871,
+                -0.6253701889832187,
+                -0.2780613244524065,
+                -0.5509336277896323,
+                0.4855857036216549
+              ]
+            },
+            "M5_teacher_width_family_dev": {
+              "r2_in_sample": 0.9890594242298886,
+              "std_beta": [
+                -0.47281221076584623,
+                -0.4093632974497932,
+                -0.27545776203261524,
+                -0.4129229927091641,
+                -0.24264069746453787,
+                -0.5333212339771283,
+                0.2984429499892425,
+                0.23372473099708993
+              ]
+            }
+          },
+          "std_beta_order": {
+            "M1_teacher": [
+              "teacher"
+            ],
+            "M2_teacher_width": [
+              "teacher",
+              "width"
+            ],
+            "M4_teacher_width_dev": [
+              "teacher",
+              "width",
+              "dev"
+            ],
+            "M3_teacher_width_family": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella"
+            ],
+            "M5_teacher_width_family_dev": [
+              "teacher",
+              "width",
+              "family=bge",
+              "family=e5",
+              "family=gte",
+              "family=mxbai",
+              "family=stella",
+              "dev"
+            ]
+          },
+          "spearman": {
+            "student_vs_teacher": -0.35757575757575755,
+            "student_vs_teacher_bootstrap95": [
+              -0.8607594936708862,
+              0.4088050314465409
+            ],
+            "student_vs_width": -0.6396021490668313,
+            "teacher_vs_width": 0.497468338163091,
+            "partial_student_vs_teacher_given_width": -0.11515151515151514,
+            "dev_vs_student": 0.6848484848484848
+          },
+          "within_width": {
+            "768": {
+              "n": 4,
+              "spearman_student_vs_teacher": -0.19999999999999998,
+              "bootstrap95": [
+                -0.7777777777777779,
+                1.0
+              ]
+            },
+            "1024": {
+              "n": 6,
+              "spearman_student_vs_teacher": -0.2571428571428572,
+              "bootstrap95": [
+                -1.0,
+                0.8000000000000002
+              ]
+            }
+          },
+          "selection_regret": {
+            "strongest_teacher": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.11349448420494979
+            },
+            "strongest_teacher_widest_band": {
+              "pick": "gte-large-en-v1.5",
+              "student": 0.26397124554025,
+              "regret": 0.11349448420494979
+            },
+            "M2_prediction_leave_one_out": {
+              "pick": "e5-base-v2",
+              "student": 0.35090181199934034,
+              "regret": 0.026563917745859422
+            },
+            "dev_screen": {
+              "pick": "stella-400M-v5",
+              "student": 0.37265976202425094,
+              "regret": 0.004805967720948823
+            }
+          },
+          "best_student": {
+            "name": "arctic-embed-m-v1.5",
+            "student": 0.37746572974519976
+          }
+        }
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e21_width_model.py",
+    "script_sha256": "c4d1877efc051276255f0cd8320bf271a46d41e653b89bec20eb3cb90d0c2c19",
+    "git_commit": "8e452144b2dcb66e8eb6803d0978a1db1a538e35",
+    "m15src_dirty": true,
+    "started_utc": "2026-10-01T13:38:40Z",
+    "finished_utc": "2026-10-01T13:38:40Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "e19_result": "results/m15_e19_head_screen.json"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "b6713d0951c2cbd56a4dcb709cc83e1096895432d163bbac26c4cd76f34bd30e"
+  },
+  "registered_fit_predicts_exploratory": {
+    "head": {
+      "n_train": 10,
+      "n_test": 16,
+      "spearman_pred_vs_actual": 0.85,
+      "spearman_pred_vs_actual_bootstrap95": [
+        0.531821624314898,
+        0.9880956803226492
+      ],
+      "spearman_teacher_only_vs_actual": 0.37058823529411766,
+      "mae": 0.04795180960677585
+    },
+    "table": {
+      "n_train": 10,
+      "n_test": 16,
+      "spearman_pred_vs_actual": 0.6970588235294117,
+      "spearman_pred_vs_actual_bootstrap95": [
+        0.1988126094883987,
+        0.9613670133729569
+      ],
+      "spearman_teacher_only_vs_actual": 0.15882352941176472,
+      "mae": 0.05733516980945997
+    }
+  }
+}

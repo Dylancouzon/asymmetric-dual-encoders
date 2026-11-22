@@ -1,0 +1,100 @@
+{
+ "v": 5,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-21T03:35:16Z"
+ },
+ "lists": "css",
+ "format": {
+  "v": 1,
+  "shared": [
+   "project/deck.css"
+  ]
+ },
+ "title": "Zero-Compute Dual Encoders",
+ "cover": "cover",
+ "order": [
+  "cover",
+  "cost",
+  "arch",
+  "bench",
+  "zero-mech",
+  "order",
+  "distill",
+  "worst",
+  "nano",
+  "cloud",
+  "bet",
+  "split",
+  "cloud-e2e",
+  "recovery",
+  "live",
+  "recipe",
+  "solved",
+  "close",
+  "thanks",
+  "race",
+  "flops",
+  "footprint",
+  "zero-train",
+  "b-datasets",
+  "b-msmarco",
+  "b-edge",
+  "b-routing",
+  "b-teachers",
+  "b-predictor"
+ ],
+ "sections": {
+  "opening": {
+   "description": "Title.",
+   "start": "cover"
+  },
+  "bill": {
+   "description": "Documents are encoded once, but every query pays for a transformer.",
+   "start": "cost"
+  },
+  "family": {
+   "description": "One Stella index, three query encoders, and how much ranking each keeps.",
+   "start": "arch"
+  },
+  "build": {
+   "description": "How Zero and Nano work, their limit, how they were trained, and how to pick a teacher.",
+   "start": "zero-mech"
+  },
+  "catch": {
+   "description": "The bet, the race replay, why cheaper queries need a wider search, and the live demo.",
+   "start": "bet"
+  },
+  "monday": {
+   "description": "Choose by measuring: the recipe, and how to start.",
+   "start": "recipe"
+  },
+  "backup": {
+   "description": "Hidden backup slides for questions.",
+   "start": "flops"
+  },
+  "cost2": {
+   "description": "What encoding costs per million queries.",
+   "start": "cloud"
+  }
+ },
+ "faces": {
+  "mona-sans": {
+   "family": "Mona Sans",
+   "href": "https://fonts.googleapis.com/css2?family=Mona+Sans:wght@200..900&display=swap"
+  },
+  "jetbrains-mono": {
+   "family": "JetBrains Mono",
+   "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Qdrant Design System (old)",
+   "namespace": "qdrant",
+   "artifact": "https://claude.ai/artifact/D5ZBsN8vkqSm1gkHyDk4Qb",
+   "version": null,
+   "copiedAt": "2026-11-21T03:35:16Z"
+  }
+ ]
+}

@@ -1,0 +1,157 @@
+{
+  "status": "FROZEN",
+  "measurement": "E9 weights",
+  "frozen": {
+    "nano": {
+      "weight": 0.3,
+      "fit_curve": {
+        "0.0": 0.42472204460708457,
+        "0.1": 0.42641552045895753,
+        "0.2": 0.42868395066387555,
+        "0.3": 0.4294904083390184,
+        "0.4": 0.4265929543477136,
+        "0.5": 0.42082909294866006
+      }
+    },
+    "stella": {
+      "weight": 0.0,
+      "fit_curve": {
+        "0.0": 0.48065374297827573,
+        "0.1": 0.48056747931255506,
+        "0.2": 0.4787320793762833,
+        "0.3": 0.47525268929432124,
+        "0.4": 0.4696220806237362,
+        "0.5": 0.459348302326971
+      }
+    }
+  },
+  "fit": [
+    "cqadup-physics",
+    "cqadup-programmers"
+  ],
+  "receipt": {
+    "script": "m15src/e9_blend.py",
+    "script_sha256": "f2ea59fd7bcac504fd2002cf8cc933bb7a5200016f01d428c1f9ed4f181570f7",
+    "git_commit": "e872f33ee5ac9cea55251962e628efa84111005e",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T16:15:52Z",
+    "finished_utc": "2026-09-30T16:19:41Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "cqadup-physics": {
+          "source": "work/m15/vecs/cqadup-physics",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.4931876544285036,
+              "m20": 0.4931876544285036,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/stella-query.json",
+                "sha256": "01aa1ee2c9ad91f229c75d47a447ed9d7a7072d34bd01549b07af3edc30fb235"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.39563472630417323,
+              "m20": 0.39563472630417323,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/zero-dense.json",
+                "sha256": "c7bcc5fcce40fd84622a162bbd749d9eced63c9bcc22c4b53e66d1cb986b0404"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.443400629009945,
+              "m20": 0.443400629009945,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/nano-dense.json",
+                "sha256": "a5a2d1ad7a513bda6a891e7119bfc3de4b59ce1d12a6e1e76ae88f2d0419ad2a"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.3470609497542545,
+              "m20": 0.3470609497542545,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-physics/bm25.json",
+                "sha256": "895ee0a703fdeaf55dc95bccdc375690fdd452c7721f83d5a08500e75efc5955"
+              },
+              "passed": true
+            }
+          }
+        }
+      },
+      {
+        "cqadup-programmers": {
+          "source": "work/m15/vecs/cqadup-programmers",
+          "encoded": "Mac MPS, this run",
+          "gate": {
+            "stella-query": {
+              "mine": 0.46811983152804787,
+              "m20": 0.46811983152804787,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/stella-query.json",
+                "sha256": "7f6c6940f730ad24a4d1e54dc1d3c108b05400116a371702d170522d6e664b53"
+              },
+              "passed": true
+            },
+            "zero": {
+              "mine": 0.338973262061671,
+              "m20": 0.338973262061671,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/zero-dense.json",
+                "sha256": "4bdb78c5e2559027d14e35af50341c64523a67e4b1eec08ce9e2ecb5016e6998"
+              },
+              "passed": true
+            },
+            "nano": {
+              "mine": 0.40604346020422416,
+              "m20": 0.40604346020422416,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/nano-dense.json",
+                "sha256": "bf47fe1b7d3ecdcf9e3c325865c127e0c79a220aa5000b973c6ae37071899754"
+              },
+              "passed": true
+            },
+            "bm25": {
+              "mine": 0.2975128020661889,
+              "m20": 0.2975128020661889,
+              "abs_mean_diff": 0.0,
+              "share_within_1e-6": 1.0,
+              "m20_row": {
+                "path": "results/m20_beir15_scores/cqadup-programmers/bm25.json",
+                "sha256": "29b0a1101111401ef33289f7b67447d607870420d4b1bbf0b7a1eeeae0833bd5"
+              },
+              "passed": true
+            }
+          }
+        }
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

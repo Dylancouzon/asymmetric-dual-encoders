@@ -1,0 +1,876 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E6",
+  "scope": "descriptive; one feature, thresholds fitted on the M7 dev forums",
+  "feature": "Zero tokenizer units per whitespace word, no special tokens",
+  "rule": "route to Nano when fertility > t_B",
+  "budgets": [
+    0.1,
+    0.25,
+    0.5
+  ],
+  "thresholds": {
+    "0.1": 1.6666666666666667,
+    "0.25": 1.4,
+    "0.5": 1.2
+  },
+  "fit_forums": [
+    "cqadup-physics",
+    "cqadup-programmers"
+  ],
+  "fit_in_sample": {
+    "0.1": {
+      "nano_fraction": 0.08720626631853785,
+      "router": 0.3747756852031828,
+      "always_zero": 0.3697154350893263,
+      "always_nano": 0.42631191889307213,
+      "random_same_fraction": 0.37465100312860855,
+      "oracle_same_fraction": 0.41910323870500027,
+      "efficiency": 0.002804854985526095,
+      "router_minus_random": 0.00012468207457422276,
+      "router_minus_random_ci95": [
+        -0.002888964693963389,
+        0.00331126328673332
+      ]
+    },
+    "0.25": {
+      "nano_fraction": 0.24386422976501307,
+      "router": 0.3885504521544071,
+      "always_zero": 0.3697154350893263,
+      "always_nano": 0.42631191889307213,
+      "random_same_fraction": 0.38351729301953486,
+      "oracle_same_fraction": 0.45557726296776785,
+      "efficiency": 0.06984681146117594,
+      "router_minus_random": 0.005033159134872234,
+      "router_minus_random_ci95": [
+        0.0002928725155415604,
+        0.009779886166603328
+      ]
+    },
+    "0.5": {
+      "nano_fraction": 0.49817232375979115,
+      "router": 0.4083673868198919,
+      "always_zero": 0.3697154350893263,
+      "always_nano": 0.42631191889307213,
+      "random_same_fraction": 0.39791023694247174,
+      "oracle_same_fraction": 0.45757351381283107,
+      "efficiency": 0.17526945260050308,
+      "router_minus_random": 0.010457149877420135,
+      "router_minus_random_ci95": [
+        0.00535337130518738,
+        0.015380419159419472
+      ]
+    }
+  },
+  "macro_over_12": {
+    "0.1": {
+      "nano_fraction": 0.12727806252363286,
+      "router": 0.4677772153948676,
+      "always_zero": 0.4523665942851687,
+      "always_nano": 0.516148560580303,
+      "random_same_fraction": 0.4645310681543218,
+      "oracle_same_fraction": 0.4973222329181313,
+      "router_minus_random": 0.003246147240545836
+    },
+    "0.25": {
+      "nano_fraction": 0.2882083962807142,
+      "router": 0.4853339769345067,
+      "always_zero": 0.4523665942851687,
+      "always_nano": 0.516148560580303,
+      "random_same_fraction": 0.4804587126457558,
+      "oracle_same_fraction": 0.5283472030523227,
+      "router_minus_random": 0.004875264288750912
+    },
+    "0.5": {
+      "nano_fraction": 0.5556897850349919,
+      "router": 0.49941321058628474,
+      "always_zero": 0.4523665942851687,
+      "always_nano": 0.516148560580303,
+      "random_same_fraction": 0.49443260674344275,
+      "oracle_same_fraction": 0.5444652782617038,
+      "router_minus_random": 0.004980603842841995
+    }
+  },
+  "per_dataset": {
+    "scifact": {
+      "mean_fertility": 1.7130958921983654,
+      "0.1": {
+        "nano_fraction": 0.4766666666666667,
+        "router": 0.6824671583887489,
+        "always_zero": 0.6101307346589265,
+        "always_nano": 0.7210974963001988,
+        "random_same_fraction": 0.6630248910412664,
+        "oracle_same_fraction": 0.7391236833370006,
+        "efficiency": 0.255487199743279,
+        "router_minus_random": 0.019442267347482556,
+        "router_minus_random_ci95": [
+          0.003831953765721142,
+          0.03527229077807684
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.73,
+        "router": 0.7062171118894554,
+        "always_zero": 0.6101307346589265,
+        "always_nano": 0.7210974963001988,
+        "random_same_fraction": 0.6911364706570553,
+        "oracle_same_fraction": 0.7391236833370006,
+        "efficiency": 0.31426374632303883,
+        "router_minus_random": 0.01508064123240005,
+        "router_minus_random_ci95": [
+          0.0024228181887157975,
+          0.02727494521150335
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.9133333333333333,
+        "router": 0.7173339242860427,
+        "always_zero": 0.6101307346589265,
+        "always_nano": 0.7210974963001988,
+        "random_same_fraction": 0.7114803769579552,
+        "oracle_same_fraction": 0.7389167943434389,
+        "efficiency": 0.2133495509214899,
+        "router_minus_random": 0.005853547328087516,
+        "router_minus_random_ci95": [
+          0.0006578057657805724,
+          0.011048384386783048
+        ]
+      }
+    },
+    "nfcorpus": {
+      "mean_fertility": 1.7498569284173,
+      "0.1": {
+        "nano_fraction": 0.3746130030959752,
+        "router": 0.34169571485496747,
+        "always_zero": 0.3123921390803689,
+        "always_nano": 0.36308038066321896,
+        "random_same_fraction": 0.33138061348137465,
+        "oracle_same_fraction": 0.3756097296777348,
+        "efficiency": 0.23321970368563905,
+        "router_minus_random": 0.010315101373592817,
+        "router_minus_random_ci95": [
+          0.0023160288797548904,
+          0.018652971535620767
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.5356037151702786,
+        "router": 0.3547482945805233,
+        "always_zero": 0.3123921390803689,
+        "always_nano": 0.36308038066321896,
+        "random_same_fraction": 0.33954094958759196,
+        "oracle_same_fraction": 0.3761997303927129,
+        "efficiency": 0.4148349906608733,
+        "router_minus_random": 0.01520734499293136,
+        "router_minus_random_ci95": [
+          0.008027862598568235,
+          0.022918143925754964
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.6439628482972136,
+        "router": 0.35654017847329483,
+        "always_zero": 0.3123921390803689,
+        "always_nano": 0.36308038066321896,
+        "random_same_fraction": 0.34503348350523827,
+        "oracle_same_fraction": 0.3761997303927129,
+        "efficiency": 0.3692037417787692,
+        "router_minus_random": 0.011506694968056563,
+        "router_minus_random_ci95": [
+          0.005188957549128114,
+          0.01796331375276386
+        ]
+      }
+    },
+    "scidocs": {
+      "mean_fertility": 1.3996021143533184,
+      "0.1": {
+        "nano_fraction": 0.171,
+        "router": 0.17581700317770288,
+        "always_zero": 0.16769336543409222,
+        "always_nano": 0.2177103334458522,
+        "random_same_fraction": 0.17624626696410317,
+        "oracle_same_fraction": 0.21527997544339286,
+        "efficiency": -0.01099725860349774,
+        "router_minus_random": -0.0004292637864002913,
+        "router_minus_random_ci95": [
+          -0.003596885472786871,
+          0.0027695749421787273
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.403,
+        "router": 0.19076978307162723,
+        "always_zero": 0.16769336543409222,
+        "always_nano": 0.2177103334458522,
+        "random_same_fraction": 0.1878502035428315,
+        "oracle_same_fraction": 0.23517439344795665,
+        "efficiency": 0.06169317498405921,
+        "router_minus_random": 0.002919579528795735,
+        "router_minus_random_ci95": [
+          -0.0012274431933312635,
+          0.007144132646347615
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.672,
+        "router": 0.20545105876188396,
+        "always_zero": 0.16769336543409222,
+        "always_nano": 0.2177103334458522,
+        "random_same_fraction": 0.20130476793799493,
+        "oracle_same_fraction": 0.23540936847067728,
+        "efficiency": 0.12157570413163635,
+        "router_minus_random": 0.004146290823889037,
+        "router_minus_random_ci95": [
+          0.00028311826617989866,
+          0.007866345191887664
+        ]
+      }
+    },
+    "trec-covid": {
+      "mean_fertility": 1.5128571608130432,
+      "0.1": {
+        "nano_fraction": 0.22,
+        "router": 0.6061626141346327,
+        "always_zero": 0.5489915794925339,
+        "always_nano": 0.7871157997648055,
+        "random_same_fraction": 0.6013789079524337,
+        "oracle_same_fraction": 0.6870876534555965,
+        "efficiency": 0.055813513009853835,
+        "router_minus_random": 0.004783706182199032,
+        "router_minus_random_ci95": [
+          -0.018714063662988032,
+          0.031039734152986494
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.7,
+        "router": 0.7230894892926534,
+        "always_zero": 0.5489915794925339,
+        "always_nano": 0.7871157997648055,
+        "random_same_fraction": 0.715678533683124,
+        "oracle_same_fraction": 0.7884045625766464,
+        "efficiency": 0.10190238243833914,
+        "router_minus_random": 0.007410955609529424,
+        "router_minus_random_ci95": [
+          -0.022590817569872055,
+          0.035187100253136615
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.92,
+        "router": 0.7724723350518292,
+        "always_zero": 0.5489915794925339,
+        "always_nano": 0.7871157997648055,
+        "random_same_fraction": 0.7680658621430237,
+        "oracle_same_fraction": 0.7948997147666418,
+        "efficiency": 0.164213203769595,
+        "router_minus_random": 0.00440647290880547,
+        "router_minus_random_ci95": [
+          -0.003373821733333293,
+          0.015590063804568434
+        ]
+      }
+    },
+    "fiqa": {
+      "mean_fertility": 1.2677964984738377,
+      "0.1": {
+        "nano_fraction": 0.04938271604938271,
+        "router": 0.3763474924308191,
+        "always_zero": 0.3727623009067084,
+        "always_nano": 0.47776539081203656,
+        "random_same_fraction": 0.37794763867981107,
+        "oracle_same_fraction": 0.40907822581173686,
+        "efficiency": -0.05140109443522002,
+        "router_minus_random": -0.0016001462489919627,
+        "router_minus_random_ci95": [
+          -0.004944232626106963,
+          0.001803204724219706
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.19598765432098766,
+        "router": 0.39142762573291057,
+        "always_zero": 0.3727623009067084,
+        "always_nano": 0.47776539081203656,
+        "random_same_fraction": 0.39334161019370945,
+        "oracle_same_fraction": 0.46313154005389345,
+        "efficiency": -0.027424937446323898,
+        "router_minus_random": -0.0019139844607988787,
+        "router_minus_random_ci95": [
+          -0.008113676579689618,
+          0.004447561451243179
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.4876543209876543,
+        "router": 0.43142908975194916,
+        "always_zero": 0.3727623009067084,
+        "always_nano": 0.47776539081203656,
+        "random_same_fraction": 0.4239675114160969,
+        "oracle_same_fraction": 0.49206685365973957,
+        "efficiency": 0.10956902210826898,
+        "router_minus_random": 0.007461578335852259,
+        "router_minus_random_ci95": [
+          -0.0009403483172743504,
+          0.015530941499293554
+        ]
+      }
+    },
+    "arguana": {
+      "mean_fertility": 1.244087305774579,
+      "0.1": {
+        "nano_fraction": 0.0,
+        "router": 0.591560073987573,
+        "always_zero": 0.591560073987573,
+        "always_nano": 0.6232963897287046,
+        "random_same_fraction": 0.591560073987573,
+        "oracle_same_fraction": 0.591560073987573,
+        "efficiency": null,
+        "router_minus_random": 0.0,
+        "router_minus_random_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.05263157894736842,
+        "router": 0.5962278808413383,
+        "always_zero": 0.591560073987573,
+        "always_nano": 0.6232963897287046,
+        "random_same_fraction": 0.593230406395001,
+        "oracle_same_fraction": 0.6232741391317845,
+        "efficiency": 0.09977037382799442,
+        "router_minus_random": 0.002997474446337245,
+        "router_minus_random_ci95": [
+          0.0004720954047401166,
+          0.00560633731659177
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.6671408250355618,
+        "router": 0.6192040179971944,
+        "always_zero": 0.591560073987573,
+        "always_nano": 0.6232963897287046,
+        "random_same_fraction": 0.6127326658547007,
+        "oracle_same_fraction": 0.6808856015911401,
+        "efficiency": 0.09495338788514839,
+        "router_minus_random": 0.006471352142493725,
+        "router_minus_random_ci95": [
+          0.0004662479215625211,
+          0.012466635577046012
+        ]
+      }
+    },
+    "msmarco": {
+      "mean_fertility": 1.2265671158835063,
+      "0.1": {
+        "nano_fraction": 0.06819484240687679,
+        "router": 0.34562461029608676,
+        "always_zero": 0.3370738502210946,
+        "always_nano": 0.406315995711997,
+        "random_same_fraction": 0.3417958074207607,
+        "oracle_same_fraction": 0.3815642854302036,
+        "efficiency": 0.09627732985951633,
+        "router_minus_random": 0.003828802875326054,
+        "router_minus_random_ci95": [
+          0.002190389737742397,
+          0.005431496331362841
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.18653295128939829,
+        "router": 0.35927009682194044,
+        "always_zero": 0.3370738502210946,
+        "always_nano": 0.406315995711997,
+        "random_same_fraction": 0.3499897919731225,
+        "oracle_same_fraction": 0.42272690806518,
+        "efficiency": 0.12758692325761986,
+        "router_minus_random": 0.009280304848817922,
+        "router_minus_random_ci95": [
+          0.0068960171667573344,
+          0.011656572838336189
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.3805157593123209,
+        "router": 0.37584661226690363,
+        "always_zero": 0.3370738502210946,
+        "always_nano": 0.406315995711997,
+        "random_same_fraction": 0.36342157778897954,
+        "oracle_same_fraction": 0.4349031741342901,
+        "efficiency": 0.17382144654271167,
+        "router_minus_random": 0.01242503447792409,
+        "router_minus_random_ci95": [
+          0.00969728562358525,
+          0.01516376840106898
+        ]
+      }
+    },
+    "nq": {
+      "mean_fertility": 1.0838787735015838,
+      "0.1": {
+        "nano_fraction": 0.005504055619930475,
+        "router": 0.5181883690344369,
+        "always_zero": 0.5173195524528932,
+        "always_nano": 0.5837996691547802,
+        "random_same_fraction": 0.5176854627128398,
+        "oracle_same_fraction": 0.5228236080728237,
+        "efficiency": 0.09787701327287515,
+        "router_minus_random": 0.0005029063215971075,
+        "router_minus_random_ci95": [
+          -0.00025589359873962877,
+          0.001382812641109665
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.03244495944380069,
+        "router": 0.5212996860584841,
+        "always_zero": 0.5173195524528932,
+        "always_nano": 0.5837996691547802,
+        "random_same_fraction": 0.5194764971431051,
+        "oracle_same_fraction": 0.541673126946643,
+        "efficiency": 0.08213809625677601,
+        "router_minus_random": 0.001823188915379026,
+        "router_minus_random_ci95": [
+          -8.712698994114973e-05,
+          0.0038382749201461663
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.18337195828505215,
+        "router": 0.5323341968603502,
+        "always_zero": 0.5173195524528932,
+        "always_nano": 0.5837996691547802,
+        "random_same_fraction": 0.529510141639537,
+        "oracle_same_fraction": 0.601363659166598,
+        "efficiency": 0.039302950196552576,
+        "router_minus_random": 0.002824055220813193,
+        "router_minus_random_ci95": [
+          -0.0005471644920762492,
+          0.006220673017097896
+        ]
+      }
+    },
+    "hotpotqa": {
+      "mean_fertility": 1.2684944036436223,
+      "0.1": {
+        "nano_fraction": 0.039837947332883185,
+        "router": 0.612011705371903,
+        "always_zero": 0.6127340424570197,
+        "always_nano": 0.6102394600672578,
+        "random_same_fraction": 0.6126346634151588,
+        "oracle_same_fraction": 0.634965523016217,
+        "efficiency": -0.027896733685358457,
+        "router_minus_random": -0.0006229580432558501,
+        "router_minus_random_ci95": [
+          -0.0016944564255276877,
+          0.00046872966616464366
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.19014179608372722,
+        "router": 0.6108800740288254,
+        "always_zero": 0.6127340424570197,
+        "always_nano": 0.6102394600672578,
+        "random_same_fraction": 0.6122597180809515,
+        "oracle_same_fraction": 0.6743017733828133,
+        "efficiency": -0.022237239650000653,
+        "router_minus_random": -0.0013796440521260944,
+        "router_minus_random_ci95": [
+          -0.0034446459740833297,
+          0.0007091784179180346
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.5508440243079,
+        "router": 0.6095807767834954,
+        "always_zero": 0.6127340424570197,
+        "always_nano": 0.6102394600672578,
+        "random_same_fraction": 0.6113599166544756,
+        "oracle_same_fraction": 0.6812915266444561,
+        "efficiency": -0.025441139868438968,
+        "router_minus_random": -0.0017791398709802175,
+        "router_minus_random_ci95": [
+          -0.0043127765407477954,
+          0.000763274279310718
+        ]
+      }
+    },
+    "webis-touche2020": {
+      "mean_fertility": 1.226876638101128,
+      "0.1": {
+        "nano_fraction": 0.061224489795918366,
+        "router": 0.23351540322992645,
+        "always_zero": 0.2288132725216718,
+        "always_nano": 0.27554735452183066,
+        "random_same_fraction": 0.23167454284821215,
+        "oracle_same_fraction": 0.2465593741357325,
+        "efficiency": 0.12367358058385929,
+        "router_minus_random": 0.0018408603817142988,
+        "router_minus_random_ci95": [
+          -0.002201620072982121,
+          0.006942662939244307
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.12244897959183673,
+        "router": 0.2348940458495496,
+        "always_zero": 0.2288132725216718,
+        "always_nano": 0.27554735452183066,
+        "random_same_fraction": 0.23453581317475247,
+        "oracle_same_fraction": 0.2578979457861833,
+        "efficiency": 0.01533390297689868,
+        "router_minus_random": 0.00035823267479712095,
+        "router_minus_random_ci95": [
+          -0.0053201851099505225,
+          0.006496343498070467
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.2857142857142857,
+        "router": 0.2365753362572782,
+        "always_zero": 0.2288132725216718,
+        "always_nano": 0.27554735452183066,
+        "random_same_fraction": 0.24216586737886003,
+        "oracle_same_fraction": 0.27598356653673495,
+        "efficiency": -0.16531376352610333,
+        "router_minus_random": -0.005590531121581838,
+        "router_minus_random_ci95": [
+          -0.016430464919545782,
+          0.00482716726262458
+        ]
+      }
+    },
+    "quora": {
+      "mean_fertility": 1.2445207828634346,
+      "0.1": {
+        "nano_fraction": 0.0329,
+        "router": 0.8518590436602413,
+        "always_zero": 0.8504363879497873,
+        "always_nano": 0.8805018489305345,
+        "random_same_fraction": 0.8514255416160538,
+        "oracle_same_fraction": 0.870897138168834,
+        "efficiency": 0.022263302498719672,
+        "router_minus_random": 0.00043350204418757254,
+        "router_minus_random_ci95": [
+          -0.00023130711312771557,
+          0.001109210652011963
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.1501,
+        "router": 0.8567879578666049,
+        "always_zero": 0.8504363879497873,
+        "always_nano": 0.8805018489305345,
+        "random_same_fraction": 0.8549492136429975,
+        "oracle_same_fraction": 0.8976986081422067,
+        "efficiency": 0.04301217000024238,
+        "router_minus_random": 0.0018387442236074136,
+        "router_minus_random_ci95": [
+          0.0006056641052976514,
+          0.003122091978680641
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.4126,
+        "router": 0.8670751485887896,
+        "always_zero": 0.8504363879497873,
+        "always_nano": 0.8805018489305345,
+        "random_same_fraction": 0.8628413971504436,
+        "oracle_same_fraction": 0.8985976309436715,
+        "efficiency": 0.11840596699386978,
+        "router_minus_random": 0.004233751438346034,
+        "router_minus_random_ci95": [
+          0.002606717985927004,
+          0.00587291455098517
+        ]
+      }
+    },
+    "climate-fever": {
+      "mean_fertility": 1.258188893528235,
+      "0.1": {
+        "nano_fraction": 0.028013029315960912,
+        "router": 0.2780773961713725,
+        "always_zero": 0.27849183225935414,
+        "always_nano": 0.24731260786241843,
+        "random_same_fraction": 0.2776184077322738,
+        "oracle_same_fraction": 0.29331752448073056,
+        "efficiency": 0.02923657721978624,
+        "router_minus_random": 0.00045898843909869536,
+        "router_minus_random_ci95": [
+          -0.0017801430217311482,
+          0.00270793395678328
+        ]
+      },
+      "0.25": {
+        "nano_fraction": 0.15960912052117263,
+        "router": 0.27839567718016756,
+        "always_zero": 0.27849183225935414,
+        "always_nano": 0.24731260786241843,
+        "random_same_fraction": 0.27351534367482694,
+        "oracle_same_fraction": 0.32056002536485156,
+        "efficiency": 0.10373826179751675,
+        "router_minus_random": 0.004880333505340617,
+        "router_minus_random_ci95": [
+          0.0009987048551891157,
+          0.008816981016854625
+        ]
+      },
+      "0.5": {
+        "nano_fraction": 0.5511400651465798,
+        "router": 0.2691158519564053,
+        "always_zero": 0.27849183225935414,
+        "always_nano": 0.24731260786241843,
+        "random_same_fraction": 0.2613077124940072,
+        "oracle_same_fraction": 0.3230657184903453,
+        "efficiency": 0.12643121060063187,
+        "router_minus_random": 0.0078081394623981115,
+        "router_minus_random_ci95": [
+          0.0029772568531717643,
+          0.012692188816244536
+        ]
+      }
+    }
+  },
+  "receipt": {
+    "script": "m15src/e6_router.py",
+    "script_sha256": "ab5b68e965402102bfa175cd7a1c059e2ace5089f81be133950a9ffeedc06226",
+    "git_commit": "92afdad6f392aba1a5601e4e319ee36bccff1637",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T02:09:01Z",
+    "finished_utc": "2026-09-30T02:10:49Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "tokenizers": "0.22.2",
+      "datasets": "5.0.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "zero_tokenizer": "/Users/dylanc/.cache/huggingface/hub/models--DylanCouzon--constella-zero/snapshots/ebee6ea94999f26182505548ffc5df035e727351/tokenizer.json"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-physics/zero-dense.json",
+        "sha256": "c7bcc5fcce40fd84622a162bbd749d9eced63c9bcc22c4b53e66d1cb986b0404"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-physics/nano-dense.json",
+        "sha256": "a5a2d1ad7a513bda6a891e7119bfc3de4b59ce1d12a6e1e76ae88f2d0419ad2a"
+      },
+      {
+        "source": "mteb/cqadupstack-physics",
+        "revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "qrels_source": "mteb/cqadupstack-physics",
+        "qrels_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-programmers/zero-dense.json",
+        "sha256": "4bdb78c5e2559027d14e35af50341c64523a67e4b1eec08ce9e2ecb5016e6998"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-programmers/nano-dense.json",
+        "sha256": "bf47fe1b7d3ecdcf9e3c325865c127e0c79a220aa5000b973c6ae37071899754"
+      },
+      {
+        "source": "mteb/cqadupstack-programmers",
+        "revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "qrels_source": "mteb/cqadupstack-programmers",
+        "qrels_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "split": "test"
+      },
+      {
+        "frozen_thresholds": "results/m15_e6_thresholds.json",
+        "sha256": "82b542d5b8536fb87c1abbccff2ed640d1ab3b0393c77938385003e2ea9e3034"
+      },
+      {
+        "path": "results/m20_beir15_scores/scifact/zero-dense.json",
+        "sha256": "b0b5e49ce21b8abb6f1eed4829d6489539a2657a4965d8b538ffe98ad339a654"
+      },
+      {
+        "path": "results/m20_beir15_scores/scifact/nano-dense.json",
+        "sha256": "2be141d2c327c08f30f2019af7f09af91b6ddd2e4eb3caa1a2350ba98d322799"
+      },
+      {
+        "source": "BeIR/scifact",
+        "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+        "qrels_source": "BeIR/scifact-qrels",
+        "qrels_revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/nfcorpus/zero-dense.json",
+        "sha256": "4486899dab7d71c61aab155b32858b12795cfa199b3f16703b186dce71f60a39"
+      },
+      {
+        "path": "results/m20_beir15_scores/nfcorpus/nano-dense.json",
+        "sha256": "0c94dcd4b3b8bc17ad0e33760e435a7dd7aee1783ba50405a2c46a55b296760e"
+      },
+      {
+        "source": "BeIR/nfcorpus",
+        "revision": "b5026a0e96e8a7ac4f95f482a596389289d46269",
+        "qrels_source": "BeIR/nfcorpus-qrels",
+        "qrels_revision": "a451b3b26d3ae1358f259c1a3a4dd61fcea35a65",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/scidocs/zero-dense.json",
+        "sha256": "db70672d96ba8c1953f945e445a13ebadad706130b5e295af54d1005c7a25c31"
+      },
+      {
+        "path": "results/m20_beir15_scores/scidocs/nano-dense.json",
+        "sha256": "743fb8c055db2794abf612d3017c7379c3c74ab81eccc649915d7df531431c3a"
+      },
+      {
+        "source": "BeIR/scidocs",
+        "revision": "acebceec772628c6679d76d6cff30ad517d17f4e",
+        "qrels_source": "BeIR/scidocs-qrels",
+        "qrels_revision": "735ea1048e37b1ebce14c6dc3d33a5edaf66d3dc",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/trec-covid/zero-dense.json",
+        "sha256": "6aebbf791515cd87f2b0d7a56bf880751bae1b9b439b08a650d639d593521ccb"
+      },
+      {
+        "path": "results/m20_beir15_scores/trec-covid/nano-dense.json",
+        "sha256": "93cb33d60096f6820f0c4547d7dc21b427341f79cb8b70c56b3f2a3081e8db2b"
+      },
+      {
+        "source": "BeIR/trec-covid",
+        "revision": "7e16fde3016c639c7f856e803f4bab92645562c4",
+        "qrels_source": "BeIR/trec-covid-qrels",
+        "qrels_revision": "532ac68ee6756ac22c9346eebf65bd3c6a042e10",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/fiqa/zero-dense.json",
+        "sha256": "e0aa5923a1e856172dab6f2382ee322f1a0a4e4718782abe9e5cfcdaad449a64"
+      },
+      {
+        "path": "results/m20_beir15_scores/fiqa/nano-dense.json",
+        "sha256": "f6ffb4a2a58c5ffb024b7252b375005aa0a24f3a40adaffd490151d67f4435c6"
+      },
+      {
+        "source": "BeIR/fiqa",
+        "revision": "979c07a7cb5ccc6ca009792241fa1250b98055dd",
+        "qrels_source": "BeIR/fiqa-qrels",
+        "qrels_revision": "252958f2d646e22cab6d0c72dd3f0d5de6d0655a",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/arguana/zero-dense.json",
+        "sha256": "0f23d3beae4a7ec5b5ffd9085c8a63c43f5a118bc40bb691904b5dea6b1f1303"
+      },
+      {
+        "path": "results/m20_beir15_scores/arguana/nano-dense.json",
+        "sha256": "b598ac64bb35d57b38ff9c467210884774b6e384f35c56ec7f5664756db7cefd"
+      },
+      {
+        "source": "BeIR/arguana",
+        "revision": "9bcf8fc0320c4e3860e25b8b85fa205fcdd7078f",
+        "qrels_source": "BeIR/arguana-qrels",
+        "qrels_revision": "ae5468c6f1c198109a8af5f0d4dc58bd18b6fea7",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/msmarco/zero-dense.json",
+        "sha256": "165c3728198aade37d9d8381da391f0d581e6cc49d7c4c8ee79b8a035d3a44bb"
+      },
+      {
+        "path": "results/m20_beir15_scores/msmarco/nano-dense.json",
+        "sha256": "aa122fbb64cdebca7f2abaca2fcd23122d76d8b6656c4d824f0ad557e19e45fe"
+      },
+      {
+        "source": "BeIR/msmarco",
+        "revision": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+        "qrels_source": "BeIR/msmarco-qrels",
+        "qrels_revision": "253fbf8a3f8d4a0932b63882b5162bedc84779f5",
+        "split": "dev"
+      },
+      {
+        "path": "results/m20_beir15_scores/nq/zero-dense.json",
+        "sha256": "7b2b6c025d033e5f3e305d54592a9e8dbcb6efc5ef071e8fc90f15b8361900be"
+      },
+      {
+        "path": "results/m20_beir15_scores/nq/nano-dense.json",
+        "sha256": "c4b9cd858b405e7d0d956757239cc7ba0e2956f5442760dd6f052c1f8f95ec5b"
+      },
+      {
+        "source": "BeIR/nq",
+        "revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+        "qrels_source": "BeIR/nq-qrels",
+        "qrels_revision": "519acd4e48bb3e5da22b2b888ce36c614f4f2bc9",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/hotpotqa/zero-dense.json",
+        "sha256": "1664fd425dd33c8b424921f77aec8e202da771cd2c0333930c531302e263e0ca"
+      },
+      {
+        "path": "results/m20_beir15_scores/hotpotqa/nano-dense.json",
+        "sha256": "506c977d5d855ba4897e6ecb4f2342e57c34d60f2ae1c67ccd80cc241ba372e4"
+      },
+      {
+        "source": "BeIR/hotpotqa",
+        "revision": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+        "qrels_source": "BeIR/hotpotqa-qrels",
+        "qrels_revision": "b15429e9244c8ec966985d7778427c3b1543b314",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/webis-touche2020/zero-dense.json",
+        "sha256": "26004f11ea41057908ea007ed6b4fba44e6fb9d854361bc0c4c370d385597f68"
+      },
+      {
+        "path": "results/m20_beir15_scores/webis-touche2020/nano-dense.json",
+        "sha256": "1fe3b0ecc2a15edff987351bdcd47f7153c7da5299f8a2dc19c3313da745cdb1"
+      },
+      {
+        "source": "BeIR/webis-touche2020",
+        "revision": "7ebed360c2743a0024cb96a404eb89e27c931ebc",
+        "qrels_source": "BeIR/webis-touche2020-qrels",
+        "qrels_revision": "dea3c4c7339f61c3e1abc42b9bdbf337b115aa97",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/quora/zero-dense.json",
+        "sha256": "6f6579a0951c26c274974cc710debde4f42ea2945c4e3d2042935d6c34ec4594"
+      },
+      {
+        "path": "results/m20_beir15_scores/quora/nano-dense.json",
+        "sha256": "00923279453fe89dd6614c5dec3551cc40483ddee969fdc54e8bab6b0e3ebce0"
+      },
+      {
+        "source": "BeIR/quora",
+        "revision": "54934c6ffc800b0928b057f047315b5d1a1d71d8",
+        "qrels_source": "BeIR/quora-qrels",
+        "qrels_revision": "7906857d63e4b4d41fd16c954c929c3ff3c580d9",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/climate-fever/zero-dense.json",
+        "sha256": "2485d858dac5f7f669facb934044540c4a7738abdcbba0c7c2d625c83b3f59df"
+      },
+      {
+        "path": "results/m20_beir15_scores/climate-fever/nano-dense.json",
+        "sha256": "56f8363c4ccc8d3e80130e31df46255422fc0f0f7352a08aebc762cd04af102b"
+      },
+      {
+        "source": "BeIR/climate-fever",
+        "revision": "d4edc15f76aef202e29b730b4d6801a7dd70df01",
+        "qrels_source": "BeIR/climate-fever-qrels",
+        "qrels_revision": "ca2c7ed51cf8b40c10c23a099a27eceb3678156b",
+        "split": "test"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "3a47c153c14add325d8ebc73eac12cd776ba8ca6026a0ee206c3fc67c7b4848a"
+  }
+}

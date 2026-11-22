@@ -21,22 +21,32 @@ M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M14 (Nano r
 M17, M18, M19 and M21 are closed historical evidence. M18 shipped an internal Qdrant project-memory
 system but no improved encoder; M19 closed `ENCODER_INCONCLUSIVE` with its confirmation surface
 still sealed, so it establishes neither improvement nor equivalence and released Zero v1 stays
-selected. **M20 is the active execution milestone.** Its stages A and B are complete: the reserved access was
-spent once on 2026-09-19 (`m8-reserved-spent`), `results/m10_final_run.json` ends `COMPLETE`, and the
-reserved four are now **known-test** — never again usable to decide anything in this project. Stage C
-(BEIR-15) is **running** and is unprotected; two of its three towers are complete. Read
-`m20/STATUS.md` and `m20/FINDINGS.md` before touching it, and never relaunch it with a truncating
-`>` redirect or without preserving the existing receipt. Paper milestone references in older files are historical. Harness
-improvements remain ordinary maintenance. Do not infer execution readiness from the historical
-phrase “half A ready to push” or from a closed milestone's executable status.
+selected. **M15 is the paper work on this branch.** Start a coworker review at `m15/REVIEW_GUIDE.md`.
+M20's stages A, B, and C are complete: the reserved access was spent once on 2026-09-19
+(`m8-reserved-spent`), `results/m10_final_run.json` and `results/m20_beir15_run.json` end
+`COMPLETE`, and the reserved four are now **known-test** — never again usable to decide anything
+in this project. M20 remains open only for the object-storage half of its archive; its local
+archive target was verified. Read `m20/STATUS.md` and `m20/FINDINGS.md` before touching it.
+Do not relaunch completed evaluations for a paper review. Paper milestone references in older
+files are historical. Harness improvements remain ordinary maintenance. Do not infer execution
+readiness from the historical phrase “half A ready to push” or from a closed milestone's
+executable status.
 
 ## Evidence and protocol
 
 - **Never overwrite `results/perquery.json`.** Its frozen comparator vectors cannot be rebuilt
   from the remaining caches. Preserve registered partitions, comparators and statistics.
-- No six-set, reserved or LoTTE evaluation outside its registered transaction. M13 must implement
-  and rehearse the executor and finish the decision lock before spending access. A recipe-lock
-  push alone does not authorize M9's close-out.
+- **Paper phase (Dylan, 2026-09-30).** The registered evaluations are done; the six public sets and
+  BEIR-15 are known-test. New analyses for the paper may be exploratory and may look at those sets
+  freely; the paper labels each one "exploratory" or "registered" and never presents an exploratory
+  result as a registered test. The registered contrasts, M20 rows and E1-E10 keep their
+  registrations and are reported as registered. The reserved-four read ban below still stands.
+- **M15 privileges (Dylan, 2026-09-30).** M15 is the paper milestone and differs from execution
+  milestones. Exploratory analyses need no method file, review round or access-log audit before they
+  run; a cloud run under $10 inside the recorded $1,000 ceiling needs no prior review; Codex and
+  sub-agent reviews target the paper's correctness and readability. What stays: the reserved-four
+  read ban, never overwriting `results/perquery.json`, committed receipts for every number the paper
+  cites, and the exploratory/registered label on every result.
 - Reserved four: FEVER, DBpedia-entity, cqadup-android, cqadup-english. Do not read
   `results/frozen_eval/untouched-*`, reserved qrels caches or `work/m9reserve` during development
   or review. Preflight uses manifests; protected content belongs inside the executor.
@@ -46,12 +56,15 @@ phrase “half A ready to push” or from a closed milestone's executable status
 - Do not run repo-wide content searches across `results/` or `work/`. Search an explicit allowlist
   of files/directories, or provide the protected-path exclusions before the command runs; filtering
   output afterward is too late. This applies to review and documentation cleanup as well as code.
-- A decision's protocol changes must precede the observations it governs, be dated, and preserve
-  the original registration in git. Never change a computed contrast to improve a result.
-  Unrun-family amendments are not permission to re-decide completed families.
+- For registered measurements, a protocol change must precede the observations it governs, be
+  dated, and preserve the original registration in git. Never change a computed contrast to improve
+  a result. Exploratory paper analyses need no prior registration but must be labelled as such.
 - Exact search produces quality numbers. Qdrant/Edge measurements establish deployment behavior
   and latency; ANN recall must not be silently mixed into the quality comparison.
-- The paper's headline is the registered clean-4, with all six beside it. “Clean” means no
+- The paper is a research paper: it leads with findings, implications and what the design makes
+  possible, not with comparator contrasts (Dylan, 2026-09-30). The registered clean-4 contrast,
+  with all six beside it, and the one-shot reserved-four result are reported in full as the
+  pre-registered test in the evaluation section; never re-picked or dropped. “Clean” means no
   disclosed teacher overlap. Stella discloses ArguAna/FiQA and FEVER exposure. Partition
   sensitivity is not a causal contamination estimate.
 - Unresolved superiority tests do not establish equivalence. Query-resampling intervals exclude

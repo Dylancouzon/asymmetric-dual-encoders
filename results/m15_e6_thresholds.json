@@ -1,0 +1,75 @@
+{
+  "status": "FROZEN",
+  "measurement": "E6 thresholds",
+  "budgets": [
+    0.1,
+    0.25,
+    0.5
+  ],
+  "thresholds": {
+    "0.1": 1.6666666666666667,
+    "0.25": 1.4,
+    "0.5": 1.2
+  },
+  "fit_forums": [
+    "cqadup-physics",
+    "cqadup-programmers"
+  ],
+  "n_fit_queries": 1915,
+  "receipt": {
+    "script": "m15src/e6_router.py",
+    "script_sha256": "ab5b68e965402102bfa175cd7a1c059e2ace5089f81be133950a9ffeedc06226",
+    "git_commit": "92afdad6f392aba1a5601e4e319ee36bccff1637",
+    "m15src_dirty": false,
+    "started_utc": "2026-09-30T02:09:01Z",
+    "finished_utc": "2026-09-30T02:09:12Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.3.5",
+      "tokenizers": "0.22.2",
+      "datasets": "5.0.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "zero_tokenizer": "/Users/dylanc/.cache/huggingface/hub/models--DylanCouzon--constella-zero/snapshots/ebee6ea94999f26182505548ffc5df035e727351/tokenizer.json"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-physics/zero-dense.json",
+        "sha256": "c7bcc5fcce40fd84622a162bbd749d9eced63c9bcc22c4b53e66d1cb986b0404"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-physics/nano-dense.json",
+        "sha256": "a5a2d1ad7a513bda6a891e7119bfc3de4b59ce1d12a6e1e76ae88f2d0419ad2a"
+      },
+      {
+        "source": "mteb/cqadupstack-physics",
+        "revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "qrels_source": "mteb/cqadupstack-physics",
+        "qrels_revision": "9c2faaa08d173bccf24e1cc3fc1e39bf3caea961",
+        "split": "test"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-programmers/zero-dense.json",
+        "sha256": "4bdb78c5e2559027d14e35af50341c64523a67e4b1eec08ce9e2ecb5016e6998"
+      },
+      {
+        "path": "results/m20_beir15_scores/cqadup-programmers/nano-dense.json",
+        "sha256": "bf47fe1b7d3ecdcf9e3c325865c127e0c79a220aa5000b973c6ae37071899754"
+      },
+      {
+        "source": "mteb/cqadupstack-programmers",
+        "revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "qrels_source": "mteb/cqadupstack-programmers",
+        "qrels_revision": "339629ee116f204b54b1cfd50b9084199a6d415c",
+        "split": "test"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "3a47c153c14add325d8ebc73eac12cd776ba8ca6026a0ee206c3fc67c7b4848a"
+  }
+}

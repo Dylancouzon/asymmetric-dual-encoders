@@ -1,0 +1,49 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (analytic estimate)",
+  "results": {
+    "stella": {
+      "median_tokens": 31.0,
+      "median_flops": 25061064704.0,
+      "ratio_to_zero": 906433.1851851852
+    },
+    "nano": {
+      "median_tokens": 12.0,
+      "median_flops": 540573696.0,
+      "ratio_to_zero": 19552.0
+    },
+    "zero": {
+      "median_tokens": 12.0,
+      "median_flops": 27648.0,
+      "ratio_to_zero": 1.0
+    }
+  },
+  "n_queries": 100,
+  "formula": "2*P_matmul*T + 4*L*T^2*d; Stella gated FFN 3*d*ff; Nano head per token",
+  "receipt": {
+    "script": "m15src/talk_flops.py",
+    "script_sha256": "ffe4e78df037495288b93adb3b9c65689cf5487a607363b839dbd0b2f97a2f40",
+    "git_commit": "f8852151f29b1cc866df70e67e316717083e42f5",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-21T04:56:40Z",
+    "finished_utc": "2026-11-21T04:56:40Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "tokenizers": "0.22.2"
+    },
+    "seed": 20260930,
+    "inputs": {
+      "e1_latency": {
+        "path": "results/m15_e1_latency.json",
+        "sha256": "c28b96ae0b9d2777ecb71a84fa01f39f7fcde511e4079bba2a9d578344946e20"
+      }
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "63872958c811fca7562799fc2a496c79c93bd1ad4dbc778a0ad5978f848ec1e5"
+  }
+}

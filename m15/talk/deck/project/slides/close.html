@@ -1,0 +1,18 @@
+<section id="close" class="s alt" data-transition="fade">
+<div class="head"><h2>Keep Your Index. <span class="tr">Make the Query Encoder a Dial.</span></h2></div>
+<pre style="margin-top:36px;background:#1E1E1E;color:#D4D4D4;border-radius:16px;padding:36px 44px;font-family:JetBrains Mono,monospace;font-size:32px;line-height:1.5;font-variant-ligatures:none;border:2px solid #303547"><span style="color:#C586C0">from</span> fastembed <span style="color:#C586C0">import</span> <span style="color:#4EC9B0">TextEmbedding</span>
+
+<span style="color:#6A9955"># 1. Index once with Stella's document model</span>
+<span style="color:#9CDCFE">stella</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/stella-en-400M-v5-doc-onnx"</span>)
+<span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">upload_collection</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#DCDCAA">list</span>(<span style="color:#9CDCFE">stella</span>.<span style="color:#DCDCAA">embed</span>(<span style="color:#9CDCFE">passages</span>)))
+
+<span style="color:#6A9955"># 2. Query the same index with Zero, or swap in Nano</span>
+<span style="color:#9CDCFE">zero</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/constella-zero"</span>)
+<span style="color:#9CDCFE">query</span> = <span style="color:#DCDCAA">next</span>(<span style="color:#9CDCFE">zero</span>.<span style="color:#DCDCAA">embed</span>([<span style="color:#CE9178">"how far is the moon?"</span>]))
+<span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>)</pre><p style="margin-top:24px;font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p>
+<aside>[~1.25 min] [Point to Qdrant/stella-en-400M-v5-doc-onnx in the editor.] I'd use Stella's document model to embed the passages and upload those vectors once. [Move to Qdrant/constella-zero, then point to the collection name in the query call.] When a question comes in, Zero makes the query vector and I search the same collection. If I want to try Nano, I swap the model on that line. I can send it the same questions and see which passages move up or down.
+
+[Point to the install command.] I'd install FastEmbed 0.9.0 or later with pip. The first thing I'd do on Monday is pull a batch of real queries and judge which passages I'd want back.
+
+[Advance to the thank-you slide. Leave the QR codes up for questions.]</aside>
+</section>

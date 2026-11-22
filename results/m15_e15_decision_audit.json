@@ -1,0 +1,217 @@
+{
+  "status": "COMPLETE",
+  "measurement": "E15 (exploratory, derived from existing receipts)",
+  "selection_registered_ten": {
+    "n_checkpoints": 10,
+    "dev_screen_choice": "stella-400M-v5",
+    "best_public_teacher": "gte-large-en-v1.5",
+    "best_public_table": "stella-400M-v5",
+    "screen_table_macro": 0.39738121822679684,
+    "teacher_choice_table_macro": 0.24549633091813186,
+    "screen_minus_teacher_choice": 0.15188488730866498,
+    "screen_regret_all6": 0.0,
+    "best_clean4_table": "arctic-embed-m-v1.5",
+    "screen_clean4_table_macro": 0.372659762024251,
+    "best_clean4_table_macro": 0.3774657297451997,
+    "screen_regret_clean4": 0.004805967720948712,
+    "screen_vs_clean4_rho": 0.6848484848484848,
+    "dimension_vs_absolute_table_rho": -0.497468338163091,
+    "dimension_vs_teacher_rho": 0.497468338163091,
+    "dimension_vs_retention_rho": -0.5685352436149611,
+    "per_dataset": {
+      "scifact": {
+        "screen_choice_rank": 2,
+        "screen_choice_score": 0.5672973104095543,
+        "best_table": "arctic-embed-m-v1.5",
+        "best_table_score": 0.5700372692520002,
+        "screen_choice_regret": 0.002739958842445822
+      },
+      "nfcorpus": {
+        "screen_choice_rank": 3,
+        "screen_choice_score": 0.3024688530685281,
+        "best_table": "arctic-embed-l",
+        "best_table_score": 0.3104054457906201,
+        "screen_choice_regret": 0.007936592722092017
+      },
+      "fiqa": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.3119366990524161,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.3119366990524161,
+        "screen_choice_regret": 0.0
+      },
+      "arguana": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.5817115622113607,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.5817115622113607,
+        "screen_choice_regret": 0.0
+      },
+      "scidocs": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.1584846556125267,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.1584846556125267,
+        "screen_choice_regret": 0.0
+      },
+      "trec-covid": {
+        "screen_choice_rank": 4,
+        "screen_choice_score": 0.46238822900639476,
+        "best_table": "bge-base-en-v1.5",
+        "best_table_score": 0.5197930815810559,
+        "screen_choice_regret": 0.0574048525746611
+      }
+    }
+  },
+  "selection_pooled_26": {
+    "n_checkpoints": 26,
+    "dev_screen_choice": "stella-400M-v5",
+    "best_public_teacher": "gte-large-en-v1.5",
+    "best_public_table": "stella-400M-v5",
+    "screen_table_macro": 0.39738121822679684,
+    "teacher_choice_table_macro": 0.24549633091813186,
+    "screen_minus_teacher_choice": 0.15188488730866498,
+    "screen_regret_all6": 0.0,
+    "best_clean4_table": "arctic-embed-xs",
+    "screen_clean4_table_macro": 0.372659762024251,
+    "best_clean4_table_macro": 0.40043487373971987,
+    "screen_regret_clean4": 0.02777511171546887,
+    "screen_vs_clean4_rho": 0.6827350427350427,
+    "dimension_vs_absolute_table_rho": -0.44158010343357373,
+    "dimension_vs_teacher_rho": 0.6121740643152428,
+    "dimension_vs_retention_rho": -0.7620348572432759,
+    "per_dataset": {
+      "scifact": {
+        "screen_choice_rank": 5,
+        "screen_choice_score": 0.5672973104095543,
+        "best_table": "arctic-embed-s",
+        "best_table_score": 0.5723881901331699,
+        "screen_choice_regret": 0.005090879723615549
+      },
+      "nfcorpus": {
+        "screen_choice_rank": 3,
+        "screen_choice_score": 0.3024688530685281,
+        "best_table": "arctic-embed-l",
+        "best_table_score": 0.3104054457906201,
+        "screen_choice_regret": 0.007936592722092017
+      },
+      "fiqa": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.3119366990524161,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.3119366990524161,
+        "screen_choice_regret": 0.0
+      },
+      "arguana": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.5817115622113607,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.5817115622113607,
+        "screen_choice_regret": 0.0
+      },
+      "scidocs": {
+        "screen_choice_rank": 1,
+        "screen_choice_score": 0.1584846556125267,
+        "best_table": "stella-400M-v5",
+        "best_table_score": 0.1584846556125267,
+        "screen_choice_regret": 0.0
+      },
+      "trec-covid": {
+        "screen_choice_rank": 11,
+        "screen_choice_score": 0.46238822900639476,
+        "best_table": "arctic-embed-xs",
+        "best_table_score": 0.6054895660868954,
+        "screen_choice_regret": 0.14310133708050066
+      }
+    }
+  },
+  "screen_timing": {
+    "minutes_per_configuration": {
+      "stella-400M-v5": 7,
+      "arctic-embed-l": 6,
+      "arctic-embed-l-mean": 7,
+      "arctic-embed-m-v1.5": 4,
+      "bge-base-en-v1.5": 5,
+      "bge-large-en-v1.5": 7,
+      "e5-base-v2": 4,
+      "e5-large-v2": 6,
+      "gte-base-en-v1.5": 5,
+      "gte-large-en-v1.5": 7,
+      "mxbai-embed-large-v1": 6
+    },
+    "kind": "coarse historical intervals between output files, not an isolated cold-start benchmark",
+    "exclusions": "model downloads, data preparation, full document-index construction; Stella reuses cached fit-query vectors"
+  },
+  "nano_build": {
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "training_examples": 199999721,
+    "training_steps": 6250000,
+    "training_seconds": 206171.92,
+    "training_hours": 57.26997777777778,
+    "historical_total_rental_usd_per_hour": 1.6636111111111112,
+    "training_time_priced_usd": 95.27497136419754,
+    "cost_kind": "training duration multiplied by the recorded rental rate; not a separately itemized invoice or complete project cost",
+    "exclusions": "data collection and generation, teacher-target preparation, recipe search, failed runs, evaluation, model export, engineering time"
+  },
+  "zero_build_historical_estimate": {
+    "teacher_target_hours": [
+      8,
+      12
+    ],
+    "retraining_minutes": 20,
+    "kind": "approximate planning estimates in m7/LEDGER.md, not measured end-to-end timings or a dollar quote"
+  },
+  "limits": [
+    "The strongest public teacher is a hindsight selection rule, not a prospectively tested model-card recommendation.",
+    "The screen chooses closed-form tables, not the trained Zero recipe or transformer students.",
+    "All-six and clean-four targets differ; checkpoint selection is task dependent.",
+    "Dimension and retention share a teacher-quality confound; no causal size claim.",
+    "No new training or evaluation access; only published aggregate receipts were read."
+  ],
+  "receipt": {
+    "script": "m15src/e15_decision_audit.py",
+    "script_sha256": "90265b3d04df22bb981a69c057bca47883c7b9900931dfcb4a66263512d2ae59",
+    "git_commit": "f00d1b040e2789fe4e1815c193fec4259cfe6bc9",
+    "m15src_dirty": true,
+    "started_utc": "2026-09-30T23:36:40Z",
+    "finished_utc": "2026-09-30T23:36:40Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "scipy": "1.18.1"
+    },
+    "seed": 20260930,
+    "inputs": [
+      {
+        "path": "results/m15_e8_towers.json",
+        "sha256": "0ef12ba6022b885bfcaa36a081b45f5cb7ac2296042f82ffbb08328ad1943fac"
+      },
+      {
+        "path": "results/m15_e8x_towers.json",
+        "sha256": "b0ecd23c98d4cff6291201dc4133f6002d751c3295fbb46f2ec647abb5f346d8"
+      },
+      {
+        "path": "results/m15_e13_robustness.json",
+        "sha256": "8e1cece1cfb723a14c8a21f46cc888910d02c57ee6436da923c9ac5fb248e661"
+      },
+      {
+        "path": "results/m13_build_record.json",
+        "sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d"
+      },
+      {
+        "path": "results/m13_build_allocation.json",
+        "sha256": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b"
+      },
+      {
+        "path": "m7/LEDGER.md",
+        "sha256": "f67803a1ca412a0ce40b95f47b0fb6e84561f1284c2fb2acb93f04a39e4d3d5d"
+      }
+    ],
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "20318710bdefdea4088e8cd07a36cbcd8329c5151e89e1f14bfd2234cc3498d4"
+  }
+}

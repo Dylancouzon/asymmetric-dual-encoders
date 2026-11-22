@@ -5,7 +5,17 @@ mandate. Depends on upstream FastEmbed's state and reviewer latency, not on our 
 on its own clock. It may start once M22 has made the official Nano revision public, because the
 registrations PR points at published artifacts and canonical vectors.
 
-## State on 2026-09-30
+## Owner note (2026-10-07)
+
+Dylan reports that the models are integrated into FastEmbed. M22 release work remains deferred at his request.
+
+## Closure (verified 2026-10-07)
+
+**M23 is complete.** Upstream fixed the padding defects in #716 and #717, merged the three model registrations in #751, and merged the dtype fix in [#754](https://github.com/qdrant/fastembed/pull/754) on 2026-10-02 (`2f2a8bfadb6d643c8774ae0234197f28b7e2b46c`). Issue [#752](https://github.com/qdrant/fastembed/issues/752) closed as completed that day. [FastEmbed v0.9.0](https://github.com/qdrant/fastembed/releases/tag/v0.9.0), published on 2026-10-07, includes both the registrations and dtype fix; the wheel and source archive are available on [PyPI](https://pypi.org/project/fastembed/0.9.0/).
+
+Verification used the GitHub issue, merge record, changed source files, release notes, and PyPI metadata. Model inference was not rerun. Install-line and card updates belong to the deferred M22 release. The earlier parity receipts remain historical; `m22/UPSTREAM_FASTEMBED.md` records both states.
+
+## Historical state on 2026-09-30
 
 Upstream moved first; see `m22/UPSTREAM_FASTEMBED.md`. Deliverable 3 is **done**: the FastEmbed
 maintainer merged the three registrations as qdrant/fastembed#751 (`a56e1e1`), byte-identical to
