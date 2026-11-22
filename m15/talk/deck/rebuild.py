@@ -10,7 +10,7 @@ MUT, LINE, WHITE = "#9aa0b5", "#303547", "#fcfdff"
 MONO = "font-family:JetBrains Mono,monospace"
 
 
-# The distill slide's own note; the zero-train note is appended at build time.
+# The distill slide's own note (the zero-train backup keeps its own).
 ORIG_DISTILL = "<aside>[~2 min] [Start at the teacher targets.]\n\nI needed a table whose pooled vectors would make sense to an index full of Stella passages. I began with Stella's encoding of each token. I also gave rare terms more initial weight using inverse document frequency. That gives each row a starting point before I've asked it to represent a whole query.\n\n[Follow the two training phases.]\n\nFor the first pass I saved Stella's vectors and used them as targets. On paired examples I also matched how Stella distributed its scores across candidate passages. A query vector can look close to the teacher's and still put a different passage first. Matching scores gives the table a chance to learn which of those differences matters.\n\nThen I trained with query and passage pairs to put the relevant passage ahead of negatives in a frozen bank. I masked known positives and candidates Stella scored close to or better than the positive. Some of those could answer the question too. At export I folded the learned weights into the rows that the encoder reads.\n\nThe desktop retrain estimate assumes I have the teacher outputs ready. For a new teacher, I estimated eight to 12 hours just to prepare Zero's targets. I can reuse those targets across attempts. Nano can train on Stella's outputs alone, which gives me a way to train a contextual encoder on text without relevance labels.</aside>"
 
 
@@ -118,7 +118,7 @@ write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
       '<div style="margin-top:32px">' + "".join(g) + "</div>" + chips,
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
       "a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.",
-      note=ORIG_DISTILL.replace("</aside>", " " + re.sub(r"</?aside>", "", aside("zero-train")) + "</aside>"))
+      note=ORIG_DISTILL)
 
 # 5. nano: three layers feed one projection into Stella's space
 g = ['<svg width="1664" height="520" viewBox="0 0 1664 520">']
@@ -150,8 +150,9 @@ write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space",
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
 
-# 6. bench v6: Constella on Stella's index among 25 open retrievers on their own indexes; six BEIR sets, query FLOPs
+# 6. bench v7: Constella on Stella's index among the 10 most-downloaded open retrievers; six BEIR sets, query FLOPs
 _FF = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_flops_field.json").read_text())["results"]
+_TOP = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_model_downloads.json").read_text())["top10"]
 _FL = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_flops.json").read_text())["results"]
 _B15 = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m20_beir15_run.json").read_text())["table"]
 _SIX = ("scifact", "nfcorpus", "scidocs", "trec-covid", "fiqa", "arguana")
@@ -171,40 +172,39 @@ for gf, lab in ((0.3, "0.3"), (1, "1"), (3, "3"), (10, "10"), (30, "30")):
     g.append(t(PX(gf), H - B + 44, lab, 26, MUT, "middle", 400, True))
 g.append(t((X0 + W - R) / 2, H - 8, "GFLOPs to encode one query (log)", 26, GRAY, "middle"))
 g.append(t(L, 22, "nDCG@10, six BEIR datasets", 26, GRAY))
-g.append(f'<line x1="{L}" x2="{W - R}" y1="{PY(six("bm25")):.0f}" y2="{PY(six("bm25")):.0f}" stroke="{MUT}" stroke-width="3" stroke-dasharray="4 10"/>')
-g.append(t(W - R, PY(six("bm25")) - 14, f"BM25 · {six('bm25'):.3f}", 28, MUT, "end"))
-for n, r in _FF.items():
-    g.append(f'<circle cx="{PX(r["median_flops"] / 1e9):.0f}" cy="{PY(r["six_ndcg10"]):.0f}" r="10" fill="#59607a"/>')
-for n, lab, dx, dy, anc in (("multi-qa-minilm-l6", "MiniLM-L6", 0, 48, "middle"), ("bge-small-en-v1.5", "bge-small", 14, -22, "start"),
-                            ("gte-large-en-v1.5", "gte-large-v1.5", -22, 10, "end"), ("e5-large-v2", "e5-large", 22, 10, "start")):
-    r = _FF[n]
-    g.append(t(PX(r["median_flops"] / 1e9) + dx, PY(r["six_ndcg10"]) + dy, lab, 28, MUT, anc))
-for n, sys_, gf, c, dx, dy, anc in (("Stella", "stella-query", _FL["stella"]["median_flops"] / 1e9, GRAY, 0, -32, "middle"),
-                                     ("Nano", "nano-dense", _FL["nano"]["median_flops"] / 1e9, VIO, -30, -22, "end"),
-                                     ("Zero", "zero-dense", None, RED, 0, 62, "middle")):
+g.append(t(W - R, 22, "10 most-downloaded open models, each on its own index", 26, MUT, "end"))
+LAB = {"minilm-l6": ("MiniLM-L6", -22, 10, "end"), "minilm-l12": ("MiniLM-L12", 22, 18, "start"),
+       "gte-small": ("gte-small", -22, 10, "end"), "e5-small-v2": ("e5-small", 22, 10, "start"),
+       "bge-small-en-v1.5": ("bge-small", 22, 10, "start"), "bge-base-en-v1.5": ("bge-base", 22, 10, "start"),
+       "contriever": ("contriever", 22, 10, "start"), "gte-large-en-v1.5": ("gte-large-v1.5", -22, 10, "end"),
+       "mxbai-embed-large-v1": ("mxbai-large", 0, -26, "middle"), "bge-large-en-v1.5": ("bge-large", 0, 50, "middle")}
+assert set(_TOP) == set(LAB), _TOP
+for n in _TOP:
+    r, (lab, dx, dy, anc) = _FF[n], LAB[n]
+    x, y = PX(r["median_flops"] / 1e9), PY(r["six_ndcg10"])
+    g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="12" fill="#7d849c"/>')
+    g.append(t(x + dx, y + dy, lab, 28, GRAY, anc))
+for n, sys_, gf, c, dx, dy, anc in (("Stella", "stella-query", _FL["stella"]["median_flops"] / 1e9, WHITE, 0, -34, "middle"),
+                                     ("Nano", "nano-dense", _FL["nano"]["median_flops"] / 1e9, VIO, 0, -34, "middle"),
+                                     ("Zero", "zero-dense", None, RED, 0, -34, "middle")):
     x, y = (ZX if gf is None else PX(gf)), PY(six(sys_))
-    g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="18" fill="{c}"/>')
-    g.append(t(x + dx, y + dy, n, 36, c, anc, 700))
-fz = six("zero+bm25 dbsf@100")
-g.append(f'<line x1="{ZX}" y1="{PY(six("zero-dense")) - 22:.0f}" x2="{ZX}" y2="{PY(fz) + 4:.0f}" stroke="{RED}" stroke-width="3" stroke-dasharray="6 6"/>')
-g.append(t(ZX, PY(fz) - 16, f"+ BM25 · {fz:.3f}", 28, RED, "middle", 600))
-g.append(f'<circle cx="{W - R - 590}" cy="{12}" r="10" fill="#59607a"/>')
-g.append(t(W - R, 22, "25 open models, each on its own index", 26, MUT, "end"))
+    g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="20" fill="{c}"/>')
+    g.append(t(x + dx, y + dy, n, 40, c, anc, 700))
 g.append("</svg>")
 write("bench", " foot", "One Index, Three Price Points",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Exact search, mean nDCG@10 over SciFact, NFCorpus, SciDocs, TREC-COVID, FiQA, and ArguAna. Stella's training "
-      "included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). FLOPs: analytic, median over "
-      "100 real 5-12 word queries with each model's query prefix. Zero: a lookup, 28 KFLOPs. Exploratory.",
-      note="<aside>[~2 min] [Give the room a moment. Point to the grey dots.] Each grey dot is an open embedding model "
-      "searching its own index. There are 25 of them, from MiniLM to gte-large. Higher means better ranking on six BEIR "
-      "datasets. Further right means more compute for every query.\n\n[Point to Nano.] Nano ranks with the base-size models "
-      "at the cost of a small one, and it searches the index I already have. [Point to Zero, far left.] Zero is off the "
-      "transformer scale. It runs no network at all, and it still ranks above the MiniLM models. [Point to the dashed line.] "
-      "If I add a BM25 search and fuse the two lists, Zero reaches 0.489. That costs a sparse search and a merge on every "
-      "request.\n\nOne caveat. Stella's training data overlapped with FiQA and ArguAna, two of these six datasets. On the "
-      "other four, Zero trails BM25, 0.410 to 0.441. I'd judge each one on my own traffic. So how does a table with no "
-      "transformer get this close? Here's what Zero does with an actual query.</aside>")
+      "included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). Models: the 10 most downloaded on "
+      "Hugging Face (30 days to 2026-11-21) of the 25 the paper evaluated. FLOPs: analytic, each model's query prefix. Exploratory.",
+      note="<aside>[~2 min] [Give the room a moment. Point to the grey dots.] These are the ten most-downloaded open "
+      "embedding models I evaluated, each searching its own index. Higher means better ranking on six BEIR datasets. "
+      "Further right means more compute for every query.\n\n[Point to Nano.] Nano ranks with bge-base and bge-large at the "
+      "cost of the small models, and it searches the index I already have. [Point to Zero, far left.] Zero is off the "
+      "transformer scale. It runs no network at all, and it still ranks above both MiniLM models, including the most "
+      "downloaded one. If I add a BM25 search and fuse the two lists, Zero reaches 0.489, for the price of a sparse search and "
+      "a merge on every request.\n\nOne caveat. Stella's training data overlapped with FiQA and ArguAna, two of these six "
+      "datasets. On the other four, Zero trails BM25, 0.410 to 0.441. I'd judge each one on my own traffic. So how does a "
+      "table with no transformer get this close? Here's what Zero does with an actual query.</aside>")
 
 # 7. split: whole-request bars on one millisecond axis
 W, L0, AX = 1664, 230, 2.2
@@ -340,44 +340,45 @@ write("close", " alt", "Keep Your Index. <span class=\"tr\">Make the Query Encod
 # ---- v5 overrides (owner review 2026-11-21) ----
 import random as _random
 
-# cost v6: the index is paid once; every request pays the encoder, and the search is a sliver of it
-_st = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_edge_nq.json").read_text())["results"]["stella"]
-_enc = _st["encode_ms_p50"]
-_srch = next(s for s in _st["settings"] if s["ef"] == 256 and s["oversampling"] == 4.0)["search_ms_p50"]
-_rng = _random.Random(7)
-g = ['<svg width="1664" height="600" viewBox="0 0 1664 600">']
-cx, cy, rad = 230, 250, 200
-for _ in range(420):
-    a, r = _rng.uniform(0, 2 * math.pi), rad * math.sqrt(_rng.random())
-    g.append(f'<circle cx="{cx + r * math.cos(a):.0f}" cy="{cy + r * math.sin(a):.0f}" r="4" fill="{GRAY}" opacity="0.55"/>')
-g.append(t(cx, 510, "2.68M passages", 36, WHITE, "middle", 600))
-g.append(t(cx, 556, "encoded once", 32, GRAY, "middle"))
-bx, bw = 560, 1080
-ew = bw * _enc / (_enc + _srch)
-for k in range(5):                                   # earlier requests, fading upward
-    y = 40 + k * 40
-    g.append(f'<rect x="{bx}" y="{y}" width="{ew:.0f}" height="26" rx="4" fill="{RED}" opacity="{0.12 + 0.1 * k:.2f}"/>')
-    g.append(f'<rect x="{bx + ew + 3:.0f}" y="{y}" width="{bw - ew - 3:.0f}" height="26" rx="2" fill="{ORG}" opacity="{0.2 + 0.12 * k:.2f}"/>')
-y = 300
-g.append(t(bx, y - 24, "every query", 36, RED, "start", 600))
-g.append(f'<rect x="{bx}" y="{y}" width="{ew:.0f}" height="96" rx="8" fill="{RED}"/>')
-g.append(f'<rect x="{bx + ew + 3:.0f}" y="{y}" width="{bw - ew - 3:.0f}" height="96" rx="3" fill="{ORG}"/>')
-g.append(t(bx + 32, y + 62, f"Stella encodes the query · {_enc:.1f} ms", 40, WHITE, "start", 700))
-g.append(f'<line x1="{bx + bw - 6:.0f}" y1="{y + 104}" x2="{bx + bw - 6:.0f}" y2="{y + 150}" stroke="{ORG}" stroke-width="4"/>')
-g.append(t(bx + bw, y + 196, f"Qdrant searches the 2.68M index · {_srch:.2f} ms", 40, ORG, "end", 700))
+# cost v7: cumulative query encoding against the one-time corpus encode; the crossing is the point
+_CR = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_crossover.json").read_text())["results"]
+_x = _CR["encoders"]["stella"]["crossover_queries"]
+W, H, L, R, T, B = 1664, 620, 150, 90, 40, 90
+XM, YM = 30e6, 3.2
+CX = lambda q: L + q / XM * (W - L - R)
+CY = lambda v: T + (YM - v) / YM * (H - T - B)
+g = [f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
+for v, lab in ((1, "1×"), (2, "2×"), (3, "3×")):
+    g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(v):.0f}" y2="{CY(v):.0f}" stroke="{LINE}" stroke-width="2"/>')
+    g.append(t(L - 20, CY(v) + 12, lab, 34, MUT, "end", 600, True))
+g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(0):.0f}" y2="{CY(0):.0f}" stroke="{MUT}" stroke-width="2"/>')
+for q in (0, 10e6, 20e6, 30e6):
+    g.append(t(CX(q), H - B + 46, f"{q / 1e6:.0f}M", 30, MUT, "middle", 400, True))
+g.append(t((L + W - R) / 2, H - 4, "queries served", 30, GRAY, "middle"))
+g.append(t(L, CY(3.2) + 4, "encoding compute, in whole-corpus encodes", 28, GRAY))
+g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(1):.0f}" y2="{CY(1):.0f}" stroke="{GRAY}" stroke-width="6"/>')
+g.append(t(W - R, CY(1) - 22, "the 2.68M-passage index · encoded once", 32, GRAY, "end", 600))
+g.append(f'<line x1="{CX(0)}" y1="{CY(0)}" x2="{CX(XM):.0f}" y2="{CY(XM / _x):.0f}" stroke="{RED}" stroke-width="7"/>')
+g.append(t(CX(19e6), CY(19e6 / _x) - 34, "Stella, every query", 36, RED, "end", 700))
+g.append(f'<circle cx="{CX(_x):.0f}" cy="{CY(1):.0f}" r="16" fill="{WHITE}"/>')
+g.append(t(CX(_x) + 28, CY(1) + 66, f"{_x / 1e6:.1f}M queries", 44, WHITE, "start", 700))
+g.append(t(CX(_x) + 28, CY(1) + 110, f"about {_x / 100 / 3600:.0f} hours at 100 queries/s", 30, GRAY, "start"))
 g.append("</svg>")
 write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      "Index: 2,681,468 NQ passages, Stella fp32, one RTX 3080, 5.3 GPU-hours at a steady 141 passages/s. Request: BEIR NQ, "
-      "3,452 queries, one Qdrant Edge shard in-process, M5 Pro CPU, medians; search at hnsw_ef 256, oversampling 4. Exploratory.",
+      f"BEIR NQ, analytic FLOPs (2·P·T + attention): 2,681,468 passages, mean {_CR['doc_tokens_mean']:.0f} tokens, no prompt, "
+      f"against the mean of the 3,452 NQ test queries with Stella's query prompt. Measured: the index took 5.3 GPU-hours on "
+      "one RTX 3080; one Stella query takes 20.5 ms on the M5 Pro CPU. Exploratory.",
       note="<aside>[~1.5 min] I built tonight's passage index on my desktop. It took about five GPU-hours of steady encoding. "
       "In real time it took six and a half hours, including a memory spill and a crash. I could go and make tea while that job ran. "
-      "I'd rather my users didn't have time to do the same.\n\n[Point to the grey field.] That's 2.68 million passages, and I paid "
-      "for them once. [Point to the red bars.] Then every search pays again. On this laptop, Stella takes about 20 milliseconds to "
-      "encode one question. [Point to the orange sliver.] Qdrant then searches the index of 2.68 million passages in about a quarter "
-      "of a millisecond. The vector search is the cheap part of the request.\n\nIf an agent calls search several times to answer one "
-      "question, those encodes can all sit on the path to the answer. I wanted to make that part cheaper. What else could search "
-      "the passage vectors I'd already paid to make?</aside>")
+      "I'd rather my users didn't have time to do the same.\n\n[Point to the grey line.] That's the index: 2.68 million passages, "
+      "paid for once. [Trace the red line from the origin.] Every question also goes through Stella before Qdrant can search. "
+      "A question is much shorter than a passage, so each one is cheap. But they never stop. [Point to the crossing.] After "
+      f"about {_x / 1e6:.1f} million queries I've spent more compute encoding questions than I spent on the whole corpus. At a "
+      "hundred queries a second, that's about a day. And that encode sits on the path of every request, roughly 20 "
+      "milliseconds on this laptop, against a quarter of a millisecond for the search itself.\n\nIf an agent calls search "
+      "several times to answer one question, those encodes can all sit on the path to the answer. I wanted to make that part "
+      "cheaper. What else could search the passage vectors I'd already paid to make?</aside>")
 
 # zero-mech v5: token rows on the left, one arrow, the result on the right
 g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
@@ -503,7 +504,11 @@ write("solved", " foot", "Solved on Tonight's Index",
       f'<p style="{c}">0.62</p><p style="{c}" class="mut">none fits</p><p style="{c}" class="mut">Stella 34.6 ms</p></div>',
       "BEIR NQ, 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential. Oversampling 4; "
       "nDCG@10 floor; fastest median among settings with ef ≥ 64. Exploratory.",
-      note="<aside></aside>")
+      note="<aside>[~0.75 min] [Let the room answer first.] At a floor of 0.55, Nano ships, with a narrow search at ef 64 "
+      "and a p95 of 2.1 milliseconds. [Point to the first row.] Lower the floor to 0.50 and Zero wins, even with the wider "
+      "search it needs. [Point to the last row.] Raise it to 0.62 and nothing fits the budget. Only Stella clears that floor, "
+      "and its p95 is 34.6 milliseconds. One number I set before looking at any latency changed which encoder ships. "
+      "That's why I'd agree on the floor first.</aside>")
 
 # close v5: VS Code Dark+ colored example
 def _code(lines):

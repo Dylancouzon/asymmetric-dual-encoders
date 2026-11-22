@@ -435,6 +435,14 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** Analytic FLOPs, not measured time; six datasets with teacher exposure on two; descriptive means without intervals.
 - **Use:** Talk slide 4.
 
+### L48. On NQ, query encoding passes the whole corpus encode after about 10 million Stella queries
+
+- **Observation:** A Stella query (31 tokens with its prompt) costs about 2.5e10 FLOPs; the 2.68M NQ passages (mean 109 tokens) cost 2.4e17 once. Query encoding equals the corpus encode after 9.6M queries, about 27 hours at 100 queries/s. Nano needs 448M queries to do the same, and Zero about 9 trillion.
+- **Decision:** Open the talk's problem slide with this crossing instead of a cost formula.
+- **Evidence:** C31, MEASUREMENTS T9, `results/m15_talk_crossover.json`.
+- **Strength/reach:** Analytic FLOPs, not dollars or time; batching makes passage encoding cheaper per FLOP than single queries, so the measured crossing would come sooner.
+- **Use:** Talk slide 2.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.

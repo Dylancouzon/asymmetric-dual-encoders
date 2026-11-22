@@ -940,3 +940,19 @@ One process, W threads sharing one Qdrant Edge shard, each encoder at its C26 se
 Formula: 2*P_matmul*T + 4*L*T^2*d; gated FFN 3*d*ff, else 2*d*ff; query prefix included. Tokens: Stella's uncased WordPiece tokenizer (shared by all 26 towers) on the 100 medium E1 queries with each model's query prefix. Scores: each model on its own index (E8/E8x six-set ceilings); Constella rows from the M20 BEIR-15 table on the same six datasets.
 
 **Cannot show.** Measured encode time; batching or GPU serving; the four datasets without teacher exposure for the 16 E8x models; any superiority claim (descriptive means, no intervals).
+
+## C31. When query encoding overtakes the corpus encode
+
+**Label:** exploratory (analytic estimate). **Source:** `results/m15_talk_crossover.json`
+
+**Claim.** On BEIR NQ, Stella's query encoding passes the one-time encode of all 2,681,468 passages after 9.6M queries, about 27 hours at 100 queries/s.
+
+| query encoder | mean FLOPs per query | queries to equal the corpus encode |
+|---|---|---|
+| stella | 2.5e+10 | 9.61e+06 |
+| nano | 5.36e+08 | 4.48e+08 |
+| zero | 2.67e+04 | 9.01e+12 |
+
+Corpus: 2.4e+17 FLOPs, mean 109 tokens per passage (Stella document path, truncated at 512). Queries: the 3,452 NQ test queries.
+
+**Cannot show.** Measured cost (the corpus ran on a GPU, queries on a CPU); batching, which favours the corpus encode; query lengths of real traffic.

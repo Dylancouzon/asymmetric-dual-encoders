@@ -1,0 +1,171 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (popularity snapshot)",
+  "fetched_utc": "2026-11-22T03:48:34Z",
+  "rule": "top 10 by 30-day downloads, one version per family",
+  "top10": [
+    "minilm-l6",
+    "bge-small-en-v1.5",
+    "bge-base-en-v1.5",
+    "contriever",
+    "bge-large-en-v1.5",
+    "gte-small",
+    "minilm-l12",
+    "mxbai-embed-large-v1",
+    "e5-small-v2",
+    "gte-large-en-v1.5"
+  ],
+  "models": {
+    "arctic-embed-l": {
+      "repo": "Snowflake/snowflake-arctic-embed-l",
+      "downloads_30d": 367161,
+      "downloads_all_time": 3342335
+    },
+    "arctic-embed-m-v1.5": {
+      "repo": "Snowflake/snowflake-arctic-embed-m-v1.5",
+      "downloads_30d": 105189,
+      "downloads_all_time": 3814636
+    },
+    "arctic-embed-s": {
+      "repo": "Snowflake/snowflake-arctic-embed-s",
+      "downloads_30d": 43843,
+      "downloads_all_time": 3651176
+    },
+    "arctic-embed-xs": {
+      "repo": "Snowflake/snowflake-arctic-embed-xs",
+      "downloads_30d": 513578,
+      "downloads_all_time": 10536500
+    },
+    "bge-base-en-v1": {
+      "repo": "BAAI/bge-base-en",
+      "downloads_30d": 1661538,
+      "downloads_all_time": 14453788
+    },
+    "bge-base-en-v1.5": {
+      "repo": "BAAI/bge-base-en-v1.5",
+      "downloads_30d": 8613336,
+      "downloads_all_time": 590036968
+    },
+    "bge-large-en-v1.5": {
+      "repo": "BAAI/bge-large-en-v1.5",
+      "downloads_30d": 6818424,
+      "downloads_all_time": 182227103
+    },
+    "bge-small-en-v1.5": {
+      "repo": "BAAI/bge-small-en-v1.5",
+      "downloads_30d": 43425321,
+      "downloads_all_time": 573673446
+    },
+    "contriever": {
+      "repo": "facebook/contriever",
+      "downloads_30d": 8288850,
+      "downloads_all_time": 203006333
+    },
+    "contriever-msmarco": {
+      "repo": "facebook/contriever-msmarco",
+      "downloads_30d": 14143,
+      "downloads_all_time": 9478732
+    },
+    "e5-base-v1": {
+      "repo": "intfloat/e5-base",
+      "downloads_30d": 842087,
+      "downloads_all_time": 9016427
+    },
+    "e5-base-v2": {
+      "repo": "intfloat/e5-base-v2",
+      "downloads_30d": 1022713,
+      "downloads_all_time": 31016612
+    },
+    "e5-large-v2": {
+      "repo": "intfloat/e5-large-v2",
+      "downloads_30d": 802120,
+      "downloads_all_time": 46125718
+    },
+    "e5-small-v2": {
+      "repo": "intfloat/e5-small-v2",
+      "downloads_30d": 1559873,
+      "downloads_all_time": 22617678
+    },
+    "gte-base": {
+      "repo": "thenlper/gte-base",
+      "downloads_30d": 108242,
+      "downloads_all_time": 22893140
+    },
+    "gte-base-en-v1.5": {
+      "repo": "Alibaba-NLP/gte-base-en-v1.5",
+      "downloads_30d": 416079,
+      "downloads_all_time": 21281944
+    },
+    "gte-large": {
+      "repo": "thenlper/gte-large",
+      "downloads_30d": 395068,
+      "downloads_all_time": 31031305
+    },
+    "gte-large-en-v1.5": {
+      "repo": "Alibaba-NLP/gte-large-en-v1.5",
+      "downloads_30d": 1401203,
+      "downloads_all_time": 60858851
+    },
+    "gte-small": {
+      "repo": "thenlper/gte-small",
+      "downloads_30d": 4501854,
+      "downloads_all_time": 36715175
+    },
+    "minilm-l12": {
+      "repo": "sentence-transformers/all-MiniLM-L12-v2",
+      "downloads_30d": 2594089,
+      "downloads_all_time": 259411546
+    },
+    "minilm-l6": {
+      "repo": "sentence-transformers/all-MiniLM-L6-v2",
+      "downloads_30d": 166834847,
+      "downloads_all_time": 4307330651
+    },
+    "msmarco-minilm-l6": {
+      "repo": "sentence-transformers/msmarco-MiniLM-L6-cos-v5",
+      "downloads_30d": 9335,
+      "downloads_all_time": 1674070
+    },
+    "multi-qa-minilm-l6": {
+      "repo": "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+      "downloads_30d": 665621,
+      "downloads_all_time": 112778765
+    },
+    "mxbai-embed-large-v1": {
+      "repo": "mixedbread-ai/mxbai-embed-large-v1",
+      "downloads_30d": 2102454,
+      "downloads_all_time": 98572995
+    },
+    "tas-b": {
+      "repo": "sentence-transformers/msmarco-distilbert-base-tas-b",
+      "downloads_30d": 354778,
+      "downloads_all_time": 13043620
+    }
+  },
+  "receipt": {
+    "script": "m15src/talk_model_downloads.py",
+    "script_sha256": "93dce46190ad580816a49891b40e3b9c33dd3c90ab64ea658c3862a5aa852fb6",
+    "git_commit": "09284fbce05504b8438098146fe777204696a683",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-22T03:48:34Z",
+    "finished_utc": "2026-11-22T03:48:35Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "huggingface_hub": "1.28.0"
+    },
+    "seed": 20260930,
+    "inputs": {
+      "field": {
+        "path": "results/m15_talk_flops_field.json",
+        "sha256": "539f039bb4ca750719d6df33cef259afbc84006c090235ecac62a3fc878162d7"
+      }
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "22ca6d3a5fd712bc67861b2cc308834d87b2190b6195bb004390cc8990377dd0"
+  }
+}

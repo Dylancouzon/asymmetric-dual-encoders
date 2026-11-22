@@ -1,0 +1,57 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (analytic estimate)",
+  "dataset": "nq",
+  "results": {
+    "n_docs": 2681468,
+    "doc_tokens_mean": 109.01410384162705,
+    "doc_tokens_median": 94.0,
+    "corpus_flops": 240110216837890048,
+    "n_queries": 3452,
+    "encoders": {
+      "stella": {
+        "query_flops_mean": 24985366921.937428,
+        "query_flops_median": 24249761792.0,
+        "crossover_queries": 9610033.648418052
+      },
+      "nano": {
+        "query_flops_mean": 536410915.3001159,
+        "query_flops_median": 495323136.0,
+        "crossover_queries": 447623659.3797706
+      },
+      "zero": {
+        "query_flops_mean": 26651.290845886444,
+        "query_flops_median": 25600.0,
+        "crossover_queries": 9009327849309.424
+      }
+    }
+  },
+  "pins": {
+    "source": "BeIR/nq",
+    "revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+    "qrels_source": "BeIR/nq-qrels",
+    "qrels_revision": "519acd4e48bb3e5da22b2b888ce36c614f4f2bc9",
+    "split": "test"
+  },
+  "receipt": {
+    "script": "m15src/talk_crossover.py",
+    "script_sha256": "9b18e9ecd972a55cd10e6534dc7ae030af53a0a0f916973e6ad727a066bddeef",
+    "git_commit": "09284fbce05504b8438098146fe777204696a683",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-22T03:42:50Z",
+    "finished_utc": "2026-11-22T03:47:17Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2",
+      "tokenizers": "0.22.2"
+    },
+    "seed": 20260930,
+    "inputs": {},
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "22ca6d3a5fd712bc67861b2cc308834d87b2190b6195bb004390cc8990377dd0"
+  }
+}

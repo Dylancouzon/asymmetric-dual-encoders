@@ -21,6 +21,18 @@ STELLA_PROMPT = ("Instruct: Given a web search query, retrieve relevant passages
                  "query.\nQuery: ")
 
 
+def stella(T, L=24, d=1024, ff=4096):
+    return 2 * L * (4 * d * d + 3 * d * ff) * T + 4 * L * T * T * d + 2 * d * d
+
+
+def nano(T, L=12, d=384, ff=1536, feat=1152, out=1024):
+    return 2 * L * (4 * d * d + 2 * d * ff) * T + 4 * L * T * T * d + 2 * feat * out * T
+
+
+def zero(ids, d=1024):
+    return 2 * len(set(ids)) * d + 3 * d
+
+
 def tok(pattern):
     from tokenizers import Tokenizer
     t = Tokenizer.from_file(glob.glob(pattern)[0])
@@ -35,12 +47,6 @@ def main():
     st = tok(f"{hub}/models--Qdrant--stella-en-400M-v5-doc-onnx/snapshots/*/tokenizer.json")
     na = tok(f"{hub}/models--Qdrant--constella-nano/snapshots/*/tokenizer.json")
 
-    def stella(T, L=24, d=1024, ff=4096):
-        return 2 * L * (4 * d * d + 3 * d * ff) * T + 4 * L * T * T * d + 2 * d * d
-
-    def nano(T, L=12, d=384, ff=1536, feat=1152, out=1024):
-        return 2 * L * (4 * d * d + 2 * d * ff) * T + 4 * L * T * T * d + 2 * feat * out * T
-
     rows = {"stella": [], "nano": [], "zero": []}
     toks = {"stella": [], "nano": [], "zero": []}
     for q in queries:
@@ -51,7 +57,7 @@ def main():
         toks["zero"].append(len(tz))
         rows["stella"].append(stella(ts))
         rows["nano"].append(nano(tn))
-        rows["zero"].append(2 * len(set(tz)) * 1024 + 3 * 1024)
+        rows["zero"].append(zero(tz))
     med = {k: statistics.median(v) for k, v in rows.items()}
     out = {k: {"median_tokens": statistics.median(toks[k]), "median_flops": med[k],
                "ratio_to_zero": med[k] / med["zero"]} for k in rows}
