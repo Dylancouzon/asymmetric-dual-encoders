@@ -176,7 +176,7 @@ g.append(t(W - R, PY(six("bm25")) - 14, f"BM25 · {six('bm25'):.3f}", 28, MUT, "
 for n, r in _FF.items():
     g.append(f'<circle cx="{PX(r["median_flops"] / 1e9):.0f}" cy="{PY(r["six_ndcg10"]):.0f}" r="10" fill="#59607a"/>')
 for n, lab, dx, dy, anc in (("multi-qa-minilm-l6", "MiniLM-L6", 0, 48, "middle"), ("bge-small-en-v1.5", "bge-small", 14, -22, "start"),
-                            ("gte-large-en-v1.5", "gte-large", -22, 10, "end"), ("e5-large-v2", "e5-large", 22, 10, "start")):
+                            ("gte-large-en-v1.5", "gte-large-v1.5", -22, 10, "end"), ("e5-large-v2", "e5-large", 22, 10, "start")):
     r = _FF[n]
     g.append(t(PX(r["median_flops"] / 1e9) + dx, PY(r["six_ndcg10"]) + dy, lab, 28, MUT, anc))
 for n, sys_, gf, c, dx, dy, anc in (("Stella", "stella-query", _FL["stella"]["median_flops"] / 1e9, GRAY, 0, -32, "middle"),
@@ -202,8 +202,8 @@ write("bench", " foot", "One Index, Three Price Points",
       "at the cost of a small one, and it searches the index I already have. [Point to Zero, far left.] Zero is off the "
       "transformer scale. It runs no network at all, and it still ranks above the MiniLM models. [Point to the dashed line.] "
       "If I add a BM25 search and fuse the two lists, Zero reaches 0.489. That costs a sparse search and a merge on every "
-      "request.\n\nOne caveat. Stella saw FiQA and ArguAna in training, so Zero and Nano get some help on two of these six "
-      "datasets. On the other four, Zero trails BM25. I'd judge each one on my own traffic. So how does a table with no "
+      "request.\n\nOne caveat. Stella's training data overlapped with FiQA and ArguAna, two of these six datasets. On the "
+      "other four, Zero trails BM25, 0.410 to 0.441. I'd judge each one on my own traffic. So how does a table with no "
       "transformer get this close? Here's what Zero does with an actual query.</aside>")
 
 # 7. split: whole-request bars on one millisecond axis
@@ -364,7 +364,7 @@ g.append(f'<rect x="{bx}" y="{y}" width="{ew:.0f}" height="96" rx="8" fill="{RED
 g.append(f'<rect x="{bx + ew + 3:.0f}" y="{y}" width="{bw - ew - 3:.0f}" height="96" rx="3" fill="{ORG}"/>')
 g.append(t(bx + 32, y + 62, f"Stella encodes the query · {_enc:.1f} ms", 40, WHITE, "start", 700))
 g.append(f'<line x1="{bx + bw - 6:.0f}" y1="{y + 104}" x2="{bx + bw - 6:.0f}" y2="{y + 150}" stroke="{ORG}" stroke-width="4"/>')
-g.append(t(bx + bw, y + 196, f"Qdrant searches 2.68M · {_srch:.2f} ms", 40, ORG, "end", 700))
+g.append(t(bx + bw, y + 196, f"Qdrant searches the 2.68M index · {_srch:.2f} ms", 40, ORG, "end", 700))
 g.append("</svg>")
 write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
@@ -374,8 +374,8 @@ write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
       "In real time it took six and a half hours, including a memory spill and a crash. I could go and make tea while that job ran. "
       "I'd rather my users didn't have time to do the same.\n\n[Point to the grey field.] That's 2.68 million passages, and I paid "
       "for them once. [Point to the red bars.] Then every search pays again. On this laptop, Stella takes about 20 milliseconds to "
-      "encode one question. [Point to the orange sliver.] Qdrant then searches all 2.68 million passages in about a quarter of a "
-      "millisecond. The vector search is the cheap part of the request.\n\nIf an agent calls search several times to answer one "
+      "encode one question. [Point to the orange sliver.] Qdrant then searches the index of 2.68 million passages in about a quarter "
+      "of a millisecond. The vector search is the cheap part of the request.\n\nIf an agent calls search several times to answer one "
       "question, those encodes can all sit on the path to the answer. I wanted to make that part cheaper. What else could search "
       "the passage vectors I'd already paid to make?</aside>")
 
@@ -414,18 +414,19 @@ for i, (k, n, c) in enumerate((("stella-query", "Stella", GRAY), ("nano", "Nano"
         g.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{c}"/>' if j < both else
                  f'<circle cx="{x}" cy="{y}" r="15" fill="none" stroke="#4a5068" stroke-width="3"/>')
     g.append(t(1664, y + 16, f"{both} / {_WO[k]['n_pairs']}", 48, WHITE if both else RED, "end", 700))
-g.append(t(250, 530, "route pairs with the right passage first in both directions", 30, GRAY))
+g.append(t(250, 530, "pairs with the right passage first in both directions", 30, GRAY))
 g.append("</svg>")
 write("order", " foot", "Reverse the Query, and Zero Returns the Same List",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      "24 frozen route pairs (m15/talk/word_order_pairs.json), one passage per direction; an encoder scores a direction when "
+      "24 frozen query pairs where direction changes the answer (m15/talk/word_order_pairs.json), one passage per direction; an encoder scores a direction when "
       "it ranks that direction's passage first. Stella with its prompt. results/m15_talk_word_order.json. Exploratory.",
       note="<aside>[~1.5 min] [Read the two routes. Pause between them.] If I mix up Paris to Rome and Rome to Paris, I'm at "
       "the wrong airport. To Zero, those queries have the same tokens with the same counts. It looks up the same rows and "
       "makes exactly the same vector, so both directions get the same ranking.\n\n[Point to the rows of dots.] I wrote 24 "
       "pairs like this, each with one passage per direction. A filled dot means the encoder put the right passage first in "
-      "both directions. Zero can only ever get one direction right, so its row stays empty. Stella fills four, and Nano "
-      "fills two. Every dense encoder I tested is weak on word order. In Zero, word order is absent.\n\nIf routes matter to "
+      "both directions. Zero can only ever get one direction right, so its row stays empty. Stella fills four and Nano "
+      "fills two. All four of Stella's wins are unit or currency conversions. On these pairs every encoder struggles, "
+      "and Zero cannot win one.\n\nIf routes matter to "
       "my users, I'd put both directions in the test set and judge them separately. That gap between pointing the right way "
       "and putting the right passage first mattered when I trained Zero.</aside>")
 
