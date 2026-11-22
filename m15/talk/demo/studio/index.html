@@ -13,11 +13,9 @@ h1{font-size:2rem;margin:0}h1+p{margin:.1rem 0 0;color:var(--mut);font-size:1.2r
 .card{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:.75rem 1rem}
 .card h2{font-size:1.05rem;letter-spacing:.19rem;color:var(--mut);margin:0 0 .5rem;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
 .card h2 b{letter-spacing:0;color:var(--txt);font-size:1.5rem}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 button{font:inherit;cursor:pointer}
-.pre{font-size:1.3rem;font-weight:700;padding:.7rem .5rem;border-radius:.75rem;border:2px solid var(--line);background:var(--card);color:var(--txt)}
-.pre:hover{border-color:#9494ff}
-.pause{grid-column:1/-1;font-size:1.4rem;font-weight:700;padding:.75rem;border-radius:.75rem;border:2px solid var(--ok);background:#122a26;color:var(--txt)}
+.trow{display:grid;grid-template-columns:1fr auto;gap:.9rem;align-items:center}
+.pause{font-size:1.3rem;font-weight:700;padding:.5rem 1.1rem;border-radius:.75rem;border:2px solid var(--ok);background:#122a26;color:var(--txt)}
 .pause.paused{border-color:var(--warn);background:#2a1f0a;color:var(--warn)}
 input[type=range]{width:100%;accent-color:#9494ff;height:1.9rem;margin:.1rem 0}input:disabled,select:disabled{opacity:.7;cursor:default}
 .seg{display:flex;gap:.4rem;margin:.4rem 0}.seg button{flex:1;font-size:1.25rem;font-weight:600;padding:.5rem .4rem;border-radius:.6rem;border:2px solid var(--line);background:#0b0f19;color:var(--mut)}
@@ -61,11 +59,8 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
 </style></head><body><div class="app">
 <div class="panel ctl">
   <div><h1>Workload studio</h1><p id="sub"></p></div>
-  <div class="row2">
-    <button class="pre" id="p_quiet">Quiet · 40/s</button><button class="pre" id="p_spike">Spike · 600/s</button>
-    <button class="pre" id="p_over">Peak · 1,500/s</button><button class="pre" id="p_agent">Agent tasks</button>
-    <button class="pause" id="pause">Pause</button></div>
-  <div class="card"><h2>TRAFFIC <b id="rate_v"></b></h2><input id="rate" type="range" min="0" max="1000"></div>
+  <div class="card"><h2>TRAFFIC <b id="rate_v"></b></h2>
+    <div class="trow"><input id="rate" type="range" min="0" max="1000"><button class="pause" id="pause">Pause</button></div></div>
   <div class="card"><h2>ROUTING</h2>
     <div class="seg" id="route"><button data-v="auto">auto</button><button data-v="split">split traffic</button></div>
     <div id="splits">
@@ -75,7 +70,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
     <div class="hint" id="autohint">Serves every query. Picks the encoder mix and search width with the best quality at or above the floor that fits the target.</div></div>
   <div class="card"><h2>QUALITY FLOOR · FIRST <b id="floor_v"></b></h2><input id="floor" type="range" min="30" max="70">
     <h2 style="margin-top:.5rem">P95 TARGET · THEN <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
-  <div class="card"><h2>SEARCH · HNSW ef · oversampling <span class="sm" id="search_by"></span></h2>
+  <div class="card"><h2>HNSW SEARCH <span class="sm" id="search_by" style="letter-spacing:0"></span></h2>
     <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><select id="os_stella"></select><div class="q" id="q_stella"></div></div>
     <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><select id="os_nano"></select><div class="q" id="q_nano"></div></div>
     <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><select id="os_zero"></select><div class="q" id="q_zero"></div></div></div>
@@ -125,10 +120,6 @@ async function flush() { sending = true;
     try { await fetch("/set", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)}); } catch (e) {} }
   sending = false; }
 for (const e of ENC) $("os_" + e).innerHTML = OSS.map(o => `<option value="${o}">×${o}</option>`).join("");
-$("p_quiet").onclick = () => set({rate: 40, spike: false, pattern: "steady", fanout: 1, paused: false});
-$("p_spike").onclick = () => set({rate: 40, spike: true, peak: 15, pattern: "steady", fanout: 1, paused: false});
-$("p_over").onclick = () => set({rate: 1500, spike: false, pattern: "steady", fanout: 1, paused: false});
-$("p_agent").onclick = () => set({rate: 300, spike: false, pattern: "steady", fanout: 10, paused: false});
 $("pause").onclick = () => set({paused: !(S && S.paused)});
 $("rate").oninput = () => { $("rate_v").textContent = rateOf(+$("rate").value).toLocaleString() + " searches/s"; set({rate: rateOf(+$("rate").value)}); };
 $("floor").oninput = () => { $("floor_v").textContent = "nDCG " + (+$("floor").value / 100).toFixed(2); set({floor: +$("floor").value / 100}); };
@@ -148,13 +139,11 @@ for (const e of ENC) {
   const sendSearch = () => set({search: {[e]: [EFS[+$("ef_" + e).value], +$("os_" + e).value]}});
   $("ef_" + e).oninput = sendSearch; $("os_" + e).onchange = sendSearch;
 }
-// Stage keys: Q quiet, S spike, O peak, A agent tasks, space pause, arrows traffic.
+// Keys: space pauses, up and down arrows step the traffic by 1.5x.
 addEventListener("keydown", ev => {
   if (["INPUT", "SELECT"].includes(ev.target.tagName) && ev.target.type !== "range") return;
-  const k = ev.key.toLowerCase();
-  if (k === "q") $("p_quiet").onclick(); if (k === "s") $("p_spike").onclick(); if (k === "o") $("p_over").onclick();
-  if (k === "a") $("p_agent").onclick(); if (k === " ") { $("pause").onclick(); ev.preventDefault(); }
-  if (k === "arrowup" || k === "arrowdown") { set({rate: Math.round((S ? S.rate : 40) * (k === "arrowup" ? 1.5 : 1 / 1.5))}); ev.preventDefault(); }
+  if (ev.key === " ") { $("pause").onclick(); ev.preventDefault(); }
+  if (ev.key === "ArrowUp" || ev.key === "ArrowDown") { set({rate: Math.round((S ? S.rate : 40) * (ev.key === "ArrowUp" ? 1.5 : 1 / 1.5))}); ev.preventDefault(); }
 });
 
 // ---- drawing ------------------------------------------------------------------------------------------
@@ -222,7 +211,7 @@ function render(s) {
   for (const e of ENC) { const c = s.costs[e]; if (!c) continue;
     $("q_" + e).textContent = `ef ${s.search[e][0]} · ×${s.search[e][1]} · nDCG@10 ${c.quality.toFixed(3)} on NQ`;
     $("ef_" + e).disabled = $("os_" + e).disabled = s.route === "auto"; }
-  $("search_by").textContent = s.route === "auto" ? "· set by auto" : "";
+  $("search_by").textContent = s.route === "auto" ? "set by auto" : "ef · oversampling";
   // tiles
   $("arr").textContent = Math.round(s.offered).toLocaleString();   // requested; a full queue holds the replay back
   $("flow1").innerHTML = `searches/s arriving · <b>${s.served_per_s.toLocaleString()}</b> served`;
