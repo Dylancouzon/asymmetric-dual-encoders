@@ -1,12 +1,12 @@
-# Swappable Query Encoders for a Frozen Index: From Transformer to Lookup Table
+# Constella: Reducing the Cost of Dense Retrieval on a Frozen Index
 
 ## Abstract
 
-Dense vector search reuses document vectors, but it still has to turn each uncached query into a vector. We trained Constella Nano and Zero to search an index built with Stella, a 400-million-parameter English embedding model. Nano uses a smaller transformer. Zero builds a query vector from a learned lookup table, with no neural network at query time. All three encoders can search the same index, so an application can choose one for each request.
+Replacing an embedding model can require re-encoding the entire corpus. We trained two query encoders for an existing index built with Stella, a 400-million-parameter English embedding model. Constella Nano uses a smaller transformer. Constella Zero produces dense query vectors from a learned lookup table without running a neural network. An application can choose among all three encoders for each request while keeping the same index.
 
-On a binary-quantized index of one million MS MARCO passages, Stella took a median of 21.3 ms for query encoding plus search. Zero took 1.1 ms (19× speedup) and retained 85% of Stella's relevance score. Nano took 2.5 ms (8.6× speedup) and retained 95% of Stella's relevance score.
+On a binary-quantized index of one million MS MARCO passages, Stella took a median of 21.3 ms for query encoding and search. Zero took 1.1 ms, a 19× speedup, and retained 85% of Stella's relevance score. Nano took 2.5 ms, an 8.6× speedup, and retained 95%.
 
-The paper describes how to apply this method to an existing index. Engineers can fit replacements to their original model's query vectors, test how well each ranks their documents, and measure the combined time for encoding and search.
+In a matched test on the same workload, Zero scored 24.5% higher than BM25 on relevance and took 0.45 ms longer at the median. That makes a lookup table a practical option for traffic where it meets the application's relevance target. We show how to test that choice on an existing index, using judged queries to determine where a cheaper encoder is good enough and timing the full request to see what it saves.
 
 ## 1. Introduction
 
