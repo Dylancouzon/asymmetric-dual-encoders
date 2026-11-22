@@ -4,11 +4,12 @@ One in-process Edge shard holds Stella document vectors (fp16, binary quantizati
 BM25 sparse vector. A second shard holds Zero's token table, so Zero's whole query path is two
 Edge calls: retrieve the query's token rows, then search.
 
-  .venv/bin/python m15src/talk_edge.py build fiqa|nq
+  .venv/bin/python m15src/talk_edge.py build fiqa|nq       # vectors: local, else downloaded from the Hub
   .venv/bin/python m15src/talk_edge.py parity fiqa|nq     # Edge Zero == released Zero
   .venv/bin/python m15src/talk_edge.py bench fiqa|nq      # writes results/m15_talk_edge_<ds>.json
 """
 import json
+import os
 import statistics
 import sys
 import time
@@ -19,14 +20,39 @@ import numpy as np
 from common import REPO, load_public, receipt, sha_file, utc_now, write_result
 
 sys.path.insert(0, str(REPO / "bench"))
-EDGE = REPO / "work/m15/edge"
+EDGE = Path(os.environ.get("EDGE_DIR", REPO / "work/m15/edge"))
 NQ_VECS = REPO / "work/m15/vecs/nq_stella"
+# Packaged Stella document vectors (m15src/talk_package_vectors.py), so a build needs no corpus encode.
+HUB_REPO, HUB_REVISION = "Qdrant/constella-demo-vectors", "8dea0dd5adf15a9e53fc8f366704a5e319ff88cf"
+HUB_DATASETS = ("fiqa", "nq")
 EFS = (32, 64, 128, 256, 512, 1024)
 OVERSAMPLING = (1.0, 2.0, 4.0, 8.0)
 TEXT_CHARS = 700
 
 
+def hub_vectors(dataset, data):
+    """Vectors from the Hub, checked against the pinned corpus order."""
+    from huggingface_hub import hf_hub_download
+
+    def get(name):
+        return Path(hf_hub_download(HUB_REPO, f"{dataset}/{name}", repo_type="dataset", revision=HUB_REVISION))
+    if json.loads(get("doc_ids.json").read_text()) != data["doc_ids"]:
+        raise RuntimeError(f"{dataset}: Hub vector ids differ from the pinned corpus")
+    path = get("doc_vecs.npy")
+    return np.load(path, mmap_mode="r"), {"source": f"hf://datasets/{HUB_REPO}@{HUB_REVISION}/{dataset}",
+                                          "sha256": sha_file(path)}
+
+
+def has_local_vectors(dataset):
+    import vectors15
+    if dataset == "nq":
+        return NQ_VECS.exists()
+    return (vectors15.LOCAL / dataset / "doc_vecs.npy").exists() or (vectors15.VECS / dataset).exists()
+
+
 def doc_vectors(dataset, data):
+    if dataset in HUB_DATASETS and (os.environ.get("VECTORS") == "hub" or not has_local_vectors(dataset)):
+        return hub_vectors(dataset, data)
     if dataset == "nq":
         ids = json.loads((NQ_VECS / "doc_ids.json").read_text())
         if ids != data["doc_ids"]:
@@ -95,6 +121,8 @@ def build(dataset):
             "hnsw": {"m": 16, "ef_construct": 100}, "datatype": "float16",
             "quantization": "binary, always_ram"}
     (path.parent / f"{dataset}.meta.json").write_text(json.dumps(meta, indent=1))
+    # Point id i is data["doc_ids"][i]; the workload studio maps search hits back to judged doc ids with this.
+    (path.parent / f"{dataset}.doc_ids.json").write_text(json.dumps(data["doc_ids"]))
     build_zero_table()
     print(json.dumps(meta), flush=True)
 

@@ -166,9 +166,11 @@ function chart(id, ticks, fy, fmt, layers) {
   // Control changes as markers, so cause and effect line up; a marker crowded by a newer one is skipped.
   const evs = (S.events || []).filter((e, i, a) => i === a.length - 1 || a[i + 1][0] - e[0] > 4);
   x.font = `600 ${Math.round(1.1 * rem)}px -apple-system, sans-serif`;
-  for (const [t, label] of evs) { const ex = tx(t); if (ex < L) continue;
+  let limit = w;                         // newest first; a label that would overlap a newer one is skipped
+  for (const [t, label] of evs.slice().reverse()) { const ex = tx(t); if (ex < L) continue;
     x.strokeStyle = "#f5a623"; x.lineWidth = 2; x.setLineDash([4, 6]); x.beginPath(); x.moveTo(ex, 0); x.lineTo(ex, h); x.stroke(); x.setLineDash([]);
-    x.fillStyle = "#f5a623"; x.fillText(label, Math.min(ex + 6, w - x.measureText(label).width - 4), 1.3 * rem); }
+    const lw = x.measureText(label).width, lx = Math.min(ex + 6, w - lw - 4);
+    if (lx + lw + 10 <= limit) { x.fillStyle = "#f5a623"; x.fillText(label, lx, 1.3 * rem); limit = lx; } }
 }
 const dashed = (get, col, fy) => (x, tx, h) => { x.strokeStyle = col; x.lineWidth = 2; x.setLineDash([8, 8]); x.beginPath();
   H.forEach((s, i) => { const y = fy(get(s), h); i ? x.lineTo(tx(s.t), y) : x.moveTo(tx(s.t), y); }); x.stroke(); x.setLineDash([]); };
@@ -193,7 +195,7 @@ function draw() {
 
 // ---- numbers ------------------------------------------------------------------------------------------
 function render(s) {
-  $("sub").textContent = s.ready ? `${(s.n_docs / 1e6).toFixed(2)}M passages · one Stella index · Qdrant Edge · this laptop` : `starting: ${s.step}…`;
+  $("sub").textContent = s.ready ? `${s.n_docs >= 1e6 ? (s.n_docs / 1e6).toFixed(2) + "M" : s.n_docs.toLocaleString()} ${s.dataset} passages · one Stella index · Qdrant Edge · this laptop` : `starting: ${s.step}…`;
   if (Date.now() - editing > 800) {       // don't fight the control being moved
     $("rate").value = xOfRate(s.rate); $("rate_v").textContent = Math.round(s.rate).toLocaleString() + " searches/s";
     $("floor").value = Math.round(s.floor * 100); $("floor_v").textContent = "nDCG " + s.floor.toFixed(2);
@@ -209,7 +211,7 @@ function render(s) {
   $("pause").textContent = s.paused ? "Start" : "Pause"; $("pause").classList.toggle("paused", s.paused);
   $("spike").classList.toggle("on", s.spike); $("agent").classList.toggle("on", s.fanout > 1);
   for (const e of ENC) { const c = s.costs[e]; if (!c) continue;
-    $("q_" + e).textContent = `ef ${s.search[e][0]} · ×${s.search[e][1]} · nDCG@10 ${c.quality.toFixed(3)} on NQ`;
+    $("q_" + e).textContent = `ef ${s.search[e][0]} · ×${s.search[e][1]} · nDCG@10 ${c.quality.toFixed(3)} on ${s.dataset}`;
     $("ef_" + e).disabled = $("os_" + e).disabled = s.route === "auto"; }
   $("search_by").textContent = s.route === "auto" ? "set by auto" : "ef · oversampling";
   // tiles

@@ -1,9 +1,9 @@
-"""Live traffic: replay judged NQ questions at a chosen rate, send each to a query encoder, search, score.
+"""Live traffic: replay judged questions at a chosen rate, send each to a query encoder, search, score.
 
 Arrivals follow a fixed seeded trace (exponential gaps, query ids), shaped by the controls: rate, a steady /
 daily-wave / bursts pattern, a spike switch, and agent tasks (one task = several searches issued together, done
 when the slowest returns). One FIFO queue feeds a pool of worker threads; each request is encoded by the chosen
-encoder, searched on the shared Edge shard, and scored against the NQ judgments. Every query is served: when the
+encoder, searched on the shared Edge shard, and scored against the dataset's judgments. Every query is served: when the
 queue is full, the replay waits, and each query keeps its scheduled arrival time, so the wait counts in latency.
 """
 import collections
@@ -19,7 +19,7 @@ MAX_QUEUE = 5000                              # bounds memory; beyond it the rep
 
 
 def ndcg10(relevant: dict, ranked: list) -> float:
-    """relevant: {doc_id: grade}; ranked: doc ids in rank order. Binary gain, as in the BEIR NQ judgments."""
+    """relevant: {doc_id: grade}; ranked: doc ids in rank order. Binary gain (BEIR's NQ and FiQA grades are 0/1)."""
     dcg = sum(1 / math.log2(i + 2) for i, d in enumerate(ranked[:10]) if relevant.get(d, 0) > 0)
     n_rel = sum(1 for g in relevant.values() if g > 0)
     ideal = sum(1 / math.log2(i + 2) for i in range(min(10, n_rel)))

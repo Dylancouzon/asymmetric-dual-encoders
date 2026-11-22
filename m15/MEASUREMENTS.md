@@ -778,7 +778,9 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   inside measured encode and shard capacity scaled by a headroom that p95 feedback tunes. Quality per setting comes
   from T3's sweep (`results/m15_talk_edge_nq.json`). Rehearsal on the M5 Pro (floor 0.50, target 150 ms): 40/s
   Stella; 600/s Nano; 1,500/s Nano and Zero at ef 256, 0 of 20 seconds over target in four runs; 2,000/s at ef 128,
-  0-4 of 20 over; one process serves about 2,600/s whatever the mix. Demo observations, not measurements.
+  0-4 of 20 over; one process serves about 2,600/s whatever the mix. FiQA (the public default; floor 0.36, just
+  under Zero's widest score) from a fresh environment: 40/s Stella, 600/s Nano, 1,500/s Nano and Zero, 3,000/s
+  mostly Zero at ef 128. Demo observations, not measurements.
 - **T6 NQ document encode and parity.** BEIR NQ corpus (revision `b7253e6c`, 2,681,468 passages) on
   the RTX 3080 (WSL2, CUDA, fp32 compute, max length 512, no prompt, fp16 store, 54 shards of 50,000,
   batch_tokens 8,192). Encode cost is the steady-state rate from shard file times (shards 3-52, the

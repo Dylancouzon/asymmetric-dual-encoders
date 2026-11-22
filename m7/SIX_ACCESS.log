@@ -448,3 +448,17 @@
 {"ts": "2026-09-30T20:56:46+00:00", "dataset": "trec-covid", "argv": ["/home/dylan/m15run/m15src/e8x_towers.py", "six", "tas-b"], "pid": 10248}
 {"ts": "2026-10-01T03:37:27+03:00", "dataset": "fiqa", "argv": ["m15src/e16_quantization_pilot.py"], "pid": 23306}
 {"ts": "2026-10-01T04:01:25+03:00", "dataset": "fiqa", "argv": ["m15src/e18_query_precision.py"], "pid": 51530}
+{"ts": "2026-11-20T22:27:29-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "build", "fiqa"], "pid": 68545}
+{"ts": "2026-11-20T22:27:32-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "parity", "fiqa"], "pid": 68556}
+{"ts": "2026-11-20T22:27:38-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "build", "fiqa"], "pid": 68611}
+{"ts": "2026-11-20T22:27:51-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "parity", "fiqa"], "pid": 68662}
+{"ts": "2026-11-20T22:27:57-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "bench", "fiqa"], "pid": 68713}
+{"ts": "2026-11-20T22:30:20-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "build", "fiqa"], "pid": 69485}
+{"ts": "2026-11-20T22:31:49-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "bench", "fiqa"], "pid": 69805}
+{"ts": "2026-11-20T23:22:21-05:00", "dataset": "fiqa", "argv": ["talk_throughput.py", "--dataset", "fiqa", "--label", "smoke-m5pro", "--price-per-hour", "0.40", "--workers", "1,2", "--seconds", "5", "--out", "/private/tmp/claude-501/-Users-dylanc-Documents-GitHub-asymetric-dual-encoders/ffe18849-e8e1-45a2-8851-1392874ab679/scratchpad/talk/throughput_smoke.json"], "pid": 1686}
+{"ts": "2026-11-21T19:14:42-05:00", "dataset": "fiqa", "argv": ["-"], "pid": 1466}
+{"ts": "2026-11-21T19:15:21-05:00", "dataset": "fiqa", "argv": ["-"], "pid": 1684}
+{"ts": "2026-11-21T19:17:00-05:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 8040}
+{"ts": "2026-11-21T19:22:03-05:00", "dataset": "fiqa", "argv": ["m15src/talk_package_vectors.py"], "pid": 17908}
+{"ts": "2026-11-21T19:43:13-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "build", "fiqa"], "pid": 28870}
+{"ts": "2026-11-21T19:44:15-05:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 29040}

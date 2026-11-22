@@ -8,7 +8,7 @@ Two knobs trade speed for recall on each request, with no rebuild and no re-inde
   hnsw_ef        how many candidates the HNSW graph walk keeps; wider finds more of the true neighbors.
   oversampling   with binary quantization, the 1-bit codes shortlist oversampling x limit candidates,
                  which are then rescored with the full fp16 vectors.
-Docs: https://qdrant.tech/documentation/edge/ and https://qdrant.tech/documentation/guides/quantization/
+Docs: https://qdrant.tech/documentation/edge/ and https://qdrant.tech/documentation/manage-data/quantization/
 """
 import threading
 import time

@@ -1,0 +1,10 @@
+# Workload studio runtime (the versions it was tested with; Python 3.12).
+qdrant-edge-py==0.8.0
+numpy==2.5.2
+fastapi==0.141.1
+uvicorn==0.53.0
+onnxruntime==1.29.0
+tokenizers==0.22.2
+huggingface-hub==1.28.0
+datasets==5.0.1
+pytrec_eval-terrier==0.5.10   # loading the judged queries goes through the repo's access trail (bench/core.py)

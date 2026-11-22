@@ -9,7 +9,7 @@ Owner notes: high technical bar but not academic; depth in mechanisms, statistic
 ## Done
 - Word-order probe (exploratory): Stella 4/24 pairs both directions, Nano 2/24, Zero 0/24. `results/m15_talk_word_order.json`.
 - Edge demo pipeline `m15src/talk_edge.py`; FiQA receipt `results/m15_talk_edge_fiqa.json`; Edge Zero parity exact.
-- Stage demo: workload studio `m15/talk/demo/studio/` (run: `DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py`, open http://127.0.0.1:8767, wait for ready; beats in the live slide notes). The older side-by-side demo `m15/talk/demo/app.py` stays as a backup.
+- Stage demo: workload studio `m15/talk/demo/studio/` (stage run: `DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py`; the default dataset is FiQA for public users; setup in its README; beats in the live slide notes). Document vectors for FiQA and NQ are packaged on the Hub (`Qdrant/constella-demo-vectors`, built by `m15src/talk_package_vectors.py`); `m15src/talk_edge.py build` downloads them when no local vectors exist.
 - NQ encode done 05:05 EST 2026-11-21: 2,681,468 vectors, steady 141 passages/s, 5.3 GPU-hours (T6, C27, L42); box-vs-Mac parity min cosine 0.99994. Vectors in `work/m15/vecs/nq_stella/`. Cost slide updated.
 - Deck v1: 18 main slides + 4 hidden backups, Astra storyboard and deck reviews applied, Sol narration in every `<aside>` (29.5 min main).
 

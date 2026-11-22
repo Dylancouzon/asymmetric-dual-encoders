@@ -1,12 +1,14 @@
-"""Workload studio: live NQ traffic on one Qdrant Edge index, with Stella, Nano and Zero as query encoders.
+"""Workload studio: live search traffic on one Qdrant Edge index, with Stella, Nano and Zero as query encoders.
 
-All three encoders search the same Stella index (2.68M passages). Traffic is replayed from judged NQ questions,
-so every answer is scored. Auto routing plans, four times a second, which share of traffic each encoder serves
+All three encoders search the same Stella document index. Traffic is replayed from a BEIR dataset's judged
+questions, so every answer is scored. Auto routing plans, four times a second, which share of traffic each encoder serves
 and how wide they search: the best average quality at or above the floor that fits the machine's encode and
 search capacity, with headroom tuned from measured p95 against the latency target (see allocator.py). Every query
 is served. Every control applies immediately.
 
-  DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py      # then open http://127.0.0.1:8767
+  .venv/bin/python m15/talk/demo/studio/app.py                 # FiQA (57,638 passages)
+  DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py      # NQ (2.68M passages), the talk's setup
+then open http://127.0.0.1:8767. Setup and the index build are in README.md next to this file.
 Demo observations only, not registered results.
 """
 import os
@@ -37,26 +39,37 @@ from edge_search import EdgeSearch  # noqa: E402
 from talk_throughput import make_encoder  # noqa: E402
 from workload import ENCODERS, Workload  # noqa: E402
 
-DATASET = os.environ.get("DATASET", "nq")
+DATASET = os.environ.get("DATASET", "fiqa")
+DATASET_NAME = {"nq": "NQ", "fiqa": "FiQA"}.get(DATASET, DATASET)
 WORKERS = int(os.environ.get("WORKERS", "14"))
 
 # ---- data, index, encoders --------------------------------------------------------------------------
+EDGE = Path(os.environ.get("EDGE_DIR", REPO / "work/m15/edge"))
+RECEIPT = REPO / f"results/m15_talk_edge_{DATASET}.json"
+for need, how in ((EDGE / DATASET, f".venv/bin/python m15src/talk_edge.py build {DATASET}"),
+                  (EDGE / f"{DATASET}.doc_ids.json", f".venv/bin/python m15src/talk_edge.py build {DATASET}"),
+                  (RECEIPT, f".venv/bin/python m15src/talk_edge.py bench {DATASET}")):
+    if not need.exists():
+        sys.exit(f"missing {need.relative_to(REPO)}; create it with: {how}  (see m15/talk/demo/studio/README.md)")
+
 data = load_public(DATASET, with_corpus=False)
-DOC_IDS = json.loads((REPO / "work/m15/vecs/nq_stella/doc_ids.json").read_text())
-search = EdgeSearch(REPO / "work/m15/edge" / DATASET)
+DOC_IDS = json.loads((EDGE / f"{DATASET}.doc_ids.json").read_text())     # Edge point id i -> judged doc id
+search = EdgeSearch(EDGE / DATASET)
 encoders = {name: make_encoder(name) for name in ENCODERS}
 
-# nDCG@10 and search time of every (encoder, ef, oversampling) on all judged NQ queries, from the offline sweep
-# (receipt below). Search settings are limited to this grid, so every one has a measured quality.
-SWEEP = {(e, s["ef"], s["oversampling"]): s for e in ENCODERS for s in
-         json.loads((REPO / f"results/m15_talk_edge_{DATASET}.json").read_text())["results"][e]["settings"]}
+# nDCG@10 and search time of every (encoder, ef, oversampling) on all judged queries, from the offline sweep
+# (the receipt above). Search settings are limited to this grid, so every one has a measured quality.
+SWEEP = {(e, s["ef"], s["oversampling"]): s for e in ENCODERS
+         for s in json.loads(RECEIPT.read_text())["results"][e]["settings"]}
 EFS, OVERSAMPLING = sorted({k[1] for k in SWEEP}), sorted({k[2] for k in SWEEP})
 PRESETS = [(128, 4.0), (256, 4.0), (512, 4.0), (1024, 8.0)]       # what Auto chooses from, narrow to wide
+# Default floor: just under Zero's best score, so Zero alone qualifies only at its widest search (NQ: 0.50).
+FLOOR = round(SWEEP[("zero", 1024, 8.0)]["ndcg10"] - 0.01, 2)
 
 state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "fanout": 1, "paused": False,
          "route": "auto", "split": {"stella": 34.0, "nano": 33.0, "zero": 33.0},
          "search": {name: [1024, 8.0] for name in ENCODERS},
-         "floor": 0.50, "target_ms": 150.0}
+         "floor": FLOOR, "target_ms": 150.0}
 
 work = Workload(search, encoders, data["q_texts"], data["q_ids"], data["qrels"], DOC_IDS, state, WORKERS)
 
@@ -277,7 +290,7 @@ def snapshot():
         "actual_share": {n: (by[n] / len(last1)) if last1 else 0.0 for n in ENCODERS},
         "plan": None if p is None else {"preset": p.preset, "shares": p.shares, "quality": p.quality,
                                         "encode_util": p.encode_util, "shard_util": p.shard_util, "status": p.status},
-        "headroom": router["headroom"], "n_docs": len(DOC_IDS), "efs": EFS, "oversampling": OVERSAMPLING,
+        "headroom": router["headroom"], "n_docs": len(DOC_IDS), "dataset": DATASET_NAME, "efs": EFS, "oversampling": OVERSAMPLING,
         "slow": sorted(router["slow"]), "encode_tail_ms": router.get("encode_ms", {}),
         "costs": {n: {"quality": c.quality, "search_ms": c.search_ms, "encode_per_s": c.encode_per_s}
                   for n, c in router["costs"].items()},
