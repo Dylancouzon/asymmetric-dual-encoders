@@ -727,7 +727,7 @@ also appears in that model's own setting, where the lookup path is learned, not 
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
 
 
-## Talk measurements T1-T11 (exploratory, 2026-11-20 to 2026-11-22)
+## Talk measurements T1-T12 (exploratory, 2026-11-20 to 2026-11-22)
 
 Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
 exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
@@ -813,3 +813,8 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   40 to 2,500 searches/s with its four presets, quality and search time from T3's NQ sweep, the M5 Pro encode capacity
   in its self-check (Stella 80, Nano 1,400, Zero 17,000 encodes/s), floor 0.50 and headroom 0.8. Planner output on
   fixed costs, not a load test. Script `m15src/talk_router_plan.py`; receipt `results/m15_talk_router_plan.json`.
+- **T12 slide 2 search example.** One NQ test query chosen for readability among queries whose judged passage ranks first
+  ("who played joey's agent estelle on friends"; the first pick ranked its judged passage fourth and was dropped). Stella
+  query encoder with its prompt, exact search over the committed Stella NQ document vectors; records the answer rank and
+  the first values of the query and three shown passage vectors. Script `m15src/talk_slide2_example.py`; receipt
+  `results/m15_talk_slide2_example.json`.

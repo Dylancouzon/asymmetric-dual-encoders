@@ -1,0 +1,106 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (illustration)",
+  "dataset": "nq",
+  "results": {
+    "query": "who played joey's agent estelle on friends",
+    "query_id": "test3387",
+    "query_vector": [
+      0.018,
+      -0.002,
+      -0.053,
+      -0.07,
+      -0.037,
+      0.025
+    ],
+    "answer_id": "doc115555",
+    "answer_rank": 1,
+    "top3": [
+      {
+        "id": "doc115555",
+        "score": 0.8032994270324707,
+        "text": "June Gable June Gable (born June 5, 1945) is an American character actress, perhaps best known for her role as Joey's ag"
+      },
+      {
+        "id": "doc115559",
+        "score": 0.7977977991104126,
+        "text": "June Gable From 1994 to 2004, Gable played Estelle Leonard of the Estelle Leonard Talent Agency, the agent of the Matt L"
+      },
+      {
+        "id": "doc1670350",
+        "score": 0.7592106461524963,
+        "text": "List of Friends characters Estelle Leonard (June Gable): Joey's talent agent. Gable made her first appearance as Estelle"
+      }
+    ],
+    "passages": [
+      {
+        "id": "doc115555",
+        "text": "June Gable June Gable (born June 5, 1945) is an American character actress, perhaps best known for her role as Joey's ag",
+        "vector": [
+          -0.004,
+          0.038,
+          -0.027,
+          -0.049,
+          -0.026,
+          0.007
+        ],
+        "score": 0.8032994270324707
+      },
+      {
+        "id": "doc105954",
+        "text": "Catch-22 Catch-22 is a satirical novel by American author Joseph Heller. He began writing it in 1953; the novel was firs",
+        "vector": [
+          -0.017,
+          -0.006,
+          -0.036,
+          0.027,
+          0.014,
+          0.015
+        ],
+        "score": 0.23352199792861938
+      },
+      {
+        "id": "doc110776",
+        "text": "Mitral valve The mitral valve, also known as the bicuspid valve or left atrioventricular valve, is a valve with two flap",
+        "vector": [
+          0.003,
+          -0.008,
+          -0.021,
+          -0.037,
+          0.039,
+          -0.051
+        ],
+        "score": 0.138859823346138
+      }
+    ],
+    "n_docs": 2681468,
+    "dims_shown": 6
+  },
+  "pins": {
+    "source": "BeIR/nq",
+    "revision": "b7253e6c379163d024ddb1d6948152a91a2e3b46",
+    "qrels_source": "BeIR/nq-qrels",
+    "qrels_revision": "519acd4e48bb3e5da22b2b888ce36c614f4f2bc9",
+    "split": "test"
+  },
+  "receipt": {
+    "script": "m15src/talk_slide2_example.py",
+    "script_sha256": "02d65f10dbef5cff3f568e3b05587f0deb967e3f17610ec9d25c68f1cb16db40",
+    "git_commit": "4835f7f9d4a63bc429f06564f60c28ca65c8c1df",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-22T19:36:10Z",
+    "finished_utc": "2026-11-22T19:37:33Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2"
+    },
+    "seed": 20260930,
+    "inputs": {},
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "d6b1726425e3f0410f5d17fb635a9a04356130fad70654dd195ddba178a936f4"
+  }
+}

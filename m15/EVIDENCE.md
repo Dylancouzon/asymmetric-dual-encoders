@@ -983,3 +983,19 @@ Corpus: 2.4e+17 FLOPs, mean 109 tokens per passage (Stella document path, trunca
 | 2,500 | ef 256, os 4 | nano 39%, zero 61% | 0.524 |
 
 **Cannot show.** Real load: queueing, contention between encoders and search, and other hardware move the switch points.
+
+## C33. One real search for the problem slide
+
+**Label:** exploratory (illustration). **Source:** `results/m15_talk_slide2_example.json`
+
+**Claim.** Stella ranks the judged passage for "who played joey's agent estelle on friends" first of 2,681,468 NQ passages in exact search.
+
+| passage | score | first values |
+|---|---|---|
+| June Gable June Gable (born June 5, 1945 | 0.803 | -0.004, 0.038, -0.027 |
+| Catch-22 Catch-22 is a satirical novel b | 0.234 | -0.017, -0.006, -0.036 |
+| Mitral valve The mitral valve, also know | 0.139 | 0.003, -0.008, -0.021 |
+
+Query vector, first values: 0.018, -0.002, -0.053.
+
+**Cannot show.** One hand-picked query; it says nothing about average quality.

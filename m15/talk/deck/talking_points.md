@@ -11,14 +11,15 @@ One section per slide, in talk order. `rebuild.py` copies each section into that
 Next: I started by timing two jobs that run on very different schedules.
 
 ## cost · ~1.5 min
-Why it matters: one model, two jobs with opposite deadlines. Only one of them can wait.
-- [Left] Tonight's index: 2.68M NQ passages through Stella, once. 5.3 GPU-hours on my desktop (6.5 hours real time, including a crash). Nobody waits; I made tea.
-- [Right] Every question goes through the very same 24-layer, 435M-parameter model before Qdrant can search. Five or six words through the same stack.
-- [20.5 ms] On this laptop that encode takes 20.5 ms. The Qdrant search after it takes a quarter of a millisecond.
-- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours.
-- Agents multiply it: several searches per answer, each one waits for an encode.
-- The left side is a sunk cost. The right side is where a cheaper model would pay off, if it could still search the same index.
-Next: what if only the right tower changed?
+Why it matters: one model does two jobs with opposite deadlines. Only one of them has a user waiting.
+- [Top path] Passages go through Stella once and come out as vectors: 1,024 numbers each. Tonight's index is 2.68M NQ passages, 5.3 GPU-hours on my desktop (6.5 hours real time, including a crash). Nobody waits; I made tea.
+- [Graph] Qdrant links those vectors into an HNSW graph: each passage connected to its near neighbours.
+- [Bottom path] A real NQ question, "who played Joey's agent Estelle on Friends", goes through the very same 435M-parameter model. Six words through the same 24 layers. 20.5 ms on this laptop.
+- [Red walk] Its vector walks the graph to June Gable, the right answer out of 2.68 million, in 0.23 ms.
+- So the search is a quarter of a millisecond. The encoder in front of it is about 90 times longer, on every request.
+- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours. Agents fire several searches per answer.
+- The top path is a sunk cost. The bottom path is where a cheaper model pays off, if it can still walk the same graph.
+Next: what if only the query side changed?
 
 ## arch · ~1.5 min
 Why it matters: you keep the index and change only the query side.

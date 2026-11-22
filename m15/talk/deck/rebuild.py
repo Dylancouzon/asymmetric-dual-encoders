@@ -415,34 +415,90 @@ def arr(x1, y1, x2, y2, c=MUT):
             f'<path d="M{x2} {y2} L{hx + px:.0f} {hy + py:.0f} L{hx - px:.0f} {hy - py:.0f}z" fill="{c}"/>')
 
 
-# cost v9: the same 24-layer Stella serves two jobs with opposite deadlines (concept agreed with Astra)
-def _tower(cx, y0):
-    return "".join(f'<rect x="{cx - 170}" y="{y0 + k * 11}" width="340" height="7" rx="3" fill="{GRAY}" '
-                   f'opacity="{0.55 + 0.45 * (k % 4 == 0)}"/>' for k in range(24))
+# cost v10: one Stella encoder, two paths; real NQ passages and query, real vector values, one HNSW walk
+_X2 = _json.loads(Path(_R + "m15_talk_slide2_example.json").read_text())["results"]
+_rng = _random.Random(7)
 
 
-def _down(cx, y1, y2, c):
-    return f'<line x1="{cx}" y1="{y1}" x2="{cx}" y2="{y2 - 14}" stroke="{c}" stroke-width="5"/><path d="M{cx} {y2} l-11 -17 l22 0z" fill="{c}"/>'
+def _vec(v, n=3):
+    return "[" + ", ".join(f"{x:.3f}".replace("-", "−") for x in v[:n]) + ", …]"
 
 
-CL, CR = 400, 1264
-g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">',
-     t(CL, 36, "Once, at indexing", 40, GRAY, "middle", 700), t(CR, 36, "Every query", 40, RED, "middle", 700)]
-for r in range(5):
-    for c in range(12):
-        g.append(f'<rect x="{CL - 262 + c * 44}" y="{70 + r * 22}" width="36" height="12" rx="3" fill="{GRAY}" opacity="0.8"/>')
-g.append(f'<rect x="{CR - 310}" y="84" width="620" height="68" rx="34" fill="#1a2233" stroke="{RED}" stroke-width="3"/>')
-g.append(t(CR, 129, "cheap flights paris to rome", 32, WHITE, "middle", 600, True))
-g += [_down(CL, 180, 226, MUT), _down(CR, 180, 226, RED), _tower(CL, 240), _tower(CR, 240),
-      t(832, 362, "Stella, 24 layers", 32, WHITE, "middle", 600), t(832, 404, "435M parameters", 30, MUT, "middle"),
-      _down(CL, 518, 562, MUT), _down(CR, 518, 562, RED),
-      t(CL, 618, "5.3 GPU-hours", 48, WHITE, "middle", 700), t(CR, 618, "20.5 ms", 48, RED, "middle", 700),
-      "</svg>"]
-write("cost", " foot", "Same Encoder, Different Deadlines",
+def _curve(x1, y1, x2, y2, c, w=5):
+    mx = (x1 + x2) / 2
+    a = f'<path d="M{x1} {y1} C {mx} {y1}, {mx} {y2}, {x2 - 16} {y2}" fill="none" stroke="{c}" stroke-width="{w}"/>'
+    return a + f'<path d="M{x2} {y2} l-18 -10 l0 20z" fill="{c}"/>'
+
+
+g = ['<svg width="1664" height="660" viewBox="0 0 1664 660">']
+# inputs: three real passages (once) and one real question (every query)
+for k, p in enumerate(_X2["passages"]):
+    y = 20 + k * 100
+    title, rest = p["text"].split(" ", 2)[:2] if p["text"].startswith("June") else (p["text"].split(" ")[0], "")
+    title = {0: "June Gable", 1: "Catch-22", 2: "Mitral valve"}[k]
+    body = p["text"][len(title) + 1:][:34] + "…"
+    g.append(f'<rect x="0" y="{y}" width="440" height="84" rx="12" fill="#151b2b" stroke="#3a4157" stroke-width="2"/>')
+    g.append(t(20, y + 36, title, 28, WHITE, "start", 700))
+    g.append(t(20, y + 68, body, 22, MUT))
+g.append(t(0, 352, "2.68M passages", 30, GRAY, "start", 600))
+g.append(f'<rect x="0" y="432" width="440" height="120" rx="20" fill="#1a2233" stroke="{RED}" stroke-width="3"/>')
+g.append(f'<circle cx="38" cy="468" r="12" fill="none" stroke="{RED}" stroke-width="4"/><line x1="47" y1="477" x2="58" y2="488" stroke="{RED}" stroke-width="4"/>')
+g.append(t(76, 478, "who played joey's agent", 27, WHITE, "start", 600))
+g.append(t(76, 520, "estelle on friends", 27, WHITE, "start", 600))
+# one encoder, drawn as a small network
+EX, EY, EW, EH = 520, 150, 260, 330
+g.append(f'<rect x="{EX}" y="{EY}" width="{EW}" height="{EH}" rx="22" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>')
+cols = [[(EX + 45 + c * 57, EY + 70 + r * 50) for r in range(5)] for c in range(4)]
+for a, b in zip(cols, cols[1:]):
+    for (x1, y1) in a:
+        for (x2, y2) in b:
+            g.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#3a4157" stroke-width="1.5"/>')
+for col in cols:
+    for (x, y) in col:
+        g.append(f'<circle cx="{x}" cy="{y}" r="9" fill="{GRAY}"/>')
+g.append(t(EX + EW / 2, EY + 46, "Stella", 36, WHITE, "middle", 700))
+g.append(t(EX + EW / 2, EY + EH + 44, "435M parameters", 26, MUT, "middle"))
+g += [_curve(440, 160, EX, 260, MUT), _curve(440, 492, EX, 400, RED)]
+# outputs: real vector values
+VX = 840
+for k, p in enumerate(_X2["passages"]):
+    g.append(t(VX, 150 + k * 46, _vec(p["vector"]), 25, GRAY, "start", 400, True))
+g.append(t(VX, 72, "once, 5.3 GPU-hours", 30, GRAY, "start", 700))
+g.append(t(VX, 452, "every query, 20.5 ms", 30, RED, "start", 700))
+g.append(t(VX, 500, _vec(_X2["query_vector"]), 25, RED, "start", 600, True))
+g += [_curve(EX + EW, 260, VX - 12, 190, MUT, 4), _curve(EX + EW, 400, VX - 12, 490, RED, 4)]
+# HNSW graph: deterministic points, links to nearest neighbours, shortest walk from the entry to June Gable
+GX0, GX1, GY0, GY1 = 1300, 1640, 40, 590
+pts = [(1330, 500), (1560, 160)] + [(_rng.uniform(GX0, GX1), _rng.uniform(GY0, GY1)) for _ in range(40)]
+pts = [p for i, p in enumerate(pts) if i < 2 or min(math.dist(p, q) for q in pts[:i]) > 48]
+nb = {i: sorted(range(len(pts)), key=lambda j: math.dist(pts[i], pts[j]))[1:4] for i in range(len(pts))}
+edges = {tuple(sorted((i, j))) for i in nb for j in nb[i]}
+for i, j in edges:
+    g.append(f'<line x1="{pts[i][0]:.0f}" y1="{pts[i][1]:.0f}" x2="{pts[j][0]:.0f}" y2="{pts[j][1]:.0f}" stroke="#3a4157" stroke-width="2"/>')
+adj = {i: set() for i in range(len(pts))}
+for i, j in edges:
+    adj[i].add(j); adj[j].add(i)
+prev, todo = {0: None}, [0]
+while todo and 1 not in prev:
+    i = todo.pop(0)
+    for j in sorted(adj[i]):
+        if j not in prev:
+            prev[j] = i; todo.append(j)
+path, i = [], 1
+while i is not None:
+    path.append(i); i = prev.get(i)
+for a, b in zip(path, path[1:]):
+    g.append(f'<line x1="{pts[a][0]:.0f}" y1="{pts[a][1]:.0f}" x2="{pts[b][0]:.0f}" y2="{pts[b][1]:.0f}" stroke="{RED}" stroke-width="5"/>')
+for k, (x, y) in enumerate(pts):
+    on = k in path
+    g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{16 if k == 1 else 9}" fill="{WHITE if k == 1 else (RED if on else "#7d849c")}"/>')
+g.append(t(1560, 126, "June Gable", 30, WHITE, "middle", 700))
+g.append(t(1650, 640, "Qdrant HNSW index, 0.23 ms", 28, GRAY, "end", 600))
+g += [_curve(1236, 196, 1310, 250, MUT, 4), _curve(1236, 490, 1314, 500, RED, 4), "</svg>"]
+write("cost", " foot", "One Encoder, Two Deadlines",
       '<div style="margin-top:8px">' + "".join(g) + "</div>",
-      "BEIR NQ: 2,681,468 passages encoded once with Stella fp32 on one RTX 3080 (5.3 GPU-hours at a steady 141 passages/s). "
-      "Query: Stella with its prompt, median encode over the 3,452 NQ test queries, M5 Pro CPU, before a 0.23 ms Qdrant Edge "
-      "search. Exploratory.")
+      f"BEIR NQ, 2,681,468 passages. Real NQ test query; its judged passage ranks first in exact search (score "
+      f"{_X2['passages'][0]['score']:.2f}). Vectors: first 3 of 1,024 values. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
 # arch v8: the paper's Figure 1 layout; one ingestion path, three query paths, each with its own search width
 _FL = _json.loads(Path(_R + "m15_talk_flops.json").read_text())["results"]
