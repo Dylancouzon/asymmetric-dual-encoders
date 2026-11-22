@@ -34,7 +34,7 @@ Prior studies of graph search have examined how differences between query and do
 
 For an existing index, the original embedding model is already the teacher. We compared teachers to see whether their retrieval scores could predict how well their replacements would rank documents.
 
-For each of the ten models in Figure 2, we fitted a lookup table and a projection on top of a frozen transformer. We used ridge regression, which fits the teacher's query vectors while applying a penalty to constrain the fitted weights. Both candidates searched the original model's existing document vectors. The registered comparison covered lookup tables for those ten models. We also evaluated the transformer fits in an exploratory analysis.
+For each of the ten models in Figure 2, we fitted a lookup table and a projection on top of a frozen transformer. We used ridge regression, which fits the teacher's query vectors while applying a penalty to constrain the fitted weights. Both candidates searched the original model's existing document vectors. The registered comparison covered lookup tables for those ten models. We also evaluated the transformer fits in an exploratory analysis [1].
 
 We fitted the candidates to the original encoders' vectors for 337,981 queries. To choose the penalty strength, we compared how well each setting ranked documents on separate judged queries from the CQADupStack Physics and Programmers forums. We then fixed that setting and evaluated the candidates on six other datasets using exact cosine search. We gave each dataset equal weight. Our metric, nDCG@10, rewards placing relevant documents higher in the top ten results [13].
 
@@ -205,7 +205,7 @@ For a search team, the practical question is how much traffic can move to a chea
 
 ### Model fitting and training
 
-Stella. We pinned ffeb2b7e, stored normalized 1,024-dimensional document vectors in fp16, and used cosine similarity. Query encoding used fp32, the s2p_query prompt, and a maximum length of 512. The fitted students used no query prefix [1, 8, 14].
+Stella. We used the Stella model revision linked in [14]. We stored normalized 1,024-dimensional document vectors in fp16 and used cosine similarity. Query encoding used fp32, the s2p_query prompt, and a maximum length of 512. The fitted students used no query prefix [1, 8, 14].
 
 Fitted candidates. We swept λ from 10⁻⁴ to 10⁻¹ and extended the range by one decade if selection reached an endpoint. Tokenization included special tokens and truncated at 512 tokens. The conjugate-gradient residual tolerance was 10⁻⁶ in fp32 and 10⁻⁸ in fp64. We used attention-masked means for the transformer features and froze bge-small at revision 5c38ec7c. The list of teachers includes bge-small, so that fitted transformer shares its teacher's backbone [1, 15]. An exact rerun requires recovering or reconstructing the cleaned fitting-query list and verifying it against the recorded hash [1]. Across the 26 models in the exploratory lookup-table comparison, Spearman's rank correlation was +0.09 (95% interval −0.39 to +0.52) [1].
 
@@ -277,7 +277,7 @@ On descriptive BEIR-15, Nano, bge-small, and LEAF scored 0.5081, 0.5171, and 0.5
 
 [13] [BEIR benchmark and evaluation software.](https://github.com/beir-cellar/beir)
 
-[14] [Stella-en-400M-v5 model card.](https://huggingface.co/NovaSearch/stella_en_400M_v5)
+[14] [Stella-en-400M-v5 model card and exact revision.](https://huggingface.co/NovaSearch/stella_en_400M_v5/tree/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20)
 
 [15] [bge-small-en-v1.5 model card.](https://huggingface.co/BAAI/bge-small-en-v1.5)
 

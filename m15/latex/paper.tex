@@ -208,7 +208,7 @@ which fits the teacher's query vectors while applying a penalty to
 constrain the fitted weights. Both candidates searched the original
 model's existing document vectors. The registered comparison covered
 lookup tables for those ten models. We also evaluated the transformer
-fits in an exploratory analysis.
+fits in an exploratory analysis {[}1{]}.
 
 We fitted the candidates to the original encoders' vectors for 337,981
 queries. To choose the penalty strength, we compared how well each
@@ -717,10 +717,11 @@ the original encoder for other requests without re-encoding the corpus.
 \subsubsection{Model fitting and
 training}\label{model-fitting-and-training}
 
-Stella. We pinned ffeb2b7e, stored normalized 1,024-dimensional document
-vectors in fp16, and used cosine similarity. Query encoding used fp32,
-the s2p\_query prompt, and a maximum length of 512. The fitted students
-used no query prefix {[}1, 8, 14{]}.
+Stella. We used the Stella model revision linked in {[}14{]}. We stored
+normalized 1,024-dimensional document vectors in fp16 and used cosine
+similarity. Query encoding used fp32, the s2p\_query prompt, and a
+maximum length of 512. The fitted students used no query prefix {[}1, 8,
+14{]}.
 
 Fitted candidates. We swept \(\lambda\) from \(10^{-4}\) to \(10^{-1}\)
 and extended the range by one decade if selection reached an endpoint.
@@ -930,8 +931,8 @@ Approximate Nearest Neighbor Search. PVLDB, 2024.}
 evaluation software.}
 
 {[}14{]}
-\href{https://huggingface.co/NovaSearch/stella_en_400M_v5}{Stella-en-400M-v5
-model card.}
+\href{https://huggingface.co/NovaSearch/stella_en_400M_v5/tree/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20}{Stella-en-400M-v5
+model card and exact revision.}
 
 {[}15{]}
 \href{https://huggingface.co/BAAI/bge-small-en-v1.5}{bge-small-en-v1.5
