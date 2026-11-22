@@ -17,22 +17,23 @@
   "cover",
   "cost",
   "arch",
-  "bench",
   "zero-mech",
-  "order",
   "distill",
   "worst",
+  "order",
   "nano",
+  "bench",
   "cloud",
   "bet",
   "split",
   "cloud-e2e",
   "recovery",
   "recipe",
-  "plan",
   "live",
+  "takeaways",
   "close",
   "thanks",
+  "plan",
   "race",
   "solved",
   "flops",
@@ -50,33 +51,37 @@
    "description": "Title.",
    "start": "cover"
   },
-  "bill": {
+  "problem": {
    "description": "Documents are encoded once, but every query pays for a transformer.",
    "start": "cost"
   },
-  "family": {
-   "description": "One Stella index, three query encoders, and how much ranking each keeps.",
+  "idea": {
+   "description": "One Stella index, three query encoders.",
    "start": "arch"
   },
-  "build": {
-   "description": "How Zero and Nano work, their limit, how they were trained, and how to pick a teacher.",
+  "zero": {
+   "description": "How Zero works, how it was trained, which teacher, and its limits.",
    "start": "zero-mech"
   },
-  "catch": {
-   "description": "The bet, the race replay, why cheaper queries need a wider search, and the live demo.",
-   "start": "bet"
+  "nano": {
+   "description": "How Nano works and how it was trained.",
+   "start": "nano"
+  },
+  "results": {
+   "description": "Quality, encoding cost, the bet, the whole request, and its bill.",
+   "start": "bench"
+  },
+  "production": {
+   "description": "Search width per encoder, the router, and the live demo.",
+   "start": "recovery"
   },
   "monday": {
-   "description": "Choose by measuring: the recipe, and how to start.",
-   "start": "recipe"
+   "description": "What to take home and how to start.",
+   "start": "takeaways"
   },
   "backup": {
    "description": "Hidden backup slides for questions.",
-   "start": "flops"
-  },
-  "cost2": {
-   "description": "What encoding costs per million queries.",
-   "start": "cloud"
+   "start": "plan"
   }
  },
  "faces": {

@@ -2,15 +2,20 @@
 <div class="head"><h2>Zero Trains on a Desktop GPU Against a Frozen Index</h2></div>
 <div style="margin-top:32px"><svg width="1664" height="420" viewBox="0 0 1664 420"><rect x="0" y="60" width="360" height="220" rx="16" fill="#151b2b" stroke="#c9cede" stroke-width="3"/><text x="180.0" y="130" font-size="34" fill="#fcfdff" text-anchor="middle" font-weight="600">Stella targets</text><text x="180.0" y="180" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">queries + passages</text><text x="180.0" y="216" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">computed once</text><path d="M372 170 l40 0" stroke="#9aa0b5" stroke-width="4"/><path d="M412 160 l14 10 l-14 10z" fill="#9aa0b5"/><rect x="430" y="60" width="380" height="220" rx="16" fill="#151b2b" stroke="#fcfdff" stroke-width="3"/><text x="620.0" y="130" font-size="34" fill="#fcfdff" text-anchor="middle" font-weight="600">Align</text><text x="620.0" y="180" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">match Stella's</text><text x="620.0" y="216" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">vectors and scores</text><path d="M822 170 l40 0" stroke="#9aa0b5" stroke-width="4"/><path d="M862 160 l14 10 l-14 10z" fill="#9aa0b5"/><rect x="880" y="60" width="380" height="220" rx="16" fill="#151b2b" stroke="#fcfdff" stroke-width="3"/><text x="1070.0" y="130" font-size="34" fill="#fcfdff" text-anchor="middle" font-weight="600">Rank</text><text x="1070.0" y="180" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">positives vs</text><text x="1070.0" y="216" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">32,768 negatives</text><path d="M1272 170 l40 0" stroke="#9aa0b5" stroke-width="4"/><path d="M1312 160 l14 10 l-14 10z" fill="#9aa0b5"/><rect x="1330" y="60" width="334" height="220" rx="16" fill="#151b2b" stroke="#ff516b" stroke-width="3"/><text x="1497.0" y="130" font-size="34" fill="#fcfdff" text-anchor="middle" font-weight="600">31 MB table</text><text x="1497.0" y="180" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">int8 rows</text><text x="1497.0" y="216" font-size="30" fill="#c9cede" text-anchor="middle" font-weight="400">+ row scales</text><text x="0" y="360" font-size="34" fill="#fcfdff" text-anchor="start" font-weight="400" style="font-family:JetBrains Mono,monospace">align: 1 − cos(z, Ê_S) + KL(p_S ‖ p_z)  ·  rank: InfoNCE  ·  Ê_D(d) never changes</text></svg></div><div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">one RTX 3080</p><p class="chip red">≈ 20 min to train</p></div>
 <p class="src">Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.</p>
-<aside>[~2 min] [Start at the teacher targets.]
-
-I needed a table whose pooled vectors would make sense to an index full of Stella passages. I began with Stella's encoding of each token. I also gave rare terms more initial weight using inverse document frequency. That gives each row a starting point before I've asked it to represent a whole query.
-
-[Follow the two training phases.]
-
-For the first pass I saved Stella's vectors and used them as targets. On paired examples I also matched how Stella distributed its scores across candidate passages. A query vector can look close to the teacher's and still put a different passage first. Matching scores gives the table a chance to learn which of those differences matters.
-
-Then I trained with query and passage pairs to put the relevant passage ahead of negatives in a frozen bank. I masked known positives and candidates Stella scored close to or better than the positive. Some of those could answer the question too. At export I folded the learned weights into the rows that the encoder reads.
-
-The desktop retrain estimate assumes I have the teacher outputs ready. For a new teacher, I estimated eight to 12 hours just to prepare Zero's targets. I can reuse those targets across attempts. Nano can train on Stella's outputs alone, which gives me a way to train a contextual encoder on text without relevance labels.</aside>
+<aside>[~2 min]
+Why it matters: the table learns to speak Stella without touching the index.
+- Goal: rows whose average lands where Stella would put the query.
+- Start: each row is Stella's encoding of that single token. Rare tokens start with more weight (IDF).
+- Phase 1, Align (16,000 steps, batches of 512):
+  - Targets: Stella's query vectors, computed once and saved.
+  - Loss part one: point the same way as Stella's vector (1 − cosine).
+  - Loss part two: for labeled queries, match how Stella spreads its scores over the relevant passage and 31 other candidates (KL divergence).
+  - Why both: a vector can look close to Stella's and still rank a different passage first.
+- Phase 2, Rank (2,500 steps): InfoNCE on 338,076 labeled query-passage pairs.
+  - Push the relevant passage above 32,768 negatives from a frozen bank.
+  - Drop candidates Stella scores close to or above the relevant one: they may answer the question too.
+- [Formula line] Ê_D, the document side, never changes.
+- Cost: about 20 minutes on one RTX 3080, once the targets exist. A new teacher needs 8 to 12 hours to compute targets first.
+- All training sources allow commercial use of the trained weights.
+Next: I assumed the best retriever would make the best table. It did not.</aside>
 </section>

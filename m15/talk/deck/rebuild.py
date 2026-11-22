@@ -524,12 +524,12 @@ for v in (0, 1, 2):
     g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="70" y2="480" stroke="{LINE}" stroke-width="2"/>')
     g.append(t(SX(v), 520, str(v), 26, MUT, "middle", 400, True))
 g.append(t(SX(2.2), 520, "ms", 26, MUT, "end", 400, True))
-y = 80
+y = 380
 g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
 g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="2000" height="64" fill="{TEAL}"/>')
 g.append(t(1640, y + 56, "20.8 ms  →", 40, "#0b0f19", "end", 700))
 for i, (n, tot, enc, c) in enumerate([("Nano", 2.04, 0.807, VIO), ("Zero", 0.86, 0.041, RED)]):
-    y = 230 + i * 150
+    y = 80 + i * 150
     g.append(t(0, y + 54, n, 44, c, "start", 600))
     g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(tot * enc) - SX(0):.0f}" height="64" fill="{TEAL}"/>')
     g.append(f'<rect x="{SX(tot * enc):.0f}" y="{y + 10}" width="{SX(tot) - SX(tot * enc):.0f}" height="64" fill="{ORG}"/>')
@@ -638,5 +638,32 @@ write("plan", " foot", "Quiet Hours Get Stella, Peaks Get Zero",
       f"second Stella can't keep up, so Nano takes over. [Point right.] Past a thousand, Zero mixes in and the search narrows. "
       f"The average quality drops from {q0:.2f} to {q1:.2f}, and it never goes below the floor I set. Nothing is dropped and "
       f"nothing is re-encoded. Let me show you it running.</aside>")
+
+# takeaways: four lines to remember
+_TK = (("Measure the whole request", "not just the encoder"), ("Pick the encoder and its ef together", "cheaper vectors need a wider search"),
+       ("Set the quality floor first", "it decides which encoder ships"), ("One index, any query encoder", "so every request can choose"))
+g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
+for i, (a, b) in enumerate(_TK):
+    y = 60 + i * 150
+    g.append(t(0, y + 40, f"0{i + 1}", 44, RED, "start", 700, True))
+    g.append(t(120, y + 40, a, 52, WHITE, "start", 700))
+    g.append(t(120, y + 92, b, 34, GRAY))
+g.append("</svg>")
+write("takeaways", "", "What to Take Home", '<div style="margin-top:24px">' + "".join(g) + "</div>")
+
+# Speaker notes: talking_points.md is the one source; it replaces every note written above.
+_TP = (Path(__file__).parent / "talking_points.md").read_text()
+for sec in re.split(r"^## ", _TP, flags=re.M)[1:]:
+    head, body = sec.split("\n", 1)
+    sid, mins = [x.strip() for x in head.split("·")]
+    f = S / f"{sid}.html"
+    html = f.read_text()
+    note = f"<aside>[{mins}]\n" + body.strip().replace("&", "&amp;").replace("<", "&lt;") + "</aside>"
+    assert html.count("<aside>") == 1, sid
+    f.write_text(re.sub(r"<aside>.*?</aside>", lambda m: note, html, flags=re.S))
+
+for sid in ("plan", "solved"):                                  # backup slides stay out of the main run
+    f = S / f"{sid}.html"
+    f.write_text(re.sub(r'<section id="(\w[\w-]*)" class="([^"]*)"[^>]*>', r'<section id="\1" class="\2" hidden>', f.read_text(), count=1))
 
 print("rebuilt")

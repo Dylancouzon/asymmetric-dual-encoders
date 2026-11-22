@@ -10,9 +10,10 @@
 <span style="color:#9CDCFE">zero</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/constella-zero"</span>)
 <span style="color:#9CDCFE">query</span> = <span style="color:#DCDCAA">next</span>(<span style="color:#9CDCFE">zero</span>.<span style="color:#DCDCAA">embed</span>([<span style="color:#CE9178">"how far is the moon?"</span>]))
 <span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>)</pre><p style="margin-top:24px;font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p>
-<aside>[~1.25 min] [Point to Qdrant/stella-en-400M-v5-doc-onnx in the editor.] I'd use Stella's document model to embed the passages and upload those vectors once. [Move to Qdrant/constella-zero, then point to the collection name in the query call.] When a question comes in, Zero makes the query vector and I search the same collection. If I want to try Nano, I swap the model on that line. I can send it the same questions and see which passages move up or down.
-
-[Point to the install command.] I'd install FastEmbed 0.9.0 or later with pip. The first thing I'd do on Monday is pull a batch of real queries and judge which passages I'd want back.
-
-[Advance to the thank-you slide. Leave the QR codes up for questions.]</aside>
+<aside>[~1 min]
+- [Comment 1] Index once with Stella's document model in FastEmbed.
+- [Comment 2] Query the same collection with Zero. To try Nano, change one model name.
+- [pip line] FastEmbed 0.9.0 or later.
+- Monday: pull a batch of real queries, judge the passages you want back, compare the encoders on your index.
+[Advance to the thank-you slide.]</aside>
 </section>
