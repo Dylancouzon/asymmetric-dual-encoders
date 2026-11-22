@@ -1,20 +1,20 @@
-# Swappable Query Encoders for a Frozen Index: From Transformer to Lookup Table
+# Constella: Reducing the Cost of Dense Retrieval on a Frozen Index
 
 ## Abstract
 
-Dense vector search reuses document vectors, but it still has to turn each uncached query into a vector. We trained Constella Nano and Zero to search an index built with Stella, a 400-million-parameter English embedding model. Nano uses a smaller transformer. Zero builds a query vector from a learned lookup table, with no neural network at query time. All three encoders can search the same index, so an application can choose one for each request.
+Replacing an embedding model can require re-encoding the entire corpus. We trained two query encoders for an existing index built with Stella, a 400-million-parameter English embedding model. Constella Nano uses a smaller transformer. Constella Zero produces dense query vectors from a learned lookup table without running a neural network. An application can choose among all three encoders for each request while keeping the same index.
 
-On a binary-quantized index of one million MS MARCO passages, Stella took a median of 21.3 ms for query encoding plus search. Zero took 1.1 ms (19× speedup) and retained 85% of Stella's relevance score. Nano took 2.5 ms (8.6× speedup) and retained 95% of Stella's relevance score.
+On a binary-quantized index of one million MS MARCO passages, Stella took a median of 21.3 ms for query encoding and search. Zero took 1.1 ms, a 19× speedup, and retained 85% of Stella's relevance score. Nano took 2.5 ms, an 8.6× speedup, and retained 95%.
 
-The paper describes how to apply this method to an existing index. Engineers can fit replacements to their original model's query vectors, test how well each ranks their documents, and measure the combined time for encoding and search.
+In a matched test on the same workload, Zero scored 24.5% higher than BM25 on relevance and took 0.45 ms longer at the median. That makes a lookup table a practical option for traffic where it meets the application's relevance target. We show how to test that choice on an existing index, using judged queries to determine where a cheaper encoder is good enough and timing the full request to see what it saves.
 
 ## 1. Introduction
 
 Changing the embedding model behind an existing search index can mean re-encoding the entire corpus. The query encoder runs on every uncached request, so replacing that part alone could reduce a recurring cost. We asked how much of that work a cheaper encoder could take over while the documents and index stayed fixed.
 
-The original query encoder served as the teacher. We ran it on example queries and used its output vectors to train a cheaper student encoder. Because the student learned to produce vectors in the same space, it could search the documents already in the index. Prior work established this form of distillation [3, 5]. Our question was how to choose a student for an existing index and what that choice would save.
+The original query encoder served as the teacher. We ran it on example queries and used its output vectors to train a cheaper student encoder. Because the student learned to produce vectors in the same space, it could search the documents already in the index. Prior work established this form of distillation [3, 5]. We asked whether one index could support several query encoders with different costs, and how much retrieval quality each could preserve.
 
-Training a student to match the teacher's vectors leaves two practical questions. The first is whether the student still ranks relevant documents well. We compared the rankings on a separate set of judged queries and scored every document to isolate the encoder's effect (§2). The second is whether faster encoding reduces the combined cost of encoding and search. The new query vectors can require a broader search over the same index, taking back some of the time saved during encoding (§5).
+We first tested whether the replacement could still rank relevant documents well. For a separate set of judged queries, we scored every document to measure the effect of changing the encoder (§2). We then measured encoding and search together. A replacement can need a wider search over the same graph, which can consume some of the time saved during encoding (§5).
 
 We chose ten public English embedding models with the same tokenizer vocabulary and used the same method to fit a lookup table for each. On six retrieval benchmarks, the model with the highest score using its original query encoder produced the lowest-scoring lookup table. We chose Stella for the case study because its fitted lookup table scored highest in that comparison.
 
@@ -34,11 +34,11 @@ Prior studies of graph search have examined how differences between query and do
 
 For an existing index, the original embedding model is already the teacher. We compared teachers to see whether their retrieval scores could predict how well their replacements would rank documents.
 
-For each of the ten public English embedding models in Figure 2, we used ridge regression to fit two query encoders. One learned a vector for each token in a lookup table, and the other learned a projection on top of a frozen transformer. Both fits used the original encoder's query vectors as targets, and both searched its existing document vectors. The registered comparison covered lookup tables for those ten models. In exploratory analyses, we extended that comparison to 16 more models and evaluated the transformer fits.
+For each of the ten models in Figure 2, we fitted a lookup table and a projection on top of a frozen transformer. We used ridge regression, which fits the teacher's query vectors while applying a penalty to constrain the fitted weights. Both candidates searched the original model's existing document vectors. The registered comparison covered lookup tables for those ten models. We also evaluated the transformer fits in an exploratory analysis.
 
-We fitted candidates on 337,981 queries paired with vectors from the original encoders. Fitting used no relevance labels. To choose the penalty by retrieval quality, we used separate, judged queries from the CQADupStack physics and programmers forums. For evaluation, we scored every eligible document by cosine similarity. We measured nDCG@10, which gives more weight to relevant documents ranked higher in the top ten. We averaged the scores equally across NFCorpus, SCIDOCS, SciFact, TREC-COVID, FiQA, and ArguAna [13].
+We fitted the candidates to the original encoders' vectors for 337,981 queries. To choose the penalty strength, we compared how well each setting ranked documents on separate judged queries from the CQADupStack Physics and Programmers forums. We then fixed that setting and evaluated the candidates on six other datasets using exact cosine search. We gave each dataset equal weight. Our metric, nDCG@10, rewards placing relevant documents higher in the top ten results [13].
 
-Among the ten registered models, gte-large-en-v1.5 scored highest with its original query encoder and lowest with its fitted lookup table. Stella's fitted table scored highest. Both original encoders produced 1,024-dimensional vectors. Across the expanded set of 26 models, original and fitted-table retrieval scores had a rank correlation of +0.09 (95% interval −0.39 to +0.52) [1].
+Among the ten registered models, gte-large-en-v1.5 ranked first with its original encoder and last with its fitted lookup table. Stella produced the highest-scoring table. Both models used 1,024-dimensional vectors. The cause of the reversal remains open. We tested 16 more models to see whether the pattern held beyond the original ten. Across all 26, a model's original retrieval rank gave little indication of where its lookup table would rank [1].
 
 ![Dot plot of exact nDCG@10 for ten models. The model with the highest original score has the lowest fitted lookup-table score. Stella has the highest fitted lookup-table score.](figures/manuscript/figure-2.png)
 
@@ -46,7 +46,7 @@ Among the ten registered models, gte-large-en-v1.5 scored highest with its origi
 
 We also tested whether query-vector similarity could predict retrieval quality. We measured similarity as the mean cosine similarity between each table's query vectors and its original encoder's vectors. Both e5 tables matched their original encoders more closely than Stella's table did, but both scored lower on retrieval [1].
 
-The best of the 26 fitted lookup tables on the two development forums also ranked first on the six evaluation datasets. A predictor based on the original encoder's retrieval score and vector dimension chose a weaker table. The two selection methods tied on seven new models with completed table fits [1].
+The table that ranked first on the development queries also ranked first on the evaluation datasets. A predictor based on the original encoder's retrieval score and vector dimension picked a weaker table. In a follow-up with seven new models with completed table fits, the two methods picked tables with the same evaluation score [1].
 
 For an existing index, use its original model as the teacher. Compare replacement encoders on separate queries with relevance judgments. In our registered comparison, fitting a table took four to seven minutes per model on an A100. That time included encoding the training queries, except for Stella, whose vectors were already cached [1].
 
@@ -68,15 +68,15 @@ We fitted a linear projection and bias by ridge regression to map these inputs i
 
 The ridge fits compared two query encoder designs across embedding models. For Stella's index, we trained Nano and Zero separately and kept the stored document vectors fixed.
 
-Training for another index requires representative queries encoded with the original query model and preprocessing. A hosted encoder can supply targets for the initial transformer fit if it returns the same query vectors. Passage targets come from the document encoder that built the index. The projection must match the stored vector dimension, and lookup rows follow the original tokenizer's token IDs. We generated Stella's targets locally [1].
+Training a replacement requires vectors from the original encoder for queries representative of the workload. A hosted endpoint can supply those targets for the initial transformer fit if it reproduces the original query vectors. If training includes passages, their targets come from the document encoder that built the index. The transformer projection must match the stored vector dimension. Each lookup table row must match a token ID from the original tokenizer [1].
 
 ### Training Nano
 
-**Initialization.** Nano is a 34.5-million-parameter query encoder built from BAAI's bge-small-en-v1.5 [8, 15]. With the backbone frozen, we used the three layers from Section 2 to fit a linear projection into Stella's 1,024-dimensional space by ridge regression.
+**Initialization.** Nano is a 34.5-million-parameter query encoder built from BAAI's bge-small-en-v1.5 [8, 15]. With the backbone frozen, we averaged the token vectors from layers 12, 8, and 4 separately and joined the three averages. We used ridge regression to fit a linear projection from those values into Stella's 1,024-dimensional space.
 
 **Training objective.** We then trained the backbone and projection jointly. For each query or passage, we minimized squared error between Nano's normalized output and Stella's normalized vector for the same text. Stella's vectors supplied the training targets without relevance labels [1].
 
-We used three query batches for every document batch. The document batches exposed Nano to a wider range of text while keeping most updates focused on queries. The released checkpoint saw about 200 million training examples, counting repeats. At serving time, Nano encodes queries for the existing Stella index [1].
+We used three query batches for every document batch. The document batches exposed Nano to a wider range of text while keeping most updates focused on queries. The released checkpoint saw about 200 million training examples, counting repeats [1].
 
 **Development comparison.** We kept generated queries in Nano's training mix after a registered comparison at five million training examples per run. The baseline used factoid questions, product queries, claims, keywords, and titles. Adding seven generated forms and redistributing the same training budget across all 12 raised mean nDCG@10 from 0.4903 to 0.5024. MedicalQARetrieval accounted for 82% of the gain [1].
 
@@ -86,7 +86,7 @@ We used three query batches for every document batch. The document batches expos
 
 **Training objective.** We first trained the table rows and token weights to reproduce Stella's query vectors. We used both labeled and unlabeled text for this step. For labeled queries, we also matched Stella's distribution of scores across the relevant document and 31 other candidates [1].
 
-In the second stage, we drew from a pool of 338,076 labeled query-document pairs to teach Zero to rank relevant documents ahead of negatives. We sampled negatives from a document bank and the training data. We excluded known relevant documents and candidates that Stella scored close to or above the labeled relevant document [1].
+The first stage taught Zero to match Stella's outputs. The second used relevance labels to train Zero directly on which documents should rank higher. From a pool of 338,076 labeled query-document pairs, we trained Zero to score each judged relevant document above alternatives sampled from a document bank and the training data. To avoid pushing down potentially relevant results, we excluded known relevant documents and alternatives that Stella scored nearly as high as the labeled document or higher [1].
 
 **Development comparison.** At query time, Zero weights each distinct token's vector by the square root of its count and normalizes the sum. A token that appears four times gets twice the weight of a single occurrence. With the int8 rows held fixed, square-root weighting raised mean development nDCG@10 from 0.6114 to 0.6153. The comparison was inconclusive on a second checkpoint [1].
 
@@ -207,7 +207,7 @@ For a search team, the practical question is how much traffic can move to a chea
 
 Stella. We pinned ffeb2b7e, stored normalized 1,024-dimensional document vectors in fp16, and used cosine similarity. Query encoding used fp32, the s2p_query prompt, and a maximum length of 512. The fitted students used no query prefix [1, 8, 14].
 
-Fitted candidates. We swept λ from 10⁻⁴ to 10⁻¹ and extended the range by one decade if selection reached an endpoint. Tokenization included special tokens and truncated at 512 tokens. The conjugate-gradient residual tolerance was 10⁻⁶ in fp32 and 10⁻⁸ in fp64. We used attention-masked means for the transformer features and froze bge-small at revision 5c38ec7c. The list of teachers includes bge-small, so that fitted transformer shares its teacher's backbone [1, 15]. An exact rerun requires recovering or reconstructing the cleaned fitting-query list and verifying it against the recorded hash [1].
+Fitted candidates. We swept λ from 10⁻⁴ to 10⁻¹ and extended the range by one decade if selection reached an endpoint. Tokenization included special tokens and truncated at 512 tokens. The conjugate-gradient residual tolerance was 10⁻⁶ in fp32 and 10⁻⁸ in fp64. We used attention-masked means for the transformer features and froze bge-small at revision 5c38ec7c. The list of teachers includes bge-small, so that fitted transformer shares its teacher's backbone [1, 15]. An exact rerun requires recovering or reconstructing the cleaned fitting-query list and verifying it against the recorded hash [1]. Across the 26 models in the exploratory lookup-table comparison, Spearman's rank correlation was +0.09 (95% interval −0.39 to +0.52) [1].
 
 Full training. Zero ran 16,000 steps of alignment and teacher-score matching at batch 512, then 2,500 contrastive steps with 32,768 bank negatives plus supplied negatives. We masked known positives and candidates whose Stella score exceeded the positive document's score minus 0.02. Nano used AdamW at batch 32 over three learning-rate cycles from 10⁻⁴ to 10⁻⁵. The released model is the endpoint of the third cycle. The companion configs pin the losses, sampling, schedules, and source manifests [1].
 

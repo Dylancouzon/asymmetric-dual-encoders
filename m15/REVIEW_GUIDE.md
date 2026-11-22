@@ -2,7 +2,7 @@
 
 ## What is ready to review
 
-The current manuscript is **Swappable Query Encoders for a Frozen Index: From Transformer to Lookup Table** on `m15-whitepaper`. Start with [the PDF](latex/paper.pdf), [the Markdown source](PAPER.md), and [the evidence map](PAPER_EVIDENCE_MAP.md).
+The current manuscript is **Constella: Reducing the Cost of Dense Retrieval on a Frozen Index** on `m15-whitepaper`. Start with [the PDF](latex/paper.pdf), [the Markdown source](PAPER.md), and [the evidence map](PAPER_EVIDENCE_MAP.md).
 
 The November 21 revision incorporates coauthor feedback and the Natural Questions cloud throughput experiment. [LOG.md](LOG.md) records the revisions. Earlier sign-offs apply to their named versions.
 
