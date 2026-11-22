@@ -1,0 +1,231 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (planner output on fixed costs)",
+  "dataset": "nq",
+  "floor": 0.5,
+  "headroom": 0.8,
+  "encode_per_s": {
+    "stella": 80,
+    "nano": 1400,
+    "zero": 17000
+  },
+  "plans": [
+    {
+      "rate": 40,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 1.0,
+        "nano": 0.0,
+        "zero": 0.0
+      },
+      "quality": 0.6362815393089273,
+      "status": "ok"
+    },
+    {
+      "rate": 60,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 1.0,
+        "nano": 0.0,
+        "zero": 0.0
+      },
+      "quality": 0.6362815393089273,
+      "status": "ok"
+    },
+    {
+      "rate": 100,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.61,
+        "nano": 0.39,
+        "zero": 0.0
+      },
+      "quality": 0.6144308289314298,
+      "status": "ok"
+    },
+    {
+      "rate": 150,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.39,
+        "nano": 0.61,
+        "zero": 0.0
+      },
+      "quality": 0.6021047871800209,
+      "status": "ok"
+    },
+    {
+      "rate": 200,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.27,
+        "nano": 0.73,
+        "zero": 0.0
+      },
+      "quality": 0.5953814916792525,
+      "status": "ok"
+    },
+    {
+      "rate": 300,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.16,
+        "nano": 0.84,
+        "zero": 0.0
+      },
+      "quality": 0.589218470803548,
+      "status": "ok"
+    },
+    {
+      "rate": 450,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.09,
+        "nano": 0.91,
+        "zero": 0.0
+      },
+      "quality": 0.5852965484280997,
+      "status": "ok"
+    },
+    {
+      "rate": 600,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.05,
+        "nano": 0.95,
+        "zero": 0.0
+      },
+      "quality": 0.5830554499278435,
+      "status": "ok"
+    },
+    {
+      "rate": 800,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.02,
+        "nano": 0.98,
+        "zero": 0.0
+      },
+      "quality": 0.5813746260526514,
+      "status": "ok"
+    },
+    {
+      "rate": 1000,
+      "ef": 1024,
+      "oversampling": 8.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 1.0,
+        "zero": 0.0
+      },
+      "quality": 0.5802540768025234,
+      "status": "ok"
+    },
+    {
+      "rate": 1200,
+      "ef": 512,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.92,
+        "zero": 0.08
+      },
+      "quality": 0.5727885557747655,
+      "status": "ok"
+    },
+    {
+      "rate": 1500,
+      "ef": 512,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.72,
+        "zero": 0.28
+      },
+      "quality": 0.5573029770107236,
+      "status": "ok"
+    },
+    {
+      "rate": 1800,
+      "ef": 512,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.58,
+        "zero": 0.42
+      },
+      "quality": 0.5464630718758943,
+      "status": "ok"
+    },
+    {
+      "rate": 2000,
+      "ef": 512,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.52,
+        "zero": 0.48
+      },
+      "quality": 0.5418173982466818,
+      "status": "ok"
+    },
+    {
+      "rate": 2250,
+      "ef": 256,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.45,
+        "zero": 0.55
+      },
+      "quality": 0.5291926591777129,
+      "status": "ok"
+    },
+    {
+      "rate": 2500,
+      "ef": 256,
+      "oversampling": 4.0,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.39,
+        "zero": 0.61
+      },
+      "quality": 0.5244025581408505,
+      "status": "ok"
+    }
+  ],
+  "receipt": {
+    "script": "m15src/talk_router_plan.py",
+    "script_sha256": "6582e120698eb47b099aa8ec632bcd6ed2b8266d58a438e2569e1b35c1bad5bf",
+    "git_commit": "b0b8253a481651a46f800c434f954c4e7db3b5ea",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-22T18:41:36Z",
+    "finished_utc": "2026-11-22T18:41:36Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2"
+    },
+    "seed": 20260930,
+    "inputs": {
+      "edge_nq": {
+        "path": "results/m15_talk_edge_nq.json",
+        "sha256": "aa2b09b1472c763af24ccef9e5964f4bea8e072ed0833b5e7555e7180206458b"
+      }
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "bfbf257dc8784bf2160d47e405fa989809d190b1ae302d5b42c1c4610d9facb0"
+  }
+}

@@ -34,51 +34,10 @@ def t(x, y, s, size=28, fill=WHITE, anchor="start", weight=400, mono=False):
             f'font-weight="{weight}"{f}>{s}</text>')
 
 
-# 1. cost: one block paid once, a stream of query ticks paid forever
-g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
-g.append(f'<rect x="0" y="100" width="440" height="200" rx="16" fill="#1d2433" stroke="{GRAY}" stroke-width="3"/>')
-g.append(t(220, 170, "2.68M passages", 34, WHITE, "middle", 600))
-g.append(t(220, 222, "5.3 GPU-hours", 34, WHITE, "middle", 600))
-g.append(t(220, 270, "once", 30, GRAY, "middle"))
-for i in range(60):
-    x = 490 + i * 19.5
-    h = 200
-    g.append(f'<rect x="{x:.0f}" y="100" width="10" height="{h}" rx="3" fill="{RED}" opacity="{0.35 + 0.65 * (i % 5 == 0)}"/>')
-g.append(t(490, 350, "Stella per query: 31.6 ms · 25 GFLOPs", 34, WHITE, "start", 600))
-g.append(t(490, 396, "1M queries ≈ 10.3 hours of encoding", 30, GRAY))
-g.append(f'<line x1="0" y1="450" x2="1664" y2="450" stroke="{LINE}" stroke-width="2"/>')
-g.append(t(0, 516, "C(t) = N · c_D + Q(t) · (c_Q + c_search)", 40, WHITE, "start", 400, True))
-g.append("</svg>")
-write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
-      '<div style="margin-top:40px">' + "".join(g) + "</div>",
-      "2,681,468 NQ passages, Stella fp32, one RTX 3080, steady 141 passages/s. Query: Stella with its prompt, "
-      "median of 31 tokens, M5 Pro CPU, 4 threads, p50; 10.3 h uses the mean (37 ms).")
-
-# 2. arch: three encoders converge on one index; FLOPs as the proof
-g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
-enc = [("Stella", "435M-parameter transformer", "25 GFLOPs / query", GRAY, 40),
-       ("Nano", "34.5M · bge-small + linear head", "0.54 GFLOPs / query", VIO, 250),
-       ("Zero", "token lookup table · 30,522 × 1024", "28 KFLOPs / query", RED, 460)]
-for name, what, fl, c, y in enc:
-    g.append(f'<rect x="0" y="{y}" width="620" height="150" rx="16" fill="#151b2b" stroke="{c}" stroke-width="3"/>')
-    g.append(t(32, y + 58, name, 44, c, "start", 600))
-    g.append(t(32, y + 100, what, 28, GRAY))
-    g.append(t(32, y + 134, fl, 26, WHITE, "start", 600, True))
-    g.append(f'<path d="M620 {y + 75} C 820 {y + 75}, 860 320, 1010 320" fill="none" stroke="{c}" stroke-width="4"/>')
-g.append(f'<rect x="1010" y="170" width="654" height="300" rx="20" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>')
-g.append(t(1337, 240, "One Stella index", 44, WHITE, "middle", 600))
-g.append(t(1337, 296, "2.68M vectors · 1024-d", 30, GRAY, "middle"))
-g.append(t(1337, 342, "HNSW · binary codes in RAM", 30, GRAY, "middle"))
-g.append("</svg>")
-write("arch", " foot", "Three Query Encoders Search One Index",
-      '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
-      "Zero: 2 FLOPs per gathered value plus normalization.")
-
 # 3. cloud: CPU per million queries (machine-normalized), dollars as labels, ratios as the outcome
 g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
-rows = [("Stella", 123.0, "123 vCPU-h · $6.07", GRAY), ("Nano", 4.786, "4.8 vCPU-h · $0.24", VIO),
-        ("Zero", 0.03296, "2 vCPU-min · $0.0016", RED)]
+rows = [("Stella", 123.0, "123 vCPU-h", GRAY), ("Nano", 4.786, "4.8 vCPU-h", VIO),
+        ("Zero", 0.03296, "2 vCPU-min", RED)]
 x0, x1, lo, hi = 200, 1060, math.log10(0.01), math.log10(300)
 X = lambda v: x0 + (math.log10(v) - lo) / (hi - lo) * (x1 - x0)
 g.append(t(x0, 30, "CPU time to encode 1M queries (log scale)", 26, MUT))
@@ -107,13 +66,13 @@ box = lambda x, w, title, sub, c: (
 arrow = lambda x: f'<path d="M{x} 170 l40 0" stroke="{MUT}" stroke-width="4"/><path d="M{x + 40} 160 l14 10 l-14 10z" fill="{MUT}"/>'
 g = ['<svg width="1664" height="420" viewBox="0 0 1664 420">',
      box(0, 360, "Stella targets", ["queries + passages", "computed once"], GRAY), arrow(372),
-     box(430, 380, "1 · Align", ["match Stella's", "vectors and scores"], WHITE), arrow(822),
-     box(880, 380, "2 · Rank", ["positives vs", "32,768 negatives"], WHITE), arrow(1272),
+     box(430, 380, "Align", ["match Stella's", "vectors and scores"], WHITE), arrow(822),
+     box(880, 380, "Rank", ["positives vs", "32,768 negatives"], WHITE), arrow(1272),
      box(1330, 334, "31 MB table", ["int8 rows", "+ row scales"], RED),
      t(0, 360, "align: 1 − cos(z, Ê_S) + KL(p_S ‖ p_z)  ·  rank: InfoNCE  ·  Ê_D(d) never changes", 30, WHITE, "start", 400, True),
      "</svg>"]
-chips = ('<div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">RTX 3080 · 10 GB</p>'
-         '<p class="chip red">≈ 20 min with prepared targets</p></div>')
+chips = ('<div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">one RTX 3080</p>'
+         '<p class="chip red">≈ 20 min to train</p></div>')
 write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
       '<div style="margin-top:32px">' + "".join(g) + "</div>" + chips,
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
@@ -129,7 +88,7 @@ for k in range(12):
     if hot:
         g.append(t(318, y + 21, f"L{k + 1}", 24, VIO, "start", 600, True))
         g.append(f'<path d="M370 {y + 13} C 480 {y + 13}, 520 260, 600 260" fill="none" stroke="{VIO}" stroke-width="3"/>')
-g.append(t(150, 500, "bge-small · 12 × 384", 26, GRAY, "middle"))
+g.append(t(150, 500, "bge-small, 12 layers", 26, GRAY, "middle"))
 g.append(f'<rect x="600" y="200" width="300" height="120" rx="14" fill="#1d1d3d" stroke="{VIO}" stroke-width="3"/>')
 g.append(t(750, 252, "mean-pool ⊕", 32, WHITE, "middle", 600))
 g.append(t(750, 292, "3 × 384 = 1,152", 26, GRAY, "middle", 400, True))
@@ -141,7 +100,6 @@ g.append(f'<path d="M1260 260 l90 0" stroke="{MUT}" stroke-width="4"/><path d="M
 g.append(f'<circle cx="1500" cy="260" r="130" fill="none" stroke="{GRAY}" stroke-width="3" stroke-dasharray="8 8"/>')
 g.append(t(1500, 252, "Stella's", 30, WHITE, "middle", 600))
 g.append(t(1500, 290, "space", 30, WHITE, "middle", 600))
-g.append(t(750, 400, "+0.0217 dev nDCG@10 vs last layer only", 28, VIO, "middle", 600))
 g.append("</svg>")
 write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space",
       '<div style="margin-top:32px">' + "".join(g) + "</div>"
@@ -172,7 +130,7 @@ for gf, lab in ((0.3, "0.3"), (1, "1"), (3, "3"), (10, "10"), (30, "30")):
     g.append(t(PX(gf), H - B + 44, lab, 26, MUT, "middle", 400, True))
 g.append(t((X0 + W - R) / 2, H - 8, "GFLOPs to encode one query (log)", 26, GRAY, "middle"))
 g.append(t(L, 22, "nDCG@10, six BEIR datasets", 26, GRAY))
-g.append(t(W - R, 22, "10 most-downloaded open models, each on its own index", 26, MUT, "end"))
+g.append(t(W - R, 22, "10 most-downloaded open models", 26, MUT, "end"))
 LAB = {"minilm-l6": ("MiniLM-L6", -22, 10, "end"), "minilm-l12": ("MiniLM-L12", 22, 18, "start"),
        "gte-small": ("gte-small", -22, 10, "end"), "e5-small-v2": ("e5-small", 22, 10, "start"),
        "bge-small-en-v1.5": ("bge-small", 22, 10, "start"), "bge-base-en-v1.5": ("bge-base", 22, 10, "start"),
@@ -206,39 +164,6 @@ write("bench", " foot", "One Index, Three Price Points",
       "datasets. On the other four, Zero trails BM25, 0.410 to 0.441. I'd judge each one on my own traffic. So how does a "
       "table with no transformer get this close? Here's what Zero does with an actual query.</aside>")
 
-# 7. split: whole-request bars on one millisecond axis
-W, L0, AX = 1664, 230, 2.2
-SX = lambda v: L0 + v / AX * 820
-g = [f'<svg width="{W}" height="580" viewBox="0 0 {W} 580">']
-g.append(t(SX(0), 30, "median request, ms", 26, MUT))
-g.append(f'<rect x="{SX(0) + 300}" y="10" width="28" height="20" rx="4" fill="{TEAL}"/>')
-g.append(t(SX(0) + 338, 30, "encode", 26, MUT))
-g.append(f'<rect x="{SX(0) + 490}" y="10" width="28" height="20" rx="4" fill="{ORG}"/>')
-g.append(t(SX(0) + 528, 30, "search", 26, MUT))
-g.append(t(1420, 30, "nDCG@10", 26, MUT))
-for i, (n, tot, enc, nd, c, star) in enumerate([("Nano", 2.04, 0.807, "0.579", VIO, "99.2% of exact"),
-                                                ("Zero", 0.86, 0.041, "0.510", RED, "98.5% of exact")]):
-    y = 80 + i * 150
-    g.append(t(0, y + 54, n, 44, c, "start", 600))
-    g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(tot * enc) - SX(0):.0f}" height="64" fill="{TEAL}"/>')
-    g.append(f'<rect x="{SX(tot * enc):.0f}" y="{y + 10}" width="{SX(tot) - SX(tot * enc):.0f}" height="64" fill="{ORG}"/>')
-    g.append(t(SX(tot) + 18, y + 56, f"{tot} ms", 40, WHITE, "start", 600))
-    g.append(t(1420, y + 56, nd, 40, WHITE, "start", 600))
-    g.append(t(1420, y + 100, star, 32 if star.startswith("98") else 26, RED if star.startswith("98") else GRAY, "start", 600 if star.startswith("98") else 400))
-y = 440
-g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
-g.append(t(SX(0), y + 54, "20.8 ms (off scale)", 34, GRAY))
-g.append(t(1420, y + 56, "0.631", 40, WHITE, "start", 600))
-g.append(t(1420, y + 96, "99.0% of exact", 26, GRAY))
-for v in (0, 1, 2):
-    g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="80" y2="360" stroke="{LINE}" stroke-width="2"/>')
-    g.append(t(SX(v), 395, str(v), 24, MUT, "middle", 400, True))
-g.append("</svg>")
-write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×",
-      '<div style="margin-top:32px">' + "".join(g) + "</div>",
-      "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
-      "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10; "
-      "Zero misses that at every tested point (best shown: ef 1024, os 8). Exploratory.")
 # 8. zero-mech: real rows Zero gathers for one query, pooled, next to Stella's vector
 
 SD = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_slide_data.json").read_text())
@@ -275,24 +200,6 @@ write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\". "
       "Colour: sign and size of each value, scaled per strip. Stella: its query vector with prompt. results/m15_talk_slide_data.json.")
-
-# 9. order: the angle between a query and its reversal, per encoder
-oc = SD["order_cosine"]
-ang = {k: math.degrees(math.acos(min(1.0, v["median_cos"]))) for k, v in oc.items()}
-g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
-for i, (k, n, c) in enumerate((("stella-query", "Stella", GRAY), ("nano", "Nano", VIO), ("zero", "Zero", RED))):
-    ox, oy, Lr = 60 + i * 560, 470, 440
-    a = math.radians(ang[k])
-    g.append(f'<line x1="{ox}" y1="{oy}" x2="{ox + Lr}" y2="{oy}" stroke="{c}" stroke-width="6"/>')
-    g.append(f'<line x1="{ox}" y1="{oy}" x2="{ox + Lr * math.cos(a):.1f}" y2="{oy - Lr * math.sin(a):.1f}" stroke="{c}" stroke-width="6" opacity="0.55"/>')
-    g.append(t(ox, 380, n, 44, c, "start", 600))
-    g.append(t(ox, 300, f"{ang[k]:.1f}°", 88, WHITE, "start", 700))
-g.append(t(0, 60, "\"paris to rome\" vs \"rome to paris\": median angle between the two query vectors, 24 pairs", 30, GRAY))
-g.append("</svg>")
-write("order", " foot", "Reverse the Query, and Zero's Vector Does Not Move",
-      '<div style="margin-top:32px">' + "".join(g) + "</div>",
-      "Median over 24 frozen reversal pairs (m15/talk/word_order_pairs.json) of the angle between the two query "
-      "vectors; Zero's are identical. results/m15_talk_slide_data.json. Exploratory.")
 
 # 10. worst: slope chart, teacher score vs its fitted table, ten registered models
 REG = [("gte-base-en-v1.5", .5331, .3252), ("arctic-embed-m-v1.5", .5263, .3279), ("bge-base-en-v1.5", .5259, .3529),
@@ -340,53 +247,12 @@ write("close", " alt", "Keep Your Index. <span class=\"tr\">Make the Query Encod
 # ---- v5 overrides (owner review 2026-11-21) ----
 import random as _random
 
-# cost v7: cumulative query encoding against the one-time corpus encode; the crossing is the point
-_CR = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_crossover.json").read_text())["results"]
-_x = _CR["encoders"]["stella"]["crossover_queries"]
-W, H, L, R, T, B = 1664, 620, 150, 90, 40, 90
-XM, YM = 30e6, 3.2
-CX = lambda q: L + q / XM * (W - L - R)
-CY = lambda v: T + (YM - v) / YM * (H - T - B)
-g = [f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
-for v, lab in ((1, "1×"), (2, "2×"), (3, "3×")):
-    g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(v):.0f}" y2="{CY(v):.0f}" stroke="{LINE}" stroke-width="2"/>')
-    g.append(t(L - 20, CY(v) + 12, lab, 34, MUT, "end", 600, True))
-g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(0):.0f}" y2="{CY(0):.0f}" stroke="{MUT}" stroke-width="2"/>')
-for q in (0, 10e6, 20e6, 30e6):
-    g.append(t(CX(q), H - B + 46, f"{q / 1e6:.0f}M", 30, MUT, "middle", 400, True))
-g.append(t((L + W - R) / 2, H - 4, "queries served", 30, GRAY, "middle"))
-g.append(t(L, CY(3.2) + 4, "encoding compute, in whole-corpus encodes", 28, GRAY))
-g.append(f'<line x1="{L}" x2="{W - R}" y1="{CY(1):.0f}" y2="{CY(1):.0f}" stroke="{GRAY}" stroke-width="6"/>')
-g.append(t(W - R, CY(1) - 22, "the 2.68M-passage index · encoded once", 32, GRAY, "end", 600))
-g.append(f'<line x1="{CX(0)}" y1="{CY(0)}" x2="{CX(XM):.0f}" y2="{CY(XM / _x):.0f}" stroke="{RED}" stroke-width="7"/>')
-g.append(t(CX(19e6), CY(19e6 / _x) - 34, "Stella, every query", 36, RED, "end", 700))
-g.append(f'<circle cx="{CX(_x):.0f}" cy="{CY(1):.0f}" r="16" fill="{WHITE}"/>')
-g.append(t(CX(_x) + 28, CY(1) + 66, f"{_x / 1e6:.1f}M queries", 44, WHITE, "start", 700))
-g.append(t(CX(_x) + 28, CY(1) + 110, f"about {_x / 100 / 3600:.0f} hours at 100 queries/s", 30, GRAY, "start"))
-g.append("</svg>")
-write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
-      '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      f"BEIR NQ, analytic FLOPs (2·P·T + attention): 2,681,468 passages, mean {_CR['doc_tokens_mean']:.0f} tokens, no prompt, "
-      f"against the mean of the 3,452 NQ test queries with Stella's query prompt. Measured: the index took 5.3 GPU-hours on "
-      "one RTX 3080; one Stella query takes 20.5 ms on the M5 Pro CPU. Exploratory.",
-      note="<aside>[~1.5 min] I built tonight's passage index on my desktop. It took about five GPU-hours of steady encoding. "
-      "In real time it took six and a half hours, including a memory spill and a crash. I could go and make tea while that job ran. "
-      "I'd rather my users didn't have time to do the same.\n\n[Point to the grey line.] That's the index: 2.68 million passages, "
-      "paid for once. [Trace the red line from the origin.] Every question also goes through Stella before Qdrant can search. "
-      "A question is much shorter than a passage, so each one is cheap. But they never stop. [Point to the crossing.] After "
-      f"about {_x / 1e6:.1f} million queries I've spent more compute encoding questions than I spent on the whole corpus. At a "
-      "hundred queries a second, that's about a day. And that encode sits on the path of every request, roughly 20 "
-      "milliseconds on this laptop, against a quarter of a millisecond for the search itself.\n\nIf an agent calls search "
-      "several times to answer one question, those encodes can all sit on the path to the answer. I wanted to make that part "
-      "cheaper. What else could search the passage vectors I'd already paid to make?</aside>")
-
 # zero-mech v5: token rows on the left, one arrow, the result on the right
 g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
 for i, r in enumerate(ex["rows"]):
     y = 30 + i * 62
     g.append(t(190, y + 34, r["token"], 32, MUT if r["token"].startswith("[") else WHITE, "end", 600, True))
     g.append(strip(215, y, r["row"], w=700))
-g.append(t(215, 500, "one table row per token", 28, MUT))
 g.append(f'<path d="M960 245 l150 0" stroke="{WHITE}" stroke-width="5"/><path d="M1110 230 l24 15 l-24 15z" fill="{WHITE}"/>')
 g.append(t(1035, 300, "weighted", 28, WHITE, "middle", 600))
 g.append(t(1035, 336, "mean", 28, WHITE, "middle", 600))
@@ -401,35 +267,6 @@ write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup",
       "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\"; "
       "√count-weighted mean, then L2. First 48 of 1,024 dimensions; colour: sign and size of each value. "
       "Stella: its query vector with prompt.")
-
-# order v6: the outcome per route pair; Zero can only ever get one direction right
-_WO = _json.loads(Path("/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/m15_talk_word_order.json").read_text())["results"]
-g = ['<svg width="1664" height="560" viewBox="0 0 1664 560">']
-g.append(t(0, 50, "\"cheapest flights from Paris to Rome\"  ⇄  \"… from Rome to Paris\"", 34, WHITE, "start", 400, True))
-for i, (k, n, c) in enumerate((("stella-query", "Stella", GRAY), ("nano", "Nano", VIO), ("zero", "Zero", RED))):
-    y = 180 + i * 120
-    both = _WO[k]["pairs_both_directions_correct"]
-    g.append(t(0, y + 14, n, 44, c, "start", 700))
-    for j in range(_WO[k]["n_pairs"]):
-        x = 250 + j * 46
-        g.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{c}"/>' if j < both else
-                 f'<circle cx="{x}" cy="{y}" r="15" fill="none" stroke="#4a5068" stroke-width="3"/>')
-    g.append(t(1664, y + 16, f"{both} / {_WO[k]['n_pairs']}", 48, WHITE if both else RED, "end", 700))
-g.append(t(250, 530, "pairs with the right passage first in both directions", 30, GRAY))
-g.append("</svg>")
-write("order", " foot", "Reverse the Query, and Zero Returns the Same List",
-      '<div style="margin-top:24px">' + "".join(g) + "</div>",
-      "24 frozen query pairs where direction changes the answer (m15/talk/word_order_pairs.json), one passage per direction; an encoder scores a direction when "
-      "it ranks that direction's passage first. Stella with its prompt. results/m15_talk_word_order.json. Exploratory.",
-      note="<aside>[~1.5 min] [Read the two routes. Pause between them.] If I mix up Paris to Rome and Rome to Paris, I'm at "
-      "the wrong airport. To Zero, those queries have the same tokens with the same counts. It looks up the same rows and "
-      "makes exactly the same vector, so both directions get the same ranking.\n\n[Point to the rows of dots.] I wrote 24 "
-      "pairs like this, each with one passage per direction. A filled dot means the encoder put the right passage first in "
-      "both directions. Zero can only ever get one direction right, so its row stays empty. Stella fills four and Nano "
-      "fills two. All four of Stella's wins are unit or currency conversions. On these pairs every encoder struggles, "
-      "and Zero cannot win one.\n\nIf routes matter to "
-      "my users, I'd put both directions in the test set and judge them separately. That gap between pointing the right way "
-      "and putting the right passage first mattered when I trained Zero.</aside>")
 
 # worst v5: bump chart with names, rank as a retriever vs rank as a lookup table
 NAMES = {"gte-large-en-v1.5": "gte-large-v1.5", "stella-400M-v5": "Stella", "mxbai-embed-large-v1": "mxbai-large",
@@ -466,49 +303,33 @@ for v in (0.75, 0.80, 0.85, 0.90, 0.95):
 for i, e in enumerate((32, 64, 128, 256, 512, 1024)):
     g.append(t(RX(i), H - B + 46, str(e), 30, MUT, "middle", 400, True))
 g.append(t((L + W - R) / 2, H - 6, "hnsw_ef (oversampling 4)", 30, GRAY, "middle"))
-g.append(t(L, 34, "share of its own exact top 10 found · NQ, 2.68M passages", 30, GRAY))
+g.append(t(L, 34, "share of its own exact top 10 found", 30, GRAY))
 g.append(f'<line x1="{RX(0)}" y1="{RY(.913):.0f}" x2="{RX(5)}" y2="{RY(.913):.0f}" stroke="{WHITE}" stroke-width="2" stroke-dasharray="8 8"/>')
 for n, (ys, c) in REC.items():
     g.append(f'<polyline points="{" ".join(f"{RX(i):.0f},{RY(v):.0f}" for i, v in enumerate(ys))}" fill="none" stroke="{c}" stroke-width="6"/>')
     g.append(t(RX(5) + 24, RY(ys[-1]) + 12, n, 36, c, "start", 600))
 for i, v in ((0, .913), (5, .901)):
     g.append(f'<circle cx="{RX(i):.0f}" cy="{RY(v):.0f}" r="22" fill="none" stroke="{WHITE}" stroke-width="4"/>')
-g.append(t(RX(3), RY(0.80), "Zero at ef 1024: 0.901", 34, RED, "middle", 600))
-g.append(t(RX(3), RY(0.80) + 46, "Stella at ef 32: 0.913", 34, WHITE, "middle", 600))
 g.append("</svg>")
 write("recovery", " foot", "Zero Needs a Wider Search, and Still Trails",
       '<div style="margin-top:16px">' + "".join(g) + "</div>",
       "Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. "
-      "Across 25 models in the paper, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.")
-
-# recipe v5: the method only; the worked example moves to "solved"
-write("recipe", "", "The Monday Recipe",
-      '<div class="fxbox" style="margin-top:24px;padding:36px 48px">'
-      '<p class="fx" style="font-size:40px;white-space:pre">(e, ef, os)* = argmin p50<span class="mut">_total</span></p>'
-      '<p class="fx" style="font-size:40px;white-space:pre">        s.t.  nDCG@10 ≥ <span class="tr">floor</span>,  p95<span class="mut">_total</span> ≤ <span class="tr">budget</span></p></div>'
-      '<div class="steps" style="margin-top:56px">'
-      '<div class="step"><p class="sn">01</p><p class="st">Judge queries</p><p class="sd">sampled from your traffic</p></div>'
-      '<div class="step"><p class="sn">02</p><p class="st">Exact nDCG@10</p><p class="sd">each encoder, your index</p></div>'
-      '<div class="step"><p class="sn">03</p><p class="st">Sweep ef × os</p><p class="sd">time encode + search</p></div>'
-      '<div class="step"><p class="sn">04</p><p class="st">Ship the winner</p><p class="sd">with its ef and os</p></div></div>')
-
-# solved: the worked example on tonight's index
-c = 'padding:18px 28px'
-hl = c + ';background:#2a2a5c;font-weight:600;color:#fcfdff'
-write("solved", " foot", "Solved on Tonight's Index",
-      '<p class="lead" style="margin-top:8px">Budget: p95 ≤ <span class="tr">3 ms</span>. Which encoder ships?</p>'
-      f'<div class="dtab" style="margin-top:40px;width:1300px;display:grid;grid-template-columns:300px 520px 480px;font-size:44px">'
-      f'<p class="hd" style="{c}">floor</p><p class="hd" style="{c}">winner</p><p class="hd" style="{c}">p95</p>'
-      f'<p style="{c}">0.50</p><p style="{c}"><span class="tr">Zero</span> · ef 512</p><p style="{c}">0.96 ms</p>'
-      f'<p style="{hl}">0.55</p><p style="{hl}"><span style="color:#b9b9ff">Nano</span> · ef 64</p><p style="{hl}">2.12 ms</p>'
-      f'<p style="{c}">0.62</p><p style="{c}" class="mut">none fits</p><p style="{c}" class="mut">Stella 34.6 ms</p></div>',
-      "BEIR NQ, 3,452 queries, 2.68M passages, one Stella index in Qdrant Edge, M5 Pro, sequential. Oversampling 4; "
-      "nDCG@10 floor; fastest median among settings with ef ≥ 64. Exploratory.",
-      note="<aside>[~0.75 min] [Let the room answer first.] At a floor of 0.55, Nano ships, with a narrow search at ef 64 "
-      "and a p95 of 2.1 milliseconds. [Point to the first row.] Lower the floor to 0.50 and Zero wins, even with the wider "
-      "search it needs. [Point to the last row.] Raise it to 0.62 and nothing fits the budget. Only Stella clears that floor, "
-      "and its p95 is 34.6 milliseconds. One number I set before looking at any latency changed which encoder ships. "
-      "That's why I'd agree on the floor first.</aside>")
+      "Across 25 models in the paper, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.",
+      note="<aside>[~2.5 min] [Before the chart: the two kinds of settings.] Qdrant's HNSW index has two kinds of settings. "
+      "The first kind is fixed when the index is built. m is how many links each passage keeps to its neighbours in the graph; "
+      "I used 16, the default. ef_construct is how many candidates Qdrant checks when it chooses those links; I used 100. "
+      "Together they shape the graph. Changing either one means rebuilding the index. I built this graph once, from Stella's "
+      "passage vectors.\n\nThe second kind I can change on every request. hnsw_ef is how many candidates the search keeps "
+      "while it walks the graph. A wider ef finds more of the true nearest neighbours and takes more time. Oversampling works "
+      "with quantization. This index keeps a one-bit binary code for every passage in RAM and the full vectors on disk. Qdrant "
+      "first fetches four times the results I asked for using the binary codes, then rescores those with the full vectors.\n\n"
+      "[Point to the curves.] Each line asks one question: of this encoder's own exact top 10, how much does the search find? "
+      "[Point to the two circles.] Zero at ef 1024 still finds less than Stella at ef 32. The graph's links were chosen with "
+      "Stella's passage vectors. Stella's queries land where those links lead. Zero's query vectors land a little off, so the "
+      "walk needs more room. Across 25 models in the paper, the median lookup table needed ef 256 to match its teacher at 64.\n\n"
+      "So I don't change the graph per encoder. I give each encoder its own ef and oversampling at query time, on the same "
+      "graph. The encoder and the search width become one decision, and the right answer changes with traffic. That's the "
+      "decision I handed to a router.</aside>")
 
 # close v5: VS Code Dark+ colored example
 def _code(lines):
@@ -566,12 +387,256 @@ for i, (n, c) in enumerate((("stella", GRAY), ("nano", VIO), ("zero", RED))):
 r = mx / _best["zero"]["usd_per_million"]
 g.append(t(1664, 250, f"{r:.0f}×", 120, RED, "end", 700))
 g.append(t(1664, 310, "cheaper than Stella", 32, GRAY, "end"))
-g.append(t(1664, 400, "encoding alone: 3,700×", 32, MUT, "end"))
 g.append("</svg>")
 write("cloud-e2e", " foot", "The Whole Request on a Cloud VM: 29× Cheaper",
       '<div style="margin-top:40px">' + "".join(g) + "</div>",
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.",
       note="<aside>[~1.25 min] That was one laptop, one query at a time. So I put the same index on the cloud machine from earlier and paid for the whole request, encoding plus search. [Point to the two short bars.] Encoding alone made Zero look three thousand times cheaper than Stella. With search in the bill, both small encoders land around 17 or 18 cents per million, about 29 times cheaper than Stella. That's still a big saving. It's just a different number from the one on the encoding slide. [Point to the ratio.] Nano and Zero tie here because the search process becomes the ceiling, around six hundred queries a second in one process. More processes or shards would move that ceiling. A cheaper encoder wouldn't. And Zero spends more of that search budget than the others, because it needs a wider search to find its own neighbors.</aside>")
+
+# ---- v8 overrides (owner review 2026-11-22) ----
+_R = "/Users/dylanc/Documents/GitHub/asymetric-dual-encoders/results/"
+
+
+def box(x, y, w, h, c, lines, fill="#151b2b"):
+    """A rounded box: first line large in the box colour, the rest small grey."""
+    out = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="{fill}" stroke="{c}" stroke-width="3"/>']
+    for k, s_ in enumerate(lines):
+        out.append(t(x + 32, y + 56 + k * 44, s_, 40 if k == 0 else 30, c if k == 0 else GRAY, "start", 600 if k == 0 else 400))
+    return "".join(out)
+
+
+def arr(x1, y1, x2, y2, c=MUT):
+    """A straight arrow ending in a small head at (x2, y2)."""
+    a = math.atan2(y2 - y1, x2 - x1)
+    hx, hy = x2 - 18 * math.cos(a), y2 - 18 * math.sin(a)
+    px, py = 9 * math.sin(a), -9 * math.cos(a)
+    return (f'<line x1="{x1}" y1="{y1}" x2="{hx:.0f}" y2="{hy:.0f}" stroke="{c}" stroke-width="4"/>'
+            f'<path d="M{x2} {y2} L{hx + px:.0f} {hy + py:.0f} L{hx - px:.0f} {hy - py:.0f}z" fill="{c}"/>')
+
+
+# cost v8: one index encode against one week of queries, same-size blocks
+_CR = _json.loads(Path(_R + "m15_talk_crossover.json").read_text())["results"]
+_x = _CR["encoders"]["stella"]["crossover_queries"]
+_week = 7 * 86400 * 100 / _x                          # index-sized blocks of Stella query encoding in a week at 100/s
+SQ, GAP, Y0 = 180, 24, 60
+g = ['<svg width="1664" height="400" viewBox="0 0 1664 400">',
+     f'<rect x="0" y="{Y0}" width="{SQ}" height="{SQ}" rx="14" fill="{GRAY}"/>',
+     t(0, Y0 + SQ + 64, "Your index", 40, GRAY, "start", 600), t(0, Y0 + SQ + 110, "encoded once", 32, MUT)]
+X1 = 330
+for k in range(math.ceil(_week)):
+    w = SQ * min(1, _week - k)
+    g.append(f'<rect x="{X1 + k * (SQ + GAP)}" y="{Y0}" width="{w:.0f}" height="{SQ}" rx="14" fill="{RED}"/>')
+g += [t(X1, Y0 + SQ + 64, "One week of queries", 40, RED, "start", 600), t(X1, Y0 + SQ + 110, "Stella, 100 per second", 32, MUT), "</svg>"]
+write("cost", " foot", "Encode the Corpus Once, Pay for Every Query",
+      '<div style="margin-top:120px">' + "".join(g) + "</div>",
+      f"BEIR NQ, analytic FLOPs (2·P·T + attention): 2,681,468 passages, mean {_CR['doc_tokens_mean']:.0f} tokens, no prompt, "
+      f"against the mean of the 3,452 NQ test queries with Stella's query prompt. Each block is one corpus encode of compute; "
+      f"one week at 100 queries/s is {_week:.1f}. Measured: the index took 5.3 GPU-hours on one RTX 3080. Exploratory.",
+      note="<aside>[~1.5 min] I built tonight's passage index on my desktop. It took about five GPU-hours of steady encoding. "
+      "In real time it took six and a half hours, including a memory spill and a crash. I could go and make tea while that job ran. "
+      "I'd rather my users didn't have time to do the same.\n\n[Point to the grey block.] That's the index: 2.68 million passages, "
+      "paid for once. [Point to the red blocks.] Every question also goes through Stella before Qdrant can search. A question is "
+      f"much shorter than a passage, so each one is cheap. But they never stop. At a hundred queries a second, I spend a whole "
+      f"index worth of compute on questions about every 27 hours. Over one week, that's {_week:.0f} more blocks. And that encode "
+      "sits on the path of every request, roughly 20 milliseconds on this laptop, against a quarter of a millisecond for the "
+      "search itself.\n\nIf an agent calls search several times to answer one question, those encodes all sit on the path to "
+      "the answer. I wanted to make that part cheaper. What else could search the passage vectors I'd already paid to make?</aside>")
+
+# arch v8: the paper's Figure 1 layout; one ingestion path, three query paths, each with its own search width
+_FL = _json.loads(Path(_R + "m15_talk_flops.json").read_text())["results"]
+g = ['<svg width="1664" height="660" viewBox="0 0 1664 660">',
+     box(0, 0, 420, 110, WHITE, ["Documents"]), arr(420, 55, 490, 55),
+     box(490, 0, 560, 110, WHITE, ["Stella document encoder"]),
+     f'<path d="M1050 55 L1400 55 L1400 172" fill="none" stroke="{MUT}" stroke-width="4"/>',
+     f'<path d="M1400 190 L1391 172 L1409 172z" fill="{MUT}"/>',
+     f'<rect x="1150" y="190" width="514" height="470" rx="20" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>',
+     t(1407, 380, "One Stella index", 44, WHITE, "middle", 700),
+     t(1407, 432, "same vectors", 32, GRAY, "middle"), t(1407, 474, "same HNSW graph", 32, GRAY, "middle"),
+     t(0, 196, "each request picks one", 30, MUT)]
+for i, (n, sub, c) in enumerate((("Stella", "25 GFLOPs per query", GRAY), ("Nano", "0.54 GFLOPs per query", VIO),
+                                 ("Zero", "28 KFLOPs per query", RED))):
+    y = 230 + i * 150
+    g.append(box(0, y, 560, 120, c, [n, sub]))
+    g.append(arr(560, y + 60, 650, y + 60))
+    g.append(f'<rect x="650" y="{y + 25}" width="190" height="70" rx="35" fill="none" stroke="{c}" stroke-width="3"/>')
+    g.append(t(745, y + 72, "own ef", 30, c, "middle", 600, True))
+    g.append(arr(840, y + 60, 1150, 425 + (i - 1) * 60))
+g.append("</svg>")
+write("arch", " foot", "Three Query Encoders Search One Index",
+      '<div style="margin-top:24px">' + "".join(g) + "</div>",
+      "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
+      "Zero: 2 FLOPs per gathered value plus normalization. ef: Qdrant's hnsw_ef, set per request.")
+
+# order v8: what a lookup table cannot see, shown on its own pipeline
+def pill(x, y, s_, c=WHITE, hot=False):
+    w = 26 + 21 * len(s_)
+    fill = "#3a1a26" if hot else "#1a2233"
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="58" rx="12" fill="{fill}" stroke="{RED if hot else "#3a4157"}" stroke-width="3"/>'
+            + t(x + w / 2, y + 41, s_, 32, c, "middle", 600, True)), w
+
+
+def row(x, y, toks, hot=()):
+    out = []
+    for s_ in toks:
+        p, w = pill(x, y, s_, RED if s_ in hot else WHITE, s_ in hot)
+        out.append(p)
+        x += w + 14
+    return "".join(out)
+
+
+g = ['<svg width="1664" height="600" viewBox="0 0 1664 600">']
+cols = (("Order", "a mean has no order", (["paris", "to", "rome"], ["rome", "to", "paris"]), (), "same vector"),
+        ("Context", "one row per token", (["river", "bank"], ["bank", "loan"]), ("bank",), "same row for bank"),
+        ("New words", "rows learned elsewhere", (["qdrant"], ["q", "##dran", "##t"]), ("q", "##dran", "##t"), "pieces, averaged"))
+for i, (head, sub, (a, b), hot, out) in enumerate(cols):
+    x = i * 572
+    g.append(t(x, 60, head, 52, RED, "start", 700))
+    g.append(t(x, 112, sub, 32, GRAY))
+    g.append(row(x, 190, a, () if head == "New words" else hot))
+    g.append(row(x, 290, b, hot))
+    g.append(f'<line x1="{x}" y1="400" x2="{x + 500}" y2="400" stroke="{LINE}" stroke-width="2"/>')
+    g.append(t(x, 470, out, 38, WHITE, "start", 700))
+g.append("</svg>")
+write("order", " foot", "What a Lookup Table Cannot See",
+      '<div style="margin-top:24px">' + "".join(g) + "</div>",
+      "Zero: Stella's WordPiece tokenizer (30,522 tokens), one learned row per token, √count-weighted mean, then L2. Token "
+      "splits shown are the real tokenizer output. On 24 query pairs where direction changes the answer, Zero ranked the right "
+      "passage first in both directions for 0 pairs, Stella 4, Nano 2 (results/m15_talk_word_order.json). Exploratory.",
+      note="<aside>[~2 min] [Point to the three headings.] Zero is fast because it skips the transformer. Here is what that costs. "
+      "Zero does three things: it splits the query into tokens, looks up one row per token, and averages the rows.\n\n"
+      "[Order.] An average has no order. Paris to Rome and Rome to Paris have the same tokens, so Zero builds exactly the same "
+      "vector and returns the same list. I tested 24 pairs where direction changes the answer. Zero got none of them right in "
+      "both directions. Stella got four, so this is hard for everyone, but Zero cannot win one.\n\n[Context.] Each token has one "
+      "row, whatever sits next to it. Bank in river bank and bank in bank loan is the same row. A transformer mixes tokens with "
+      "attention, so its bank depends on its neighbours. Zero only has the other rows in the average to separate the two.\n\n"
+      "[New words.] The vocabulary is fixed at 30,522 pieces. A word it has never seen, like qdrant, splits into pieces whose "
+      "rows were learned from other words. A transformer can put those pieces back together; Zero averages them.\n\nSo Zero "
+      "works best on short keyword-like queries, and I'd test longer, phrased questions separately.</aside>")
+
+# split v8: Stella's bar runs off the slide; one millisecond axis for all three
+W, L0, AX = 1664, 230, 2.2
+SX = lambda v: L0 + v / AX * 820
+g = [f'<svg width="{W}" height="560" viewBox="0 0 {W} 560" style="overflow:visible">',
+     f'<rect x="{SX(0)}" y="10" width="28" height="20" rx="4" fill="{TEAL}"/>', t(SX(0) + 38, 30, "encode", 26, MUT),
+     f'<rect x="{SX(0) + 190}" y="10" width="28" height="20" rx="4" fill="{ORG}"/>', t(SX(0) + 228, 30, "search", 26, MUT)]
+for v in (0, 1, 2):
+    g.append(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="70" y2="480" stroke="{LINE}" stroke-width="2"/>')
+    g.append(t(SX(v), 520, str(v), 26, MUT, "middle", 400, True))
+g.append(t(SX(2.2), 520, "ms", 26, MUT, "end", 400, True))
+y = 80
+g.append(t(0, y + 54, "Stella", 44, GRAY, "start", 600))
+g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="2000" height="64" fill="{TEAL}"/>')
+g.append(t(1640, y + 56, "20.8 ms  →", 40, "#0b0f19", "end", 700))
+for i, (n, tot, enc, c) in enumerate([("Nano", 2.04, 0.807, VIO), ("Zero", 0.86, 0.041, RED)]):
+    y = 230 + i * 150
+    g.append(t(0, y + 54, n, 44, c, "start", 600))
+    g.append(f'<rect x="{SX(0)}" y="{y + 10}" width="{SX(tot * enc) - SX(0):.0f}" height="64" fill="{TEAL}"/>')
+    g.append(f'<rect x="{SX(tot * enc):.0f}" y="{y + 10}" width="{SX(tot) - SX(tot * enc):.0f}" height="64" fill="{ORG}"/>')
+    g.append(t(SX(tot) + 18, y + 56, f"{tot} ms", 40, WHITE, "start", 600))
+g.append("</svg>")
+write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×",
+      '<div style="margin-top:32px">' + "".join(g) + "</div>",
+      "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
+      "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
+      "(Stella 0.631, Nano 0.579); Zero misses that at every tested point (best shown: ef 1024, os 8, nDCG@10 0.510). Exploratory.")
+
+# recipe v8: how auto-routing decides, in three steps
+_ED = _json.loads(Path(_R + "m15_talk_edge_nq.json").read_text())["results"]
+_RP = _json.loads(Path(_R + "m15_talk_router_plan.json").read_text())
+nd = lambda n, ef: next(s["ndcg10"] for s in _ED[n]["settings"] if s["ef"] == ef and s["oversampling"] == 4.0)
+g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
+for i, (num, head) in enumerate((("01", "Measure"), ("02", "Set"), ("03", "Route"))):
+    x = i * 590
+    g.append(f'<line x1="{x}" y1="0" x2="{x + 500}" y2="0" stroke="{RED}" stroke-width="4"/>')
+    g.append(t(x, 56, num, 30, RED, "start", 600, True))
+    g.append(t(x + 70, 58, head, 48, WHITE, "start", 700))
+for k, ef in enumerate((128, 256, 512)):                      # 01: the measured menu
+    g.append(t(200 + k * 120, 150, str(ef), 28, MUT, "middle", 400, True))
+for j, (n, c) in enumerate((("stella", GRAY), ("nano", VIO), ("zero", RED))):
+    yy = 210 + j * 64
+    g.append(t(0, yy, n.capitalize(), 34, c, "start", 600))
+    for k, ef in enumerate((128, 256, 512)):
+        g.append(t(200 + k * 120, yy, f"{nd(n, ef):.3f}"[1:], 32, WHITE, "middle", 400, True))
+g.append(t(0, 150, "ef", 28, MUT, "start", 400, True))
+g.append(t(0, 420, "nDCG@10 on judged queries", 30, GRAY))
+g.append(t(0, 462, "+ encode and search time", 30, GRAY))
+for k, (lab, val) in enumerate((("quality floor", "0.50"), ("p95 target", "150 ms"))):   # 02: the two rules
+    yy = 110 + k * 170
+    g.append(f'<rect x="590" y="{yy}" width="420" height="140" rx="16" fill="#151b2b" stroke="{GRAY}" stroke-width="3"/>')
+    g.append(t(622, yy + 50, lab, 30, GRAY))
+    g.append(t(622, yy + 112, val, 56, WHITE, "start", 700, True))
+g.append(t(590, 462, "quality first, then latency", 30, GRAY))
+p15 = next(p for p in _RP["plans"] if p["rate"] == 1500)        # 03: one plan, re-made every 250 ms
+g.append(t(1180, 200, "every 250 ms", 52, WHITE, "start", 700))
+g.append(t(1180, 262, "at 1,500 searches/s:", 30, GRAY))
+bx, bw = 1180, 484
+for n, c in (("nano", VIO), ("zero", RED)):
+    w = bw * p15["shares"][n]
+    g.append(f'<rect x="{bx:.0f}" y="290" width="{w:.0f}" height="70" fill="{c}"/>')
+    g.append(t(bx + w / 2, 337, n.capitalize(), 30, "#0b0f19", "middle", 700))
+    bx += w
+g.append(t(1180, 410, f"ef {p15['ef']}", 34, WHITE, "start", 600, True))
+g.append(t(1180, 462, "best average nDCG that fits", 30, GRAY))
+g.append("</svg>")
+write("recipe", " foot", "How the Router Decides",
+      '<div style="margin-top:40px">' + "".join(g) + "</div>",
+      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4 (results/m15_talk_edge_nq.json). Floor and target: the "
+      "studio defaults. Plan: allocator.py on this laptop's measured encode capacity (results/m15_talk_router_plan.json). Exploratory.",
+      note="<aside>[~2 min] Here's how the router you're about to see makes its choice. Three steps.\n\n[01 Measure.] Before "
+      "any traffic arrives, I score every encoder at every search width on judged queries. That's this menu: the ranking "
+      "quality I get from each pair. At startup the studio also times each encoder and each search on this machine.\n\n"
+      "[02 Set.] Then I give it two rules, in order. Quality first: the average score of what it serves stays above the floor. "
+      "Then latency: stay under the p95 target if the machine can.\n\n[03 Route.] Every quarter of a second it looks at the "
+      "traffic and picks the mix of encoders and one search width that gives the best average quality and still fits on this "
+      "machine. At 1,500 searches a second that's about three quarters Nano, one quarter Zero, at ef 512.\n\nThis only works "
+      "because all three search one index. Switching an encoder costs nothing: no second index, no re-encode. To do this on "
+      "your data you need the same three things: a few hundred judged queries from your traffic, the quality of each encoder "
+      "and ef on them, and timings on your hardware.</aside>")
+
+# plan: what the router picks as traffic grows (planner output)
+W, H, L, R, T, B = 1664, 600, 120, 40, 90, 90
+lo, hi = math.log10(40), math.log10(2500)
+PX = lambda r: L + (math.log10(r) - lo) / (hi - lo) * (W - L - R)
+PY = lambda v: T + (1 - v) * (H - T - B)
+P_ = _RP["plans"]
+g = [f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
+base = [0.0] * len(P_)
+for n, c in (("stella", GRAY), ("nano", VIO), ("zero", RED)):
+    top = [b + p["shares"][n] for b, p in zip(base, P_)]
+    pts = [f"{PX(p['rate']):.0f},{PY(v):.0f}" for p, v in zip(P_, top)]
+    pts += [f"{PX(p['rate']):.0f},{PY(v):.0f}" for p, v in reversed(list(zip(P_, base)))]
+    g.append(f'<polygon points="{" ".join(pts)}" fill="{c}"/>')
+    base = top
+g.append(t(PX(55), PY(0.45), "Stella", 44, "#0b0f19", "start", 700))
+g.append(t(PX(600), PY(0.45), "Nano", 44, "#0b0f19", "middle", 700))
+g.append(t(PX(2350), PY(0.82), "Zero", 44, "#0b0f19", "end", 700))
+spans = {}
+for p in P_:
+    spans.setdefault(p["ef"], []).append(p["rate"])
+efs = list(spans)
+edge = [PX(P_[0]["rate"])] + [PX(math.sqrt(spans[a][-1] * spans[b][0])) for a, b in zip(efs, efs[1:])] + [PX(P_[-1]["rate"])]
+for k, ef in enumerate(efs):                                   # one search width per span of traffic, split at the switch
+    a, b = edge[k] + 4, edge[k + 1] - 4
+    g.append(f'<line x1="{a:.0f}" x2="{b:.0f}" y1="{T - 40}" y2="{T - 40}" stroke="{WHITE}" stroke-width="4"/>')
+    last = k == len(efs) - 1
+    g.append(t(W if last else (a + b) / 2, T - 56, f"ef {ef}" if k == 0 else str(ef), 30, WHITE, "end" if last else "middle", 600, True))
+for r in (40, 100, 300, 1000, 2500):
+    g.append(t(PX(r), H - B + 44, f"{r:,}", 30, MUT, "end" if r == 2500 else "middle", 400, True))
+g.append(t((L + W - R) / 2, H - 4, "searches per second", 30, GRAY, "middle"))
+for v in (0, 0.5, 1):
+    g.append(t(L - 16, PY(v) + 10, f"{v:.0%}", 28, MUT, "end", 400, True))
+g.append("</svg>")
+q0, q1 = P_[0]["quality"], P_[-1]["quality"]
+write("plan", " foot", "Quiet Hours Get Stella, Peaks Get Zero",
+      '<div style="margin-top:16px">' + "".join(g) + "</div>",
+      f"Share of traffic per encoder planned by allocator.py: NQ quality and search time per preset, M5 Pro encode capacity "
+      f"(Stella 80, Nano 1,400, Zero 17,000 encodes/s), floor 0.50, headroom 0.8. Average nDCG@10 falls from {q0:.3f} to "
+      f"{q1:.3f}. Planner output, not a load test (results/m15_talk_router_plan.json). Exploratory.",
+      note=f"<aside>[~1 min] This is the plan the router makes for this laptop, from quiet to busy. [Point left.] At 40 "
+      f"searches a second, everything goes to Stella with the widest search. [Point to the purple.] From about a hundred a "
+      f"second Stella can't keep up, so Nano takes over. [Point right.] Past a thousand, Zero mixes in and the search narrows. "
+      f"The average quality drops from {q0:.2f} to {q1:.2f}, and it never goes below the floor I set. Nothing is dropped and "
+      f"nothing is re-encoded. Let me show you it running.</aside>")
 
 print("rebuilt")
