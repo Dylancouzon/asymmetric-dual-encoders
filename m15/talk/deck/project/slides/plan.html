@@ -19,13 +19,11 @@
 <p class="lb" style="left:129px;top:354px;width:103px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:right;font-family:JetBrains Mono,monospace;">100%</p>
 <p class="src">Share of traffic per encoder planned by the studio's router: NQ quality and search time per setting, M5 Pro encode capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), quality floor 0.50, encode and search kept under 80% of capacity. Planner output, not a load test. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~0.5 min]<br>
-Why it matters: this is when to pick Zero over Nano.<br>
-- [Chart] The router's plan at every traffic level on this laptop. The demo showed a few points; this is the whole range.<br>
-- [Stella, then Nano] Quiet hours go to Stella. From about 100 searches/s Nano takes a growing share; by 1,000 it carries everything.<br>
-- [Dashed line] Around 1,000 searches/s Nano reaches its encoding capacity: about 1,400 queries/s on this laptop, against Zero's 17,000.<br>
-- [Zero] Past the line, Zero takes the traffic Nano cannot encode in time, and the search narrows to hold latency (ef along the top).<br>
-- So pick Zero when encoding capacity runs out: traffic peaks, CPU-only hosts, small devices. Below that, Nano ranks better for about the same cost.<br>
-- Average nDCG@10 falls from 0.636 at 40/s to 0.524 at 2,500/s: the price of serving every query.<br>
+<aside>[~0.75 min]<br>
+Why it matters: this is when Zero earns its place.<br>
+- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On this laptop, Nano does about 1,400, Zero about 17,000.<br>
+- Below Nano's ceiling, Nano wins: better ranking for about the same cost. Quiet hours can even afford Stella.<br>
+- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average goes from 0.636 when quiet to 0.524 at 2,500 searches/s.<br>
+- In general: pick Zero wherever encoding capacity is the bottleneck: traffic peaks, CPU-only hosts, small devices. And because all three share one index, you never have to pick just one.<br>
 Next: how to use it.</aside>
 </section>

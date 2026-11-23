@@ -20,10 +20,10 @@
 <p class="src">One GCP c4-standard-8 (8 vCPU), NQ queries. Hollow: encoding only, CPU per 1M queries (Stella 123 vCPU-h), batch 1, 8 processes × 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-Why it matters: Zero's 3,700 times is real, but it is not what you save.<br>
-- [Hollow dots] Encoding alone, on one 8-vCPU VM: Stella needs 123 vCPU-hours per million queries, Zero 2 vCPU-minutes. That is 3,700 times cheaper. Nano: 26 times.<br>
-- [Arrow] Now pay for the whole request, encode plus search, on the same machine. Zero's 3,700 collapses to 29.<br>
-- Why: with encoding almost free, the search is the bill. Per million queries: Stella $4.91, Nano $0.18, Zero $0.17.<br>
-- So Nano and Zero cost the same. More processes or shards move that ceiling; a cheaper encoder does not.<br>
-The next slide explains why</aside>
+Why it matters: a cheaper encoder only saves what encoding was costing you.<br>
+- With Stella, encoding was almost the whole bill. Make it nearly free, and the next cost in line, the search, becomes the bill.<br>
+- [Arrow] Zero's encoding is 3,700 times cheaper than Stella's. The whole request is 29 times cheaper, and Nano lands in the same place at 27 times.<br>
+- Still a big win: per million queries, Stella $4.91, Nano $0.18, Zero $0.17.<br>
+- General lesson: once the encoder is cheap, the next savings come from the search side: more search processes or shards, quantization, and the search width.<br>
+Next: and Zero needs more search than the others.</aside>
 </section>

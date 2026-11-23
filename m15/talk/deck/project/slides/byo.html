@@ -4,16 +4,12 @@
 </div><p class="ql">Full recipe</p></div></div>
 <p class="src">Costs are Constella's, for a Stella index: Zero trained on one RTX 3080 once its targets existed (computing Stella's targets took 8-12 h); Nano took 57.3 A100-hours. Training sources must allow commercial use of derived weights. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~1.25 min]<br>
-Why it matters: the method works for any frozen index. You can train cheap query encoders for yours.<br>
-- [01] Keep your document encoder and your index. Nothing is re-encoded, ever.<br>
-- [02] Encode many real queries with your current query model, including its prompt and preprocessing: those vectors are the targets. For Nano, also encode passages with your document model.<br>
-  - A hosted model works if it returns the same vectors.<br>
-  - First fit a quick lookup table to check that your model is easy to imitate (remember gte-large).<br>
-- [03] Train:<br>
-  - Zero: one row per token of your tokenizer, each starting from your model's vector for that token, then the same two phases. About 20 minutes on one GPU once the targets exist; for Stella, computing them took 8 to 12 hours.<br>
-  - Nano: a small embedding model, three averaged layers, one matrix to your vector size, trained to reproduce your model's vectors. No relevance labels. Ours cost about $95 of A100 time.<br>
-- [04] Judge on your own queries: exact nDCG@10 per encoder, then sweep ef and oversampling. Set your floor and let a router pick.<br>
-- [QR] The paper has every detail: data, losses, steps, and what failed.<br>
+<aside>[~1 min]<br>
+Why it matters: this works for any frozen index.<br>
+- [01] Keep your index. Nothing is re-encoded.<br>
+- [02] Your current query model is the teacher: encode real queries with it, and its vectors become the targets.<br>
+- [03] Train Zero, Nano, or both. First fit a quick table to check your model is easy to copy (remember gte-large).<br>
+- [04] Measure on your own queries, then pick each encoder's search width.<br>
+- [QR] Everything else, data, losses, and what failed, is in the paper.<br>
 [Advance to the thank-you slide.]</aside>
 </section>

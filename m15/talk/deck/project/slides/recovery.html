@@ -19,16 +19,12 @@
 <p class="lb" style="left:1622px;top:394px;width:110px;font-size:36px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
 <p class="src">BEIR NQ, 2.68M passages, Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, M5 Pro. nDCG@10 as a share of each encoder's exact-search nDCG@10 (Stella 0.637, Nano 0.584, Zero 0.517). Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~2 min]<br>
-Why it matters: a cheap encoder saves time on encoding, then gives some of it back in search.<br>
-- An HNSW search is a walk: start at an entry point, hop to whichever neighbour is closer to the query, stop when nothing closer is left. All using Stella's vectors.<br>
-- A Stella query walks that graph the way it was built for. Zero's query is close to Stella's, not identical, so at some hops it picks the wrong neighbour and ends up in a nearby but wrong region.<br>
-- hnsw_ef is the insurance: the walk keeps more candidates alive, so one wrong turn costs less. Wider is more accurate, and slower.<br>
-- Compression adds its own noise: the index keeps quantized vectors in memory and full ones on disk. Oversampling fetches 4 times the results in RAM, then rescores them from disk.<br>
-- [Chart] Each line: how much of its own best ranking quality an encoder keeps through the approximate search. Stella keeps 95% at the narrowest setting. Nano gets there at ef 128. Zero gets there at ef 256, an 8 times wider search, and keeps 98% at ef 1024.<br>
-- Note: this is relative to each encoder's own best. Zero's best is still lower than Stella's, as the earlier chart showed.<br>
-- If asked: on the stricter measure, the share of the exact top 10 found, Zero still trails: 90% at ef 1024, against Stella's 91% at ef 32. Many of those misses are near-ties that barely change the ranking.<br>
-- The bigger and the more compressed the index, the bigger the effect.<br>
-- So the encoder and the search width are one decision.<br>
+<aside>[~1.5 min]<br>
+Why it matters: a cheaper encoder can give back part of its savings in search.<br>
+- The graph was built from Stella's vectors. Zero's queries land close to where Stella's would, not exactly there, so the search takes more wrong turns.<br>
+- The fix is a wider search, set per request with hnsw_ef. Same graph, no rebuild.<br>
+- [Chart] With an 8 times wider search, Zero keeps as much of its own quality as Stella does at its narrowest.<br>
+- Takeaway: the encoder and the search width are one decision. Pick them together.<br>
+- If asked: this is relative to each encoder's own best, and Zero's best is lower. On the stricter top-10 measure, Zero still trails: 90% at ef 1024, against Stella's 91% at ef 32.<br>
 Next: and the best decision changes with traffic. Let me show you a router that makes it live.</aside>
 </section>

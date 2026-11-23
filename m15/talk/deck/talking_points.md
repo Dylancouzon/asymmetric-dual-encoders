@@ -80,12 +80,12 @@ Why it matters: is the cheap encoder good enough?
 Next: quality is half the story. How fast is each one? Quick bet.
 
 ## cloud · ~1.5 min
-Why it matters: Zero's 3,700 times is real, but it is not what you save.
-- [Hollow dots] Encoding alone, on one 8-vCPU VM: Stella needs 123 vCPU-hours per million queries, Zero 2 vCPU-minutes. That is 3,700 times cheaper. Nano: 26 times.
-- [Arrow] Now pay for the whole request, encode plus search, on the same machine. Zero's 3,700 collapses to 29.
-- Why: with encoding almost free, the search is the bill. Per million queries: Stella $4.91, Nano $0.18, Zero $0.17.
-- So Nano and Zero cost the same. More processes or shards move that ceiling; a cheaper encoder does not.
-The next slide explains why
+Why it matters: a cheaper encoder only saves what encoding was costing you.
+- With Stella, encoding was almost the whole bill. Make it nearly free, and the next cost in line, the search, becomes the bill.
+- [Arrow] Zero's encoding is 3,700 times cheaper than Stella's. The whole request is 29 times cheaper, and Nano lands in the same place at 27 times.
+- Still a big win: per million queries, Stella $4.91, Nano $0.18, Zero $0.17.
+- General lesson: once the encoder is cheap, the next savings come from the search side: more search processes or shards, quantization, and the search width.
+Next: and Zero needs more search than the others.
 
 ## bet · ~0.75 min
 - [Read it] Zero encodes a query about 650 times faster than Stella, and 51 times faster than Nano. Same laptop, same NQ queries, median encode time.
@@ -109,17 +109,13 @@ Why it matters: the honest saving, with search included.
 - So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.
 Next: why does Zero need more search?
 
-## recovery · ~2 min
-Why it matters: a cheap encoder saves time on encoding, then gives some of it back in search.
-- An HNSW search is a walk: start at an entry point, hop to whichever neighbour is closer to the query, stop when nothing closer is left. All using Stella's vectors.
-- A Stella query walks that graph the way it was built for. Zero's query is close to Stella's, not identical, so at some hops it picks the wrong neighbour and ends up in a nearby but wrong region.
-- hnsw_ef is the insurance: the walk keeps more candidates alive, so one wrong turn costs less. Wider is more accurate, and slower.
-- Compression adds its own noise: the index keeps quantized vectors in memory and full ones on disk. Oversampling fetches 4 times the results in RAM, then rescores them from disk.
-- [Chart] Each line: how much of its own best ranking quality an encoder keeps through the approximate search. Stella keeps 95% at the narrowest setting. Nano gets there at ef 128. Zero gets there at ef 256, an 8 times wider search, and keeps 98% at ef 1024.
-- Note: this is relative to each encoder's own best. Zero's best is still lower than Stella's, as the earlier chart showed.
-- If asked: on the stricter measure, the share of the exact top 10 found, Zero still trails: 90% at ef 1024, against Stella's 91% at ef 32. Many of those misses are near-ties that barely change the ranking.
-- The bigger and the more compressed the index, the bigger the effect.
-- So the encoder and the search width are one decision.
+## recovery · ~1.5 min
+Why it matters: a cheaper encoder can give back part of its savings in search.
+- The graph was built from Stella's vectors. Zero's queries land close to where Stella's would, not exactly there, so the search takes more wrong turns.
+- The fix is a wider search, set per request with hnsw_ef. Same graph, no rebuild.
+- [Chart] With an 8 times wider search, Zero keeps as much of its own quality as Stella does at its narrowest.
+- Takeaway: the encoder and the search width are one decision. Pick them together.
+- If asked: this is relative to each encoder's own best, and Zero's best is lower. On the stricter top-10 measure, Zero still trails: 90% at ef 1024, against Stella's 91% at ef 32.
 Next: and the best decision changes with traffic. Let me show you a router that makes it live.
 
 ## recipe · ~2 min
@@ -146,14 +142,12 @@ Next: let me show you.
 - To run it yourself: a few hundred judged queries from your traffic, the quality of each encoder at each search width, and timings on your hardware.
 Next: the whole range on one chart.
 
-## plan · ~0.5 min
-Why it matters: this is when to pick Zero over Nano.
-- [Chart] The router's plan at every traffic level on this laptop. The demo showed a few points; this is the whole range.
-- [Stella, then Nano] Quiet hours go to Stella. From about 100 searches/s Nano takes a growing share; by 1,000 it carries everything.
-- [Dashed line] Around 1,000 searches/s Nano reaches its encoding capacity: about 1,400 queries/s on this laptop, against Zero's 17,000.
-- [Zero] Past the line, Zero takes the traffic Nano cannot encode in time, and the search narrows to hold latency (ef along the top).
-- So pick Zero when encoding capacity runs out: traffic peaks, CPU-only hosts, small devices. Below that, Nano ranks better for about the same cost.
-- Average nDCG@10 falls from 0.636 at 40/s to 0.524 at 2,500/s: the price of serving every query.
+## plan · ~0.75 min
+Why it matters: this is when Zero earns its place.
+- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On this laptop, Nano does about 1,400, Zero about 17,000.
+- Below Nano's ceiling, Nano wins: better ranking for about the same cost. Quiet hours can even afford Stella.
+- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average goes from 0.636 when quiet to 0.524 at 2,500 searches/s.
+- In general: pick Zero wherever encoding capacity is the bottleneck: traffic peaks, CPU-only hosts, small devices. And because all three share one index, you never have to pick just one.
 Next: how to use it.
 
 ## close · ~1 min
@@ -165,17 +159,13 @@ Why it matters: you can try this on Monday with a few lines of code.
 - Then judge the three encoders on real queries against your own index.
 Next: and if your index was built with a different model?
 
-## byo · ~1.25 min
-Why it matters: the method works for any frozen index. You can train cheap query encoders for yours.
-- [01] Keep your document encoder and your index. Nothing is re-encoded, ever.
-- [02] Encode many real queries with your current query model, including its prompt and preprocessing: those vectors are the targets. For Nano, also encode passages with your document model.
-  - A hosted model works if it returns the same vectors.
-  - First fit a quick lookup table to check that your model is easy to imitate (remember gte-large).
-- [03] Train:
-  - Zero: one row per token of your tokenizer, each starting from your model's vector for that token, then the same two phases. About 20 minutes on one GPU once the targets exist; for Stella, computing them took 8 to 12 hours.
-  - Nano: a small embedding model, three averaged layers, one matrix to your vector size, trained to reproduce your model's vectors. No relevance labels. Ours cost about $95 of A100 time.
-- [04] Judge on your own queries: exact nDCG@10 per encoder, then sweep ef and oversampling. Set your floor and let a router pick.
-- [QR] The paper has every detail: data, losses, steps, and what failed.
+## byo · ~1 min
+Why it matters: this works for any frozen index.
+- [01] Keep your index. Nothing is re-encoded.
+- [02] Your current query model is the teacher: encode real queries with it, and its vectors become the targets.
+- [03] Train Zero, Nano, or both. First fit a quick table to check your model is easy to copy (remember gte-large).
+- [04] Measure on your own queries, then pick each encoder's search width.
+- [QR] Everything else, data, losses, and what failed, is in the paper.
 [Advance to the thank-you slide.]
 
 ## thanks · ~0.5 min
