@@ -112,14 +112,16 @@ Why it matters: the honest saving, with search included.
 Next: why does Zero need more search?
 
 ## recovery · ~2 min
-Why it matters: the search settings are part of the encoder choice.
-- The HNSW graph was built once, from Stella's vectors, and stays as it is.
-- [hnsw_ef] How many candidates the search keeps while it walks the graph. Wider finds more true neighbours and takes longer.
-- [oversampling] The index stores 1-bit vectors in memory and full copy on disk. With a setting of 4, The search fetches 4 times the results it needs, then rescores them with the full vectors.
-- [Curves] Each line: how much of the encoder's own exact top 10 the search finds.
-- [Circles] Even at ef 1024, Zero still finds less than Stella at ef 32.
-- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across the 25 models tested, lookup tables typically needed ef 256 to match their teacher at ef 64.
-- So: one graph, but each model needs a different search effort
+Why it matters: a cheaper encoder can need a wider search on the same graph, and that search costs time.
+- [Setup] One HNSW graph, built once from Stella's vectors. Every query walks it to find its nearest passages.
+- [hnsw_ef] How many candidates the walk keeps. Wider finds more of the true neighbours, and takes longer.
+- [oversampling 4] The index keeps 1-bit vectors in memory and full ones on disk. The search fetches 4 times the results with the 1-bit vectors, then rescores them with the full ones.
+- [Curves] Each line: how much of the encoder's own exact top 10 the search actually finds.
+- [Stella, Nano] Stella finds 91% at the narrowest setting. Nano catches up with that at ef 128.
+- [Circles] Zero never catches up: even at ef 1024, it finds less than Stella at ef 32.
+- Why: the links were built for Stella's vectors. Zero's query lands near the right passages, not on them, so the walk takes wrong turns. A wider search makes up for most of it, not all.
+- Bigger and compressed indexes make this worse. On the paper's smaller, uncompressed indexes, lookup tables needed about 4 times the width.
+- So: same graph, no rebuild, but each encoder gets its own search width.
 Next: the best encoder and search width change with traffic. Let me show you a router that decides live.
 
 ## recipe · ~2 min

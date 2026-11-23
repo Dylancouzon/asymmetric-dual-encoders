@@ -1328,8 +1328,8 @@ for n, (ys, c) in REC.items():
 for i, v in ((0, .913), (5, .901)):
     F.add(f'<circle cx="{RX(i):.0f}" cy="{RY(v):.0f}" r="22" fill="none" stroke="{WHITE}" stroke-width="4"/>')
 write("recovery", " foot", "Zero Needs a Wider Search, and Still Trails", F.html(),
-      "Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. "
-      "Across the paper's 25 lookup tables that passed its exact-search check, they needed a median ef of 256 to match their teacher at 64. Exploratory.")
+      "Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, M5 Pro. "
+      "On the paper's smaller, uncompressed indexes, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.")
 
 # recipe v11: three cards; a measured menu, two settings as fields, one routing plan as a split bar
 menu = ['<div style="display:grid;grid-template-columns:150px 110px 110px 110px;gap:14px 0;font-family:JetBrains Mono,monospace;font-size:30px">',

@@ -17,16 +17,18 @@
 <p class="lb" style="left:1622px;top:359px;width:153px;font-size:36px;color:#c9cede;font-weight:700;text-align:left;">Stella</p>
 <p class="lb" style="left:1622px;top:414px;width:110px;font-size:36px;color:#9494ff;font-weight:700;text-align:left;">Nano</p>
 <p class="lb" style="left:1622px;top:491px;width:110px;font-size:36px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
-<p class="src">Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. Across the paper's 25 lookup tables that passed its exact-search check, they needed a median ef of 256 to match their teacher at 64. Exploratory.</p>
+<p class="src">Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, M5 Pro. On the paper's smaller, uncompressed indexes, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2 min]<br>
-Why it matters: the search settings are part of the encoder choice.<br>
-- The HNSW graph was built once, from Stella's vectors, and stays as it is.<br>
-- [hnsw_ef] How many candidates the search keeps while it walks the graph. Wider finds more true neighbours and takes longer.<br>
-- [oversampling] The index stores 1-bit vectors in memory and full copy on disk. With a setting of 4, The search fetches 4 times the results it needs, then rescores them with the full vectors.<br>
-- [Curves] Each line: how much of the encoder's own exact top 10 the search finds.<br>
-- [Circles] Even at ef 1024, Zero still finds less than Stella at ef 32.<br>
-- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across the 25 models tested, lookup tables typically needed ef 256 to match their teacher at ef 64.<br>
-- So: one graph, but each model needs a different search effort<br>
+Why it matters: a cheaper encoder can need a wider search on the same graph, and that search costs time.<br>
+- [Setup] One HNSW graph, built once from Stella's vectors. Every query walks it to find its nearest passages.<br>
+- [hnsw_ef] How many candidates the walk keeps. Wider finds more of the true neighbours, and takes longer.<br>
+- [oversampling 4] The index keeps 1-bit vectors in memory and full ones on disk. The search fetches 4 times the results with the 1-bit vectors, then rescores them with the full ones.<br>
+- [Curves] Each line: how much of the encoder's own exact top 10 the search actually finds.<br>
+- [Stella, Nano] Stella finds 91% at the narrowest setting. Nano catches up with that at ef 128.<br>
+- [Circles] Zero never catches up: even at ef 1024, it finds less than Stella at ef 32.<br>
+- Why: the links were built for Stella's vectors. Zero's query lands near the right passages, not on them, so the walk takes wrong turns. A wider search makes up for most of it, not all.<br>
+- Bigger and compressed indexes make this worse. On the paper's smaller, uncompressed indexes, lookup tables needed about 4 times the width.<br>
+- So: same graph, no rebuild, but each encoder gets its own search width.<br>
 Next: the best encoder and search width change with traffic. Let me show you a router that decides live.</aside>
 </section>
