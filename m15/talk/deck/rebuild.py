@@ -113,7 +113,7 @@ g.append("</svg>")
 write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space",
       '<div style="margin-top:32px">' + "".join(g) + "</div>"
       '<div class="chips" style="gap:24px"><p class="chip vio">34.5M parameters</p><p class="chip">3.49M training queries</p>'
-      '<p class="chip">57.3 A100-hours ≈ $95, once</p></div>',
+      '<p class="chip">57.3 A100-hours ≈ $95</p></div>',
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
 
@@ -1198,7 +1198,7 @@ for _ in range(70):
 F.add(f'<circle cx="1530" cy="186" r="22" fill="none" stroke="{VIO}" stroke-width="4"/><circle cx="1530" cy="186" r="11" fill="{VIO}"/>')
 F.t(1490, 436, "Stella's space", 32, WHITE, "middle", 700)
 chips = ('<div class="chips" style="position:absolute;left:128px;top:792px;gap:24px">' + stat("34.5M parameters", "vio")
-         + stat("3.49M training queries") + stat("57.3 A100-hours ≈ $95, once") + "</div>")
+         + stat("3.49M training queries") + stat("57.3 A100-hours ≈ $95") + "</div>")
 write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space", F.html() + "\n" + chips + astro("graph", 1590, 716, 200, 200),
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
