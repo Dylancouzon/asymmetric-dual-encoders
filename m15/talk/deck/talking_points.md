@@ -80,13 +80,14 @@ Why it matters: is the cheap encoder good enough?
 Next: quality is half the story. How fast is each one? Quick bet.
 
 ## cloud · ~1.5 min
-Why it matters: this is the bill, and search is now most of it.
-- [Hollow dots] Encoding alone, on one VM with 8 vCPUs, one query per batch. To encode 1M queries: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes. Nano is 26 times cheaper than Stella, Zero 3,700 times.
-- [Solid dots] The whole request on the same machine, encode plus search: Stella $4.91, Nano $0.18, Zero $0.17 per million queries. Nano 27 times cheaper, Zero 29 times.
-- [Arrow] 3,700 becomes 29: once encoding is nearly free, search is the bill.
-- Nano and Zero tie because one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.
+Why it matters: Zero's 3,700 times is real, but it is not what you save.
+- [Hollow dots] Encoding alone, on one 8-vCPU VM: Stella needs 123 vCPU-hours per million queries, Zero 2 vCPU-minutes. That is 3,700 times cheaper. Nano: 26 times.
+- [Arrow] Now pay for the whole request, encode plus search, on the same machine. Zero's 3,700 collapses to 29.
+- Why: with encoding almost free, the search is the bill. Per million queries: Stella $4.91, Nano $0.18, Zero $0.17.
+- So Nano and Zero cost the same: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.
 - So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.
-Next: why does Zero need more search?
+- The lever is now the search itself, and Zero needs more of it than the others.
+Next: so how much more search does Zero need?
 
 ## bet · ~0.75 min
 - [Read it] Zero encodes a query about 650 times faster than Stella, and 51 times faster than Nano. Same laptop, same NQ queries, median encode time.
