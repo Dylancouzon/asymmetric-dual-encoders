@@ -19,11 +19,11 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
 Why it matters: one model does two jobs with opposite deadlines. Only one has a user waiting.<br>
-- [Top lane] Passages go through Stella once into Qdrant's HNSW graph, each linked to its near neighbours. 2.68M NQ passages: 5.3 GPU-hours on my desktop.<br>
+- [Top lane] Indexing: every chunk goes through the embedding model once. Here, 2.68M passages from Natural Questions through Stella: 5.3 GPU-hours on my desktop, paid up front.<br>
 [Click: the question appears.]<br>
-- [Bottom lane] A real NQ question, "who played Joey's agent Estelle on Friends", runs through the same 435M-parameter, 24-layer model: 20.5 ms on this laptop.<br>
-- [Red walk] Its vector walks the graph to June Gable, the right answer out of 2.68 million, in 0.23 ms. The encoder takes about 90 times longer than the search, on every request.<br>
-- At 100 queries/s, query encoding burns a whole index worth of compute every 27 hours. Agents fire several searches per answer.<br>
-- The top lane is a sunk cost. The bottom lane is where a cheaper model pays off, if it can walk the same graph.<br>
+- [Bottom lane] Search: every question goes through the same 435M-parameter model. "Who played Joey's agent Estelle on Friends": 20.5 ms on this laptop.<br>
+- [Red walk] Its vector walks the graph to the right passage out of 2.68 million in 0.23 ms. Encoding takes about 90 times longer than the search, on every request.<br>
+- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours, and agents fire several searches per answer.<br>
+- So the cost worth cutting is the bottom lane, if a cheaper model can still walk the same graph.<br>
 Next: what if only the query side changed?</aside>
 </section>

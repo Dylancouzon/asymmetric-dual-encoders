@@ -17,7 +17,7 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
 Why it matters: you keep the index and change only the query side.<br>
-- [Top row] Documents go through Stella's document encoder once. Those vectors and the HNSW graph never change.<br>
+- [Top row] The index from the last slide, built once with Stella's document encoder. It stays exactly as it is.<br>
 - [Three rows] Each request picks one query encoder. All three write into the same vector space and search the same index:<br>
   - Stella's query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).<br>
   - Nano: a 34.5M-parameter transformer, 0.54 GFLOPs, about 46 times less.<br>

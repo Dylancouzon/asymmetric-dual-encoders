@@ -3,25 +3,24 @@
 One section per slide, in talk order. `rebuild.py` copies each section into that slide's speaker notes. Lines in [brackets] are stage directions. Every number here has a receipt in `m15/EVIDENCE.md` or the paper.
 
 ## cover · ~0.5 min
-- Hook: someone offers you a cheaper query encoder on Monday. How long until you know if it helps?
-- If the answer is "re-embed the whole corpus first", the experiment sits in the backlog.
-- This talk: how far you can get with the index you already have.
-- I'm Dylan Couzon, research in Developer Relations at Qdrant. Welcome, London and Zoom.
-Next: I started by timing two jobs that run on very different schedules.
+- Hook: where does the time go in a semantic search request? [Let the room guess.]
+- The usual fix, a smaller model, means re-embedding the whole corpus. So most teams never try it.
+- This talk: cut the query-side cost and keep your index exactly as it is.
+Next: here is the answer, timed on one real request.
 
 ## cost · ~1.5 min
 Why it matters: one model does two jobs with opposite deadlines. Only one has a user waiting.
-- [Top lane] Passages go through Stella once into Qdrant's HNSW graph, each linked to its near neighbours. 2.68M NQ passages: 5.3 GPU-hours on my desktop.
+- [Top lane] Indexing: every chunk goes through the embedding model once. Here, 2.68M passages from Natural Questions through Stella: 5.3 GPU-hours on my desktop, paid up front.
 [Click: the question appears.]
-- [Bottom lane] A real NQ question, "who played Joey's agent Estelle on Friends", runs through the same 435M-parameter, 24-layer model: 20.5 ms on this laptop.
-- [Red walk] Its vector walks the graph to June Gable, the right answer out of 2.68 million, in 0.23 ms. The encoder takes about 90 times longer than the search, on every request.
-- At 100 queries/s, query encoding burns a whole index worth of compute every 27 hours. Agents fire several searches per answer.
-- The top lane is a sunk cost. The bottom lane is where a cheaper model pays off, if it can walk the same graph.
+- [Bottom lane] Search: every question goes through the same 435M-parameter model. "Who played Joey's agent Estelle on Friends": 20.5 ms on this laptop.
+- [Red walk] Its vector walks the graph to the right passage out of 2.68 million in 0.23 ms. Encoding takes about 90 times longer than the search, on every request.
+- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours, and agents fire several searches per answer.
+- So the cost worth cutting is the bottom lane, if a cheaper model can still walk the same graph.
 Next: what if only the query side changed?
 
 ## arch · ~1.5 min
 Why it matters: you keep the index and change only the query side.
-- [Top row] Documents go through Stella's document encoder once. Those vectors and the HNSW graph never change.
+- [Top row] The index from the last slide, built once with Stella's document encoder. It stays exactly as it is.
 - [Three rows] Each request picks one query encoder. All three write into the same vector space and search the same index:
   - Stella's query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).
   - Nano: a 34.5M-parameter transformer, 0.54 GFLOPs, about 46 times less.
