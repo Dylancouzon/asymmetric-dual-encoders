@@ -95,7 +95,7 @@ Next: so what do the three keep of Stella's ranking?
 ## bench · ~2 min
 Why it matters: is the cheap encoder good enough? Compare it with what you already run.
 - [Grey dots] The 10 most-downloaded open embedding models on Hugging Face, each on its own index. Up is better ranking on six BEIR datasets. Right is more compute per query.
-- [Nano] Ranks with bge-base and bge-large at the compute of the small models, and searches the index you already have.
+- [Nano] Ranks with bge-base and bge-large at the compute of the small models, and searches the index you already have. Against bge-large: 0.532 vs 0.533 nDCG@10, for 0.54 vs 12.1 GFLOPs per query, about 22 times less.
 - [Zero] Off the transformer scale on the left. No network at all, and still above both MiniLM models, including the most downloaded one.
 - Add a BM25 search and fuse the lists, and Zero reaches 0.489, for the price of a sparse search per request.
 - Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets Zero trails BM25, 0.410 to 0.441. Judge on your own traffic.

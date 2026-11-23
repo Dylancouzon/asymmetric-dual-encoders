@@ -82,7 +82,7 @@ g = ['<svg width="1664" height="420" viewBox="0 0 1664 420">',
      "</svg>"]
 chips = ('<div class="chips" style="margin-top:28px;gap:24px;white-space:nowrap"><p class="chip">one RTX 3080</p>'
          '<p class="chip red">≈ 20 min to train</p></div>')
-write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
+write("distill", " foot", "Zero Learns to Copy Stella's Query Vectors",
       '<div style="margin-top:32px">' + "".join(g) + "</div>" + chips,
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
       "a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.",
@@ -110,7 +110,7 @@ g.append(f'<circle cx="1500" cy="260" r="130" fill="none" stroke="{GRAY}" stroke
 g.append(t(1500, 252, "Stella's", 30, WHITE, "middle", 600))
 g.append(t(1500, 290, "space", 30, WHITE, "middle", 600))
 g.append("</svg>")
-write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space",
+write("nano", " foot", "Nano Projects bge-small into Stella's Space",
       '<div style="margin-top:32px">' + "".join(g) + "</div>"
       '<div class="chips" style="gap:24px"><p class="chip vio">34.5M parameters</p><p class="chip">3.49M training queries</p>'
       '<p class="chip">57.3 A100-hours ≈ $95</p></div>',
@@ -158,7 +158,7 @@ for n, sys_, gf, c, dx, dy, anc in (("Stella", "stella-query", _FL["stella"]["me
     g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="20" fill="{c}"/>')
     g.append(t(x + dx, y + dy, n, 40, c, anc, 700))
 g.append("</svg>")
-write("bench", " foot", "One Index, Three Price Points",
+write("bench", " foot", "Nano Ranks Like bge-large With 22× Less Compute",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Exact search, mean nDCG@10 over SciFact, NFCorpus, SciDocs, TREC-COVID, FiQA, and ArguAna. Stella's training "
       "included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). Models: the 10 most downloaded on "
@@ -205,7 +205,7 @@ g.append(t(1100, 450, "Stella", 32, GRAY, "start", 600))
 g.append(strip(1100, 464, ex["stella_vector"], w=560))
 g.append(t(1100, 580, f"cosine {ex['cos_zero_stella']:.2f}", 44, WHITE, "start", 700))
 g.append("</svg>")
-write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup",
+write("zero-mech", " foot", "Zero Averages One Learned Row per Token",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\". "
       "Colour: sign and size of each value, scaled per strip. Stella: its query vector with prompt. results/m15_talk_slide_data.json.")
@@ -271,7 +271,7 @@ g.append(t(1170, 290, "Stella", 34, GRAY, "start", 600))
 g.append(strip(1170, 306, ex["stella_vector"], w=490))
 g.append(t(1170, 440, f"cosine {ex['cos_zero_stella']:.2f}", 52, WHITE, "start", 700))
 g.append("</svg>")
-write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup",
+write("zero-mech", " foot", "Zero Averages One Learned Row per Token",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\"; "
       "√count-weighted mean, then L2. First 48 of 1,024 dimensions; colour: sign and size of each value. "
@@ -399,7 +399,7 @@ r = mx / _best["zero"]["usd_per_million"]
 g.append(t(1664, 250, f"{r:.0f}×", 120, RED, "end", 700))
 g.append(t(1664, 310, "cheaper than Stella", 32, GRAY, "end"))
 g.append("</svg>")
-write("cloud-e2e", " foot", "The Whole Request on a Cloud VM: 29× Cheaper",
+write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill",
       '<div style="margin-top:40px">' + "".join(g) + "</div>",
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.",
@@ -506,7 +506,7 @@ for k, (x, y) in enumerate(pts):
 g.append(t(1560, 126, "June Gable", 30, WHITE, "middle", 700))
 g.append(t(1650, 640, "Qdrant HNSW index, 0.23 ms", 28, GRAY, "end", 600))
 g += [_curve(1236, 196, 1310, 250, MUT, 4), _curve(1236, 490, 1314, 500, RED, 4), "</svg>"]
-write("cost", " foot", "One Encoder, Two Deadlines",
+write("cost", " foot", "Every Query Runs the Full 435M-Parameter Model",
       '<div style="margin-top:8px">' + "".join(g) + "</div>",
       f"BEIR NQ, 2,681,468 passages. Real NQ test query; its judged passage ranks first in exact search (score "
       f"{_X2['passages'][0]['score']:.2f}). Vectors: first 3 of 1,024 values. Median times on the M5 Pro. Graph schematic. Exploratory.")
@@ -531,7 +531,7 @@ for i, (n, sub, c) in enumerate((("Stella", "25 GFLOPs per query", GRAY), ("Nano
     g.append(t(745, y + 72, "own ef", 30, c, "middle", 600, True))
     g.append(arr(840, y + 60, 1150, 425 + (i - 1) * 60))
 g.append("</svg>")
-write("arch", " foot", "Three Query Encoders Search One Index",
+write("arch", " foot", "Keep the Index, Swap the Query Encoder",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
       "Zero: 2 FLOPs per gathered value plus normalization. ef: Qdrant's hnsw_ef, set per request.")
@@ -566,7 +566,7 @@ for i, (head, sub, (a, b), hot, out) in enumerate(cols):
     g.append(f'<line x1="{x}" y1="400" x2="{x + 500}" y2="400" stroke="{LINE}" stroke-width="2"/>')
     g.append(t(x, 470, out, 38, WHITE, "start", 700))
 g.append("</svg>")
-write("order", " foot", "What a Lookup Table Cannot See",
+write("order", " foot", "Zero Misses Word Order, Context, and New Words",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "Zero: Stella's WordPiece tokenizer (30,522 tokens), one learned row per token, √count-weighted mean, then L2. Token "
       "splits shown are the real tokenizer output. On 24 query pairs where direction changes the answer, Zero ranked the right "
@@ -732,7 +732,7 @@ for i, (a, b) in enumerate(_ST):
     g.append(t(110, y + 90, b, 32, GRAY))
 g.append("</svg>")
 _q = _qr("paper")
-write("byo", " foot", "Already Have an Index? Train Your Own",
+write("byo", " foot", "Train a Query Encoder for Your Own Index",
       '<div class="row" style="gap:80px;margin-top:24px;align-items:center">' + "".join(g)
       + f'<div class="col" style="gap:20px;align-items:center"><div style="background:#fff;border-radius:16px;padding:12px">{_q}</div>'
       '<p style="font-size:34px;font-weight:600;color:#fcfdff">Full recipe: the paper</p></div></div>',
@@ -923,7 +923,7 @@ F.add(f'<path d="M{VX + 514} 120 C 1316 120, 1326 50, 1368 50" fill="none" strok
       curve(VX + 514, 485, 1352, 150, RED))
 F.t(1664, ty + 70, "June Gable", 30, WHITE, "end", 700)
 F.t(1664, 612, "Qdrant HNSW index, 0.23 ms", 28, GRAY, "end", 600)
-write("cost", " foot", "One Encoder, Two Deadlines", F.html(),
+write("cost", " foot", "Every Query Runs the Full 435M-Parameter Model", F.html(),
       f"BEIR NQ, 2,681,468 passages. Real NQ test query; its judged passage ranks first in exact search (score "
       f"{_X2['passages'][0]['score']:.2f}). Vectors: first 3 of 1,024 values. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
@@ -1005,7 +1005,7 @@ Q.t(TGT[0], TGT[1] - 46, "June Gable", 32, WHITE, "middle", 700)
 Q.t((IX0 + IX1) / 2, H2 - 34, "search 0.23 ms", 32, RED, "middle", 700)
 _qlane = Q.html().replace('<svg aria', '<svg class="fragment" data-fragment-index="1" aria').replace(
     'class="lb"', 'class="lb fragment" data-fragment-index="1"').replace('class="qbox"', 'class="qbox fragment" data-fragment-index="1"')
-write("cost", " foot", "One Encoder, Two Deadlines", A.html() + "\n" + _qlane,
+write("cost", " foot", "Every Query Runs the Full 435M-Parameter Model", A.html() + "\n" + _qlane,
       f"BEIR NQ, 2,681,468 passages, encoded once with Stella. Real NQ test query; its judged passage ranks first in exact "
       f"search (score {_X2['passages'][0]['score']:.2f}). Vector: first values of 1,024. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
@@ -1049,7 +1049,7 @@ F.add(hn)
 F.el(1182, 212, '<img src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="" style="position:absolute;left:{L}px;top:{T}px;width:44px;height:51px;object-fit:contain">')
 F.t(1240, 256, "One Stella index", 40, WHITE, weight=700)
 F.t(1407, 596, "same vectors, same HNSW graph", 26, GRAY, "middle")
-write("arch", " foot", "Three Query Encoders Search One Index", F.html(),
+write("arch", " foot", "Keep the Index, Swap the Query Encoder", F.html(),
       "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
       "Zero: 2 FLOPs per gathered value plus normalization. ef: Qdrant's hnsw_ef, set per request.")
 
@@ -1072,7 +1072,7 @@ F.t(1182, 260, "Stella", 34, GRAY, weight=700)
 F.add(strip2(1182, 278, ex["stella_vector"], 450, 50))
 F.add(f'<line x1="1182" y1="374" x2="1632" y2="374" stroke="#303547" stroke-width="2"/>')
 F.t(1182, 452, f"cosine {ex['cos_zero_stella']:.2f}", 56, WHITE, weight=700)
-write("zero-mech", " foot", "Zero Builds a Query Vector by Lookup", F.html(),
+write("zero-mech", " foot", "Zero Averages One Learned Row per Token", F.html(),
       "Released Zero table (int8 rows, fp32 scale per row, dequantized), query \"cheap flights paris to rome\"; "
       "√count-weighted mean, then L2. First 48 of 1,024 dimensions; colour: sign and size of each value. "
       "Stella: its query vector with prompt.")
@@ -1106,8 +1106,8 @@ code = ('<div class="win" style="position:absolute;left:128px;top:650px;width:86
 chips = ('<div class="col" style="position:absolute;left:1036px;top:668px;width:430px;gap:22px">'
          '<p style="font-size:44px;font-weight:700;color:#fcfdff">one RTX 3080</p>'
          '<p style="font-size:44px;font-weight:700;color:#ff516b">≈ 20 min to train</p></div>')
-write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index", F.html() + "\n" + code + "\n" + chips
-      + astro("strings", 1490, 620, 300, 300),
+write("distill", " foot", "Zero Learns to Copy Stella's Query Vectors", F.html() + "\n" + code + "\n" + chips
+      + astro("strings", 1466, 614, 404, 370),
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
       "a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.")
 
@@ -1142,7 +1142,7 @@ for head, sub, (a, b), hot, out in (("Order", "a mean has no order", (["paris", 
     cards.append(f'<div class="ocard"><div class="col" style="gap:10px"><p class="oh">{head}</p><p class="os">{sub}</p></div>'
                  f'<div class="col" style="gap:18px">{_toks(a, () if head == "New words" else hot)}{_toks(b, hot)}</div>'
                  f'<div class="grow"></div><p class="or">{out}</p></div>')
-write("order", " foot", "What a Lookup Table Cannot See",
+write("order", " foot", "Zero Misses Word Order, Context, and New Words",
       '<div class="row" style="gap:32px;height:560px;margin-top:8px">' + "".join(cards) + "</div>",
       "Zero: Stella's WordPiece tokenizer (30,522 tokens), one learned row per token, √count-weighted mean, then L2. Token "
       "splits shown are the real tokenizer output. On 24 query pairs where direction changes the answer, Zero ranked the right "
@@ -1184,7 +1184,7 @@ F.add(f'<circle cx="1530" cy="186" r="22" fill="none" stroke="{VIO}" stroke-widt
 F.t(1490, 436, "Stella's space", 32, WHITE, "middle", 700)
 chips = ('<div class="chips" style="position:absolute;left:128px;top:792px;gap:24px">' + stat("34.5M parameters", "vio")
          + stat("3.49M training queries") + stat("57.3 A100-hours ≈ $95") + "</div>")
-write("nano", " foot", "Nano Reads Three Layers to Reach Stella's Space", F.html() + "\n" + chips + astro("graph", 1644, 728, 303, 356),
+write("nano", " foot", "Nano Projects bge-small into Stella's Space", F.html() + "\n" + chips + astro("graph", 1644, 728, 303, 356),
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
 
@@ -1218,7 +1218,7 @@ for n, sys_, gf, c in (("Stella", "stella-query", _FL["stella"]["median_flops"] 
     x, y = (ZX if gf is None else PX(gf)), PY(six(sys_))
     F.add(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="32" fill="{c}" opacity="0.18"/><circle cx="{x:.0f}" cy="{y:.0f}" r="20" fill="{c}"/>')
     F.t(x, y - 40, n, 40, c, "middle", 700)
-write("bench", " foot", "One Index, Three Price Points", F.html(),
+write("bench", " foot", "Nano Ranks Like bge-large With 22× Less Compute", F.html(),
       "Exact search, mean nDCG@10 over SciFact, NFCorpus, SciDocs, TREC-COVID, FiQA, and ArguAna. Stella's training "
       "included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). Models: the 10 most downloaded on "
       "Hugging Face (30 days to 2026-11-21) of the 25 the paper evaluated. FLOPs: analytic, each model's query prefix. Exploratory.")
@@ -1300,7 +1300,7 @@ r = mx / _best["zero"]["usd_per_million"]
 card = (f'<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
         f'<p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">{r:.0f}×</p>'
         f'<p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div>')
-write("cloud-e2e", " foot", "The Whole Request on a Cloud VM: 29× Cheaper", F.html() + "\n" + card + astro("coffee", 1164, 427, 446, 525),
+write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1164, 427, 446, 525),
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.")
 
@@ -1421,7 +1421,7 @@ write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>
 # byo v11: four step cards and the paper's QR in a card
 steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" style="gap:4px"><p class="st">{a}</p><p class="sd">{b}</p></div></div>'
                 for i, (a, b) in enumerate(_ST))
-write("byo", " foot", "Already Have an Index? Train Your Own",
+write("byo", " foot", "Train a Query Encoder for Your Own Index",
       '<div class="row" style="gap:64px;margin-top:8px;align-items:center">'
       f'<div class="col" style="gap:20px;width:1100px">{steps}</div>'
       f'<div class="qr"><div class="qi">{_q}</div><p class="ql">Full recipe</p></div></div>',
@@ -1433,7 +1433,7 @@ cards = "".join(f'<div class="qr"><div class="qi">{_qr(n)}</div><p class="ql">{l
                 for n, lab in (("linkedin", "LinkedIn"), ("paper", "Paper preview"), ("modelcard", "Model card"), ("fastembed", "FastEmbed")))
 write("thanks", " alt", "Thank You",
       '<img src="project/ds/qdrant/assets/logo-red-white.svg" alt="Qdrant" style="position:absolute;left:1566px;top:128px;width:226px;height:60px;object-fit:contain">'
-      + astro("wave", 1240, 64, 300, 300)
+      + astro("wave", 302, 25, 517, 474)
       + '<div class="row" style="gap:40px;margin-top:auto;justify-content:space-between">' + cards + "</div>", pre=GLOW, mark=False)
 
 # cover v12: the corner graphic as a constellation: linked stars, three query lines into one entry star,
