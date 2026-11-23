@@ -749,6 +749,7 @@ ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "telescope-left
          "coffee": "/_blob/fcf094b23e6cc4c81851cc9e9c5aa63d", "juggle": "/_blob/61fa8a9ea84f0d11a2a93c62e8ada4d0",
          "sleep": "/_blob/71e2bb95eae4079139ad8059d053f973"}
 INK = "#0b0f19"
+ASTRO["bill"] = "/_blob/2d5fc6fe390d5af94d5e9925291c05b1"            # shocked by a long receipt (slide 12)
 # 2026-11-23: the robot mascot (generated with Codex gpt-6.2-sol from the owner's character sheet), same roles per slide
 ASTRO.update({"strings": "/_blob/41d32282c204df52436c792132876383", "graph": "/_blob/08e7d34403c04d248c672ad0496ba4af",
               "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97",
@@ -1573,7 +1574,7 @@ for n, y, c in (("nano", 170, VIO), ("zero", 360, RED)):
         F.t(max(xe, xr) + 40, y + 12, f"{R_enc[n]:.0f}\u00d7 \u2192 {R_req[n]:.0f}\u00d7", 36, WHITE, weight=700)
     F.add(f'<circle cx="{xe:.0f}" cy="{y}" r="17" fill="{INK}" stroke="{c}" stroke-width="5"/>',
           f'<circle cx="{xr:.0f}" cy="{y}" r="19" fill="{c}"/>')
-write("cloud", " foot", "Search Is Now the Bill: 3,700\u00d7 Becomes 29\u00d7", F.html() + "\n" + astro("coffee", 1452, 560, 380, 380),
+write("cloud", " foot", "Search Is Now the Bill: 3,700\u00d7 Becomes 29\u00d7", F.html() + "\n" + astro("bill", 1520, 512, 288, 392),
       "One GCP c4-standard-8 (8 vCPU), NQ queries. Hollow: encoding only, CPU per 1M queries (Stella 123 vCPU-h), batch 1, 8 "
       "processes \u00d7 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, "
       "Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.")

@@ -15,7 +15,7 @@
 <p class="lb" style="left:1179px;top:682px;width:276px;font-size:30px;color:#c9cede;font-weight:400;text-align:center;">encoding alone</p>
 <p class="lb" style="left:717px;top:562px;width:103px;font-size:44px;color:#ff516b;font-weight:700;text-align:center;">29×</p>
 <p class="lb" style="left:622px;top:682px;width:294px;font-size:30px;color:#c9cede;font-weight:400;text-align:center;">encode + search</p>
-<img class="mascot" src="/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97" alt="" style="left:1452px;top:560px;width:380px;height:380px">
+<img class="mascot" src="/_blob/2d5fc6fe390d5af94d5e9925291c05b1" alt="" style="left:1520px;top:512px;width:288px;height:392px">
 
 <p class="src">One GCP c4-standard-8 (8 vCPU), NQ queries. Hollow: encoding only, CPU per 1M queries (Stella 123 vCPU-h), batch 1, 8 processes × 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
@@ -24,8 +24,6 @@ Why it matters: Zero's 3,700 times is real, but it is not what you save.<br>
 - [Hollow dots] Encoding alone, on one 8-vCPU VM: Stella needs 123 vCPU-hours per million queries, Zero 2 vCPU-minutes. That is 3,700 times cheaper. Nano: 26 times.<br>
 - [Arrow] Now pay for the whole request, encode plus search, on the same machine. Zero's 3,700 collapses to 29.<br>
 - Why: with encoding almost free, the search is the bill. Per million queries: Stella $4.91, Nano $0.18, Zero $0.17.<br>
-- So Nano and Zero cost the same: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.<br>
-- So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.<br>
-- The lever is now the search itself, and Zero needs more of it than the others.<br>
-Next: so how much more search does Zero need?</aside>
+- So Nano and Zero cost the same. More processes or shards move that ceiling; a cheaper encoder does not.<br>
+The next slide explains why</aside>
 </section>
