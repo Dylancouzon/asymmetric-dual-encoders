@@ -727,7 +727,7 @@ also appears in that model's own setting, where the lookup path is learned, not 
 - **Output:** immutable `results/m15_e25_lightretriever.json` from `m15src/e25_lightretriever.py`.
 
 
-## Talk measurements T1-T7 (exploratory, 2026-11-20 and 2026-11-21)
+## Talk measurements T1-T12 (exploratory, 2026-11-20 to 2026-11-22)
 
 Added for the London IR Meetup talk (2026-11-23) under the M15 paper-phase privileges. All are
 exploratory, use public known-test sets only, and touch none of the reserved four. Plan and reviews:
@@ -795,3 +795,26 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   dequantized Zero rows it gathers (first 48 dimensions, for drawing), Zero's pooled vector, and its
   cosine with Stella's and Nano's query vectors. Script `m15src/talk_slide_data.py`; receipt
   `results/m15_talk_slide_data.json`.
+- **T8 query compute of 25 open retrievers.** T2's formula applied to the 25 E8/E8x towers (arctic-embed-l-mean,
+  a pooling variant, left out): layer count, width and feed-forward size from each config.json at its pinned
+  revision; gated feed-forward blocks (gte-*-en-v1.5) count 3·d·ff weights; T is the median over E1's 100 medium
+  queries with each model's query prefix, counted with Stella's uncased WordPiece tokenizer, which all 26 towers
+  share (E8/E8x preflight). Quality: each tower's own six-set nDCG@10 from E8/E8x; Constella's from the M20 table on
+  the same six datasets (Stella 0.5744 and bge-small 0.5042 match the E8/E8x values). Script
+  `m15src/talk_flops_field.py`; receipt `results/m15_talk_flops_field.json`.
+- **T9 corpus-versus-query crossover.** T2's formulas on BEIR NQ: every corpus passage as the registered Stella
+  document path encodes it (title + " " + text, no prompt, truncated at 512 tokens) against the mean of the 3,452 NQ
+  test queries (Stella with its prompt; Nano and Zero with their served tokenizers). The crossover is the corpus
+  FLOPs divided by the mean query FLOPs. Script `m15src/talk_crossover.py`; receipt `results/m15_talk_crossover.json`.
+- **T10 download snapshot.** Hugging Face 30-day and all-time downloads of T8's 25 towers, fetched once; the talk
+  labels the 10 most downloaded in 30 days, one version per family (bge-base-en v1 and e5-base v1 give way to
+  their newer versions). Script `m15src/talk_model_downloads.py`; receipt `results/m15_talk_model_downloads.json`.
+- **T11 router plan by traffic.** The studio allocator (`m15/talk/demo/studio/allocator.py`) planned at 16 rates from
+  40 to 2,500 searches/s with its four presets, quality and search time from T3's NQ sweep, the M5 Pro encode capacity
+  in its self-check (Stella 80, Nano 1,400, Zero 17,000 encodes/s), floor 0.50 and headroom 0.8. Planner output on
+  fixed costs, not a load test. Script `m15src/talk_router_plan.py`; receipt `results/m15_talk_router_plan.json`.
+- **T12 slide 2 search example.** One NQ test query chosen for readability among queries whose judged passage ranks first
+  ("who played joey's agent estelle on friends"; the first pick ranked its judged passage fourth and was dropped). Stella
+  query encoder with its prompt, exact search over the committed Stella NQ document vectors; records the answer rank and
+  the first values of the query and three shown passage vectors. Script `m15src/talk_slide2_example.py`; receipt
+  `results/m15_talk_slide2_example.json`.

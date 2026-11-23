@@ -764,6 +764,73 @@ def talk_cloud_e2e():
                 "Several processes or shards; Qdrant server; GPU encoders; other instance types.")
 
 
+def talk_flops_field():
+    if not (REPO / "results" / "m15_talk_flops_field.json").exists():
+        return ""
+    d, b = R("m15_talk_flops_field.json"), R("m20_beir15_run.json")["table"]
+    six = lambda sys_: sum(b[k]["systems"][sys_] for k in ("scifact", "nfcorpus", "scidocs", "trec-covid", "fiqa", "arguana")) / 6
+    fl = R("m15_talk_flops.json")["results"]
+    rows = [[n, f"{v['median_tokens']:.0f}", f"{v['median_flops']:.3g}", f"{v['six_ndcg10']:.4f}"]
+            for n, v in sorted(d["results"].items(), key=lambda kv: kv[1]["median_flops"])]
+    rows += [[f"**{n}** (Stella index)", f"{fl[k]['median_tokens']:.0f}", f"{fl[k]['median_flops']:.3g}", f"{six(s):.4f}"]
+             for n, k, s in (("Zero", "zero", "zero-dense"), ("Nano", "nano", "nano-dense"), ("Stella", "stella", "stella-query"))]
+    return card("C30. Constella among 25 open retrievers by query compute", "exploratory (analytic estimate; descriptive scores)",
+                f"On six BEIR datasets, Nano ({six('nano-dense'):.3f}) ranks with base-size retrievers at small-model compute, and "
+                f"Zero ({six('zero-dense'):.3f}) ranks above all four MiniLM models with no forward pass. Stella saw FiQA and "
+                f"ArguAna in training; on the other four datasets Zero trails BM25.",
+                table(["model", "median tokens", "median FLOPs per query", "six-BEIR nDCG@10"], rows)
+                + f"\n\nFormula: {d['formula']}. Tokens: Stella's uncased WordPiece tokenizer (shared by all 26 towers) on "
+                  f"the {d['n_queries']} medium E1 queries with each model's query prefix. Scores: each model on its own index "
+                  "(E8/E8x six-set ceilings); Constella rows from the M20 BEIR-15 table on the same six datasets.",
+                "`results/m15_talk_flops_field.json`, `results/m15_e8_towers.json`, `results/m15_e8x_towers.json`, `results/m20_beir15_run.json`",
+                "Measured encode time; batching or GPU serving; the four datasets without teacher exposure for the 16 E8x models; "
+                "any superiority claim (descriptive means, no intervals).")
+
+
+def talk_crossover():
+    if not (REPO / "results" / "m15_talk_crossover.json").exists():
+        return ""
+    d = R("m15_talk_crossover.json")["results"]
+    rows = [[n, f"{v['query_flops_mean']:.3g}", f"{v['crossover_queries']:.3g}"] for n, v in d["encoders"].items()]
+    x = d["encoders"]["stella"]["crossover_queries"]
+    return card("C31. When query encoding overtakes the corpus encode", "exploratory (analytic estimate)",
+                f"On BEIR NQ, Stella's query encoding passes the one-time encode of all {d['n_docs']:,} passages after "
+                f"{x / 1e6:.1f}M queries, about {x / 100 / 3600:.0f} hours at 100 queries/s.",
+                table(["query encoder", "mean FLOPs per query", "queries to equal the corpus encode"], rows)
+                + f"\n\nCorpus: {d['corpus_flops']:.3g} FLOPs, mean {d['doc_tokens_mean']:.0f} tokens per passage "
+                  f"(Stella document path, truncated at 512). Queries: the {d['n_queries']:,} NQ test queries.",
+                "`results/m15_talk_crossover.json`",
+                "Measured cost (the corpus ran on a GPU, queries on a CPU); batching, which favours the corpus encode; "
+                "query lengths of real traffic.")
+
+
+def talk_router_plan():
+    if not (REPO / "results" / "m15_talk_router_plan.json").exists():
+        return ""
+    d = R("m15_talk_router_plan.json")
+    rows = [[f"{p['rate']:,}", f"ef {p['ef']}, os {p['oversampling']:g}",
+             ", ".join(f"{k} {v:.0%}" for k, v in p["shares"].items() if v), f"{p['quality']:.3f}"] for p in d["plans"]]
+    return card("C32. What the studio router plans as traffic grows", "exploratory (planner output on fixed costs)",
+                f"With floor {d['floor']:.2f}, the router serves Stella alone at 40 searches/s, moves to Nano by 1,000/s, and "
+                f"mixes in Zero with a narrower search above that; average nDCG@10 stays above the floor.",
+                table(["searches/s", "preset", "traffic share", "average nDCG@10"], rows),
+                "`results/m15_talk_router_plan.json`",
+                "Real load: queueing, contention between encoders and search, and other hardware move the switch points.")
+
+
+def talk_slide2_example():
+    if not (REPO / "results" / "m15_talk_slide2_example.json").exists():
+        return ""
+    d = R("m15_talk_slide2_example.json")["results"]
+    rows = [[p["text"][:40], f"{p['score']:.3f}", ", ".join(f"{x:.3f}" for x in p["vector"][:3])] for p in d["passages"]]
+    return card("C33. One real search for the problem slide", "exploratory (illustration)",
+                f"Stella ranks the judged passage for \"{d['query']}\" first of {d['n_docs']:,} NQ passages in exact search.",
+                table(["passage", "score", "first values"], rows)
+                + f"\n\nQuery vector, first values: {', '.join(f'{x:.3f}' for x in d['query_vector'][:3])}.",
+                "`results/m15_talk_slide2_example.json`",
+                "One hand-picked query; it says nothing about average quality.")
+
+
 if __name__ == "__main__":
     parts = ["# M15 evidence, in plain language\n",
              "Generated by `python m15/make_evidence.py` from committed result files. Each card "
@@ -771,6 +838,6 @@ if __name__ == "__main__":
              "exploratory, the numbers, the file that holds them, and what the result cannot show.\n",
              beir(), latency(), towers(), towers_extended(), mechanisms(), oracle(), prefixes(), routers(), blend(),
              system(), failure_modes(), heldout(), decision_audit(), precision_followup(), cross_recipe(), cross_space_ann(), width_model(), lightretriever(), gap_predictors(), corpus_size(), prospective(),
-             talk_word_order(), talk_flops(), talk_cloud(), talk_edge(), talk_nq_encode(), talk_slide_data(), talk_cloud_e2e()]
+             talk_word_order(), talk_flops(), talk_cloud(), talk_edge(), talk_nq_encode(), talk_slide_data(), talk_cloud_e2e(), talk_flops_field(), talk_crossover(), talk_router_plan(), talk_slide2_example()]
     OUT.write_text("\n".join(p for p in parts if p))
     print("wrote", OUT.relative_to(REPO))

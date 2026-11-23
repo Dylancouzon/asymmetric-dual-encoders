@@ -6,9 +6,9 @@
 <div class="fl" style="gap:16px"><div style="width:40px;height:24px;border-radius:6px;background:#3fc1a5"></div><p class="watch">query encoding</p></div>
 <div class="fl" style="gap:16px"><div style="width:40px;height:24px;border-radius:6px;background:#f5a623"></div><p class="watch">graph search</p></div>
 </div>
-<aside>[~3 min] [Share the demo window. Open Race and press Space. Play the recorded fallback if the replay is unavailable.] I timed each encoder on the same questions over one Stella index. I ran one encoder at a time. Qdrant Edge ran in the same process on this laptop. I lined up the timings so we can follow the same question in each lane. Each bar covers the time from query text to retrieved passages.
-
-[Follow one request in each lane. Pause to let Zoom viewers catch up.] Watch the change in color. That's the moment I hand the vector to search. Stella is still making a vector for much of the bar. Zero gets to the handoff almost immediately. Then it has to walk the graph and get the passages back. Watch where Zero spends its time after that handoff.
-
+<aside>[~3 min] [Share the demo window. Open Race and press Space. Play the recorded fallback if the replay is unavailable.] I timed each encoder on the same questions over one Stella index. I ran one encoder at a time. Qdrant Edge ran in the same process on this laptop. I lined up the timings so we can follow the same question in each lane. Each bar covers the time from query text to retrieved passages.<br>
+<br>
+[Follow one request in each lane. Pause to let Zoom viewers catch up.] Watch the change in color. That's the moment I hand the vector to search. Stella is still making a vector for much of the bar. Zero gets to the handoff almost immediately. Then it has to walk the graph and get the passages back. Watch where Zero spends its time after that handoff.<br>
+<br>
 [Let the replay finish. Hold on the finish clock.] Over the whole batch, Zero finished about 2.3 times as fast as Nano. One slow request can add a lot to that total. The bet was about the request in the middle. I worked that out from the same run. [Return to split and repeat the guess.]</aside>
 </section>

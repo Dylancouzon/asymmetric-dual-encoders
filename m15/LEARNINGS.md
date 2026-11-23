@@ -427,6 +427,22 @@ Historical renumbering is in [ROADMAP.md](../ROADMAP.md). Earlier documents reta
 - **Strength/reach:** One laptop, one process, simulated traffic; the mechanisms carry over, the numbers will not.
 - **Use:** Live demo; talk Q&A on routing.
 
+### L47. Among 25 open retrievers, Nano scores like a base model at small-model compute, and Zero clears MiniLM with no network
+
+- **Observation:** On six BEIR datasets (exact search, each tower on its own index), Nano on Stella's index scores 0.532 at 0.54 GFLOPs per query; the base-size towers score 0.467-0.533 at 2.0-3.4 GFLOPs and the small ones 0.454-0.504 at 0.51-0.86. Zero scores 0.434 at 28 KFLOPs, above all four MiniLM models (0.328-0.422, 0.26-0.51 GFLOPs) and BM25 (0.417). Stella saw FiQA and ArguAna in training: on the other four datasets Zero (0.410) trails BM25 (0.441).
+- **Decision:** Show the 25-model field on the talk's quality slide with the exposure caveat in the footnote and the notes; keep BEIR-15 (L-registered rows) as the paper's headline.
+- **Evidence:** C30, MEASUREMENTS T8, `results/m15_talk_flops_field.json`.
+- **Strength/reach:** Analytic FLOPs, not measured time; six datasets with teacher exposure on two; descriptive means without intervals.
+- **Use:** Talk slide 4.
+
+### L48. On NQ, query encoding passes the whole corpus encode after about 10 million Stella queries
+
+- **Observation:** A Stella query (31 tokens with its prompt) costs about 2.5e10 FLOPs; the 2.68M NQ passages (mean 109 tokens) cost 2.4e17 once. Query encoding equals the corpus encode after 9.6M queries, about 27 hours at 100 queries/s. Nano needs 448M queries to do the same, and Zero about 9 trillion.
+- **Decision:** Open the talk's problem slide with this crossing instead of a cost formula.
+- **Evidence:** C31, MEASUREMENTS T9, `results/m15_talk_crossover.json`.
+- **Strength/reach:** Analytic FLOPs, not dollars or time; batching makes passage encoding cheaper per FLOP than single queries, so the measured crossing would come sooner.
+- **Use:** Talk slide 2.
+
 ## Current editorial selection (agent recommendation, not owner acceptance)
 
 **Primary question:** When retaining a document index, how should an engineer choose and validate a cheaper query path? **Separate construction question:** before committing to a teacher and index, how should an engineer screen the cheap representation? Teacher choice changes the index; it is not a runtime option over an already fixed one.
