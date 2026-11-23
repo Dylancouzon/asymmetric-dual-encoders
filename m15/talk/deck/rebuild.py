@@ -323,7 +323,7 @@ g.append("</svg>")
 write("recovery", " foot", "Zero Needs a Wider Search, and Still Trails",
       '<div style="margin-top:16px">' + "".join(g) + "</div>",
       "Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. "
-      "Across 25 models in the paper, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.",
+      "Across the paper's 25 lookup tables that passed its exact-search check, they needed a median ef of 256 to match their teacher at 64. Exploratory.",
       note="<aside>[~2.5 min] [Before the chart: the two kinds of settings.] Qdrant's HNSW index has two kinds of settings. "
       "The first kind is fixed when the index is built. m is how many links each passage keeps to its neighbours in the graph; "
       "I used 16, the default. ef_construct is how many candidates Qdrant checks when it chooses those links; I used 100. "
@@ -347,15 +347,17 @@ def _code(lines):
     return lines(sp, K, F, S_, C_, V, T_, P_)
 code = _code(lambda sp, K, F, S_, C_, V, T_, P_: "\n".join([
     sp(K, "from") + " fastembed " + sp(K, "import") + " " + sp(T_, "TextEmbedding"),
+    sp(K, "from") + " qdrant_client " + sp(K, "import") + " " + sp(T_, "models"),
     "",
     sp(C_, "# 1. Index once with Stella's document model"),
     sp(V, "stella") + " = " + sp(T_, "TextEmbedding") + "(" + sp(S_, '"Qdrant/stella-en-400M-v5-doc-onnx"') + ")",
     sp(V, "client") + "." + sp(F, "upload_collection") + "(" + sp(S_, '"wiki"') + ", " + sp(F, "list") + "(" + sp(V, "stella") + "." + sp(F, "embed") + "(" + sp(V, "passages") + ")))",
     "",
-    sp(C_, "# 2. Query the same index with Zero, or swap in Nano"),
+    sp(C_, '# 2. Query the same index with Zero, or "Qdrant/constella-nano"'),
     sp(V, "zero") + " = " + sp(T_, "TextEmbedding") + "(" + sp(S_, '"Qdrant/constella-zero"') + ")",
     sp(V, "query") + " = " + sp(F, "next") + "(" + sp(V, "zero") + "." + sp(F, "embed") + "([" + sp(S_, '"how far is the moon?"') + "]))",
-    sp(V, "hits") + " = " + sp(V, "client") + "." + sp(F, "query_points") + "(" + sp(S_, '"wiki"') + ", " + sp(V, "query") + "=" + sp(V, "query") + ")",
+    sp(V, "hits") + " = " + sp(V, "client") + "." + sp(F, "query_points") + "(" + sp(S_, '"wiki"') + ", " + sp(V, "query") + "=" + sp(V, "query") + ",",
+    "    " + sp(V, "search_params") + "=" + sp(T_, "models") + "." + sp(T_, "SearchParams") + "(" + sp(V, "hnsw_ef") + "=" + '<span style="color:#B5CEA8">512</span>' + "))",
 ]))
 write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>",
       f'<pre style="margin-top:36px;background:#1E1E1E;color:#D4D4D4;border-radius:16px;padding:36px 44px;font-family:JetBrains Mono,monospace;'
@@ -965,7 +967,7 @@ gp, ge, walk = _flat_graph(IX0 + 40, 120, IX1 - IX0 - 80, 330, TGT, ENT)
 A, Q = Fig(h=H2, aria="Passages go through Stella once and fill a Qdrant HNSW index"), \
     Fig(h=H2, aria="A question goes through the same Stella on every request; its vector walks the index to June Gable")
 A.t(28, 42, "ONCE, AT INDEXING", 25, MUT, weight=700, mono=True)
-Q.t(28, 332, "EVERY QUERY", 25, RED, weight=700, mono=True)
+Q.t(28, 357, "EVERY QUERY", 25, RED, weight=700, mono=True)
 # lane 1: a stack of passages, Stella, into the index
 for k in (2, 1):
     A.add(f'<rect x="{28 + k * 14}" y="{96 - k * 14}" width="400" height="118" rx="14" fill="#151b2b" stroke="#3a4157" stroke-width="2"/>')
@@ -1021,6 +1023,7 @@ F.add(f'<rect x="490" y="0" width="634" height="110" rx="18" fill="#151b2b" stro
       g_net(506, 12, 120, 86, (3, 4, 3), GRAY, 6))
 F.t(646, 68, "Stella document encoder", 36, WHITE, weight=700)
 F.t(0, 198, "each request picks one", 30, MUT)
+F.t(775, 198, "own ef", 30, MUT, "middle", 600, True)
 rows = (("Stella", "25 GFLOPs per query", GRAY), ("Nano", "0.54 GFLOPs per query", VIO), ("Zero", "28 KFLOPs per query", RED))
 for i, (n, sub, c) in enumerate(rows):
     y = 232 + i * 136
@@ -1034,11 +1037,11 @@ for i, (n, sub, c) in enumerate(rows):
     F.t(170, y + 52, n, 40, c, weight=700)
     F.t(170, y + 96, sub, 30, GRAY)
     F.add(arr(580, y + 58, 650, y + 58))
+    kx = 684 + 182 * (i + 1) / 3                                 # knob: Stella ef 256, Nano 512, Zero 1024
     F.add(f'<rect x="650" y="{y + 24}" width="250" height="68" rx="34" fill="{INK}" stroke="{c}" stroke-width="3"/>',
-          f'<line x1="680" y1="{y + 58}" x2="736" y2="{y + 58}" stroke="#3a4157" stroke-width="6" stroke-linecap="round"/>',
-          f'<line x1="680" y1="{y + 58}" x2="{686 + 16 * (i + 1)}" y2="{y + 58}" stroke="{c}" stroke-width="6" stroke-linecap="round"/>',
-          f'<circle cx="{686 + 16 * (i + 1)}" cy="{y + 58}" r="9" fill="{c}"/>')
-    F.t(752, y + 70, "own ef", 30, c, "start", 600, True)
+          f'<line x1="684" y1="{y + 58}" x2="866" y2="{y + 58}" stroke="#3a4157" stroke-width="6" stroke-linecap="round"/>',
+          f'<line x1="684" y1="{y + 58}" x2="{kx:.0f}" y2="{y + 58}" stroke="{c}" stroke-width="6" stroke-linecap="round"/>',
+          f'<circle cx="{kx:.0f}" cy="{y + 58}" r="11" fill="{c}"/>')
     F.add(arr(900, y + 58, 1150, 400 + (i - 1) * 70))
 F.add(f'<rect x="1150" y="186" width="514" height="434" rx="22" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>')
 hn, _, _, _ = g_hnsw(1190, 300, 434, layer_h=58, gap=26, seed=4, target_uv=(0.8, 0.55))
@@ -1100,8 +1103,9 @@ code = ('<div class="win" style="position:absolute;left:128px;top:650px;width:86
         '<p style="padding:20px 32px 24px;font-family:JetBrains Mono,monospace;font-size:30px;line-height:1.5;color:#e2e7f5">'
         '<span style="color:#ff8fa0">align</span>&#160;&#160;&#160;1 − cos(z, Ê_S) + KL(p_S ‖ p_z)<br>'
         '<span style="color:#ff8fa0">rank</span>&#160;&#160;&#160;&#160;InfoNCE<br><span style="color:#9aa0b5">Ê_D(d)&#160;&#160;never changes</span></p></div>')
-chips = ('<div class="col" style="position:absolute;left:1020px;top:650px;width:430px;gap:20px">'
-         + stat("one RTX 3080", icon="Settings", ic=GRAY) + stat("≈ 20 min to train", "red", "Clock", "#ff8fa0") + "</div>")
+chips = ('<div class="col" style="position:absolute;left:1036px;top:668px;width:430px;gap:22px">'
+         '<p style="font-size:44px;font-weight:700;color:#fcfdff">one RTX 3080</p>'
+         '<p style="font-size:44px;font-weight:700;color:#ff516b">≈ 20 min to train</p></div>')
 write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index", F.html() + "\n" + code + "\n" + chips
       + astro("strings", 1490, 620, 300, 300),
       "Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; "
@@ -1111,9 +1115,8 @@ write("distill", " foot", "Zero Trains on a Desktop GPU Against a Frozen Index",
 F = Fig(aria="Bump chart: ten models ranked as retrievers on the left and as lookup tables on the right; gte-large falls "
              "from 1st to 10th, Stella rises from 2nd to 1st")
 lx, rx, top, step = 600, 1060, 96, 52
-F.add(f'<rect x="{lx - 380}" y="0" width="{rx - lx + 760}" height="612" rx="18" fill="#0d1320" stroke="#303547" stroke-width="2"/>')
-F.el(lx - 300, 26, f'<p class="pill drop" style="position:absolute;left:{{L}}px;top:{{T}}px;width:300px;text-align:center;box-sizing:border-box">as a retriever</p>')
-F.el(rx, 26, f'<p class="pill drop" style="position:absolute;left:{{L}}px;top:{{T}}px;width:300px;text-align:center;box-sizing:border-box">as a lookup table</p>')
+F.t(lx, 50, "as a retriever", 30, GRAY, "end", 600)
+F.t(rx, 50, "as a lookup table", 30, GRAY, "start", 600)
 for n, a, b in sorted(REG, key=lambda r: r[0] in ("gte-large-en-v1.5", "stella-400M-v5")):
     i, j = left.index((n, a, b)), right.index((n, a, b))
     hot = n in ("gte-large-en-v1.5", "stella-400M-v5")
@@ -1143,7 +1146,7 @@ write("order", " foot", "What a Lookup Table Cannot See",
       '<div class="row" style="gap:32px;height:560px;margin-top:8px">' + "".join(cards) + "</div>",
       "Zero: Stella's WordPiece tokenizer (30,522 tokens), one learned row per token, √count-weighted mean, then L2. Token "
       "splits shown are the real tokenizer output. On 24 query pairs where direction changes the answer, Zero ranked the right "
-      "passage first in both directions for 0 pairs, Stella 4, Nano 2 (results/m15_talk_word_order.json). Exploratory.")
+      "passage first in both directions for 0 pairs, Stella 4, Nano 2. Exploratory.")
 
 # nano v11: 12 transformer layers, three taps, a concatenated feature vector, a weight matrix, Stella's space
 F = Fig(h=470, aria="bge-small's 12 layers; layers 4, 8 and 12 are mean-pooled and joined into 1,152 features, which a "
@@ -1223,7 +1226,7 @@ write("bench", " foot", "One Index, Three Price Points", F.html(),
 # cloud v11: log bars on a track, ratios in stat cards
 F = Fig(h=600, aria="CPU time to encode one million queries on a log scale: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes")
 rows = [("Stella", 123.0, "123 vCPU-h", GRAY), ("Nano", 4.786, "4.8 vCPU-h", VIO), ("Zero", 0.03296, "2 vCPU-min", RED)]
-x0, x1, lo, hi = 200, 1060, math.log10(0.01), math.log10(300)
+x0, x1, lo, hi = 200, 1300, math.log10(0.01), math.log10(300)
 X = lambda v: x0 + (math.log10(v) - lo) / (hi - lo) * (x1 - x0)
 F.t(x0, 30, "CPU time to encode 1M queries (log scale)", 26, MUT)
 for d in (0.01, 0.1, 1, 10, 100):
@@ -1240,8 +1243,8 @@ ratio = ('<div class="col" style="position:absolute;left:1360px;top:500px;width:
          '<div class="stat vio" style="justify-content:space-between"><p style="font-size:30px;color:#dde0ff">Nano</p><p style="font-size:88px;font-weight:700;color:#9494ff;line-height:1">26×</p></div>'
          '<div class="stat red" style="justify-content:space-between"><p style="font-size:30px;color:#ffb3bf">Zero</p><p style="font-size:88px;font-weight:700;color:#ff516b;line-height:1">3,700×</p></div>'
          '<p style="font-size:30px;color:#c9cede;text-align:right">less CPU than Stella</p></div>')
-write("cloud", " foot", "Encoding 1M Queries: $6.07, $0.24, or $0.0016", F.html() + "\n" + ratio,
-      "GCP c4-standard-8 (8 vCPU), us-east1, on-demand $0.395/h, at peak throughput: batch 1, 8 processes × 1 ONNX "
+write("cloud", " foot", "Encoding Alone: Nano 26×, Zero 3,700× Less CPU", F.html(),
+      "GCP c4-standard-8 (8 vCPU), us-east1, at peak throughput: batch 1, 8 processes × 1 ONNX "
       "Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries. vCPU-hours = 8 / queries per second × 1M / 3600. "
       "Encoding only. Exploratory.")
 
@@ -1278,7 +1281,7 @@ for r in range(rows):
     if b_ - a_ > e_end:
         F.add(f'<rect x="{SX(e_end):.0f}" y="{yy}" width="{SX(b_ - a_) - SX(e_end):.0f}" height="{th}" rx="6" fill="{ORG}"/>')
 F.t(SX(AX) + 24, y0 + (rows - 1) * pitch + 14, f"{_tot:.1f} ms", 40, WHITE, weight=700)
-write("split", " foot", "The Whole Request Is <i>Only</i> 2.4× Faster", F.html(),                 # title set by Dylan in the page
+write("split", " foot", "The Whole Request Is <i>Only</i> 2.4× Faster Than Nano", F.html(),                 # title set by Dylan in the page
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
       "(Stella 0.631, Nano 0.579); Zero misses that at every tested point (best shown: ef 1024, os 8, nDCG@10 0.510). Exploratory.")
@@ -1324,7 +1327,7 @@ for i, v in ((0, .913), (5, .901)):
     F.add(f'<circle cx="{RX(i):.0f}" cy="{RY(v):.0f}" r="22" fill="none" stroke="{WHITE}" stroke-width="4"/>')
 write("recovery", " foot", "Zero Needs a Wider Search, and Still Trails", F.html(),
       "Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. "
-      "Across 25 models in the paper, lookup tables needed a median ef of 256 to match their teacher at 64. Exploratory.")
+      "Across the paper's 25 lookup tables that passed its exact-search check, they needed a median ef of 256 to match their teacher at 64. Exploratory.")
 
 # recipe v11: three cards; a measured menu, two settings as fields, one routing plan as a split bar
 menu = ['<div style="display:grid;grid-template-columns:150px 110px 110px 110px;gap:14px 0;font-family:JetBrains Mono,monospace;font-size:30px">',
@@ -1336,21 +1339,22 @@ for n, c in (("stella", GRAY), ("nano", VIO), ("zero", RED)):
         menu.append(f'<p style="color:#fcfdff;text-align:right">{v_}</p>')
 menu.append("</div>")
 p15 = next(p for p in _RP["plans"] if p["rate"] == 1500)
-bar = '<div style="display:flex;height:76px;border-radius:12px;overflow:hidden">' + "".join(
+bar = '<div style="display:flex;flex:none;height:76px;border-radius:12px;overflow:hidden">' + "".join(
     f'<div style="width:{420 * p15["shares"][n]:.0f}px;background:{c};display:flex;align-items:center;justify-content:center">'
     f'<p style="font-size:30px;font-weight:700;color:{INK}">{n.capitalize()}</p></div>' for n, c in (("nano", VIO), ("zero", RED))) + "</div>"
 c1 = ('<div class="rcard"><div class="rh"><p class="rn">01</p><p class="rt">Measure</p></div>' + "".join(menu)
       + '<div class="grow"></div><p class="rd">nDCG@10 on judged queries<br>+ encode and search time</p></div>')
 c2 = ('<div class="rcard"><div class="rh"><p class="rn">02</p><p class="rt">Set</p></div>'
-      '<div class="field"><p class="fl">quality floor</p><p class="fv">0.50</p></div>'
-      '<div class="field"><p class="fl">p95 target</p><p class="fv">150 ms</p></div>'
+      '<div class="col" style="gap:2px"><p class="rd" style="color:#9aa0b5">quality floor</p><p style="font-size:60px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">0.50</p></div>'
+      '<div class="col" style="gap:2px;margin-top:24px"><p class="rd" style="color:#9aa0b5">p95 target</p><p style="font-size:60px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">150 ms</p></div>'
       '<div class="grow"></div><p class="rd">quality first, then latency</p></div>')
 c3 = (f'<div class="rcard" style="border-color:rgba(148,148,255,0.5)"><div class="rh"><p class="rn">03</p><p class="rt">Route</p></div>'
       f'<p style="font-size:52px;font-weight:700;color:#fcfdff">every 250 ms</p><p class="rd">at 1,500 searches/s:</p>{bar}'
-      f'<p class="tk" style="align-self:flex-start">ef {p15["ef"]}</p><div class="grow"></div><p class="rd">best average nDCG that fits</p></div>')
+      f'<p style="font-size:34px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">ef {p15["ef"]}</p><p class="rd" style="color:#ff8fa0">Zero takes Nano\'s overflow</p>'
+      f'<div class="grow"></div><p class="rd">best average nDCG that fits</p></div>')
 write("recipe", " foot", "How the Router Decides", '<div class="row" style="gap:32px;height:610px;margin-top:8px">' + c1 + c2 + c3 + "</div>",
-      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4 (results/m15_talk_edge_nq.json). Floor and target: the "
-      "studio defaults. Plan: allocator.py on this laptop's measured encode capacity (results/m15_talk_router_plan.json). Exploratory.")
+      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4. Floor and target: the studio defaults. Plan: the "
+      "studio's router on this laptop's measured encode capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s). Exploratory.")
 
 # live v11: the demo slide, with room for the astronaut
 write("live", " demo", "Live: An Auto Router on One Index",
@@ -1363,8 +1367,8 @@ write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>
       '<div class="win" style="width:1250px;margin-top:8px;flex:none"><div class="wbar"><div class="d" style="background:#ff516b"></div>'
       '<div class="d" style="background:#f5a623"></div><div class="d" style="background:#3fc1a5"></div></div>'
       f'<pre style="margin:0;background:#1E1E1E;color:#D4D4D4;padding:30px 40px;font-family:JetBrains Mono,monospace;'
-      f'font-size:30px;line-height:1.45;font-variant-ligatures:none">{code_close}</pre></div>'
-      '<div class="win" style="flex-direction:row;align-self:flex-start;align-items:center;gap:18px;padding:18px 30px;background:#0d1220">'
+      f'font-size:28px;line-height:1.4;font-variant-ligatures:none">{code_close}</pre></div>'
+      '<div class="win" style="flex-direction:row;flex:none;align-self:flex-start;align-items:center;gap:18px;padding:18px 30px;background:#0d1220">'
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p>'
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none">'
       '<span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div>'

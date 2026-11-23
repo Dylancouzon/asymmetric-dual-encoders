@@ -28,7 +28,8 @@ Why it matters: you keep the index and change only the query side.
   - Stella's own query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).
   - Nano: a small transformer, 34.5M parameters, 0.54 GFLOPs. About 46 times less compute.
   - Zero: no neural network at all, a lookup table. 28 KFLOPs, nearly a million times less than Stella.
-- [own ef] Each encoder also gets its own search width: Qdrant's `hnsw_ef`, how many candidates the HNSW search keeps. That matters later.
+- [own ef] Each encoder also gets its own search width: Qdrant's `hnsw_ef`, how many candidates the HNSW search keeps. The knobs show the settings we use later: Stella 256, Nano 512, Zero 1,024.
+- What makes Zero different from other static embedding tables: it is trained for one frozen index. Its only job is to put each query where Stella would put it.
 - The family is called Constella.
 - Switching costs nothing: no second index, no re-encode. If rankings get worse, switch back on the next request.
 Next: how can a lookup table produce a query vector?
@@ -98,15 +99,15 @@ Why it matters: is the cheap encoder good enough? Compare it with what you alrea
 - [Zero] Off the transformer scale on the left. No network at all, and still above both MiniLM models, including the most downloaded one.
 - Add a BM25 search and fuse the lists, and Zero reaches 0.489, for the price of a sparse search per request.
 - Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets Zero trails BM25, 0.410 to 0.441. Judge on your own traffic.
-Next: quality is half the story. What does each one cost to run?
+Next: quality is half the story. How fast is each one? Quick bet.
 
 ## cloud · ~1 min
-Why it matters: this is the line item your finance team sees.
-- One GCP machine with 8 vCPUs ($0.395/hour), pushed as fast as it goes, one query per batch.
-- CPU time to encode one million queries: Stella 123 vCPU-hours ($6.07). Nano 4.8 ($0.24). Zero 2 vCPU-minutes ($0.0016).
+Why it matters: CPU time is what you pay for.
+- One GCP machine with 8 vCPUs, pushed as fast as it goes, one query per batch.
+- CPU time to encode one million queries: Stella 123 vCPU-hours. Nano 4.8. Zero 2 vCPU-minutes.
 - Nano uses 26 times less CPU than Stella. Zero uses 3,700 times less.
-- The dollars assume a busy machine. Idle hours still cost money: size for your real rate.
-Next: but encoding is not the whole request. Quick bet.
+- This assumes a busy machine. Idle hours still cost money: size for your real rate.
+Next: encoding is not the whole request. Same machine, encode plus search.
 
 ## bet · ~0.75 min
 - [Read it] Zero encodes a query about 650 times faster than Stella, and 51 times faster than Nano. Same laptop, same NQ queries, median encode time.
@@ -120,7 +121,7 @@ Why it matters: optimize the request, not the component.
 - [Orange] Once encoding is nearly free, search is most of Zero's request. And Zero needs a wider search (coming up).
 - [Wrapped rows] Stella on the same scale: 20.8 ms, so its bar wraps ten times. Almost all of it is encoding; the orange search sliver is at the very end.
 - Ranking: Stella 0.631, Nano 0.579, Zero 0.510 nDCG@10 at these settings. Faster has a price.
-Next: what does that look like as a bill?
+Next: now the bill. First encoding alone, on a cloud machine.
 
 ## cloud-e2e · ~1.25 min
 Why it matters: the honest saving, with search included.
@@ -128,6 +129,7 @@ Why it matters: the honest saving, with search included.
 - Per million queries: Stella $4.91, Nano $0.18, Zero $0.17. About 29 times cheaper.
 - Encoding alone said 3,700 times. The search is now the bill.
 - Nano and Zero tie: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling. A cheaper encoder does not.
+- So why keep Zero? Not for price at this rate. The router shows where it earns its place.
 Next: why does Zero need more search?
 
 ## recovery · ~2.5 min
@@ -148,6 +150,7 @@ Why it matters: you can run this policy on your own data.
 - [02 Set] Two rules, in order. Quality first: the average score of what is served stays above the floor. Then latency: stay under the p95 target if the machine can.
 - [03 Route] Every 250 ms, look at traffic, and pick the encoder mix plus one search width with the best average quality that fits the machine.
   - Example: at 1,500 searches/s, about three quarters Nano, one quarter Zero, ef 512.
+- [Zero takes Nano's overflow] This is when to pick Zero: when encoding capacity runs out. On this laptop Nano encodes about 1,400 queries/s, Zero about 17,000. Up to about 1,000 searches/s the router uses no Zero at all. Above that, Zero takes the traffic Nano cannot encode in time. The same holds for CPU-only hosts and small devices.
 - Advantages: quiet hours get the best ranking, peaks stay served, nothing is dropped, nothing is re-encoded.
 - Only possible because all three search one index.
 - To do it yourself: a few hundred judged queries from your traffic, quality per encoder and ef, timings on your hardware.
@@ -170,6 +173,7 @@ Next: how to use it.
 Why it matters: you can try this on Monday with a few lines of code.
 - [Comment 1] Index once with Stella's document model in FastEmbed.
 - [Comment 2] Query the same collection with Zero. To try Nano, change one model name.
+- [hnsw_ef=512] Zero needs a wider search, as the recovery slide showed. Set it per request.
 - [pip line] FastEmbed 0.9.0 or later.
 - Start with real queries: judge the passages you want back and compare the three encoders on your index.
 Next: and if your index was built with a different model?
