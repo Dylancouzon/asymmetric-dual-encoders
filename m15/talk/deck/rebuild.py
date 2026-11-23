@@ -1375,7 +1375,7 @@ write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p>'
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none">'
       '<span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div>'
-      + astro("telescope-left", 1420, 470, 428, 460), pre=GLOW)
+      + astro("telescope-left", 1116, 307, 1093, 915), pre=GLOW)
 
 # byo v11: four step cards and the paper's QR in a card
 steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" style="gap:4px"><p class="st">{a}</p><p class="sd">{b}</p></div></div>'
