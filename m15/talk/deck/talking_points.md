@@ -112,17 +112,15 @@ Why it matters: the honest saving, with search included.
 Next: why does Zero need more search?
 
 ## recovery · ~2 min
-Why it matters: a cheaper encoder can need a wider search on the same graph, and that search costs time.
-- [Setup] One HNSW graph, built once from Stella's vectors. Every query walks it to find its nearest passages.
-- [hnsw_ef] How many candidates the walk keeps. Wider finds more of the true neighbours, and takes longer.
-- [oversampling 4] The index keeps 1-bit vectors in memory and full ones on disk. The search fetches 4 times the results with the 1-bit vectors, then rescores them with the full ones.
-- [Curves] Each line: how much of the encoder's own exact top 10 the search actually finds.
-- [Stella, Nano] Stella finds 91% at the narrowest setting. Nano catches up with that at ef 128.
-- [Circles] Zero never catches up: even at ef 1024, it finds less than Stella at ef 32.
-- Why: the links were built for Stella's vectors. Zero's query lands near the right passages, not on them, so the walk takes wrong turns. A wider search makes up for most of it, not all.
-- Bigger and compressed indexes make this worse. On the paper's smaller, uncompressed indexes, lookup tables needed about 4 times the width.
-- So: same graph, no rebuild, but each encoder gets its own search width.
-Next: the best encoder and search width change with traffic. Let me show you a router that decides live.
+Why it matters: a cheap encoder saves time on encoding, then gives some of it back in search.
+- An HNSW search is a walk: start at an entry point, hop to whichever neighbour is closer to the query, stop when nothing closer is left. The links were chosen using Stella's vectors.
+- A Stella query walks that graph the way it was built for. Zero's query is close to Stella's, not identical (cosine 0.88 in the earlier example), so at some hops it picks the wrong neighbour and ends up in a nearby but wrong region.
+- hnsw_ef is the insurance: the walk keeps more candidates alive, so one wrong turn costs less. Wider is more accurate, and slower.
+- Compression adds its own noise: the index keeps quantized vectors in memory and full ones on disk. Oversampling fetches 4 times the results in RAM, then rescores them from disk.
+- [Chart] Nano needs a wider search to match Stella's narrowest one. Zero needs far more, and still falls short.
+- The bigger and the more compressed the index, the bigger the effect. On the paper's smaller, uncompressed indexes, lookup tables needed about 4 times the width.
+- So the encoder and the search width are one decision.
+Next: and the best decision changes with traffic. Let me show you a router that makes it live.
 
 ## recipe · ~2 min
 Why it matters: you can run this policy on your own data.
