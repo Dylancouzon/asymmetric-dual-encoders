@@ -60,7 +60,7 @@ $$\lVert XW - Y\rVert_F^2 + \lambda\lVert W - A\rVert_F^2$$
 
 Each row of X contains a query's token counts divided by its length, so XW gives the fitted query vectors. The subscript F denotes the Frobenius norm. The first term sums squared errors against the teacher's vectors Y. The second penalizes changes from the initial table A, with λ controlling the penalty. This helps stabilize vectors for rare tokens.
 
-**Transformer projection.** We froze the bge-small backbone. We averaged the token vectors in each layer, excluding padding. The final layer gives 384 values. A linear projection can produce 1,024 values from those inputs, but its output can vary along at most 384 independent directions. Combining the averages from layers 12, 8, and 4 gave the projection 1,152 inputs and more room to match the teacher's vectors. In an exploratory test, adding each earlier layer improved retrieval on both CQADupStack forums [1].
+**Transformer projection.** We froze the bge-small backbone. Each layer produces a 384-dimensional vector for each token. We averaged those vectors within each layer, excluding padding. A linear projection can produce 1,024 values from those inputs, but its output can vary along at most 384 independent directions. Combining the averages from layers 12, 8, and 4 gave the projection 1,152 inputs and more room to match the teacher's vectors. In an exploratory test, adding each earlier layer improved retrieval on both CQADupStack forums [1].
 
 We fitted a linear projection and bias by ridge regression to map these inputs into each teacher's vector space. Both fitted encoders normalized their output vectors before search [1, 15].
 
