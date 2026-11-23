@@ -39,10 +39,11 @@ Next: random rows would not do that. Here is how it learned.
 
 ## distill · ~1.5 min
 - [Open] The main ideas here. The full training details, data, and losses are in the paper.
-- Stella is the teacher: the model Zero imitates. The table learns to put each query where Stella would, and the index never changes.
+- Stella is the teacher: the model Zero imitates. The table learns to put each query where Stella would.
 - Start: each row begins as Stella's own vector for that single token.
-- [Align] First, copy Stella: match its query vectors and its ranking of a few candidate passages. A vector can look close to Stella's and still rank the wrong passage first.
-- [Rank] Then, rank: push the right passage above 32,768 wrong ones.
+- [Align] Take a training query. Stella's vector for it was computed once and saved. Zero's vector is the average of its token rows. Compare the two, and nudge those rows so Zero's vector points closer to Stella's. Repeat for millions of examples (16,000 steps of 512).
+- For labeled queries, also score the right passage and 31 others with both models, and nudge the rows so Zero ranks them the way Stella does. A vector can look close to Stella's and still rank the wrong passage first.
+- [Rank] Then stop copying Stella and learn from the answers: for each labeled query, nudge the rows so the correct passage scores above 32,768 wrong ones.
 - [Table] The result is the 31 MB table from the last slide.
 - Cost: about 20 minutes on one RTX 3080, once Stella's vectors for the training data are saved. Computing those takes 8 to 12 hours, once.
 Next: I assumed the best retriever would make the best table. It did not.
