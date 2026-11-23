@@ -1296,7 +1296,7 @@ for r in range(rows):
     if b_ - a_ > e_end:
         F.add(f'<rect x="{SX(e_end):.0f}" y="{yy}" width="{SX(b_ - a_) - SX(e_end):.0f}" height="{th}" rx="6" fill="{ORG}"/>')
 F.t(SX(AX) + 24, y0 + (rows - 1) * pitch + 14, f"{_tot:.1f} ms", 40, WHITE, weight=700)
-write("split", " foot", "The Whole Request Is 2.4× Faster", F.html(),                 # title set by Dylan in the page
+write("split", " foot", "The Whole Request Is <i>Only</i> 2.4× Faster", F.html(),                 # title set by Dylan in the page
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
       "(Stella 0.631, Nano 0.579); Zero misses that at every tested point (best shown: ef 1024, os 8, nDCG@10 0.510). Exploratory.")
