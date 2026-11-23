@@ -115,12 +115,12 @@ Next: why does Zero need more search?
 Why it matters: the search settings are part of the encoder choice.
 - The HNSW graph was built once, from Stella's vectors, and stays as it is.
 - [hnsw_ef] How many candidates the search keeps while it walks the graph. Wider finds more true neighbours and takes longer.
-- [oversampling 4] The index stores 1-bit codes in memory and full vectors on disk. The search fetches 4 times the results with the codes, then rescores them with the full vectors.
+- [oversampling] The index stores 1-bit vectors in memory and full copy on disk. With a setting of 4, The search fetches 4 times the results it needs, then rescores them with the full vectors.
 - [Curves] Each line: how much of the encoder's own exact top 10 the search finds.
-- [Circles] Zero at ef 1024 still finds less than Stella at ef 32.
-- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.
-- So: one graph, and each encoder gets its own search width per request.
-Next: encoder and search width are one decision, and the best one changes with traffic. So I let a router decide.
+- [Circles] Even at ef 1024, Zero still finds less than Stella at ef 32.
+- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across the 25 models tested, lookup tables typically needed ef 256 to match their teacher at ef 64.
+- So: one graph, but each model needs a different search effort
+Next: the best encoder and search width change with traffic. Let me show you a router that decides live.
 
 ## recipe · ~2 min
 Why it matters: you can run this policy on your own data.
@@ -135,6 +135,7 @@ Next: let me show you.
 [Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]
 - [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions scored against judged answers.
 - Two rules: quality floor first, then the latency target. It never drops a query.
+- Every 250 ms it looks at the traffic and picks the encoder mix and one search width: the best average quality that fits the machine. Only possible because all three search one index.
 - [40/s] Quiet: everything on Stella, widest search.
 - [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency holds; quality dips a little.
 - [Drag to about 1,500] Zero mixes in and the search narrows by itself. Same index, nothing re-encoded.
@@ -142,6 +143,7 @@ Next: let me show you.
 - [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.
 - Honest framing: questions and judgments are real, the traffic is simulated, the capacity is this laptop's. On your hardware the numbers move; that is why you measure.
+- To run it yourself: a few hundred judged queries from your traffic, the quality of each encoder at each search width, and timings on your hardware.
 Next: the whole range on one chart.
 
 ## plan · ~0.5 min

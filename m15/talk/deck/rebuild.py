@@ -1578,7 +1578,7 @@ write("cloud", " foot", "Search Is Now the Bill: 3,700\u00d7 Becomes 29\u00d7", 
       "processes \u00d7 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, "
       "Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.")
 
-for sid in ("solved", "takeaways", "cloud-e2e"):                                  # backup slides stay out of the main run
+for sid in ("solved", "takeaways", "cloud-e2e", "recipe"):                                  # backup slides stay out of the main run
     f = S / f"{sid}.html"
     f.write_text(re.sub(r'<section id="(\w[\w-]*)" class="([^"]*)"[^>]*>', r'<section id="\1" class="\2" hidden>', f.read_text(), count=1))
 
