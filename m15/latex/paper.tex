@@ -590,61 +590,57 @@ from 2.9 to 1.2 percentage points. The smaller sample kept all judged
 relevant passages. Qdrant can use full scans on small segments, and we
 did not record which segments it scanned {[}1, 16{]}.
 
-\subsection{6. Deployment choices and
-costs}\label{deployment-choices-and-costs}
+\subsection{6. Serving and training
+costs}\label{serving-and-training-costs}
 
-The deployment trade-off depends on the upfront cost of training and how
-much traffic a replacement can serve at the required relevance and
-latency.
+\subsubsection{Serving cost}\label{serving-cost}
+
+On Natural Questions, Nano served 605 queries per second and Zero served
+653, compared with 22 for Stella on the same eight-vCPU VM. This
+exploratory benchmark measured encoding and search together on one
+Qdrant Edge shard with a warm page cache. At the recorded VM rate, the
+measured throughput implied a cost of \$4.91 per million queries for
+Stella, \$0.18 for Nano, and \$0.17 for Zero. Each encoder used its own
+search settings and reached a different relevance score. Once search was
+included, Nano and Zero had similar serving costs in this benchmark
+{[}20{]}.
 
 \subsubsection{Training cost}\label{training-cost}
 
 Nano's final optimization took 57.3 hours on an A100, or about \$95 at
-the recorded rate. That figure excludes data preparation, earlier runs,
-and evaluation. With prepared targets, we estimated that retraining Zero
-would take 20 minutes. A new teacher would add an estimated eight to 12
-hours to encode the training queries. The companion repository provides
-both training implementations {[}1{]}, and the model cards identify the
-released checkpoints for the Stella index {[}8{]}.
+the recorded rate. This excludes data preparation, earlier runs, and
+evaluation. With training targets prepared, we estimated that retraining
+Zero would take 20 minutes. A new teacher would add an estimated eight
+to 12 hours to encode the training queries. The training implementations
+and released checkpoints are available in the companion repository and
+model cards {[}1, 8{]}.
+
+\subsubsection{Choosing an encoder per
+request}\label{choosing-an-encoder-per-request}
+
+A shared index lets an application reduce transformer inference by
+sending some requests to Zero. A search bar, for example, could use Zero
+while the user types and Stella on submission. The benchmark timed
+submitted queries. The search-bar example still needs testing on partial
+queries.
+
+We used relevance judgments to estimate how much traffic could move to
+Zero if we knew in advance which queries benefited most from Nano.
+Across 12 BEIR-15 datasets, sending about 15\% of queries to Nano and
+the rest to Zero scored 0.5163 nDCG@10, compared with 0.5161 for Nano
+alone. Choosing the better of the two for every query scored 0.5473,
+compared with 0.5580 for Stella. The routing rules we tested gained at
+most 0.005 nDCG@10 over random assignment at the same share of Nano
+requests {[}18{]}.
 
 \subsubsection{Adding a lexical branch}\label{adding-a-lexical-branch}
 
-Pairing Zero with BM25 enables hybrid retrieval without running a neural
-network at query time. In the descriptive BEIR-15 evaluation, this
-raised Zero's nDCG@10 from 0.4572 to 0.4933. We combined 100 candidates
-from each branch using distribution-based score fusion. That gain comes
-with a sparse index to maintain and a second search per request. The
-registered fusion comparison used convex fusion at a depth of 1,000
-candidates {[}2, 17{]}.
-
-\subsubsection{Choosing an encoder for each
-request}\label{choosing-an-encoder-for-each-request}
-
-At high query rates, routing requests that Zero can serve at the
-required relevance reduces the load on transformer inference. A search
-bar could use Zero while users type and Stella on submission, over the
-same index. Table 2 measured sequential latency on completed queries.
-The search-bar example still requires separate measurements on partial
-queries.
-
-We measured encoding and search throughput on Natural Questions using
-one Qdrant Edge shard on an eight-vCPU VM. With a warm page cache,
-Stella reached 22 queries/s, Nano 605, and Zero 653. At the recorded VM
-rate, this implies \$4.91, \$0.18, and \$0.17 per million queries,
-respectively. The encoders used search settings that achieved different
-relevance scores in the Natural Questions sweep. Nano and Zero reached
-similar throughput once search was included {[}20{]}.
-
-We used relevance judgments to estimate the best retrieval score
-possible when routing about 15\% of queries to Nano. On each of 12
-BEIR-15 datasets, we assigned Nano to the queries where it improved
-relevance most over Zero. Zero handled the rest. The combined score was
-0.5163 nDCG@10, close to the 0.5161 from using Nano for every query.
-Choosing the better of Nano and Zero for each query scored 0.5473,
-compared with 0.5580 for always using Stella {[}18{]}.
-
-The routing rules we tested gained at most 0.005 nDCG@10 over random
-assignment at the same share of queries sent to Nano {[}18{]}.
+Pairing Zero with BM25 enables hybrid retrieval without a neural network
+at query time. Combining 100 candidates from each branch with
+distribution-based score fusion raised Zero's descriptive BEIR-15 score
+from 0.4572 to 0.4933 nDCG@10. This requires a sparse index and a second
+search per request. The separate registered comparison used convex
+fusion at a depth of 1,000 candidates {[}2, 17{]}.
 
 \subsection{7. How retrieval quality varies across
 datasets}\label{how-retrieval-quality-varies-across-datasets}
@@ -692,28 +688,21 @@ baseline is therefore still useful when testing Zero on another workload
 
 \subsection{8. Conclusion}\label{conclusion}
 
-A dense index built with a large embedding model can serve some queries
-without running a neural network at query time. Zero demonstrated this
-on Stella's index. Nano retained more of Stella's retrieval relevance
-than Zero and reduced encoding time by running a smaller transformer for
-each query. Both used the document vectors already in the index.
+A single dense index can support query encoders with very different
+serving costs. On Stella's index, Nano retained more of Stella's
+retrieval quality than Zero. Zero produced dense query vectors without
+running a neural network. Both reduced estimated serving cost by more
+than 95\% in our Natural Questions cloud benchmark {[}20{]}. On the
+matched MS MARCO benchmark, Zero also scored 24.5\% higher than BM25 in
+nDCG@10 {[}19{]}.
 
 The strongest original retriever in our registered comparison produced
-the weakest fitted lookup table. Ranking the fitted tables on separate
-judged queries gave a better guide to their retrieval quality. On the
-uncompressed MS MARCO index, Zero encoded queries about 62 times as fast
-as Nano. Once search was included, Zero's median latency was only 6\%
-lower. The selected settings retained at least 99\% of each encoder's
-own exact nDCG@10. Binary quantization preserved more of the encoding
-advantage.
-
-For a search team, the practical question is how much traffic can move
-to a cheaper encoder at the relevance the application needs. Exact
-retrieval on representative judged queries helps identify request types
-where a cheaper encoder meets the relevance target. After tuning search
-for each encoder, measuring encoding and search together shows what the
-change saves. Teams can use Zero where it meets the target and retain
-the original encoder for other requests without re-encoding the corpus.
+the weakest fitted lookup table. For teams adapting an existing index,
+that result points to a practical test. Fit candidates to the original
+encoder, measure relevance on representative queries, and time encoding
+and search together. The same index can then serve requests at different
+costs, with the original encoder still available where its relevance
+gains justify the expense.
 
 \subsection{Appendix A. Run settings}\label{appendix-a.-run-settings}
 
