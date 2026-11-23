@@ -18,13 +18,12 @@
 <p class="src">BEIR NQ, 2,681,468 passages, encoded once with Stella. Real NQ test query; its judged passage ranks first in exact search (score 0.80). Vector: first values of 1,024. Median times on the M5 Pro. Graph schematic. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-Why it matters: one model does two jobs with opposite deadlines. Only one of them has a user waiting.<br>
-- [Top lane] Passages go through Stella once and land in Qdrant's HNSW graph: each passage linked to its near neighbours. Tonight's index is 2.68M NQ passages, 5.3 GPU-hours on my desktop (6.5 hours real time, including a crash). Nobody waits; I made tea.<br>
+Why it matters: one model does two jobs with opposite deadlines. Only one has a user waiting.<br>
+- [Top lane] Passages go through Stella once into Qdrant's HNSW graph, each linked to its near neighbours. 2.68M NQ passages: 5.3 GPU-hours on my desktop.<br>
 [Click: the question appears.]<br>
-- [Bottom lane] A real NQ question, "who played Joey's agent Estelle on Friends", goes through the very same 435M-parameter model. Six words through the same 24 layers. 20.5 ms on this laptop.<br>
-- [Red walk] Its vector walks the graph to June Gable, the right answer out of 2.68 million, in 0.23 ms.<br>
-- So the search is a quarter of a millisecond. The encoder in front of it is about 90 times longer, on every request.<br>
-- It never stops: at 100 queries/s, query encoding burns a whole index worth of compute every 27 hours. Agents fire several searches per answer.<br>
-- The top lane is a sunk cost. The bottom lane is where a cheaper model pays off, if it can still walk the same graph.<br>
+- [Bottom lane] A real NQ question, "who played Joey's agent Estelle on Friends", runs through the same 435M-parameter, 24-layer model: 20.5 ms on this laptop.<br>
+- [Red walk] Its vector walks the graph to June Gable, the right answer out of 2.68 million, in 0.23 ms. The encoder takes about 90 times longer than the search, on every request.<br>
+- At 100 queries/s, query encoding burns a whole index worth of compute every 27 hours. Agents fire several searches per answer.<br>
+- The top lane is a sunk cost. The bottom lane is where a cheaper model pays off, if it can walk the same graph.<br>
 Next: what if only the query side changed?</aside>
 </section>

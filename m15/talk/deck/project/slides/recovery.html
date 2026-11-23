@@ -21,13 +21,13 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2.5 min]<br>
 Why it matters: the search settings are part of the encoder choice.<br>
-- Two kinds of HNSW settings in Qdrant:<br>
+- Qdrant's HNSW settings come in two kinds:<br>
   - Set when the index is built: `m`, the links per passage (16, the default), and `ef_construct`, the candidates checked when choosing links (100). Change them and you rebuild.<br>
   - Set per request: `hnsw_ef`, the candidates kept during the search walk. Wider finds more true neighbours and takes longer.<br>
   - Oversampling, with quantization: 1-bit binary codes in RAM, full vectors on disk. Fetch 4 times the results with the codes, then rescore with the full vectors.<br>
-- [Curves] Each line: of the encoder's own exact top 10, how much does the search find?<br>
+- [Curves] Each line: the share of the encoder's own exact top 10 that the search finds.<br>
 - [Circles] Zero at ef 1024 still finds less than Stella at ef 32.<br>
-- Why: the graph's links were built from Stella's vectors. Zero's query vectors land a little off, so the search has to keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match the model they imitate at ef 64.<br>
-- So: same graph, but each encoder gets its own ef and oversampling per request.<br>
-Next: the encoder and the search width are one decision, and the best answer changes with traffic. So I let a router decide.</aside>
+- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.<br>
+- So: one graph, with ef and oversampling set per encoder, per request.<br>
+Next: encoder and search width are one decision, and the best one changes with traffic. So I let a router decide.</aside>
 </section>

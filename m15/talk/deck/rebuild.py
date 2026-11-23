@@ -1298,7 +1298,7 @@ r = mx / _best["zero"]["usd_per_million"]
 card = (f'<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
         f'<p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">{r:.0f}×</p>'
         f'<p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div>')
-write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1480, 612, 400, 400),
+write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1088, 461, 552, 527),
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.")
 
@@ -1422,7 +1422,7 @@ steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" st
 write("byo", " foot", "Train a Query Encoder for Your Own Index",
       '<div class="row" style="gap:64px;margin-top:8px;align-items:center">'
       f'<div class="col" style="gap:20px;width:1100px">{steps}</div>'
-      f'<div class="qr"><div class="qi">{_q}</div><p class="ql">Full recipe</p></div></div>',
+      f'<div class="qr" style="transform:translate(80px, 0)"><div class="qi">{_q}</div><p class="ql">Full recipe</p></div></div>',
       "Costs are Constella's, for a Stella index: Zero trained on one RTX 3080 once its targets existed (computing Stella's "
       "targets took 8-12 h); Nano took 57.3 A100-hours. Training sources must allow commercial use of derived weights. Exploratory.")
 

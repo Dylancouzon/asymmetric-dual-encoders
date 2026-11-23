@@ -6,14 +6,14 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~4 min]<br>
 [Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]<br>
-- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions, every answer scored against judged answers.<br>
+- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions scored against judged answers.<br>
 - Two rules: quality floor first, then the latency target. It never drops a query.<br>
-- [40/s] Quiet: everything on Stella with the widest search.<br>
-- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency stays under the line; quality dips a little.<br>
-- [Drag to about 1,500] Zero mixes in, and the search narrows by itself. Same index, nothing re-encoded.<br>
-- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows. Quality first, as asked.<br>
+- [40/s] Quiet: everything on Stella, widest search.<br>
+- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency holds; quality dips a little.<br>
+- [Drag to about 1,500] Zero mixes in and the search narrows by itself. Same index, nothing re-encoded.<br>
+- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows: quality first, as asked.<br>
 - [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.<br>
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.<br>
-- Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.<br>
+- Honest framing: questions and judgments are real, the traffic is simulated, the capacity is this laptop's. On your hardware the numbers move; that is why you measure.<br>
 Next: the whole range on one chart.</aside>
 </section>

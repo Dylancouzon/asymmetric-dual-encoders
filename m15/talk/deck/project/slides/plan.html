@@ -21,12 +21,11 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~0.5 min]<br>
 Why it matters: this is when to pick Zero over Nano.<br>
-- [Chart] What the router plans at every traffic level on this laptop. The demo showed a few points; this is the whole range.<br>
-- [Stella] Quiet hours: Stella's best ranking for nearly everything.<br>
-- [Nano] From about 100 searches/s Nano takes a growing share. By 1,000 it carries everything.<br>
-- [Dashed line] Around 1,000 searches/s Nano reaches its encoding capacity. Nano encodes about 1,400 queries/s on this laptop; Zero about 17,000.<br>
-- [Zero] Past the line, Zero takes the traffic Nano cannot encode in time. The search narrows to hold latency (ef along the top).<br>
+- [Chart] The router's plan at every traffic level on this laptop. The demo showed a few points; this is the whole range.<br>
+- [Stella, then Nano] Quiet hours go to Stella. From about 100 searches/s Nano takes a growing share; by 1,000 it carries everything.<br>
+- [Dashed line] Around 1,000 searches/s Nano reaches its encoding capacity: about 1,400 queries/s on this laptop, against Zero's 17,000.<br>
+- [Zero] Past the line, Zero takes the traffic Nano cannot encode in time, and the search narrows to hold latency (ef along the top).<br>
 - So pick Zero when encoding capacity runs out: traffic peaks, CPU-only hosts, small devices. Below that, Nano ranks better for about the same cost.<br>
-- Average nDCG@10 goes from 0.636 at 40/s to 0.524 at 2,500/s: the price of serving every query.<br>
+- Average nDCG@10 falls from 0.636 at 40/s to 0.524 at 2,500/s: the price of serving every query.<br>
 Next: how to use it.</aside>
 </section>

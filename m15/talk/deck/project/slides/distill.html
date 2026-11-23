@@ -20,18 +20,12 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2 min]<br>
 Why it matters: the table learns to imitate Stella without touching the index. In distillation terms, Stella is the teacher: the model being imitated.<br>
-- Goal: rows whose average lands where Stella would put the query.<br>
 - Start: each row is Stella's encoding of that single token. Rare tokens start with more weight (IDF).<br>
-- Phase 1, Align (16,000 training steps of 512 examples each):<br>
-  - What it imitates: Stella's query vectors for the training queries, computed once and saved.<br>
-  - First goal: point in the same direction as Stella's vector (the loss is 1 − cosine).<br>
-  - Second goal: for labeled queries, give the relevant passage and 31 other candidates the same relative scores Stella gives them (measured with KL divergence).<br>
-  - Why both: a vector can look close to Stella's and still rank a different passage first.<br>
-- Phase 2, Rank (2,500 steps): contrastive training (InfoNCE) on 338,076 labeled query-passage pairs.<br>
-  - Score the relevant passage above 32,768 wrong passages, drawn from a fixed pool.<br>
-  - Drop candidates Stella scores close to or above the relevant one: they may answer the question too.<br>
+- Phase 1, Align (16,000 steps of 512 examples), against Stella's query vectors, computed once and saved:<br>
+  - Point the same way as Stella's vector (loss: 1 − cosine).<br>
+  - For labeled queries, give the relevant passage and 31 other candidates the same relative scores Stella gives them (KL divergence). A vector can look close to Stella's and still rank a different passage first.<br>
+- Phase 2, Rank (2,500 steps): contrastive training (InfoNCE) on 338,076 labeled query-passage pairs. The relevant passage must outscore 32,768 wrong ones from a fixed pool. Candidates Stella scores close to or above it are dropped: they may answer the question too.<br>
 - [Formula line] Ê_D, Stella's document vectors, never changes.<br>
-- Cost: about 20 minutes on one RTX 3080, once Stella's vectors are saved. A different teacher model needs 8 to 12 hours to compute those vectors first.<br>
-- All training sources allow commercial use of the trained weights.<br>
+- Cost: about 20 minutes on one RTX 3080 once Stella's vectors are saved. A different teacher needs 8 to 12 hours to compute them first. All training sources allow commercial use of the trained weights.<br>
 Next: I assumed the best retriever would make the best table. It did not.</aside>
 </section>

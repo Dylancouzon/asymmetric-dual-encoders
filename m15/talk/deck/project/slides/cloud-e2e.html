@@ -8,16 +8,15 @@
 <p class="lb" style="left:374px;top:532px;width:132px;font-size:36px;color:#fcfdff;font-weight:700;text-align:left;">$0.18</p>
 <p class="lb" style="left:128px;top:668px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
 <p class="lb" style="left:372px;top:672px;width:132px;font-size:36px;color:#fcfdff;font-weight:700;text-align:left;">$0.17</p>
-<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px"><p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">29×</p><p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div><img class="mascot" src="/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97" alt="" style="left:1480px;top:612px;width:400px;height:400px">
+<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px"><p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">29×</p><p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div><img class="mascot" src="/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97" alt="" style="left:1088px;top:461px;width:552px;height:527px">
 
 <p class="src">GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.25 min]<br>
 Why it matters: the honest saving, with search included.<br>
-- Same NQ index on the same cloud machine, now paying for encode plus search.<br>
-- Per million queries: Stella $4.91, Nano $0.18, Zero $0.17. About 29 times cheaper.<br>
+- Same NQ index and cloud machine, now paying for encode plus search: Stella $4.91, Nano $0.18, Zero $0.17 per million queries. About 29 times cheaper.<br>
 - Encoding alone said 3,700 times. The search is now the bill.<br>
-- Nano and Zero tie: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling. A cheaper encoder does not.<br>
+- Nano and Zero tie because one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.<br>
 - So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.<br>
 Next: why does Zero need more search?</aside>
 </section>

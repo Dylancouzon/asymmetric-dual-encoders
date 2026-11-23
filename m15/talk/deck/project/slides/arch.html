@@ -17,13 +17,12 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
 Why it matters: you keep the index and change only the query side.<br>
-- [Top row] Documents go through Stella's document encoder once. Those vectors and that HNSW graph never change.<br>
-- [Three rows] Each request picks a query encoder. All three write vectors into the same space and search the same index.<br>
-  - Stella's own query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).<br>
-  - Nano: a small transformer, 34.5M parameters, 0.54 GFLOPs. About 46 times less compute.<br>
-  - Zero: no neural network at all, a lookup table. 28 KFLOPs, nearly a million times less than Stella.<br>
-- What makes Zero different from other static embedding tables: it is trained for one frozen index. Its only job is to put each query where Stella would put it.<br>
-- The family is called Constella.<br>
-- Switching costs nothing: no second index, no re-encode. If rankings get worse, switch back on the next request.<br>
+- [Top row] Documents go through Stella's document encoder once. Those vectors and the HNSW graph never change.<br>
+- [Three rows] Each request picks one query encoder. All three write into the same vector space and search the same index:<br>
+  - Stella's query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).<br>
+  - Nano: a 34.5M-parameter transformer, 0.54 GFLOPs, about 46 times less.<br>
+  - Zero: a lookup table, no neural network. 28 KFLOPs, nearly a million times less.<br>
+- Zero's table is trained for one frozen index: its only job is to put each query where Stella would. That sets it apart from general static embedding tables.<br>
+- Together they are Constella. Switching is free: no second index, no re-encode, and you can switch back on the next request.<br>
 Next: how can a lookup table produce a query vector?</aside>
 </section>
