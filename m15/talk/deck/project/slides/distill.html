@@ -19,13 +19,11 @@
 <p class="src">Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-- [Open] The main ideas here. The full training details, data, and losses are in the paper.<br>
-- Stella is the teacher: the model Zero imitates. The table learns to put each query where Stella would.<br>
-- Start: each row begins as Stella's own vector for that single token.<br>
-- [Align] Take a training query. Stella's vector for it was computed once and saved. Zero's vector is the average of its token rows. Compare the two, and nudge those rows so Zero's vector points closer to Stella's. Repeat for millions of examples (16,000 steps of 512).<br>
-- For labeled queries, also score the right passage and 31 others with both models, and nudge the rows so Zero ranks them the way Stella does. A vector can look close to Stella's and still rank the wrong passage first.<br>
-- [Rank] Then stop copying Stella and learn from the answers: for each labeled query, nudge the rows so the correct passage scores above 32,768 wrong ones.<br>
-- [Table] The result is the 31 MB table from the last slide.<br>
-- Cost: about 20 minutes on one RTX 3080, once Stella's vectors for the training data are saved. Computing those takes 8 to 12 hours, once.<br>
+- [Open] The main ideas here. The full training details are in the paper.<br>
+- Stella is the teacher: the model Zero imitates.<br>
+- Start: each row is Stella's own vector for that single token.<br>
+- [Align] Copy Stella: run a query through both, compare the vectors, and nudge Zero's rows closer. Millions of times.<br>
+- [Rank] Then learn from real answers: nudge the rows so the correct passage scores above 32,768 wrong ones.<br>
+- [Table] The result: the 31 MB table. About 20 minutes on one RTX 3080, once Stella's vectors are saved (8 to 12 hours to compute, once).<br>
 Next: I assumed the best retriever would make the best table. It did not.</aside>
 </section>
