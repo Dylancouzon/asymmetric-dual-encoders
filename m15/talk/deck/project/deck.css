@@ -209,3 +209,7 @@
 .field .fl{font-size:28px;color:#9aa0b5}
 .field .fv{font-family:'JetBrains Mono','Courier New',monospace;font-size:52px;font-weight:600;color:#fcfdff}
 .mascot{position:absolute;object-fit:contain}
+.mascot.flip{transform:scaleX(-1)}
+.s > .mascot.flip{animation:riseflip 0.8s cubic-bezier(0.2,0.7,0.2,1) 0.5s both,driftflip 5s ease-in-out 1.3s infinite alternate}
+@keyframes riseflip{from{opacity:0;transform:translateY(28px) scaleX(-1)}to{opacity:1;transform:translateY(0) scaleX(-1)}}
+@keyframes driftflip{from{transform:translateY(0) scaleX(-1)}to{transform:translateY(-16px) scaleX(-1)}}
