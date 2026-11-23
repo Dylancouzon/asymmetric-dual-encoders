@@ -121,21 +121,21 @@ Next: and the best decision changes with traffic. Let me show you a router that 
 ## recipe · ~2 min
 Why it matters: you can run this policy on your own data.
 - [01 Measure] Before traffic, score each encoder at each search width on judged queries: this table. At startup, time each encoder and each search on the machine.
-- [02 Set] Two rules, in order. Quality first: the average score served stays above the floor. Then latency: stay under the p95 target if the machine can.
+- [02 Set] One rule: stay under the p95 target, with the best ranking that fits.
 - [03 Route] Every 250 ms, pick the encoder mix and one search width with the best average quality that fits the current traffic. At 1,500 searches/s: about three quarters Nano, one quarter Zero, ef 512.
 - Quiet hours get the best ranking, peaks stay served, nothing is dropped or re-encoded. Only possible because all three search one index.
 - To do it yourself: a few hundred judged queries from your traffic, quality per encoder and ef, timings on your hardware.
 Next: let me show you.
 
 ## live · ~4 min
-[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]
+[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]
 - [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions scored against judged answers.
-- Two rules: quality floor first, then the latency target. It never drops a query.
+- One rule: the best ranking that still meets the latency target. It never drops a query.
 - Every 250 ms it looks at the traffic and picks the encoder mix and one search width: the best average quality that fits the machine. Only possible because all three search one index.
 - [40/s] Quiet: everything on Stella, widest search.
 - [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency holds; quality dips a little.
 - [Drag to about 1,500] Zero mixes in and the search narrows by itself. Same index, nothing re-encoded.
-- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows: quality first, as asked.
+- [Drag to about 3,500] It goes almost all Zero and narrows the search further, so latency holds while ranking quality dips. Speed first, then the best quality it can afford. Past the laptop's limit it still serves every query, and the queue grows.
 - [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.
 - Honest framing: questions and judgments are real, the traffic is simulated, the capacity is this laptop's. On your hardware the numbers move; that is why you measure.
@@ -143,10 +143,10 @@ Next: let me show you.
 Next: the whole range on one chart.
 
 ## plan · ~0.75 min
-Why it matters: this is when Zero earns its place.
-- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On this laptop, Nano does about 1,400, Zero about 17,000.
-- Below Nano's ceiling, Nano wins: better ranking for about the same cost. Quiet hours can even afford Stella.
-- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average goes from 0.636 when quiet to 0.524 at 2,500 searches/s.
+If Zero cost the same as Nano, why would you use it?
+- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On my laptop, Nano does about 1,400, Zero about 17,000.
+- Below that ceiling, use Nano: it ranks better than Zero and costs about the same per query. Quiet hours can even afford Stella.
+- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average NDCG goes from 0.64 when quiet to 0.52 at 2,500 searches/s.
 - In general: pick Zero wherever encoding capacity is the bottleneck: traffic peaks, CPU-only hosts, small devices. And because all three share one index, you never have to pick just one.
 Next: how to use it.
 

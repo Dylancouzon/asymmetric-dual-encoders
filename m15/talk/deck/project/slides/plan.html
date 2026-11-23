@@ -17,13 +17,13 @@
 <p class="lb" style="left:169px;top:774px;width:63px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:right;font-family:JetBrains Mono,monospace;">0%</p>
 <p class="lb" style="left:149px;top:564px;width:83px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:right;font-family:JetBrains Mono,monospace;">50%</p>
 <p class="lb" style="left:129px;top:354px;width:103px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:right;font-family:JetBrains Mono,monospace;">100%</p>
-<p class="src">Share of traffic per encoder planned by the studio's router: NQ quality and search time per setting, M5 Pro encode capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), quality floor 0.50, encode and search kept under 80% of capacity. Planner output, not a load test. Exploratory.</p>
+<p class="src">Share of traffic per encoder planned by the studio's router: NQ quality and search time per setting, M5 Pro encode capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), encode and search kept under 80% of capacity. Planner output, not a load test. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~0.75 min]<br>
-Why it matters: this is when Zero earns its place.<br>
-- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On this laptop, Nano does about 1,400, Zero about 17,000.<br>
-- Below Nano's ceiling, Nano wins: better ranking for about the same cost. Quiet hours can even afford Stella.<br>
-- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average goes from 0.636 when quiet to 0.524 at 2,500 searches/s.<br>
+If Zero cost the same as Nano, why would you use it?<br>
+- Every encoder has a throughput ceiling: how many queries one machine can encode per second. On my laptop, Nano does about 1,400, Zero about 17,000.<br>
+- Below that ceiling, use Nano: it ranks better than Zero and costs about the same per query. Quiet hours can even afford Stella.<br>
+- Above it, Zero keeps every query served, instead of queueing or adding machines. The price is quality: the average NDCG goes from 0.64 when quiet to 0.52 at 2,500 searches/s.<br>
 - In general: pick Zero wherever encoding capacity is the bottleneck: traffic peaks, CPU-only hosts, small devices. And because all three share one index, you never have to pick just one.<br>
 Next: how to use it.</aside>
 </section>

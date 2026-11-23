@@ -35,14 +35,13 @@ The vectors come from the Hugging Face dataset [`Qdrant/constella-demo-vectors`]
 ## What to try
 
 - **Traffic.** Drag the slider from 40 to a few thousand searches/s. Auto moves from Stella to Nano, then mixes in Zero and narrows the HNSW search. Space pauses; the arrow keys step traffic by 1.5x.
-- **Quality floor.** The average nDCG@10 of served searches never drops below it. The default sits just under Zero's best score (NQ: 0.50, FiQA: 0.36).
-- **p95 target.** Auto keeps latency under it when the machine can. Quality comes first: past the machine's capacity, every query is still served, the queue grows and the gauge turns red.
+- **p95 target.** Auto serves the best ranking that keeps latency under it. As traffic grows it trades quality for speed: Nano, then Zero, then a narrower search. Past the machine's capacity, every query is still served, the queue grows and the gauge turns red.
 - **Split traffic.** Route by hand, with your own ef and oversampling per encoder, and compare with Auto.
 - **More.** Daily wave and burst patterns, a spike switch, and agent tasks that fire several searches at once and finish with the slowest.
 
 ## How Auto decides
 
-Every 250 ms, `allocator.py` picks the traffic share of each encoder and one search preset (ef 128, 256 or 512 with 4x oversampling, or ef 1024 with 8x). It maximizes the average nDCG@10 of served searches, keeps it at or above the floor, and fits two measured budgets: encode capacity per encoder (measured at startup) and time on the Edge shard, which serves one search at a time in this process. A headroom factor, tuned from measured p95, absorbs what the cost model misses. An encoder too slow for the target on its own is left out unless the floor needs it.
+Every 250 ms, `allocator.py` picks the traffic share of each encoder and one search preset (ef 64, 128, 256 or 512 with 4x oversampling, or ef 1024 with 8x). It maximizes the average nDCG@10 of served searches and fits two measured budgets: encode capacity per encoder (measured at startup) and time on the Edge shard, which serves one search at a time in this process. A headroom factor, tuned from measured p95, absorbs what the cost model misses. An encoder too slow for the target on its own is left out.
 
 ## Code map
 

@@ -1348,15 +1348,14 @@ bar = '<div style="display:flex;flex:none;height:76px;border-radius:12px;overflo
 c1 = ('<div class="rcard"><div class="rh"><p class="rn">01</p><p class="rt">Measure</p></div>' + "".join(menu)
       + '<div class="grow"></div><p class="rd">nDCG@10 on judged queries<br>+ encode and search time</p></div>')
 c2 = ('<div class="rcard"><div class="rh"><p class="rn">02</p><p class="rt">Set</p></div>'
-      '<div class="col" style="gap:2px"><p class="rd" style="color:#9aa0b5">quality floor</p><p style="font-size:60px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">0.50</p></div>'
-      '<div class="col" style="gap:2px;margin-top:24px"><p class="rd" style="color:#9aa0b5">p95 target</p><p style="font-size:60px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">150 ms</p></div>'
-      '<div class="grow"></div><p class="rd">quality first, then latency</p></div>')
+      '<div class="col" style="gap:2px"><p class="rd" style="color:#9aa0b5">p95 target</p><p style="font-size:60px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">150 ms</p></div>'
+      '<div class="grow"></div><p class="rd">the best ranking that meets it</p></div>')
 c3 = (f'<div class="rcard" style="border-color:rgba(148,148,255,0.5)"><div class="rh"><p class="rn">03</p><p class="rt">Route</p></div>'
       f'<p style="font-size:52px;font-weight:700;color:#fcfdff">every 250 ms</p><p class="rd">at 1,500 searches/s:</p>{bar}'
       f'<p style="font-size:34px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">ef {p15["ef"]}</p>'
       f'<div class="grow"></div><p class="rd">best average nDCG that fits</p></div>')
 write("recipe", " foot", "How the Router Decides", '<div class="row" style="gap:32px;height:610px;margin-top:8px">' + c1 + c2 + c3 + "</div>",
-      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4. Floor and target: the studio defaults. Plan: the "
+      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4. Target: the studio default. Plan: the "
       "studio's router on this laptop's measured encode capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s). Exploratory.")
 
 # plan v12: what the router plans across the day, with the point where Nano's CPU fills up (after the live demo)
@@ -1398,7 +1397,7 @@ for v in (0, 0.5, 1):
     F.t(L - 16, PY(v) + 10, f"{v:.0%}", 28, MUT, "end", 400, True)
 write("plan", " foot", "Zero Only Enters at Peaks", F.html(),
       "Share of traffic per encoder planned by the studio's router: NQ quality and search time per setting, M5 Pro encode "
-      "capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), quality floor 0.50, encode and search kept under 80% of capacity. Planner output, not a "
+      "capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), encode and search kept under 80% of capacity. Planner output, not a "
       "load test. Exploratory.")
 
 # live v11: the demo slide, with room for the astronaut

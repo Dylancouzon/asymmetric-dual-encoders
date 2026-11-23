@@ -10,15 +10,16 @@ throughput on one machine, and the encoders stress them differently:
 A plan picks one search preset (ef, oversampling) shared by all encoders and fractions f (summing to 1) that
 maximize the average nDCG@10 of served searches, subject to
 
-  average nDCG  >= floor                                  quality comes first
   rate * sum(f_i / encode_capacity_i)      <= headroom    encode stays below saturation
   rate * sum(f_i * search_ms_i) / 1000     <= headroom    the shard stays below saturation
 
 Headroom (< 1) leaves room for queueing so latency stays under target; the caller tunes it from measured p95.
 Every query is served. An encoder the caller marks as slow (its own processing time exceeds the latency budget)
-is left out, unless the floor needs it. If no plan carries the whole rate at the floor, the plan is the floor-meeting one that carries the
-most: the queue grows and latency goes over target, because quality comes first. If no plan reaches the floor,
-the plan says so and serves the best quality.
+is left out. If no plan carries the whole rate, the plan is the one that carries the most, and the queue grows.
+
+An optional quality floor (default 0, no floor) keeps the average nDCG@10 at or above it and puts quality before
+latency: slow encoders come back if only they reach the floor, and past capacity the queue grows rather than the
+quality dropping below the floor. If no plan reaches the floor, the plan says so and serves the best quality.
 """
 from dataclasses import dataclass
 from functools import lru_cache
@@ -41,7 +42,8 @@ class Plan:
     quality: float          # expected average nDCG@10 of served searches
     encode_util: float      # fraction of encode capacity the plan uses at the offered rate
     shard_util: float       # fraction of shard time the plan uses at the offered rate
-    status: str             # "ok", "over target to keep floor", "over capacity at this floor", "floor unreachable"
+    status: str             # "ok", "over capacity", "over target" (every encoder too slow for the target), or with
+                            # a floor: "over target to keep floor", "floor unreachable"
 
 
 @lru_cache(maxsize=None)
@@ -51,9 +53,10 @@ def _grid(step: float) -> np.ndarray:
     return np.array([(a, b, k - a - b) for a in range(k + 1) for b in range(k + 1 - a)], dtype=np.float64) / k
 
 
-def plan(rate: float, presets: dict, floor: float, headroom: float, slow: frozenset = frozenset(),
+def plan(rate: float, presets: dict, headroom: float, floor: float = 0.0, slow: frozenset = frozenset(),
          step: float = 0.01) -> Plan:
     """presets: (ef, oversampling) -> [EncoderCost] in a fixed encoder order.
+    floor: optional minimum average nDCG@10; 0 means none, and the plan is the best quality that fits.
     slow: encoders too slow for the latency target on their own; used only when the floor needs them."""
     F, keys = _grid(step), list(presets)
     names = [e.name for e in presets[keys[0]]]
@@ -76,12 +79,13 @@ def plan(rate: float, presets: dict, floor: float, headroom: float, slow: frozen
         # Best quality that fits; among equals, the lightest load (more slack for bursts).
         idx = np.flatnonzero(fits)
         i = idx[np.lexsort((load[idx], -quality[idx]))[0]]
-        status = "ok" if fast else "over target to keep floor"
+        status = "ok" if fast else ("over target to keep floor" if floor > 0 else "over target")
     elif pool.any():
-        # More traffic than any floor-meeting plan carries: take the one that carries the most; the queue grows.
+        # More traffic than any plan (at the floor, if one is set) carries: take the one that carries the most.
+        # Among plans that carry the same most, the best quality.
         idx = np.flatnonzero(pool)
-        i = idx[np.argmin(load[idx])]
-        status = "over capacity at this floor"
+        i = idx[np.lexsort((-quality[idx], load[idx]))[0]]
+        status = "over capacity"
     else:
         # The floor is above what any plan delivers: serve the best quality, and say so.
         i = np.lexsort((load, -quality))[0]
@@ -110,7 +114,17 @@ if __name__ == "__main__":
     busy = plan(2000, presets(), floor=0.50, headroom=0.8)
     assert busy.status == "ok" and busy.shares["zero"] > 0.2, busy                  # nothing dropped: a cheaper plan
     huge = plan(8000, presets(), floor=0.50, headroom=0.8)
-    assert huge.status == "over capacity at this floor", huge                       # the queue grows
+    assert huge.status == "over capacity" and huge.quality >= 0.50, huge            # floor held: the queue grows
+    # No floor (the studio's Auto): the same as a non-binding floor in the normal range; past capacity it trades
+    # quality for throughput instead: mostly Zero at the narrowest preset, the plans that carry the most.
+    assert plan(2000, presets(), headroom=0.8) == busy
+    flood = plan(8000, presets(), headroom=0.8)
+    assert flood.status == "over capacity" and flood.preset == (128, 4.0) and flood.shares["stella"] == 0.0, flood
+    assert flood.quality < huge.quality and flood.shares["zero"] > 0.5, flood
+    stuck = plan(40, presets(), headroom=0.8, slow=frozenset({"stella", "nano", "zero"}))
+    assert stuck.status == "over target", stuck                                     # target below every encoder
+    lean = plan(300, presets(), headroom=0.8, slow=frozenset({"stella"}))
+    assert lean.status == "ok" and lean.shares["stella"] == 0.0, lean              # slow encoders stay out
     keep = plan(96, presets(), floor=0.60, headroom=0.8, slow=frozenset({"stella"}))
     assert keep.status == "over target to keep floor" and keep.shares["stella"] >= 0.4, keep   # floor beats latency
     agent = plan(300, presets(), floor=0.50, headroom=0.8, slow=frozenset({"stella"}))

@@ -67,8 +67,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
       <div class="mix"><span><span class="dot" style="background:var(--nano)"></span>Nano</span><input id="w_nano" type="range" min="0" max="100"><b id="w_nano_v"></b></div>
       <div class="mix"><span><span class="dot" style="background:var(--zero)"></span>Zero</span><input id="w_zero" type="range" min="0" max="100"><b id="w_zero_v"></b></div></div>
     </div>
-  <div class="card"><h2>QUALITY FLOOR · FIRST <b id="floor_v"></b></h2><input id="floor" type="range" min="30" max="70">
-    <h2 style="margin-top:.5rem">P95 TARGET · THEN <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
+  <div class="card"><h2>P95 TARGET <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
   <div class="card"><h2>HNSW SEARCH <span class="sm" id="search_by" style="letter-spacing:0"></span></h2>
     <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><select id="os_stella"></select></div>
     <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><select id="os_nano"></select></div>
@@ -83,7 +82,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
     <div class="panel t"><div class="k">traffic</div><div class="v" id="arr">–</div><div class="d" id="flow1"></div><div class="d" id="flow2"></div></div>
     <div class="panel t g" id="gt"><svg id="g" viewBox="0 0 190 120"></svg>
       <div><div class="k" id="p95k">p95 latency</div><div class="v" id="p95">–</div><div class="verdict" id="verdict"></div></div></div>
-    <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d"></div></div>
+    <div class="panel t"><div class="k">ranking quality</div><div class="v" id="ndcg">–</div><div class="d" id="ndcg_d">nDCG@10 of served searches</div></div>
     <div class="panel t"><div class="k">machine load</div><div class="v" id="load">–</div><div class="d" id="load_d"></div></div>
   </div>
   <div class="panel plan"><span class="k" id="plan_k">auto</span><div class="bar" id="bar"></div><span class="chip" id="chip"></span><div class="util" id="util"></div></div>
@@ -93,7 +92,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
   </div>
   <div class="charts">
     <div class="panel"><table><thead><tr><th>encoder</th><th>ef · os</th><th>nDCG@10</th><th>encodes/s max</th><th>search</th><th>plan</th><th>actual</th></tr></thead><tbody id="enc_tbl"></tbody></table></div>
-    <div class="panel chart"><div class="k">nDCG@10 of served searches vs floor</div><canvas id="c_ndcg"></canvas></div>
+    <div class="panel chart"><div class="k">nDCG@10 of served searches</div><canvas id="c_ndcg"></canvas></div>
   </div>
 </div></div>
 <script>
@@ -121,7 +120,6 @@ async function flush() { sending = true;
 for (const e of ENC) $("os_" + e).innerHTML = OSS.map(o => `<option value="${o}">×${o}</option>`).join("");
 $("pause").onclick = () => set({paused: !(S && S.paused)});
 $("rate").oninput = () => { $("rate_v").textContent = rateOf(+$("rate").value).toLocaleString() + " searches/s"; set({rate: rateOf(+$("rate").value)}); };
-$("floor").oninput = () => { $("floor_v").textContent = "nDCG " + (+$("floor").value / 100).toFixed(2); set({floor: +$("floor").value / 100}); };
 $("target").oninput = () => { $("target_v").textContent = tgtOf(+$("target").value) + " ms"; set({target_ms: tgtOf(+$("target").value)}); };
 $("spike").onclick = () => set({spike: !(S && S.spike)});
 $("peak").oninput = () => { $("peak_v").textContent = "×" + $("peak").value; set({peak: +$("peak").value}); };
@@ -173,23 +171,23 @@ function chart(id, ticks, fy, fmt, layers) {
 }
 const dashed = (get, col, fy) => (x, tx, h) => { x.strokeStyle = col; x.lineWidth = 2; x.setLineDash([8, 8]); x.beginPath();
   H.forEach((s, i) => { const y = fy(get(s), h); i ? x.lineTo(tx(s.t), y) : x.moveTo(tx(s.t), y); }); x.stroke(); x.setLineDash([]); };
-const solid = (get, limit, fy, worse) => (x, tx, h) => { x.lineWidth = 4;
-  for (let i = 1; i < H.length; i++) { const a = H[i - 1], b = H[i]; x.strokeStyle = worse(get(b), limit(b)) ? "#ff516b" : "#fcfdff";
+const solid = (get, fy, worse = () => false) => (x, tx, h) => { x.lineWidth = 4;
+  for (let i = 1; i < H.length; i++) { const a = H[i - 1], b = H[i]; x.strokeStyle = worse(b) ? "#ff516b" : "#fcfdff";
     x.beginPath(); x.moveTo(tx(a.t), fy(get(a), h)); x.lineTo(tx(b.t), fy(get(b), h)); x.stroke(); } };
 const latOf = s => s.fanout > 1 ? s.task_p95_ms : s.p95_ms;
 function draw() {
   if (H.length < 2) return;
   const fl = (v, h) => h - 8 - lfrac(v) * (h - 16);
   chart("c_lat", [1, 10, 100, 1000, 10000], fl, v => v >= 1000 ? v / 1000 + "s" : v,
-    [dashed(s => s.target_ms, "#f5a623", fl), solid(latOf, s => s.target_ms, fl, (v, t) => v > t)]);
+    [dashed(s => s.target_ms, "#f5a623", fl), solid(latOf, fl, s => latOf(s) > s.target_ms)]);
   const mq = Math.max(50, ...H.map(s => Math.max(s.offered, s.served_per_s))) * 1.1, fq = (v, h) => h - 8 - v / mq * (h - 16);
   chart("c_qps", [0, Math.round(mq / 2), Math.round(mq)], fq, v => v, [
     (x, tx, h) => { for (let i = 1; i < H.length; i++) { const s = H[i], x0 = tx(H[i - 1].t), x1 = tx(s.t); let acc = 0;
       for (const e of ENC) { const v = s.by[e]; if (!v) continue; x.fillStyle = COL[e]; x.fillRect(x0, fq(acc + v, h), x1 - x0 + 0.6, fq(acc, h) - fq(acc + v, h)); acc += v; } } },
     dashed(s => s.offered, "#fcfdff", fq)]);
-  const lo = Math.min(0.4, Math.floor(10 * Math.min(...H.map(s => Math.min(s.floor, s.ndcg10 || 1)))) / 10);
+  const lo = Math.min(0.4, Math.floor(10 * Math.min(...H.map(s => s.ndcg10 || 1))) / 10);
   const fn = (v, h) => h - 8 - (v - lo) / (0.7 - lo) * (h - 16);
-  chart("c_ndcg", Array.from({length: Math.round((0.7 - lo) * 10) + 1}, (_, i) => lo + i / 10), fn, v => v.toFixed(1), [dashed(s => s.floor, "#f5a623", fn), solid(s => s.ndcg10, s => s.floor, fn, (v, f) => v < f)]);
+  chart("c_ndcg", Array.from({length: Math.round((0.7 - lo) * 10) + 1}, (_, i) => lo + i / 10), fn, v => v.toFixed(1), [solid(s => s.ndcg10, fn)]);
 }
 
 // ---- numbers ------------------------------------------------------------------------------------------
@@ -197,7 +195,6 @@ function render(s) {
   $("sub").textContent = s.ready ? "" : `starting: ${s.step}…`;
   if (Date.now() - editing > 800) {       // don't fight the control being moved
     $("rate").value = xOfRate(s.rate); $("rate_v").textContent = Math.round(s.rate).toLocaleString() + " searches/s";
-    $("floor").value = Math.round(s.floor * 100); $("floor_v").textContent = "nDCG " + s.floor.toFixed(2);
     $("target").value = xOfTgt(s.target_ms); $("target_v").textContent = Math.round(s.target_ms) + " ms";
     $("peak").value = s.peak; $("peak_v").textContent = "×" + s.peak; $("fanout").value = s.fanout; $("fanout_v").textContent = s.fanout;
     const tot = ENC.reduce((a, e) => a + s.split[e], 0) || 1;
@@ -223,15 +220,14 @@ function render(s) {
   $("p95").textContent = ms(lat); $("p95").style.color = over ? "var(--bad)" : "var(--ok)";
   $("verdict").textContent = s.paused && !s.served_per_s ? "paused" : over ? "over target" : "";
   $("verdict").style.color = over ? "var(--bad)" : "var(--mut)"; $("gt").classList.toggle("over", over); gauge(lat, s.target_ms);
-  $("ndcg").textContent = s.ndcg10.toFixed(2); $("ndcg").style.color = s.ndcg10 < s.floor && s.n_quality > 100 ? "var(--bad)" : "var(--txt)";
-  $("ndcg_d").textContent = `nDCG@10 · floor ${s.floor.toFixed(2)}`;
+  $("ndcg").textContent = s.ndcg10.toFixed(2);
   $("load").textContent = s.cores.toFixed(1); $("load_d").textContent = `of ${s.cores_total} cores`;
   // plan
   const p = s.plan, shares = p ? p.shares : Object.fromEntries(ENC.map(e => [e, s.split[e] / (ENC.reduce((a, o) => a + s.split[o], 0) || 1)]));
   $("plan_k").textContent = s.route === "auto" ? "auto" : "split";
   $("bar").innerHTML = ENC.filter(e => shares[e] > 0.004).map(e => `<div style="width:${100 * shares[e]}%;background:${COL[e]}">${shares[e] > 0.08 ? `${Math.round(100 * shares[e])}% ${NAME[e]}` : ""}</div>`).join("");
-  const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "floor unreachable": ["#2a1f0a", "#f5a623"], "over target to keep floor": ["#2a1f0a", "#f5a623"], "over capacity at this floor": ["#2a1520", "#ff516b"], manual: ["#1d1d3d", "#9494ff"]}[status];
-  $("chip").textContent = {"over target to keep floor": "floor first · latency may exceed target", "over capacity at this floor": "over capacity · queue growing", manual: ""}[status] ?? (status === "ok" ? "" : status);
+  const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "over capacity": ["#2a1520", "#ff516b"], "over target": ["#2a1f0a", "#f5a623"], manual: ["#1d1d3d", "#9494ff"]}[status] ?? ["#2a1520", "#ff516b"];
+  $("chip").textContent = {"over capacity": "over capacity · queue growing", "over target": "target below every encoder's own time", manual: ""}[status] ?? (status === "ok" ? "" : status);
   $("chip").style.display = $("chip").textContent ? "" : "none"; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
   $("util").textContent = p ? `ef ${p.preset[0]} ×${p.preset[1]} · expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · shard ${Math.round(100 * p.shard_util)}%` : "";
   // encoders

@@ -2,9 +2,9 @@
 
 All three encoders search the same Stella document index. Traffic is replayed from a BEIR dataset's judged
 questions, so every answer is scored. Auto routing plans, four times a second, which share of traffic each encoder serves
-and how wide they search: the best average quality at or above the floor that fits the machine's encode and
-search capacity, with headroom tuned from measured p95 against the latency target (see allocator.py). Every query
-is served. Every control applies immediately.
+and how wide they search: the best average quality that fits the machine's encode and search capacity, with
+headroom tuned from measured p95 against the latency target (see allocator.py). Every query is served. Every
+control applies immediately.
 
   .venv/bin/python m15/talk/demo/studio/app.py                 # FiQA (57,638 passages)
   DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py      # NQ (2.68M passages), the talk's setup
@@ -62,14 +62,12 @@ encoders = {name: make_encoder(name) for name in ENCODERS}
 SWEEP = {(e, s["ef"], s["oversampling"]): s for e in ENCODERS
          for s in json.loads(RECEIPT.read_text())["results"][e]["settings"]}
 EFS, OVERSAMPLING = sorted({k[1] for k in SWEEP}), sorted({k[2] for k in SWEEP})
-PRESETS = [(128, 4.0), (256, 4.0), (512, 4.0), (1024, 8.0)]       # what Auto chooses from, narrow to wide
-# Default floor: just under Zero's best score, so Zero alone qualifies only at its widest search (NQ: 0.50).
-FLOOR = round(SWEEP[("zero", 1024, 8.0)]["ndcg10"] - 0.01, 2)
+PRESETS = [(64, 4.0), (128, 4.0), (256, 4.0), (512, 4.0), (1024, 8.0)]   # what Auto chooses from, narrow to wide
 
 state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "fanout": 1, "paused": False,
          "route": "auto", "split": {"stella": 34.0, "nano": 33.0, "zero": 33.0},
          "search": {name: [1024, 8.0] for name in ENCODERS},
-         "floor": FLOOR, "target_ms": 150.0}
+         "target_ms": 150.0}
 
 work = Workload(search, encoders, data["q_texts"], data["q_ids"], data["qrels"], DOC_IDS, state, WORKERS)
 
@@ -231,7 +229,7 @@ def plan_loop():
                     router["headroom"] = min(0.85, router["headroom"] + 0.02)
         # Plan for arrivals plus the backlog cleared within 2 s.
         presets = {pr: [cost(n, *pr, slowdown) for n in ENCODERS] for pr in PRESETS}
-        args = dict(rate=rate + backlog(now) / 2, floor=state["floor"], headroom=router["headroom"],
+        args = dict(rate=rate + backlog(now) / 2, headroom=router["headroom"],
                     slow=slow_encoders(enc_ms, target, now))
         p, prev = allocator.plan(presets=presets, **args), router["plan"]
         if prev and p.preset != prev.preset:
@@ -246,7 +244,7 @@ def plan_loop():
             EVENTS.append((now, f"auto ef {p.preset[0]} ×{p.preset[1]:g}"))
         router["plan"] = p
         # After an overload, the backlog drains; until it is short, its waits say nothing about this plan.
-        router["draining"] = p.status == "over capacity at this floor" or (
+        router["draining"] = p.status == "over capacity" or (
             router["draining"] and backlog(now) > rate * 2 * target / 1000)
         if router["draining"]:
             router["over_capacity_t"] = now
@@ -315,7 +313,7 @@ def index():
 @app.get("/stats")
 def stats():
     s = HISTORY[-1] if HISTORY else snapshot()
-    keep = ("t", "offered", "served_per_s", "p95_ms", "task_p95_ms", "target_ms", "ndcg10", "floor", "by", "fanout")
+    keep = ("t", "offered", "served_per_s", "p95_ms", "task_p95_ms", "target_ms", "ndcg10", "by", "fanout")
     return {**s, "history": [{k: h[k] for k in keep} for h in list(HISTORY)[-240:]]}
 
 
@@ -327,7 +325,7 @@ def _nearest(values, x):
 def update(body: dict):
     """Partial update of the controls; applies to the next request. Traffic never stops unless paused."""
     before = json.loads(json.dumps(state))
-    for key in ("rate", "peak", "floor", "target_ms"):
+    for key in ("rate", "peak", "target_ms"):
         if key in body:
             state[key] = float(body[key])
     state["rate"] = min(max(state["rate"], 1.0), 10000.0)
@@ -360,8 +358,6 @@ def _describe(a, b):
     """One short timeline marker for a control change, the most important first."""
     if a["paused"] != b["paused"]:
         return "paused" if b["paused"] else "resumed"
-    if a["floor"] != b["floor"]:
-        return f"floor {b['floor']:.2f}"
     if a["route"] != b["route"]:
         return b["route"]
     for name in ENCODERS:
