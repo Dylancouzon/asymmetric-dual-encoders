@@ -3,7 +3,6 @@
 One section per slide, in talk order. `rebuild.py` copies each section into that slide's speaker notes. Lines in [brackets] are stage directions. Every number here has a receipt in `m15/EVIDENCE.md` or the paper.
 
 ## cover · ~0.5 min
-[Pause on the title. Trace the three lines into the dots.]
 - Hook: someone offers you a cheaper query encoder on Monday. How long until you know if it helps?
 - If the answer is "re-embed the whole corpus first", the experiment sits in the backlog.
 - This talk: how far you can get with the index you already have.
@@ -28,7 +27,6 @@ Why it matters: you keep the index and change only the query side.
   - Stella's own query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).
   - Nano: a small transformer, 34.5M parameters, 0.54 GFLOPs. About 46 times less compute.
   - Zero: no neural network at all, a lookup table. 28 KFLOPs, nearly a million times less than Stella.
-- [own ef] Each encoder also gets its own search width: Qdrant's `hnsw_ef`, how many candidates the HNSW search keeps. The knobs show the settings we use later: Stella 256, Nano 512, Zero 1,024.
 - What makes Zero different from other static embedding tables: it is trained for one frozen index. Its only job is to put each query where Stella would put it.
 - The family is called Constella.
 - Switching costs nothing: no second index, no re-encode. If rankings get worse, switch back on the next request.

@@ -534,7 +534,7 @@ g.append("</svg>")
 write("arch", " foot", "Keep the Index, Swap the Query Encoder",
       '<div style="margin-top:24px">' + "".join(g) + "</div>",
       "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
-      "Zero: 2 FLOPs per gathered value plus normalization. ef: Qdrant's hnsw_ef, set per request.")
+      "Zero: 2 FLOPs per gathered value plus normalization.")
 
 # order v8: what a lookup table cannot see, shown on its own pipeline
 def pill(x, y, s_, c=WHITE, hot=False):
@@ -749,6 +749,11 @@ ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "telescope-left
          "coffee": "/_blob/fcf094b23e6cc4c81851cc9e9c5aa63d", "juggle": "/_blob/61fa8a9ea84f0d11a2a93c62e8ada4d0",
          "sleep": "/_blob/71e2bb95eae4079139ad8059d053f973"}
 INK = "#0b0f19"
+# 2026-11-23: the robot mascot (generated with Codex gpt-6.2-sol from the owner's character sheet), same roles per slide
+ASTRO.update({"strings": "/_blob/41d32282c204df52436c792132876383", "graph": "/_blob/08e7d34403c04d248c672ad0496ba4af",
+              "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/04adffae4bd1e482c525300df428406d",
+              "laptop": "/_blob/05b0c46d773451944c71dbba1c666232", "telescope-left": "/_blob/baa5783eb9620b82b42e657a129cf8c6",
+              "wave": "/_blob/c61d49d539b53b74e45ff7bb51d840f0"})
 
 
 def astro(name, x, y, w, h=None, flip=False):
@@ -1011,8 +1016,8 @@ write("cost", " foot", "Every Query Runs the Full 435M-Parameter Model", A.html(
 
 # arch v11: documents and a document encoder fill one Qdrant index; three query encoders, drawn as what they are
 F = Fig(aria="Documents pass through Stella's document encoder into one Stella index; three query encoders, Stella, Nano "
-             "and Zero, each with its own search width, query that same index")
-F.add(f'<path d="M1124 55 L1407 55 L1407 168" fill="none" stroke="{MUT}" stroke-width="4"/><path d="M1407 186 L1398 168 L1416 168z" fill="{MUT}"/>')
+             "and Zero, query that same index")
+F.add(f'<path d="M1124 55 L1282 55 L1282 168" fill="none" stroke="{MUT}" stroke-width="4"/><path d="M1282 186 L1273 168 L1291 168z" fill="{MUT}"/>')
 F.add(arr(400, 55, 476, 55))
 for i in range(3):                                                # documents: a small stack of pages
     F.add(f'<rect x="{24 + i * 14}" y="{14 + i * 10}" width="64" height="76" rx="8" fill="#1a2233" stroke="{GRAY}" stroke-width="2"/>')
@@ -1023,7 +1028,6 @@ F.add(f'<rect x="490" y="0" width="634" height="110" rx="18" fill="#151b2b" stro
       g_net(506, 12, 120, 86, (3, 4, 3), GRAY, 6))
 F.t(646, 68, "Stella document encoder", 36, WHITE, weight=700)
 F.t(0, 198, "each request picks one", 30, MUT)
-F.t(775, 198, "own ef", 30, MUT, "middle", 600, True)
 rows = (("Stella", "25 GFLOPs per query", GRAY), ("Nano", "0.54 GFLOPs per query", VIO), ("Zero", "28 KFLOPs per query", RED))
 for i, (n, sub, c) in enumerate(rows):
     y = 232 + i * 136
@@ -1036,22 +1040,16 @@ for i, (n, sub, c) in enumerate(rows):
         F.add(g_table(26, y + 18, 100, 80, 6, 7, c, seed=5, hot=(1, 4)))
     F.t(170, y + 52, n, 40, c, weight=700)
     F.t(170, y + 96, sub, 30, GRAY)
-    F.add(arr(580, y + 58, 650, y + 58))
-    kx = 684 + 182 * (i + 1) / 3                                 # knob: Stella ef 256, Nano 512, Zero 1024
-    F.add(f'<rect x="650" y="{y + 24}" width="250" height="68" rx="34" fill="{INK}" stroke="{c}" stroke-width="3"/>',
-          f'<line x1="684" y1="{y + 58}" x2="866" y2="{y + 58}" stroke="#3a4157" stroke-width="6" stroke-linecap="round"/>',
-          f'<line x1="684" y1="{y + 58}" x2="{kx:.0f}" y2="{y + 58}" stroke="{c}" stroke-width="6" stroke-linecap="round"/>',
-          f'<circle cx="{kx:.0f}" cy="{y + 58}" r="11" fill="{c}"/>')
-    F.add(arr(900, y + 58, 1150, 400 + (i - 1) * 70))
-F.add(f'<rect x="1150" y="186" width="514" height="434" rx="22" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>')
-hn, _, _, _ = g_hnsw(1190, 300, 434, layer_h=58, gap=26, seed=4, target_uv=(0.8, 0.55))
+    F.add(arr(580, y + 58, 900, 400 + (i - 1) * 60))            # ef comes later, on the recovery slide
+F.add(f'<rect x="900" y="186" width="764" height="434" rx="22" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>')
+hn, _, _, _ = g_hnsw(982, 296, 600, layer_h=62, gap=24, seed=4, target_uv=(0.8, 0.55))
 F.add(hn)
-F.el(1182, 212, '<img src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="" style="position:absolute;left:{L}px;top:{T}px;width:44px;height:51px;object-fit:contain">')
-F.t(1240, 256, "One Stella index", 40, WHITE, weight=700)
-F.t(1407, 596, "same vectors, same HNSW graph", 26, GRAY, "middle")
+F.el(932, 212, '<img src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="" style="position:absolute;left:{L}px;top:{T}px;width:44px;height:51px;object-fit:contain">')
+F.t(990, 256, "One Stella index", 40, WHITE, weight=700)
+F.t(1282, 600, "same vectors, same HNSW graph", 26, GRAY, "middle")
 write("arch", " foot", "Keep the Index, Swap the Query Encoder", F.html(),
       "FLOPs: analytic estimate, 2·P·T + attention, median over 100 real 5-12 word queries (Stella includes its prompt); "
-      "Zero: 2 FLOPs per gathered value plus normalization. ef: Qdrant's hnsw_ef, set per request.")
+      "Zero: 2 FLOPs per gathered value plus normalization.")
 
 # zero-mech v11: the query's tokens pick rows out of a big table; the mean lands near Stella's vector
 F = Fig(aria="The query's tokens each pick one row of Zero's lookup table; the weighted mean of those rows is Zero's "
@@ -1184,7 +1182,7 @@ F.add(f'<circle cx="1530" cy="186" r="22" fill="none" stroke="{VIO}" stroke-widt
 F.t(1490, 436, "Stella's space", 32, WHITE, "middle", 700)
 chips = ('<div class="chips" style="position:absolute;left:128px;top:792px;gap:24px">' + stat("34.5M parameters", "vio")
          + stat("3.49M training queries") + stat("57.3 A100-hours ≈ $95") + "</div>")
-write("nano", " foot", "Nano Projects bge-small into Stella's Space", F.html() + "\n" + chips + astro("graph", 1644, 728, 303, 356),
+write("nano", " foot", "Nano Projects bge-small into Stella's Space", F.html() + "\n" + chips + astro("graph", 1520, 716, 220, 230),
       "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
       "No relevance labels; MS MARCO used for validation only.")
 
@@ -1401,7 +1399,7 @@ write("plan", " foot", "Zero Only Enters at Peaks", F.html(),
 # live v11: the demo slide, with room for the astronaut
 write("live", " demo", "Demo: An Auto Router on One Index",                   # layout set by Dylan in the page
       '<div class="live" style="margin-top:8px;translate:0 16px"><div class="dot"></div><p>LIVE</p></div>'
-      + astro("telescope", 1004, 276, 985, 933), pre=GLOW)
+      + astro("laptop", 1004, 276, 985, 933), pre=GLOW)
 _lv = S / "live.html"
 _lv.write_text(_lv.read_text().replace("<h2>Demo:", '<h2 style="width:1498px;min-height:300px;transform:translate(0, 252px);'
                                        'box-sizing:border-box;flex:0 0 auto">Demo:', 1))
@@ -1431,9 +1429,12 @@ write("byo", " foot", "Train a Query Encoder for Your Own Index",
 # thanks v11: QR cards on the glow background, the Qdrant logo, a waving astronaut
 cards = "".join(f'<div class="qr"><div class="qi">{_qr(n)}</div><p class="ql">{lab}</p></div>'
                 for n, lab in (("linkedin", "LinkedIn"), ("paper", "Paper preview"), ("modelcard", "Model card"), ("fastembed", "FastEmbed")))
-write("thanks", " alt", "Thank You",
+write("thanks", " alt", "",                                       # the mascot says it
       '<img src="project/ds/qdrant/assets/logo-red-white.svg" alt="Qdrant" style="position:absolute;left:1566px;top:128px;width:226px;height:60px;object-fit:contain">'
-      + astro("wave", 302, 25, 517, 474)
+      + '<img class="mascot" src="/_blob/618ab71966d805daa6f0e0cf6f9efe30" alt="" style="left:128px;top:52px;width:290px;height:428px">'
+      + '<div style="position:absolute;left:452px;top:120px;background:#fcfdff;border-radius:40px;padding:22px 48px">'
+        '<div style="position:absolute;left:-14px;bottom:30px;width:40px;height:40px;background:#fcfdff;transform:rotate(45deg);border-radius:6px"></div>'
+        '<p style="position:relative;font-size:84px;font-weight:700;color:#0b0f19;white-space:nowrap">Thank you!</p></div>'
       + '<div class="row" style="gap:40px;margin-top:auto;justify-content:space-between">' + cards + "</div>", pre=GLOW, mark=False)
 
 # cover v12: the corner graphic as a constellation: linked stars, three query lines into one entry star,
