@@ -16,7 +16,7 @@
 <p class="src">Released Zero table (int8 rows, fp32 scale per row, dequantized), query "cheap flights paris to rome"; √count-weighted mean, then L2. First 48 of 1,024 dimensions; colour: sign and size of each value. Stella: its query vector with prompt.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-- The table: one learned vector of 1,024 numbers for every token in Stella's vocabulary, 30,522 tokens (words and word pieces). Stored as 8-bit integers with one scaling factor per row: 31 MB, small enough to sit next to the search process.<br>
+- The table: one learned vector for every token in Stella's vocabulary, 31k tokens. Stored as 8-bit integers so the whole table is about 31mb<br>
 - Step 1: Stella's tokenizer splits the query into tokens from that vocabulary.<br>
 - Step 2: each token looks up its vector in the table.<br>
 - Step 3: average those vectors, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.<br>

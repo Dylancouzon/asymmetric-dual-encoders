@@ -14,15 +14,10 @@
 
 <p class="src">Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge.&nbsp;<br>No relevance labels; MS MARCO used for validation only.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~2 min]<br>
-Why it matters: a small transformer whose vectors land in Stella's space, so they search Stella's index.<br>
-- Start: bge-small, a 12-layer embedding model with 384-dimensional vectors. Stella's index holds 1,024 dimensions.<br>
-- Problem: one matrix can stretch 384 numbers to 1,024 but cannot add information. The output still spans only a 384-dimensional slice of Stella's space.<br>
-- Fix: average the token vectors of layers 4, 8, and 12 and join them (3 × 384 = 1,152), then map to 1,024 with one matrix. Different layers capture different things, so the matrix has more to work with.<br>
-- Training:<br>
-  - Step 1: keep bge-small fixed and fit only the matrix, by ridge regression (least squares with a penalty on large weights).<br>
-  - Step 2: train everything on the squared distance to Stella's vector for the same text. Queries match Stella's query vectors, passages its document vectors, three query batches per passage batch. No relevance labels: Stella supplies every target.<br>
-- Data: 3.49M unique queries in 12 forms (questions, product searches, claims, keywords, titles, and seven generated forms). About 200 million examples seen.<br>
-- Cost: 57.3 A100-hours, about $95, once. MS MARCO only for validation, never for training.<br>
+<aside>[~1.5 min]<br>
+- Start from bge-small, a 12-layer embedding model. Its vectors have 384 numbers; Stella's have 1,024.<br>
+- One matrix alone cannot fill Stella's 1,024 dimensions from 384. So Nano reads three of bge-small's layers (4, 8, and 12), joins them into 1,152 numbers, and maps those to 1,024.<br>
+- Training: make Nano's vector match Stella's for the same text, on 3.49M real and generated queries plus passages. No relevance labels: Stella supplies every target.<br>
+- Cost: 34.5M parameters, 57.3 A100-hours, about $95, once.<br>
 Next: so what do the three keep of Stella's ranking?</aside>
 </section>

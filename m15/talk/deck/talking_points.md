@@ -25,27 +25,26 @@ Why it matters: you keep the index and change only the query side.
   - Stella's query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).
   - Nano: a 34.5M-parameter transformer, 0.54 GFLOPs, about 46 times less.
   - Zero: a lookup table, no neural network. 28 KFLOPs, nearly a million times less.
-- Zero's table is trained for one frozen index: its only job is to put each query where Stella would. That sets it apart from general static embedding tables.
+- Zero's table is trained for one frozen index: its only job is to put each query where Stella would. That sets it apart from general static embedding models.
 - Together they are Constella. Switching is free: no second index, no re-encode, and you can switch back on the next request.
-Next: how can a lookup table produce a query vector?
+Next: how can a lookup table produce a query vector with no matrix multiplication?
 
 ## zero-mech · ~1.5 min
-- The table: one learned vector of 1,024 numbers for every token in Stella's vocabulary, 30,522 tokens (words and word pieces). Stored as 8-bit integers with one scaling factor per row: 31 MB, small enough to sit next to the search process.
+- The table: one learned vector for every token in Stella's vocabulary, 31k tokens. Stored as 8-bit integers so the whole table is about 31mb
 - Step 1: Stella's tokenizer splits the query into tokens from that vocabulary.
 - Step 2: each token looks up its vector in the table.
 - Step 3: average those vectors, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.
 - [Two vectors] For this query, Zero's vector has cosine 0.88 with Stella's: not identical, but pointing the same way.
 Next: random rows would not do that. Here is how it learned.
 
-## distill · ~2 min
-Why it matters: the table learns to imitate Stella without touching the index. In distillation terms, Stella is the teacher: the model being imitated.
-- Start: each row is Stella's encoding of that single token. Rare tokens start with more weight (IDF).
-- Phase 1, Align (16,000 steps of 512 examples), against Stella's query vectors, computed once and saved:
-  - Point the same way as Stella's vector (loss: 1 − cosine).
-  - For labeled queries, give the relevant passage and 31 other candidates the same relative scores Stella gives them (KL divergence). A vector can look close to Stella's and still rank a different passage first.
-- Phase 2, Rank (2,500 steps): contrastive training (InfoNCE) on 338,076 labeled query-passage pairs. The relevant passage must outscore 32,768 wrong ones from a fixed pool. Candidates Stella scores close to or above it are dropped: they may answer the question too.
-- [Formula line] Ê_D, Stella's document vectors, never changes.
-- Cost: about 20 minutes on one RTX 3080 once Stella's vectors are saved. A different teacher needs 8 to 12 hours to compute them first. All training sources allow commercial use of the trained weights.
+## distill · ~1.5 min
+- [Open] The main ideas here. The full training details, data, and losses are in the paper.
+- Stella is the teacher: the model Zero imitates. The table learns to put each query where Stella would, and the index never changes.
+- Start: each row begins as Stella's own vector for that single token.
+- [Align] First, copy Stella: match its query vectors and its ranking of a few candidate passages. A vector can look close to Stella's and still rank the wrong passage first.
+- [Rank] Then, rank: push the right passage above 32,768 wrong ones.
+- [Table] The result is the 31 MB table from the last slide.
+- Cost: about 20 minutes on one RTX 3080, once Stella's vectors for the training data are saved. Computing those takes 8 to 12 hours, once.
 Next: I assumed the best retriever would make the best table. It did not.
 
 ## worst · ~1.25 min
@@ -66,16 +65,11 @@ Why it matters: know which queries Zero gets wrong before your users do.
 - Takeaway: Zero fits short keyword queries. Test phrased questions separately.
 Next: to get order and context back, you need attention. That is Nano.
 
-## nano · ~2 min
-Why it matters: a small transformer whose vectors land in Stella's space, so they search Stella's index.
-- Start: bge-small, a 12-layer embedding model with 384-dimensional vectors. Stella's index holds 1,024 dimensions.
-- Problem: one matrix can stretch 384 numbers to 1,024 but cannot add information. The output still spans only a 384-dimensional slice of Stella's space.
-- Fix: average the token vectors of layers 4, 8, and 12 and join them (3 × 384 = 1,152), then map to 1,024 with one matrix. Different layers capture different things, so the matrix has more to work with.
-- Training:
-  - Step 1: keep bge-small fixed and fit only the matrix, by ridge regression (least squares with a penalty on large weights).
-  - Step 2: train everything on the squared distance to Stella's vector for the same text. Queries match Stella's query vectors, passages its document vectors, three query batches per passage batch. No relevance labels: Stella supplies every target.
-- Data: 3.49M unique queries in 12 forms (questions, product searches, claims, keywords, titles, and seven generated forms). About 200 million examples seen.
-- Cost: 57.3 A100-hours, about $95, once. MS MARCO only for validation, never for training.
+## nano · ~1.5 min
+- Start from bge-small, a 12-layer embedding model. Its vectors have 384 numbers; Stella's have 1,024.
+- One matrix alone cannot fill Stella's 1,024 dimensions from 384. So Nano reads three of bge-small's layers (4, 8, and 12), joins them into 1,152 numbers, and maps those to 1,024.
+- Training: make Nano's vector match Stella's for the same text, on 3.49M real and generated queries plus passages. No relevance labels: Stella supplies every target.
+- Cost: 34.5M parameters, 57.3 A100-hours, about $95, once.
 Next: so what do the three keep of Stella's ranking?
 
 ## bench · ~2 min
