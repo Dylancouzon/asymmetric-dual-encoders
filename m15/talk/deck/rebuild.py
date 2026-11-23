@@ -751,7 +751,7 @@ ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "telescope-left
 INK = "#0b0f19"
 # 2026-11-23: the robot mascot (generated with Codex gpt-6.2-sol from the owner's character sheet), same roles per slide
 ASTRO.update({"strings": "/_blob/41d32282c204df52436c792132876383", "graph": "/_blob/08e7d34403c04d248c672ad0496ba4af",
-              "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/fdd9aacb427bf1f1d5c8d7d76fa895ec",
+              "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97",
               "laptop": "/_blob/05b0c46d773451944c71dbba1c666232", "telescope-left": "/_blob/baa5783eb9620b82b42e657a129cf8c6",
               "wave": "/_blob/c61d49d539b53b74e45ff7bb51d840f0"})
 
@@ -1298,7 +1298,7 @@ r = mx / _best["zero"]["usd_per_million"]
 card = (f'<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
         f'<p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">{r:.0f}×</p>'
         f'<p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div>')
-write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1390, 612, 400, 400),
+write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1480, 612, 400, 400),
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.")
 
