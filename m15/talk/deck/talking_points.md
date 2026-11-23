@@ -113,12 +113,14 @@ Next: why does Zero need more search?
 
 ## recovery · ~2 min
 Why it matters: a cheap encoder saves time on encoding, then gives some of it back in search.
-- An HNSW search is a walk: start at an entry point, hop to whichever neighbour is closer to the query, stop when nothing closer is left. The links were chosen using Stella's vectors.
-- A Stella query walks that graph the way it was built for. Zero's query is close to Stella's, not identical (cosine 0.88 in the earlier example), so at some hops it picks the wrong neighbour and ends up in a nearby but wrong region.
+- An HNSW search is a walk: start at an entry point, hop to whichever neighbour is closer to the query, stop when nothing closer is left. All using Stella's vectors.
+- A Stella query walks that graph the way it was built for. Zero's query is close to Stella's, not identical, so at some hops it picks the wrong neighbour and ends up in a nearby but wrong region.
 - hnsw_ef is the insurance: the walk keeps more candidates alive, so one wrong turn costs less. Wider is more accurate, and slower.
 - Compression adds its own noise: the index keeps quantized vectors in memory and full ones on disk. Oversampling fetches 4 times the results in RAM, then rescores them from disk.
-- [Chart] Nano needs a wider search to match Stella's narrowest one. Zero needs far more, and still falls short.
-- The bigger and the more compressed the index, the bigger the effect. On the paper's smaller, uncompressed indexes, lookup tables needed about 4 times the width.
+- [Chart] Each line: how much of its own best ranking quality an encoder keeps through the approximate search. Stella keeps 95% at the narrowest setting. Nano gets there at ef 128. Zero gets there at ef 256, an 8 times wider search, and keeps 98% at ef 1024.
+- Note: this is relative to each encoder's own best. Zero's best is still lower than Stella's, as the earlier chart showed.
+- If asked: on the stricter measure, the share of the exact top 10 found, Zero still trails: 90% at ef 1024, against Stella's 91% at ef 32. Many of those misses are near-ties that barely change the ranking.
+- The bigger and the more compressed the index, the bigger the effect.
 - So the encoder and the search width are one decision.
 Next: and the best decision changes with traffic. Let me show you a router that makes it live.
 

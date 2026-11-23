@@ -1578,6 +1578,40 @@ write("cloud", " foot", "Search Is Now the Bill: 3,700\u00d7 Becomes 29\u00d7", 
       "processes \u00d7 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, "
       "Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.")
 
+# recovery v12: ranking quality kept (nDCG@10 / own exact nDCG@10), oversampling 4, from the committed NQ Edge sweep
+_EQ = _json.loads(Path(_R + "m15_talk_edge_nq.json").read_text())["results"]
+EFS = (32, 64, 128, 256, 512, 1024)
+KEPT = {n: [next(x["ndcg10"] for x in _EQ[k]["settings"] if x["ef"] == e and x["oversampling"] == 4.0) / _EQ[k]["exact_ndcg10"]
+            for e in EFS] for n, k in (("Stella", "stella"), ("Nano", "nano"), ("Zero", "zero"))}
+COL = {"Stella": GRAY, "Nano": VIO, "Zero": RED}
+bar = KEPT["Stella"][0]                                          # Stella's narrowest search
+zi = next(i for i, v in enumerate(KEPT["Zero"]) if v >= bar)    # first ef where Zero keeps as much
+W, H, L, R, T, B = 1664, 620, 130, 200, 60, 90
+RX = lambda i: L + i * (W - L - R) / 5
+RY = lambda v: T + (1.0 - v) / (1.0 - 0.80) * (H - T - B)
+F = Fig(aria=f"Ranking quality kept, as a share of each encoder's own exact-search nDCG@10, as hnsw_ef grows from 32 to 1024: "
+             f"Stella keeps {bar:.0%} at ef 32; Zero keeps as much at ef {EFS[zi]} and {KEPT['Zero'][-1]:.0%} at ef 1024")
+F.add(f'<rect x="{L}" y="{T - 20}" width="{W - L - R}" height="{H - T - B + 40}" rx="14" fill="#0d1320"/>')
+for v in (0.80, 0.85, 0.90, 0.95, 1.00):
+    F.add(f'<line x1="{L}" x2="{W - R}" y1="{RY(v):.0f}" y2="{RY(v):.0f}" stroke="{LINE}" stroke-width="2"/>')
+    F.t(L - 34, RY(v) + 10, f"{v:.0%}", 30, MUT, "end", 400, True)
+for i, e in enumerate(EFS):
+    F.t(RX(i), H - B + 56, str(e), 30, MUT, "middle", 400, True)
+F.t((L + W - R) / 2, H + 4, "hnsw_ef (oversampling 4)", 30, GRAY, "middle")
+F.t(L, 22, "ranking quality kept, vs. its own exact search", 30, GRAY)
+F.add(f'<line x1="{RX(0)}" y1="{RY(bar):.0f}" x2="{RX(5)}" y2="{RY(bar):.0f}" stroke="{WHITE}" stroke-width="2" stroke-dasharray="8 8"/>')
+for n, ys in KEPT.items():
+    c = COL[n]
+    F.add(f'<polyline points="{" ".join(f"{RX(i):.0f},{RY(v):.0f}" for i, v in enumerate(ys))}" fill="none" stroke="{c}" stroke-width="6" stroke-linejoin="round"/>',
+          *[f'<circle cx="{RX(i):.0f}" cy="{RY(v):.0f}" r="7" fill="{c}"/>' for i, v in enumerate(ys)])
+    F.t(RX(5) + 30, RY(ys[-1]) + 12 + {"Stella": -14, "Nano": 14, "Zero": 26}[n], n, 36, c, weight=700)
+for i, v in ((0, bar), (zi, KEPT["Zero"][zi])):
+    F.add(f'<circle cx="{RX(i):.0f}" cy="{RY(v):.0f}" r="22" fill="none" stroke="{WHITE}" stroke-width="4"/>')
+write("recovery", " foot", f"Zero Needs an {EFS[zi] // EFS[0]}\u00d7 Wider Search to Keep Its Quality", F.html(),
+      "BEIR NQ, 2.68M passages, Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, M5 Pro. "
+      f"nDCG@10 as a share of each encoder's exact-search nDCG@10 (Stella {_EQ['stella']['exact_ndcg10']:.3f}, Nano "
+      f"{_EQ['nano']['exact_ndcg10']:.3f}, Zero {_EQ['zero']['exact_ndcg10']:.3f}). Exploratory.")
+
 for sid in ("solved", "takeaways", "cloud-e2e", "recipe"):                                  # backup slides stay out of the main run
     f = S / f"{sid}.html"
     f.write_text(re.sub(r'<section id="(\w[\w-]*)" class="([^"]*)"[^>]*>', r'<section id="\1" class="\2" hidden>', f.read_text(), count=1))
