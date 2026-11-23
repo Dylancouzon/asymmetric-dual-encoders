@@ -1,25 +1,27 @@
 <section id="cloud" class="s foot" data-transition="fade">
-<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>Encoding Alone: Nano 26×, Zero 3,700× Less CPU</h2></div>
-<svg aria-label="CPU time to encode one million queries on a log scale: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes" style="position:absolute;left:128px;top:284px" width="1664" height="600" viewBox="0 0 1664 600"><line x1="200" x2="200" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="446" x2="446" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="691" x2="691" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="937" x2="937" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="1183" x2="1183" y1="70" y2="500" stroke="#303547" stroke-width="2"/><rect x="200" y="96" width="1100" height="68" rx="12" fill="#151b2b"/><rect x="200" y="96" width="1005" height="68" rx="12" fill="#c9cede"/><rect x="200" y="236" width="1100" height="68" rx="12" fill="#151b2b"/><rect x="200" y="236" width="658" height="68" rx="12" fill="#9494ff"/><rect x="200" y="376" width="1100" height="68" rx="12" fill="#151b2b"/><rect x="200" y="376" width="127" height="68" rx="12" fill="#ff516b"/></svg>
-<p class="lb" style="left:328px;top:286px;width:761px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:left;">CPU time to encode 1M queries (log scale)</p>
+<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>Search Is Now the Bill: 3,700× Becomes 29×</h2></div>
+<svg aria-label="Left, CPU time to encode one million queries on a log scale: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes. Right, dollars per million queries for encode plus search: Stella $4.91, Nano $0.18, Zero $0.17" style="position:absolute;left:128px;top:284px" width="1664" height="600" viewBox="0 0 1664 600"><line x1="865" x2="865" y1="70" y2="520" stroke="#303547" stroke-width="2"/><rect x="190" y="96" width="500" height="68" rx="12" fill="#151b2b"/><rect x="190" y="96" width="457" height="68" rx="12" fill="#c9cede"/><rect x="960" y="96" width="380" height="68" rx="12" fill="#151b2b"/><rect x="960" y="96" width="380" height="68" rx="12" fill="#c9cede"/><rect x="190" y="246" width="500" height="68" rx="12" fill="#151b2b"/><rect x="190" y="246" width="299" height="68" rx="12" fill="#9494ff"/><rect x="960" y="246" width="380" height="68" rx="12" fill="#151b2b"/><rect x="960" y="246" width="14" height="68" rx="12" fill="#9494ff"/><rect x="190" y="396" width="500" height="68" rx="12" fill="#151b2b"/><rect x="190" y="396" width="58" height="68" rx="12" fill="#ff516b"/><rect x="960" y="396" width="380" height="68" rx="12" fill="#151b2b"/><rect x="960" y="396" width="14" height="68" rx="12" fill="#ff516b"/></svg>
+<p class="lb" style="left:318px;top:286px;width:744px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:left;">Encoding alone: CPU per 1M queries (log)</p>
+<p class="lb" style="left:1088px;top:286px;width:618px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:left;">Encode + search: $ per 1M queries</p>
 <p class="lb" style="left:128px;top:388px;width:168px;font-size:40px;color:#c9cede;font-weight:700;text-align:left;">Stella</p>
-<p class="lb" style="left:1351px;top:394px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">123 vCPU-h</p>
-<p class="lb" style="left:128px;top:528px;width:120px;font-size:40px;color:#9494ff;font-weight:700;text-align:left;">Nano</p>
-<p class="lb" style="left:1004px;top:534px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">4.8 vCPU-h</p>
-<p class="lb" style="left:128px;top:668px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
-<p class="lb" style="left:473px;top:674px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">2 vCPU-min</p>
-<p class="lb" style="left:279px;top:806px;width:98px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">0.01</p>
-<p class="lb" style="left:534px;top:806px;width:79px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">0.1</p>
-<p class="lb" style="left:798px;top:806px;width:42px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">1</p>
-<p class="lb" style="left:1035px;top:806px;width:61px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">10</p>
-<p class="lb" style="left:1206px;top:806px;width:210px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">100 vCPU-h</p>
-<p class="src">GCP c4-standard-8 (8 vCPU), us-east1, at peak throughput: batch 1, 8 processes × 1 ONNX Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries. vCPU-hours = 8 / queries per second × 1M / 3600. Encoding only. Exploratory.</p>
+<p class="lb" style="left:791px;top:396px;width:216px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">123 vCPU-h</p>
+<p class="lb" style="left:1484px;top:396px;width:120px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">$4.91</p>
+<p class="lb" style="left:128px;top:538px;width:120px;font-size:40px;color:#9494ff;font-weight:700;text-align:left;">Nano</p>
+<p class="lb" style="left:633px;top:546px;width:216px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">4.8 vCPU-h</p>
+<p class="lb" style="left:1118px;top:546px;width:120px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">$0.18</p>
+<p class="lb" style="left:128px;top:688px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
+<p class="lb" style="left:392px;top:696px;width:216px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">2 vCPU-min</p>
+<p class="lb" style="left:1118px;top:696px;width:120px;font-size:32px;color:#fcfdff;font-weight:700;text-align:left;">$0.17</p>
+<img class="mascot" src="/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97" alt="" style="left:1470px;top:548px;width:380px;height:380px">
+
+<p class="src">GCP c4-standard-8 (8 vCPU), $0.395/h, NQ queries. Left: encoding only, batch 1, 8 processes × 1 ONNX Runtime thread (Zero: NumPy), 30-second closed loop. Right: encode plus Qdrant Edge search in one process, best of 1-8 threads, warm page cache. Separate runs: compare the ratios, not the totals. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~1 min]<br>
-Why it matters: CPU time is what you pay for.<br>
-- One GCP machine with 8 vCPUs, pushed as fast as it goes, one query per batch.<br>
-- CPU time to encode one million queries: Stella 123 vCPU-hours. Nano 4.8. Zero 2 vCPU-minutes.<br>
-- Nano uses 26 times less CPU than Stella. Zero uses 3,700 times less.<br>
-- This assumes a busy machine. Idle hours still cost money: size for your real rate.<br>
-Next: encoding is not the whole request. Same machine, encode plus search.</aside>
+<aside>[~1.5 min]<br>
+Why it matters: this is the bill, and search is now most of it.<br>
+- [Left] Encoding alone, on one VM with 8 vCPUs, one query per batch. To encode 1M queries: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes. Nano uses 26 times less CPU than Stella, Zero 3,700 times less.<br>
+- [Right] The whole request on the same machine, encode plus search: Stella $4.91, Nano $0.18, Zero $0.17 per million queries. About 29 times cheaper.<br>
+- 3,700 becomes 29: once encoding is nearly free, search is the bill.<br>
+- Nano and Zero tie because one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.<br>
+- So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.<br>
+Next: why does Zero need more search?</aside>
 </section>

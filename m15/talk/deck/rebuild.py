@@ -1516,7 +1516,34 @@ for f in sorted(S.glob("*.html")):                             # backup notes no
     if m and "<br>" not in m.group(1) and "\n" in m.group(1).strip():
         f.write_text(html.replace(m.group(0), "<aside>" + m.group(1).strip().replace("\n", "<br>\n") + "</aside>"))
 
-for sid in ("solved", "takeaways"):                                  # backup slides stay out of the main run
+# cloud v14: slides 12 and 13 merged: encoding alone (CPU, log) beside the whole request (dollars); cloud-e2e becomes a backup
+F = Fig(h=600, aria="Left, CPU time to encode one million queries on a log scale: Stella 123 vCPU-hours, Nano 4.8, Zero 2 "
+                    "vCPU-minutes. Right, dollars per million queries for encode plus search: Stella $4.91, Nano $0.18, Zero $0.17")
+lo_, hi_ = math.log10(0.01), math.log10(300)
+LX0, LX1, RX0, RX1 = 190, 690, 960, 1340                       # left (log CPU) and right (linear $) bar spans
+LXv = lambda v: LX0 + (math.log10(v) - lo_) / (hi_ - lo_) * (LX1 - LX0)
+F.t(LX0, 30, "Encoding alone: CPU per 1M queries (log)", 26, MUT)
+F.t(RX0, 30, "Encode + search: $ per 1M queries", 26, MUT)
+F.add(f'<line x1="{(LX1 + RX0) / 2 + 40:.0f}" x2="{(LX1 + RX0) / 2 + 40:.0f}" y1="70" y2="520" stroke="{LINE}" stroke-width="2"/>')
+cpu = {"stella": (123.0, "123 vCPU-h"), "nano": (4.786, "4.8 vCPU-h"), "zero": (0.03296, "2 vCPU-min")}
+usd_max = _best["stella"]["usd_per_million"]
+for i, (n, c) in enumerate((("stella", GRAY), ("nano", VIO), ("zero", RED))):
+    y = 90 + i * 150
+    F.t(0, y + 52, n.capitalize(), 40, c, weight=700)
+    v, lab = cpu[n]
+    F.add(f'<rect x="{LX0}" y="{y + 6}" width="{LX1 - LX0}" height="68" rx="12" fill="#151b2b"/>',
+          f'<rect x="{LX0}" y="{y + 6}" width="{LXv(v) - LX0:.0f}" height="68" rx="12" fill="{c}"/>')
+    F.t(LXv(v) + 16, y + 52, lab, 32, WHITE, weight=700)
+    u = _best[n]["usd_per_million"]
+    F.add(f'<rect x="{RX0}" y="{y + 6}" width="{RX1 - RX0}" height="68" rx="12" fill="#151b2b"/>',
+          f'<rect x="{RX0}" y="{y + 6}" width="{max(14, u / usd_max * (RX1 - RX0)):.0f}" height="68" rx="12" fill="{c}"/>')
+    F.t(RX0 + max(14, u / usd_max * (RX1 - RX0)) + 16, y + 52, f"${u:.2f}", 32, WHITE, weight=700)
+write("cloud", " foot", "Search Is Now the Bill: 3,700× Becomes 29×", F.html() + "\n" + astro("coffee", 1470, 548, 380, 380),
+      "GCP c4-standard-8 (8 vCPU), $0.395/h, NQ queries. Left: encoding only, batch 1, 8 processes × 1 ONNX Runtime thread (Zero: "
+      "NumPy), 30-second closed loop. Right: encode plus Qdrant Edge search in one process, best of 1-8 threads, warm page cache. "
+      "Separate runs: compare the ratios, not the totals. Exploratory.")
+
+for sid in ("solved", "takeaways", "cloud-e2e"):                                  # backup slides stay out of the main run
     f = S / f"{sid}.html"
     f.write_text(re.sub(r'<section id="(\w[\w-]*)" class="([^"]*)"[^>]*>', r'<section id="\1" class="\2" hidden>', f.read_text(), count=1))
 
