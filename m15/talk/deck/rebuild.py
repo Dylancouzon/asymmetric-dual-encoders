@@ -742,7 +742,7 @@ write("byo", " foot", "Already Have an Index? Train Your Own",
 # A figure is pinned to the section (no 24-child host limit): canvas x = 128 + fx, y = FY + fy.
 FY = 284
 code_close = code                                                # the close slide's highlighted example (v5)
-ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "graph": "/_blob/6555b253e0d651bdf09ff98a61c601b6",
+ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "telescope-left": "/_blob/43ddfb95abc5817b219b8e5f2d93a6ee", "graph": "/_blob/6555b253e0d651bdf09ff98a61c601b6",
          "strings": "/_blob/3c7720bfa1638e99fac382a8a0a8f4a0", "wave": "/_blob/edfd48b7d5290cdc27cfe7ebcff0ef2d",
          "coffee": "/_blob/fcf094b23e6cc4c81851cc9e9c5aa63d", "juggle": "/_blob/61fa8a9ea84f0d11a2a93c62e8ada4d0",
          "sleep": "/_blob/71e2bb95eae4079139ad8059d053f973"}
@@ -924,6 +924,77 @@ F.t(1664, 612, "Qdrant HNSW index, 0.23 ms", 28, GRAY, "end", 600)
 write("cost", " foot", "One Encoder, Two Deadlines", F.html(),
       f"BEIR NQ, 2,681,468 passages. Real NQ test query; its judged passage ranks first in exact search (score "
       f"{_X2['passages'][0]['score']:.2f}). Vectors: first 3 of 1,024 values. Median times on the M5 Pro. Graph schematic. Exploratory.")
+
+# cost v12: two lanes through one Stella; the query lane is one click step (passages first, then the question)
+def _flat_graph(x0, y0, w, h, target, entry, seed=5, n=28, k=3):
+    """One flat graph layer: spaced random nodes, k-nearest links, and the shortest walk from entry to target."""
+    rng, pts = _random.Random(seed), [entry, target]
+    for _ in range(5000):                                        # ponytail: rejection sampling, capped
+        q = (rng.uniform(x0, x0 + w), rng.uniform(y0, y0 + h))
+        if min(math.dist(q, p) for p in pts) > 62:
+            pts.append(q)
+        if len(pts) == n:
+            break
+    adj = {i: set() for i in range(len(pts))}
+    for i in adj:
+        for j in sorted(adj, key=lambda j: math.dist(pts[i], pts[j]))[1:k + 1]:
+            adj[i].add(j); adj[j].add(i)
+    prev, todo = {0: None}, [0]
+    while todo and 1 not in prev:
+        i = todo.pop(0)
+        for j in sorted(adj[i], key=lambda j: math.dist(pts[j], target)):
+            if j not in prev:
+                prev[j] = i; todo.append(j)
+    path, i = [], 1
+    while i is not None:
+        path.append(i); i = prev.get(i)
+    return pts, {tuple(sorted((i, j))) for i in adj for j in adj[i]}, path[::-1]
+
+
+GX, GY, GW, GH = 1300, 30, 364, 520
+TGT, ENT = (1600, 90), (1326, 470)
+gp, ge, walk = _flat_graph(GX, GY, GW, GH, TGT, ENT)
+A, Q = Fig(h=620, aria="Passages go through Stella once and fill a Qdrant HNSW graph"), \
+    Fig(h=620, aria="A question goes through the same Stella; its vector walks the graph to June Gable")
+# lane 1, always shown: a stack of passages, Stella, vectors flowing into the graph
+for k in (2, 1):
+    A.add(f'<rect x="{k * 16}" y="{40 - k * 16}" width="430" height="128" rx="14" fill="#151b2b" stroke="#3a4157" stroke-width="2"/>')
+A.el(0, 40, '<div class="pc" style="left:{L}px;top:{T}px;width:430px;height:128px;justify-content:center;gap:8px">'
+            '<p class="pt" style="font-size:34px">June Gable</p><p class="pb" style="font-size:26px">American character actress…</p></div>')
+A.t(0, 236, "2.68M passages", 36, GRAY, weight=700)
+EX, EY, EW, EH = 540, 30, 250, 520
+A.add(f'<rect x="{EX}" y="{EY}" width="{EW}" height="{EH}" rx="24" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>',
+      g_net(EX + 22, EY + 96, EW - 44, EH - 130, (3, 6, 6, 6, 3), GRAY, 9))
+A.t(EX + EW / 2, EY + 62, "Stella", 40, WHITE, "middle", 700)
+A.add(curve(450, 104, EX, 150, MUT, 5))
+for s_ in range(6):                                              # passage vectors land in the graph as points
+    u = (s_ + 0.5) / 6
+    A.add(f'<circle cx="{EX + EW + 30 + u * (GX - EX - EW - 60):.0f}" cy="{150 - 40 * math.sin(math.pi * u):.0f}" r="9" fill="{GRAY}" opacity="{0.4 + 0.6 * u:.2f}"/>')
+A.t(EX + EW + 40, 76, "once, 5.3 GPU-hours", 34, GRAY, weight=700)
+for i, j in ge:
+    A.add(f'<line x1="{gp[i][0]:.0f}" y1="{gp[i][1]:.0f}" x2="{gp[j][0]:.0f}" y2="{gp[j][1]:.0f}" stroke="#3a4157" stroke-width="2.5"/>')
+for k, (x, y) in enumerate(gp):
+    A.add(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{14 if k == 1 else 9}" fill="{WHITE if k == 1 else "#7d849c"}"/>')
+A.t(GX + GW, GY + GH + 64, "Qdrant HNSW index", 32, GRAY, "end", 600)
+# lane 2, one click: the question, the same Stella, its vector, the walk to the answer
+Q.el(0, 380, '<div class="qbox" style="left:{L}px;top:{T}px;width:450px;height:132px"><x-icon name="Search" style="width:40px;height:40px;color:#ff516b;flex:none"></x-icon>'
+              '<p style="font-size:30px">who played joey\'s agent<br>estelle on friends</p></div>')
+Q.add(curve(450, 446, EX, 420, RED, 5), curve(EX + EW, 420, 830, 446, RED, 5))
+Q.add(f'<rect x="830" y="406" width="400" height="80" rx="14" fill="#2a1520" stroke="{RED}" stroke-width="3"/>')
+Q.t(1030, 458, _vec(_X2["query_vector"], 2), 30, "#ffb3bf", "middle", 600, True)
+Q.t(830, 382, "every query, 20.5 ms", 34, RED, weight=700)
+Q.add(curve(1230, 446, ENT[0] - 6, ENT[1], RED, 5))
+pts = " ".join(f"{gp[i][0]:.0f},{gp[i][1]:.0f}" for i in walk)
+Q.add(f'<polyline points="{pts}" fill="none" stroke="{RED}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>')
+Q.add("".join(f'<circle cx="{gp[i][0]:.0f}" cy="{gp[i][1]:.0f}" r="11" fill="{RED}"/>' for i in walk[:-1]),
+      f'<circle cx="{TGT[0]}" cy="{TGT[1]}" r="28" fill="none" stroke="{RED}" stroke-width="5"/>')
+Q.t(TGT[0], TGT[1] - 44, "June Gable", 36, WHITE, "middle", 700)
+Q.t(GX + GW, GY + GH + 20, "0.23 ms", 36, RED, "end", 700)
+_q = Q.html().replace('<svg aria', '<svg class="fragment" data-fragment-index="1" aria').replace(
+    'class="lb"', 'class="lb fragment" data-fragment-index="1"').replace('class="qbox"', 'class="qbox fragment" data-fragment-index="1"')
+write("cost", " foot", "One Encoder, Two Deadlines", A.html() + "\n" + _q,
+      f"BEIR NQ, 2,681,468 passages, encoded once with Stella. Real NQ test query; its judged passage ranks first in exact "
+      f"search (score {_X2['passages'][0]['score']:.2f}). Vector: first values of 1,024. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
 # arch v11: documents and a document encoder fill one Qdrant index; three query encoders, drawn as what they are
 F = Fig(aria="Documents pass through Stella's document encoder into one Stella index; three query encoders, Stella, Nano "
@@ -1285,7 +1356,7 @@ write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p>'
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none">'
       '<span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div>'
-      + astro("telescope", 1420, 470, 428, 460, flip=True), pre=GLOW)
+      + astro("telescope-left", 1420, 470, 428, 460), pre=GLOW)
 
 # byo v11: four step cards and the paper's QR in a card
 steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" style="gap:4px"><p class="st">{a}</p><p class="sd">{b}</p></div></div>'
