@@ -1266,25 +1266,37 @@ write("cloud", " foot", "Encoding 1M Queries: $6.07, $0.24, or $0.0016", F.html(
 # split v11: same bars; legend and labels as text
 W, L0, AX = 1664, 230, 2.2
 SX = lambda v: L0 + v / AX * 820
-F = Fig(h=600, w=1664, aria="Median request time split into encode and search: Nano 2.04 ms, Zero 0.86 ms, Stella 20.8 ms off the scale")
+F = Fig(h=600, w=1664, aria="Median request time split into encode and search: Nano 2.04 ms, Zero 0.86 ms, Stella 20.8 ms wrapped over ten thin rows")
 F.add(f'<rect x="{SX(0)}" y="8" width="28" height="22" rx="5" fill="{TEAL}"/>', f'<rect x="{SX(0) + 200}" y="8" width="28" height="22" rx="5" fill="{ORG}"/>')
 F.t(SX(0) + 40, 30, "encode", 26, GRAY)
 F.t(SX(0) + 240, 30, "search", 26, GRAY)
 for v in (0, 1, 2):
-    F.add(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="70" y2="500" stroke="{LINE}" stroke-width="2"/>')
-    F.t(SX(v), 548, str(v), 26, MUT, "middle", 400, True)
-F.t(SX(2.2), 548, "ms", 26, MUT, "end", 400, True)
+    F.add(f'<line x1="{SX(v)}" x2="{SX(v)}" y1="60" y2="540" stroke="{LINE}" stroke-width="2"/>')
+    F.t(SX(v), 584, str(v), 26, MUT, "middle", 400, True)
+F.t(SX(2.2), 584, "ms", 26, MUT, "end", 400, True)
 for i, (n, tot, enc, c) in enumerate([("Nano", 2.04, 0.807, VIO), ("Zero", 0.86, 0.041, RED)]):
-    y = 90 + i * 140
+    y = 70 + i * 120
     F.t(0, y + 54, n, 44, c, weight=700)
     F.add(f'<rect x="{SX(0)}" y="{y + 6}" width="{SX(tot) - SX(0):.0f}" height="72" rx="12" fill="{ORG}"/>',
           f'<rect x="{SX(0)}" y="{y + 6}" width="{max(12, SX(tot * enc) - SX(0)):.0f}" height="72" rx="12" fill="{TEAL}"/>',
           f'<rect x="{SX(tot * enc) - 6:.0f}" y="{y + 6}" width="12" height="72" fill="{ORG}"/>' if enc > 0.2 else "")
     F.t(SX(tot) + 20, y + 56, f"{tot} ms", 40, WHITE, weight=700)
-y = 380
-F.t(0, y + 54, "Stella", 44, GRAY, weight=700)
-F.add(f'<rect x="{SX(0)}" y="{y + 6}" width="{W - SX(0) + 40}" height="72" rx="12" fill="{TEAL}"/>')
-F.t(1640, y + 56, "20.8 ms  →", 40, INK, "end", 700)
+# Stella's request wraps like text: one thin row per 2.2 ms of the axis, encode then search
+_SN = _json.loads(Path(_R + "m15_talk_edge_nq.json").read_text())["results"]["stella"]
+_enc, _tot = _SN["encode_ms_p50"], _SN["selected"]["total_ms_p50"]
+y0, pitch, th = 330, 20, 12
+F.t(0, y0 + 30, "Stella", 44, GRAY, weight=700)
+rows = math.ceil(_tot / AX)
+for r in range(rows):
+    a_, b_ = r * AX, min((r + 1) * AX, _tot)
+    yy = y0 + r * pitch
+    e_end = min(max(_enc - a_, 0), b_ - a_)                    # encode part of this row, in ms from the row start
+    if e_end > 0:
+        F.add(f'<rect x="{SX(0)}" y="{yy}" width="{SX(e_end) - SX(0):.0f}" height="{th}" rx="6" fill="{TEAL}"/>')
+    if b_ - a_ > e_end:
+        F.add(f'<rect x="{SX(e_end):.0f}" y="{yy}" width="{SX(b_ - a_) - SX(e_end):.0f}" height="{th}" rx="6" fill="{ORG}"/>')
+F.t(SX(AX) + 20, y0 + 14, "↵ wraps every 2.2 ms", 26, MUT)
+F.t(SX(_tot - (rows - 1) * AX) + 20, y0 + (rows - 1) * pitch + 16, f"{_tot:.1f} ms", 40, WHITE, weight=700)
 write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×", F.html(),
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
@@ -1394,6 +1406,63 @@ write("thanks", " alt", "Thank You",
       '<img src="project/ds/qdrant/assets/logo-red-white.svg" alt="Qdrant" style="position:absolute;left:1566px;top:128px;width:226px;height:60px;object-fit:contain">'
       + astro("wave", 1240, 64, 300, 300)
       + '<div class="row" style="gap:40px;margin-top:auto;justify-content:space-between">' + cards + "</div>", pre=GLOW, mark=False)
+
+# cover v12: the corner graphic as a constellation: linked stars, three query lines into one entry star,
+# a bright walk to the answer (Stella white and thick, Nano violet, Zero red and thin)
+def _cover_svg():
+    rng = _random.Random(23)
+    W_, H_, cx, cy, rad = 820, 430, 590, 215, 190
+    ent, tgt = (418, 215), (700, 120)
+    pts = [ent, tgt]
+    for _ in range(6000):                                        # ponytail: rejection sampling, capped
+        a, r = rng.uniform(0, 2 * math.pi), rad * math.sqrt(rng.random())
+        q = (cx + r * math.cos(a) * 1.05, cy + r * math.sin(a) * 0.95)
+        if q[0] > 410 and min(math.dist(q, p) for p in pts) > 34:
+            pts.append(q)
+        if len(pts) == 46:
+            break
+    adj = {i: set() for i in range(len(pts))}
+    for i in adj:
+        for j in sorted(adj, key=lambda j: math.dist(pts[i], pts[j]))[1:3]:
+            adj[i].add(j); adj[j].add(i)
+    walk, cur = [0], 0                                           # greedy walk toward the answer
+    while cur != 1:
+        nxt = min(adj[cur], key=lambda j: math.dist(pts[j], tgt))
+        if math.dist(pts[nxt], tgt) >= math.dist(pts[cur], tgt):
+            nxt = 1
+        walk.append(nxt); cur = nxt
+    g = [f'<svg aria-label="Three query lines of different weights meet at one star of a constellation and walk to the answer" '
+         f'width="{W_}" height="{H_}" viewBox="0 0 {W_} {H_}" style="position:absolute;left:960px;top:96px">',
+         '<defs><radialGradient id="cg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9494ff" stop-opacity="0.22"/>'
+         '<stop offset="100%" stop-color="#9494ff" stop-opacity="0"/></radialGradient>'
+         '<filter id="gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter></defs>',
+         f'<ellipse cx="{cx}" cy="{cy}" rx="{rad + 40}" ry="{rad + 10}" fill="url(#cg)"/>']
+    for i in adj:
+        for j in adj[i]:
+            if i < j:
+                g.append(f'<line x1="{pts[i][0]:.0f}" y1="{pts[i][1]:.0f}" x2="{pts[j][0]:.0f}" y2="{pts[j][1]:.0f}" '
+                         f'stroke="#8a90b8" stroke-opacity="0.45" stroke-width="1.6"/>')
+    for k, (x, y) in enumerate(pts):
+        r = 3 + 3 * rng.random()
+        g.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{r:.1f}" fill="#dfe3f5" opacity="{0.55 + 0.45 * rng.random():.2f}"/>')
+    for x0, y0, c, w in ((130, 70, "#e2e7f5", 10), (130, 215, VIO, 6), (130, 330, RED, 3)):
+        g.append(f'<path d="M{x0} {y0} C 290 {y0}, 310 {ent[1]}, {ent[0]} {ent[1]}" fill="none" stroke="{c}" stroke-width="{w}" stroke-linecap="round"/>')
+        g.append(f'<circle cx="{x0}" cy="{y0}" r="{w + 4}" fill="{c}"/>')
+    wp = " ".join(f"{pts[i][0]:.0f},{pts[i][1]:.0f}" for i in walk)
+    g.append(f'<polyline points="{wp}" fill="none" stroke="#ff8fa0" stroke-width="10" stroke-opacity="0.35" filter="url(#gl)"/>')
+    g.append(f'<polyline points="{wp}" fill="none" stroke="#ffd0d8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>')
+    for i in walk[1:-1]:
+        g.append(f'<circle cx="{pts[i][0]:.0f}" cy="{pts[i][1]:.0f}" r="6" fill="#ffd0d8"/>')
+    g += [f'<circle cx="{ent[0]}" cy="{ent[1]}" r="18" fill="#fcfdff" opacity="0.35" filter="url(#gl)"/>',
+          f'<circle cx="{ent[0]}" cy="{ent[1]}" r="9" fill="#fcfdff"/>',
+          f'<circle cx="{tgt[0]}" cy="{tgt[1]}" r="26" fill="#ff516b" opacity="0.45" filter="url(#gl)"/>',
+          f'<circle cx="{tgt[0]}" cy="{tgt[1]}" r="20" fill="none" stroke="#ff516b" stroke-width="4"/>',
+          f'<circle cx="{tgt[0]}" cy="{tgt[1]}" r="9" fill="#fcfdff"/>', "</svg>"]
+    return "".join(g)
+
+
+_cv = S / "cover.html"
+_cv.write_text(re.sub(r"<svg aria-label=\"Three query[^\n]*?</svg>", lambda m: _cover_svg(), _cv.read_text(), count=1))
 
 # Speaker notes: talking_points.md is the one source; it replaces every note written above.
 _TP = (Path(__file__).parent / "talking_points.md").read_text()

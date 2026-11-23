@@ -109,7 +109,7 @@ Why it matters: this is the line item your finance team sees.
 Next: but encoding is not the whole request. Quick bet.
 
 ## bet · ~0.75 min
-- [Read it] Zero encodes a query 51 times faster than Nano.
+- [Read it] Zero encodes a query about 650 times faster than Stella, and 51 times faster than Nano. Same laptop, same NQ queries, median encode time.
 - [Click] How much faster is the whole search, from query in to passages out?
 - [Take one spoken guess. Give Zoom a moment. Remember the guess.]
 Next: let's see where the time goes.
@@ -118,7 +118,7 @@ Next: let's see where the time goes.
 Why it matters: optimize the request, not the component.
 - [Repeat the guess.] Median request on this laptop: Nano 2.04 ms, Zero 0.86 ms. 2.4 times faster, not 51.
 - [Orange] Once encoding is nearly free, search is most of Zero's request. And Zero needs a wider search (coming up).
-- [Bottom bar] Stella for scale: 20.8 ms, almost all encoding. It runs off the slide.
+- [Wrapped rows] Stella on the same scale: 20.8 ms, so its bar wraps ten times. Almost all of it is encoding; the orange search sliver is at the very end.
 - Ranking: Stella 0.631, Nano 0.579, Zero 0.510 nDCG@10 at these settings. Faster has a price.
 Next: what does that look like as a bill?
 
