@@ -1211,10 +1211,10 @@ for i, (n, c) in enumerate((("stella", GRAY), ("nano", VIO), ("zero", RED))):
           f'<rect x="{x0}" y="{y + 6}" width="{max(14, v / mx * xw):.0f}" height="68" rx="12" fill="{c}"/>')
     F.t(x0 + max(14, v / mx * xw) + 18, y + 52, f"${v:.2f}", 36, WHITE, weight=700)
 r = mx / _best["zero"]["usd_per_million"]
-card = (f'<div class="stat red" style="position:absolute;left:1300px;top:350px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
+card = (f'<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
         f'<p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">{r:.0f}×</p>'
         f'<p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div>')
-write("cloud-e2e", " foot", "The Whole Request on a Cloud VM: 29× Cheaper", F.html() + "\n" + card + astro("coffee", 1500, 640, 250, 250),
+write("cloud-e2e", " foot", "The Whole Request on a Cloud VM: 29× Cheaper", F.html() + "\n" + card + astro("coffee", 1164, 427, 446, 525),
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.")
 
@@ -1293,7 +1293,7 @@ steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" st
 write("byo", " foot", "Already Have an Index? Train Your Own",
       '<div class="row" style="gap:64px;margin-top:8px;align-items:center">'
       f'<div class="col" style="gap:20px;width:1100px">{steps}</div>'
-      f'<div class="qr"><div class="qi">{_q}</div><p class="ql">Full recipe: the paper</p></div></div>',
+      f'<div class="qr"><div class="qi">{_q}</div><p class="ql">Full recipe</p></div></div>',
       "Costs are Constella's, for a Stella index: Zero trained on one RTX 3080 once its targets existed (computing Stella's "
       "targets took 8-12 h); Nano took 57.3 A100-hours. Training sources must allow commercial use of derived weights. Exploratory.")
 
