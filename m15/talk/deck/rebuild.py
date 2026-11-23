@@ -1205,7 +1205,7 @@ for gf, lab in ((0.3, "0.3"), (1, "1"), (3, "3"), (10, "10"), (30, "30")):
     F.t(PX(gf), H - B + 54, lab, 26, MUT, "middle", 400, True)
 F.t((X0 + W - R) / 2, H + 2, "GFLOPs to encode one query (log)", 26, GRAY, "middle")
 F.t(L - 120, 18, "nDCG@10, six BEIR datasets", 26, GRAY)
-F.t(W - R, 18, "10 most-downloaded open models", 26, MUT, "end")
+F.t(W - R, 18, "the 10 most downloaded of the 25 models we tested", 26, MUT, "end")
 for n in _TOP:
     r, (lab, dx, dy, anc) = _FF[n], LAB[n]
     x, y = PX(r["median_flops"] / 1e9), PY(r["six_ndcg10"])

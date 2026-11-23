@@ -15,9 +15,9 @@
 <p class="src">Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge.&nbsp;<br>No relevance labels; MS MARCO used for validation only.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-- Start from bge-small, a 12-layer embedding model. Its vectors have 384 numbers; Stella's have 1,024.<br>
-- One matrix alone cannot fill Stella's 1,024 dimensions from 384. So Nano reads three of bge-small's layers (4, 8, and 12), joins them into 1,152 numbers, and maps those to 1,024.<br>
-- Training: make Nano's vector match Stella's for the same text, on 3.49M real and generated queries plus passages. No relevance labels: Stella supplies every target.<br>
-- Cost: 34.5M parameters, 57.3 A100-hours, about $95, once.<br>
+- Start from bge-small, a 12-layer324.5M parameters embedding model. Its vectors have 384 embeddings; Stella's have 1,024.<br>
+- One matrix alone cannot fill Stella's dimensions. So Nano reads three of the models layers (4, 8, and 12), joins them into 1,152 embeddings, and maps those to 1,024.<br>
+- Training: make Nano's vector match Stella's for the same text, on 3.49M queries. No relevance labels: Stella supplies every target.<br>
+- Cost: 57.3 A100-hours, about $95, once.<br>
 Next: so what do the three keep of Stella's ranking?</aside>
 </section>

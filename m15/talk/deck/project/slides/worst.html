@@ -27,10 +27,10 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.25 min]<br>
 Why it matters: a leaderboard score does not tell you which teacher to pick.<br>
-- I fitted a quick lookup table (a few minutes on one A100) to 10 strong models, each tested on its own index.<br>
-- [Red line] gte-large: 1st as a retriever, 10th as a table (0.597 down to 0.246).<br>
-- [White line] Stella: 2nd as a retriever, 1st as a table. That is why Constella uses Stella.<br>
-- Across all 26 models I tried, the two rankings barely relate (rank correlation +0.09).<br>
-- Lesson: if you might want a cheap query encoder later, test it on a small index before you encode the whole corpus.<br>
+- Picked Stella first of all for licenses and training dataset disclosure, easy to avoid contamination<br>
+- I fitted a quick lookup table on multiple models<br>
+- gte-large: 1st as a retriever, 10th as a table. Not sure why, carry lots of context into the vectors<br>
+- Tested 26 models in total and rank correlation was pretty poor<br>
+- Lesson: The leaderboard tells you how good a model is today, not how cheap its queries can get later.<br>
 Next: even with the best teacher, a lookup table has limits you should know.</aside>
 </section>

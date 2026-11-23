@@ -19,11 +19,11 @@
 <p class="src">Zero: phase 1 16,000 steps × 512, phase 2 2,500 steps InfoNCE, τ 0.02; retrain time is a historical estimate; a new teacher needs 8-12 h of target encoding. All training sources permit commercial derived weights.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
-- [Open] The main ideas here. The full training details are in the paper.<br>
-- Stella is the teacher: the model Zero imitates.<br>
+- [Open] The main ideas here. At the end I'll share the paper with the full training details<br>
+- Stella is the teacher: Zero's goal is to imitate<br>
 - Start: each row is Stella's own vector for that single token.<br>
 - [Align] Copy Stella: run a query through both, compare the vectors, and nudge Zero's rows closer. Millions of times.<br>
-- [Rank] Then learn from real answers: nudge the rows so the correct passage scores above 32,768 wrong ones.<br>
-- [Table] The result: the 31 MB table. About 20 minutes on one RTX 3080, once Stella's vectors are saved (8 to 12 hours to compute, once).<br>
+- [Rank] Then learn from label queries: nudge the rows so the correct chunk scores above the wrong ones.<br>
+- [Table] The result: the 31 MB table. About 20 minutes on one RTX 3080<br>
 Next: I assumed the best retriever would make the best table. It did not.</aside>
 </section>

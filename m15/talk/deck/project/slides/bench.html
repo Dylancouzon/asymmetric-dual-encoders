@@ -13,7 +13,7 @@
 <p class="lb" style="left:1644px;top:840px;width:61px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">30</p>
 <p class="lb" style="left:850px;top:878px;width:600px;font-size:30px;color:#c9cede;font-weight:400;text-align:center;">GFLOPs to encode one query (log)</p>
 <p class="lb" style="left:138px;top:274px;width:492px;font-size:30px;color:#c9cede;font-weight:400;text-align:left;">nDCG@10, six BEIR datasets</p>
-<p class="lb" style="left:1168px;top:274px;width:564px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:right;">10 most-downloaded open models</p>
+<p class="lb" style="left:826px;top:274px;width:906px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:right;">the 10 most downloaded of the 25 models we tested</p>
 <p class="lb" style="left:502px;top:588px;width:196px;font-size:32px;color:#c9cede;font-weight:400;text-align:right;">MiniLM-L6</p>
 <p class="lb" style="left:984px;top:468px;width:196px;font-size:32px;color:#c9cede;font-weight:400;text-align:left;">bge-small</p>
 <p class="lb" style="left:1261px;top:439px;width:177px;font-size:32px;color:#c9cede;font-weight:400;text-align:left;">bge-base</p>
@@ -30,11 +30,10 @@
 <p class="src">Exact search, mean nDCG@10 over SciFact, NFCorpus, SciDocs, TREC-COVID, FiQA, and ArguAna. Stella's training included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). Models: the 10 most downloaded on Hugging Face (30 days to 2026-11-21) of the 25 the paper evaluated. FLOPs: analytic, each model's query prefix. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2 min]<br>
-Why it matters: is the cheap encoder good enough compared with what you run today?<br>
-- [Grey dots] The 10 most-downloaded open embedding models on Hugging Face, each on its own index. Up: better ranking on six BEIR datasets. Right: more compute per query.<br>
-- [Nano] Ranks with bge-base and bge-large at small-model compute, on the index you already have. Against bge-large: 0.532 vs 0.533 nDCG@10, at 0.54 vs 12.1 GFLOPs per query, about 22 times less.<br>
-- [Zero] Left of the transformer scale, with no network, and still above both MiniLM models, including the most downloaded one.<br>
-- Fuse Zero with a BM25 search and it reaches 0.489, for the price of one sparse search per request.<br>
-- Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets Zero trails BM25, 0.410 to 0.441. Judge on your own traffic.<br>
+Why it matters: is the cheap encoder good enough?<br>
+- [Grey dots] The 10 most-downloaded of the 25 models we tested, each on its own index. Up: better ranking on six BEIR datasets. Right: more compute per query.<br>
+- [Nano] Ranks like bge-large (0.532 vs 0.533 nDCG@10) with 22 times less compute, on the index you already have.<br>
+- [Zero] No network at all, and still above both MiniLM models, including the most downloaded one. Fused with BM25, it reaches 0.489.<br>
+- Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets, Zero trails BM25 (0.410 vs 0.441).<br>
 Next: quality is half the story. How fast is each one? Quick bet.</aside>
 </section>

@@ -17,9 +17,9 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.5 min]<br>
 - The table: one learned vector for every token in Stella's vocabulary, 31k tokens. Stored as 8-bit integers so the whole table is about 31mb<br>
-- Step 1: Stella's tokenizer splits the query into tokens from that vocabulary.<br>
-- Step 2: each token looks up its vector in the table.<br>
-- Step 3: average those vectors, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.<br>
+- Step 1: We use Stella's tokenizer to get the token for each word<br>
+- Step 2: we lookup each matching vector in the table.<br>
+- Step 3: average those vectors, weighted by the square root of each token's count (more value to repeated words), then normalize.<br>
 - [Two vectors] For this query, Zero's vector has cosine 0.88 with Stella's: not identical, but pointing the same way.<br>
 Next: random rows would not do that. Here is how it learned.</aside>
 </section>

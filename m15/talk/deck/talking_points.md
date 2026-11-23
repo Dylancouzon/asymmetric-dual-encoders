@@ -31,53 +31,51 @@ Next: how can a lookup table produce a query vector with no matrix multiplicatio
 
 ## zero-mech · ~1.5 min
 - The table: one learned vector for every token in Stella's vocabulary, 31k tokens. Stored as 8-bit integers so the whole table is about 31mb
-- Step 1: Stella's tokenizer splits the query into tokens from that vocabulary.
-- Step 2: each token looks up its vector in the table.
-- Step 3: average those vectors, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.
+- Step 1: We use Stella's tokenizer to get the token for each word
+- Step 2: we lookup each matching vector in the table.
+- Step 3: average those vectors, weighted by the square root of each token's count (more value to repeated words), then normalize.
 - [Two vectors] For this query, Zero's vector has cosine 0.88 with Stella's: not identical, but pointing the same way.
 Next: random rows would not do that. Here is how it learned.
 
 ## distill · ~1.5 min
-- [Open] The main ideas here. The full training details are in the paper.
-- Stella is the teacher: the model Zero imitates.
+- [Open] The main ideas here. At the end I'll share the paper with the full training details
+- Stella is the teacher: Zero's goal is to imitate
 - Start: each row is Stella's own vector for that single token.
 - [Align] Copy Stella: run a query through both, compare the vectors, and nudge Zero's rows closer. Millions of times.
-- [Rank] Then learn from real answers: nudge the rows so the correct passage scores above 32,768 wrong ones.
-- [Table] The result: the 31 MB table. About 20 minutes on one RTX 3080, once Stella's vectors are saved (8 to 12 hours to compute, once).
+- [Rank] Then learn from label queries: nudge the rows so the correct chunk scores above the wrong ones.
+- [Table] The result: the 31 MB table. About 20 minutes on one RTX 3080
 Next: I assumed the best retriever would make the best table. It did not.
 
 ## worst · ~1.25 min
 Why it matters: a leaderboard score does not tell you which teacher to pick.
-- I fitted a quick lookup table (a few minutes on one A100) to 10 strong models, each tested on its own index.
-- [Red line] gte-large: 1st as a retriever, 10th as a table (0.597 down to 0.246).
-- [White line] Stella: 2nd as a retriever, 1st as a table. That is why Constella uses Stella.
-- Across all 26 models I tried, the two rankings barely relate (rank correlation +0.09).
-- Lesson: if you might want a cheap query encoder later, test it on a small index before you encode the whole corpus.
+- Picked Stella first of all for licenses and training dataset disclosure, easy to avoid contamination
+- I fitted a quick lookup table on multiple models
+- gte-large: 1st as a retriever, 10th as a table. Not sure why, carry lots of context into the vectors
+- Tested 26 models in total and rank correlation was pretty poor
+- Lesson: The leaderboard tells you how good a model is today, not how cheap its queries can get later.
 Next: even with the best teacher, a lookup table has limits you should know.
 
 ## order · ~2 min
 Why it matters: know which queries Zero gets wrong before your users do.
 - Each of Zero's three steps (split into tokens, look up one row each, average) loses something.
-- [Order] An average has no order: "paris to rome" and "rome to paris" give the same vector. On 24 query pairs where direction changes the answer, right passage first in both directions: Zero 0, Nano 2, Stella 4. Hard for everyone, impossible for Zero.
-- [Context] "bank" is the same row in "river bank" and "bank loan". A transformer reads the neighbouring words through attention; Zero only has the other rows in the average.
+- [Order] An average has no order: "paris to rome" and "rome to paris" give the same vector. Hard for most models, impossible for Zero.
+- [Context] "bank" is the same row in "river bank" and "bank loan". A transformer reads the neighbouring words through attention; Zero is unable to do that
 - [New words] The vocabulary is fixed: "qdrant" becomes q, ##dran, ##t, rows learned from other words. A transformer recombines pieces; Zero averages them.
-- Takeaway: Zero fits short keyword queries. Test phrased questions separately.
-Next: to get order and context back, you need attention. That is Nano.
+- Takeaway: Zero is a bag of tokens and acts like one. For queries that needs order and context back, you need attention. That is Nano.
 
 ## nano · ~1.5 min
-- Start from bge-small, a 12-layer embedding model. Its vectors have 384 numbers; Stella's have 1,024.
-- One matrix alone cannot fill Stella's 1,024 dimensions from 384. So Nano reads three of bge-small's layers (4, 8, and 12), joins them into 1,152 numbers, and maps those to 1,024.
-- Training: make Nano's vector match Stella's for the same text, on 3.49M real and generated queries plus passages. No relevance labels: Stella supplies every target.
-- Cost: 34.5M parameters, 57.3 A100-hours, about $95, once.
+- Start from bge-small, a 12-layer324.5M parameters embedding model. Its vectors have 384 embeddings; Stella's have 1,024.
+- One matrix alone cannot fill Stella's dimensions. So Nano reads three of the models layers (4, 8, and 12), joins them into 1,152 embeddings, and maps those to 1,024.
+- Training: make Nano's vector match Stella's for the same text, on 3.49M queries. No relevance labels: Stella supplies every target.
+- Cost: 57.3 A100-hours, about $95, once.
 Next: so what do the three keep of Stella's ranking?
 
 ## bench · ~2 min
-Why it matters: is the cheap encoder good enough compared with what you run today?
-- [Grey dots] The 10 most-downloaded open embedding models on Hugging Face, each on its own index. Up: better ranking on six BEIR datasets. Right: more compute per query.
-- [Nano] Ranks with bge-base and bge-large at small-model compute, on the index you already have. Against bge-large: 0.532 vs 0.533 nDCG@10, at 0.54 vs 12.1 GFLOPs per query, about 22 times less.
-- [Zero] Left of the transformer scale, with no network, and still above both MiniLM models, including the most downloaded one.
-- Fuse Zero with a BM25 search and it reaches 0.489, for the price of one sparse search per request.
-- Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets Zero trails BM25, 0.410 to 0.441. Judge on your own traffic.
+Why it matters: is the cheap encoder good enough?
+- [Grey dots] The 10 most-downloaded of the 25 models we tested, each on its own index. Up: better ranking on six BEIR datasets. Right: more compute per query.
+- [Nano] Ranks like bge-large (0.532 vs 0.533 nDCG@10) with 22 times less compute, on the index you already have.
+- [Zero] No network at all, and still above both MiniLM models, including the most downloaded one. Fused with BM25, it reaches 0.489.
+- Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets, Zero trails BM25 (0.410 vs 0.441).
 Next: quality is half the story. How fast is each one? Quick bet.
 
 ## cloud · ~1 min
