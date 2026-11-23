@@ -16,9 +16,9 @@
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2 min]<br>
 Why it matters: a small transformer whose output vectors land in the same space as Stella's, so they can search Stella's index.<br>
-- Starting model: bge-small, a 12-layer embedding model. Inside it, each token is represented by 384 numbers.<br>
-- Problem: Stella's vectors have 1,024 numbers. One matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent ways.<br>
-- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.<br>
+- Starting model: bge-small, a 12-layer embedding model. bge-small produces 384-dimensional vectors; Stella's index holds 1,024-dimensional vectors.<br>
+- Problem: one matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent directions, a 384-dimensional slice of Stella's space.<br>
+- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (3 × 384 = 1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.<br>
 - Training, step 1: keep bge-small fixed and fit only that final matrix, with ridge regression (least squares with a penalty on large weights).<br>
 - Training, step 2: train the whole model together. The loss is the squared distance to Stella's vector for the same text.<br>
   - Queries are matched to Stella's query vectors. Passages are matched to Stella's document vectors. Three query batches for every passage batch.<br>

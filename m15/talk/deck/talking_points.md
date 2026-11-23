@@ -80,9 +80,9 @@ Next: to get order and context back, you need attention. That is Nano.
 
 ## nano · ~2 min
 Why it matters: a small transformer whose output vectors land in the same space as Stella's, so they can search Stella's index.
-- Starting model: bge-small, a 12-layer embedding model. Inside it, each token is represented by 384 numbers.
-- Problem: Stella's vectors have 1,024 numbers. One matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent ways.
-- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.
+- Starting model: bge-small, a 12-layer embedding model. bge-small produces 384-dimensional vectors; Stella's index holds 1,024-dimensional vectors.
+- Problem: one matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent directions, a 384-dimensional slice of Stella's space.
+- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (3 × 384 = 1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.
 - Training, step 1: keep bge-small fixed and fit only that final matrix, with ridge regression (least squares with a penalty on large weights).
 - Training, step 2: train the whole model together. The loss is the squared distance to Stella's vector for the same text.
   - Queries are matched to Stella's query vectors. Passages are matched to Stella's document vectors. Three query batches for every passage batch.
