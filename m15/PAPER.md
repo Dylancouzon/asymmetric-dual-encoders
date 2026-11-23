@@ -14,7 +14,7 @@ Changing the embedding model behind an existing search index can mean re-encodin
 
 The original query encoder served as the teacher. We ran it on example queries and used its output vectors to train a cheaper student encoder. Because the student learned to produce vectors in the same space, it could search the documents already in the index. Prior work established this form of distillation [3, 5]. We asked whether one index could support several query encoders with different costs, and how much retrieval quality each could preserve.
 
-We first tested whether the replacement could still rank relevant documents well. For a separate set of judged queries, we scored every document to measure the effect of changing the encoder (§2). We then measured encoding and search together. A replacement can need a wider search over the same graph, which can consume some of the time saved during encoding (§5).
+We first tested whether the replacement could still rank relevant documents well. For each query in a separate evaluation set, we ranked every document by cosine similarity. We compared those rankings against relevance judgments (§2). We then measured encoding and search together. A replacement can need a wider search over the same graph, which can consume some of the time saved during encoding (§5).
 
 We chose ten public English embedding models with the same tokenizer vocabulary and used the same method to fit a lookup table for each. On six retrieval benchmarks, the model with the highest score using its original query encoder produced the lowest-scoring lookup table. We chose Stella for the case study because its fitted lookup table scored highest in that comparison.
 
@@ -60,7 +60,7 @@ $$\lVert XW - Y\rVert_F^2 + \lambda\lVert W - A\rVert_F^2$$
 
 Each row of X contains a query's token counts divided by its length, so XW gives the fitted query vectors. The subscript F denotes the Frobenius norm. The first term sums squared errors against the teacher's vectors Y. The second penalizes changes from the initial table A, with λ controlling the penalty. This helps stabilize vectors for rare tokens.
 
-**Transformer projection.** We froze the bge-small backbone. Each layer produces a 384-dimensional vector for each token. We averaged those vectors within each layer, excluding padding. A linear projection can produce 1,024 values from those inputs, but its output can vary along at most 384 independent directions. Combining the averages from layers 12, 8, and 4 gave the projection 1,152 inputs and more room to match the teacher's vectors. In an exploratory test, adding each earlier layer improved retrieval on both CQADupStack forums [1].
+**Transformer projection.** We froze the bge-small backbone. Each layer produces a 384-dimensional vector for each token. We averaged those vectors within each layer, excluding padding. Using the final layer alone limits the projection to 384 independent directions, even when the output has 1,024 dimensions, as in Stella. We joined the averages from layers 12, 8, and 4 to give the projection 1,152 inputs and more flexibility to match the teacher's vectors. In an exploratory test, adding each earlier layer improved retrieval on both CQADupStack forums [1].
 
 We fitted a linear projection and bias by ridge regression to map these inputs into each teacher's vector space. Both fitted encoders normalized their output vectors before search [1, 15].
 
@@ -86,7 +86,7 @@ We used three query batches for every document batch. The document batches expos
 
 **Training objective.** We first trained the table rows and token weights to reproduce Stella's query vectors. We used both labeled and unlabeled text for this step. For labeled queries, we also matched Stella's distribution of scores across the relevant document and 31 other candidates [1].
 
-The first stage taught Zero to match Stella's outputs. The second used relevance labels to train Zero directly on which documents should rank higher. From a pool of 338,076 labeled query-document pairs, we trained Zero to score each judged relevant document above alternatives sampled from a document bank and the training data. To avoid pushing down potentially relevant results, we excluded known relevant documents and alternatives that Stella scored nearly as high as the labeled document or higher [1].
+In the second stage, we used relevance labels to teach Zero directly which documents should rank higher. From a pool of 338,076 labeled query-document pairs, we trained Zero to score each judged relevant document above alternatives sampled from a document bank and the training data. To avoid pushing down potentially relevant results, we excluded known relevant documents and alternatives that Stella scored nearly as high as the labeled document or higher [1].
 
 **Development comparison.** At query time, Zero weights each distinct token's vector by the square root of its count and normalizes the sum. A token that appears four times gets twice the weight of a single occurrence. With the int8 rows held fixed, square-root weighting raised mean development nDCG@10 from 0.6114 to 0.6153. The comparison was inconclusive on a second checkpoint [1].
 
@@ -113,7 +113,7 @@ Changing the query encoder changes how HNSW navigates the same graph. At a fixed
 
 We ran the benchmark on one million MS MARCO passages using Qdrant 1.19.1 [16] on an Apple M5 Pro. We kept every passage judged relevant to the 6,980 development queries and sampled the rest, leaving fewer passages to compete for the top results.
 
-We tested both uncompressed vectors and binary quantization to see whether cheaper candidate scoring preserved more of the encoding savings. The binary index used one sign bit per coordinate to find candidates and rescored them with the original vectors. All three encoders shared an index within each format. We varied hnsw_ef, which controls how broadly HNSW searches the graph. For each encoder and format, we chose the setting with the lowest median encoding-plus-search time that retained at least 99% of that encoder's exact nDCG@10.
+We tested both uncompressed vectors and binary quantization to see whether cheaper candidate scoring preserved more of the encoding savings. The binary index used one sign bit per coordinate to find candidates and rescored them with the original vectors. All three encoders shared an index within each format. We varied hnsw_ef, which controls how broadly HNSW searches the graph. For each encoder and index format, we kept the settings that retained at least 99% of that encoder's own exact-search nDCG@10. Of those settings, we chose the one with the lowest median time for encoding and search combined.
 
 | **Encoder and index** | **hnsw_ef** | **Oversampling** | **nDCG@10** | **Median encoding + search** |
 |:---|----|----|----|----|
@@ -149,7 +149,7 @@ Against BM25, the lexical baseline, Zero gained 24.5% in nDCG@10 for 0.45 ms mor
 
 The latency savings depended on the workload. On the uncompressed FiQA index, Zero saved 1.784 ms over Nano at the same 99% retention threshold. Nano ranked results better on both FiQA and the MS MARCO sample [1].
 
-Fitted lookup tables often needed a wider search to recover their exact neighbors. The effect on judged relevance varied by dataset. In an exploratory comparison of 25 embedding models, each table shared an index with its original encoder. On FiQA and TREC-COVID, the tables needed four times the original encoders' hnsw_ef of 64 at the median to match their exact top-10 recovery. To match the original encoders' relative loss in nDCG@10, all 25 tables on FiQA needed a wider search on average or missed the target at the widest setting. On TREC-COVID, this applied to 12 of 25 [1].
+Fitted lookup tables often needed a wider search to recover their exact neighbors. The effect on judged relevance varied by dataset. In an exploratory comparison of 25 embedding models, each table shared an index with its original encoder. At hnsw_ef=64, we measured how often the original encoders recovered documents from their own exact top ten. On FiQA and TREC-COVID, the lookup tables needed a median hnsw_ef of 256 to recover the same share of their own exact top ten. To match the original encoders' relative loss in nDCG@10, all 25 tables on FiQA needed a wider search on average or missed the target at the widest setting. On TREC-COVID, this applied to 12 of 25 [1].
 
 The neighbor recovery gap also changed with index size. After we reduced FiQA to 25,657 documents and rebuilt the index, the average gap narrowed from 2.9 to 1.2 percentage points. The smaller sample kept all judged relevant passages. Qdrant can use full scans on small segments, and we did not record which segments it scanned [1, 16].
 
@@ -171,9 +171,9 @@ At high query rates, routing requests that Zero can serve at the required releva
 
 We measured encoding and search throughput on Natural Questions using one Qdrant Edge shard on an eight-vCPU VM. With a warm page cache, Stella reached 22 queries/s, Nano 605, and Zero 653. At the recorded VM rate, this implies \$4.91, \$0.18, and \$0.17 per million queries, respectively. The encoders used search settings that achieved different relevance scores in the Natural Questions sweep. Nano and Zero reached similar throughput once search was included [20].
 
-Potential savings depend on how often a query benefits from Nano. We tested this on 12 BEIR-15 datasets. We used relevance judgments to pick the roughly 15% of queries per dataset where Nano helped most. The selector assigned Nano to those queries and Zero to the rest. The combined score was 0.5163 nDCG@10, close to the 0.5161 from using Nano for every query. Choosing the better of Nano and Zero for each query scored 0.5473, compared with 0.5580 for always using Stella [18].
+We used relevance judgments to estimate the best retrieval score possible when routing about 15% of queries to Nano. On each of 12 BEIR-15 datasets, we assigned Nano to the queries where it improved relevance most over Zero. Zero handled the rest. The combined score was 0.5163 nDCG@10, close to the 0.5161 from using Nano for every query. Choosing the better of Nano and Zero for each query scored 0.5473, compared with 0.5580 for always using Stella [18].
 
-Choosing an encoder from query text proved harder. At the same share of Nano requests, they gained at most 0.005 nDCG@10 over random selection [18].
+The routing rules we tested gained at most 0.005 nDCG@10 over random assignment at the same share of queries sent to Nano [18].
 
 ## 7. How retrieval quality varies across datasets
 
@@ -191,7 +191,7 @@ On the held-out data, Nano scored close to bge-small when DBpedia-entity and the
 
 ### Zero compared with BM25
 
-Zero outscored BM25 on the matched MS MARCO benchmark and on the descriptive BEIR-15 average. The separate registered comparison remained unresolved. The comparison on datasets without disclosed Stella training exposure favored BM25. A lexical baseline is therefore still useful when testing Zero on another workload [2, 17, 19].
+Zero outscored BM25 on the matched MS MARCO benchmark and on the descriptive BEIR-15 average. Zero scored higher in the separate registered six-dataset comparison. The result fell short of the threshold for establishing superiority. The comparison on datasets without disclosed Stella training exposure favored BM25. A lexical baseline is therefore still useful when testing Zero on another workload [2, 17, 19].
 
 ## 8. Conclusion
 
