@@ -129,7 +129,7 @@ Why it matters: the honest saving, with search included.
 - Per million queries: Stella $4.91, Nano $0.18, Zero $0.17. About 29 times cheaper.
 - Encoding alone said 3,700 times. The search is now the bill.
 - Nano and Zero tie: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling. A cheaper encoder does not.
-- So why keep Zero? Not for price at this rate. The router shows where it earns its place.
+- So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.
 Next: why does Zero need more search?
 
 ## recovery · ~2.5 min
@@ -150,7 +150,6 @@ Why it matters: you can run this policy on your own data.
 - [02 Set] Two rules, in order. Quality first: the average score of what is served stays above the floor. Then latency: stay under the p95 target if the machine can.
 - [03 Route] Every 250 ms, look at traffic, and pick the encoder mix plus one search width with the best average quality that fits the machine.
   - Example: at 1,500 searches/s, about three quarters Nano, one quarter Zero, ef 512.
-- [Zero takes Nano's overflow] This is when to pick Zero: when encoding capacity runs out. On this laptop Nano encodes about 1,400 queries/s, Zero about 17,000. Up to about 1,000 searches/s the router uses no Zero at all. Above that, Zero takes the traffic Nano cannot encode in time. The same holds for CPU-only hosts and small devices.
 - Advantages: quiet hours get the best ranking, peaks stay served, nothing is dropped, nothing is re-encoded.
 - Only possible because all three search one index.
 - To do it yourself: a few hundred judged queries from your traffic, quality per encoder and ef, timings on your hardware.
@@ -167,6 +166,17 @@ Next: let me show you.
 - [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.
 - Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.
+Next: the whole range on one chart.
+
+## plan · ~0.5 min
+Why it matters: this is when to pick Zero over Nano.
+- [Chart] What the router plans at every traffic level on this laptop. The demo showed a few points; this is the whole range.
+- [Stella] Quiet hours: Stella's best ranking for nearly everything.
+- [Nano] From about 100 searches/s Nano takes a growing share. By 1,000 it carries everything.
+- [Dashed line] Around 1,000 searches/s Nano reaches its encoding capacity. Nano encodes about 1,400 queries/s on this laptop; Zero about 17,000.
+- [Zero] Past the line, Zero takes the traffic Nano cannot encode in time. The search narrows to hold latency (ef along the top).
+- So pick Zero when encoding capacity runs out: traffic peaks, CPU-only hosts, small devices. Below that, Nano ranks better for about the same cost.
+- Average nDCG@10 goes from 0.636 at 40/s to 0.524 at 2,500/s: the price of serving every query.
 Next: how to use it.
 
 ## close · ~1 min
