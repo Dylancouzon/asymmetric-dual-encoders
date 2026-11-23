@@ -462,3 +462,6 @@
 {"ts": "2026-11-21T19:22:03-05:00", "dataset": "fiqa", "argv": ["m15src/talk_package_vectors.py"], "pid": 17908}
 {"ts": "2026-11-21T19:43:13-05:00", "dataset": "fiqa", "argv": ["m15src/talk_edge.py", "build", "fiqa"], "pid": 28870}
 {"ts": "2026-11-21T19:44:15-05:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 29040}
+{"ts": "2026-11-23T11:20:23+00:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 10174}
+{"ts": "2026-11-23T11:22:27+00:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 10543}
+{"ts": "2026-11-23T11:26:37+00:00", "dataset": "fiqa", "argv": ["m15/talk/demo/studio/app.py"], "pid": 12467}
