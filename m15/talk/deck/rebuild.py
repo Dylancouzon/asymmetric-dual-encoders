@@ -925,13 +925,14 @@ write("cost", " foot", "One Encoder, Two Deadlines", F.html(),
       f"BEIR NQ, 2,681,468 passages. Real NQ test query; its judged passage ranks first in exact search (score "
       f"{_X2['passages'][0]['score']:.2f}). Vectors: first 3 of 1,024 values. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
-# cost v12: two lanes through one Stella; the query lane is one click step (passages first, then the question)
-def _flat_graph(x0, y0, w, h, target, entry, seed=5, n=28, k=3):
+# cost v13: two labelled lanes share one Stella card and one Qdrant index card; timings as big numbers;
+# the query lane is one click step
+def _flat_graph(x0, y0, w, h, target, entry, seed=5, n=18, k=3, gap=74):
     """One flat graph layer: spaced random nodes, k-nearest links, and the shortest walk from entry to target."""
     rng, pts = _random.Random(seed), [entry, target]
-    for _ in range(5000):                                        # ponytail: rejection sampling, capped
+    for _ in range(8000):                                        # ponytail: rejection sampling, capped
         q = (rng.uniform(x0, x0 + w), rng.uniform(y0, y0 + h))
-        if min(math.dist(q, p) for p in pts) > 62:
+        if min(math.dist(q, p) for p in pts) > gap:
             pts.append(q)
         if len(pts) == n:
             break
@@ -951,45 +952,63 @@ def _flat_graph(x0, y0, w, h, target, entry, seed=5, n=28, k=3):
     return pts, {tuple(sorted((i, j))) for i in adj for j in adj[i]}, path[::-1]
 
 
-GX, GY, GW, GH = 1300, 30, 364, 520
-TGT, ENT = (1600, 90), (1326, 470)
-gp, ge, walk = _flat_graph(GX, GY, GW, GH, TGT, ENT)
-A, Q = Fig(h=620, aria="Passages go through Stella once and fill a Qdrant HNSW graph"), \
-    Fig(h=620, aria="A question goes through the same Stella; its vector walks the graph to June Gable")
-# lane 1, always shown: a stack of passages, Stella, vectors flowing into the graph
+def _arrow(x1, y, x2, c, w=5):
+    return (f'<line x1="{x1}" y1="{y}" x2="{x2 - 18}" y2="{y}" stroke="{c}" stroke-width="{w}" stroke-linecap="round"/>'
+            f'<path d="M{x2} {y} l-20 -11 l0 22z" fill="{c}"/>')
+
+
+H2, L1, L2 = 560, 155, 440                                       # figure height, lane centre lines
+SX0, SX1 = 520, 760                                              # Stella card
+IX0, IX1 = 1220, 1664                                            # Qdrant index card
+TGT, ENT = (1520, 190), (1262, 440)
+gp, ge, walk = _flat_graph(IX0 + 40, 120, IX1 - IX0 - 80, 330, TGT, ENT)
+A, Q = Fig(h=H2, aria="Passages go through Stella once and fill a Qdrant HNSW index"), \
+    Fig(h=H2, aria="A question goes through the same Stella on every request; its vector walks the index to June Gable")
+# lane bands, labelled
+def _band(y, fill, op, stroke, sop):                          # a lane band, split around the Stella card
+    return "".join(f'<rect x="{x0}" y="{y}" width="{x1 - x0}" height="270" rx="22" fill="{fill}" fill-opacity="{op}" '
+                   f'stroke="{stroke}" stroke-opacity="{sop}" stroke-width="2"/>' for x0, x1 in ((0, SX0 - 24), (SX1 + 24, IX0 - 24)))
+
+
+A.add(_band(0, "#c9cede", 0.035, "#3a4157", 1))
+A.t(28, 42, "ONCE, AT INDEXING", 25, MUT, weight=700, mono=True)
+Q.add(_band(290, RED, 0.06, RED, 0.5))
+Q.t(28, 332, "EVERY QUERY", 25, RED, weight=700, mono=True)
+# lane 1: a stack of passages, Stella, into the index
 for k in (2, 1):
-    A.add(f'<rect x="{k * 16}" y="{40 - k * 16}" width="430" height="128" rx="14" fill="#151b2b" stroke="#3a4157" stroke-width="2"/>')
-A.el(0, 40, '<div class="pc" style="left:{L}px;top:{T}px;width:430px;height:128px;justify-content:center;gap:8px">'
-            '<p class="pt" style="font-size:34px">June Gable</p><p class="pb" style="font-size:26px">American character actress…</p></div>')
-A.t(0, 236, "2.68M passages", 36, GRAY, weight=700)
-EX, EY, EW, EH = 540, 30, 250, 520
-A.add(f'<rect x="{EX}" y="{EY}" width="{EW}" height="{EH}" rx="24" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>',
-      g_net(EX + 22, EY + 96, EW - 44, EH - 130, (3, 6, 6, 6, 3), GRAY, 9))
-A.t(EX + EW / 2, EY + 62, "Stella", 40, WHITE, "middle", 700)
-A.add(curve(450, 104, EX, 150, MUT, 5))
-for s_ in range(6):                                              # passage vectors land in the graph as points
-    u = (s_ + 0.5) / 6
-    A.add(f'<circle cx="{EX + EW + 30 + u * (GX - EX - EW - 60):.0f}" cy="{150 - 40 * math.sin(math.pi * u):.0f}" r="9" fill="{GRAY}" opacity="{0.4 + 0.6 * u:.2f}"/>')
-A.t(EX + EW + 40, 76, "once, 5.3 GPU-hours", 34, GRAY, weight=700)
+    A.add(f'<rect x="{28 + k * 14}" y="{96 - k * 14}" width="400" height="118" rx="14" fill="#151b2b" stroke="#3a4157" stroke-width="2"/>')
+A.el(28, 96, '<div class="pc" style="left:{L}px;top:{T}px;width:400px;height:118px;justify-content:center;gap:6px">'
+             '<p class="pt" style="font-size:32px">June Gable</p><p class="pb" style="font-size:26px">American character actress…</p></div>')
+A.t(28, 252, "2.68M passages", 30, GRAY, weight=600)
+A.add(_arrow(456, L1, SX0, MUT))
+A.add(f'<rect x="{SX0}" y="0" width="{SX1 - SX0}" height="{H2}" rx="24" fill="#11182a" stroke="{WHITE}" stroke-width="3"/>',
+      g_net(SX0 + 24, 96, SX1 - SX0 - 48, H2 - 130, (3, 5, 5, 5, 3), GRAY, 10, "#2c3349", 1.6))
+A.t((SX0 + SX1) / 2, 60, "Stella", 40, WHITE, "middle", 700)
+A.add(_arrow(SX1, L1, IX0, MUT))
+A.t((SX1 + IX0) / 2, L1 - 30, "5.3 GPU-hours", 52, WHITE, "middle", 700)
+# the index card: Qdrant mark, a clean graph
+A.add(f'<rect x="{IX0}" y="0" width="{IX1 - IX0}" height="{H2}" rx="24" fill="#0d1320" stroke="#3a4157" stroke-width="2"/>')
+A.el(IX0 + 32, 28, '<img src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="" style="position:absolute;left:{L}px;top:{T}px;width:40px;height:46px;object-fit:contain">')
+A.t(IX0 + 88, 64, "Qdrant index", 32, WHITE, weight=700)
 for i, j in ge:
-    A.add(f'<line x1="{gp[i][0]:.0f}" y1="{gp[i][1]:.0f}" x2="{gp[j][0]:.0f}" y2="{gp[j][1]:.0f}" stroke="#3a4157" stroke-width="2.5"/>')
+    A.add(f'<line x1="{gp[i][0]:.0f}" y1="{gp[i][1]:.0f}" x2="{gp[j][0]:.0f}" y2="{gp[j][1]:.0f}" stroke="#39405a" stroke-width="3"/>')
 for k, (x, y) in enumerate(gp):
-    A.add(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{14 if k == 1 else 9}" fill="{WHITE if k == 1 else "#7d849c"}"/>')
-A.t(GX + GW, GY + GH + 64, "Qdrant HNSW index", 32, GRAY, "end", 600)
-# lane 2, one click: the question, the same Stella, its vector, the walk to the answer
-Q.el(0, 380, '<div class="qbox" style="left:{L}px;top:{T}px;width:450px;height:132px"><x-icon name="Search" style="width:40px;height:40px;color:#ff516b;flex:none"></x-icon>'
-              '<p style="font-size:30px">who played joey\'s agent<br>estelle on friends</p></div>')
-Q.add(curve(450, 446, EX, 420, RED, 5), curve(EX + EW, 420, 830, 446, RED, 5))
-Q.add(f'<rect x="830" y="406" width="400" height="80" rx="14" fill="#2a1520" stroke="{RED}" stroke-width="3"/>')
-Q.t(1030, 458, _vec(_X2["query_vector"], 2), 30, "#ffb3bf", "middle", 600, True)
-Q.t(830, 382, "every query, 20.5 ms", 34, RED, weight=700)
-Q.add(curve(1230, 446, ENT[0] - 6, ENT[1], RED, 5))
+    A.add(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{16 if k == 1 else 11}" fill="{WHITE if k == 1 else "#7d849c"}"/>')
+# lane 2, one click: the question, the same Stella, its vector, the walk
+Q.el(28, 380, '<div class="qbox" style="left:{L}px;top:{T}px;width:428px;height:120px"><x-icon name="Search" style="width:40px;height:40px;color:#ff516b;flex:none"></x-icon>'
+              '<p style="font-size:29px">who played joey\'s agent<br>estelle on friends</p></div>')
+Q.add(_arrow(456, L2, SX0, RED))
+Q.add(_arrow(SX1, L2, 800, RED))
+Q.add(f'<rect x="800" y="{L2 - 38}" width="380" height="76" rx="14" fill="#2a1520" stroke="{RED}" stroke-width="3"/>')
+Q.t(990, L2 + 11, _vec(_X2["query_vector"], 2), 29, "#ffb3bf", "middle", 600, True)
+Q.t(990, L2 - 62, "20.5 ms", 52, RED, "middle", 700)
+Q.add(_arrow(1180, L2, ENT[0] - 14, RED))
 pts = " ".join(f"{gp[i][0]:.0f},{gp[i][1]:.0f}" for i in walk)
-Q.add(f'<polyline points="{pts}" fill="none" stroke="{RED}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>')
-Q.add("".join(f'<circle cx="{gp[i][0]:.0f}" cy="{gp[i][1]:.0f}" r="11" fill="{RED}"/>' for i in walk[:-1]),
-      f'<circle cx="{TGT[0]}" cy="{TGT[1]}" r="28" fill="none" stroke="{RED}" stroke-width="5"/>')
-Q.t(TGT[0], TGT[1] - 44, "June Gable", 36, WHITE, "middle", 700)
-Q.t(GX + GW, GY + GH + 20, "0.23 ms", 36, RED, "end", 700)
+Q.add(f'<polyline points="{pts}" fill="none" stroke="{RED}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>',
+      "".join(f'<circle cx="{gp[i][0]:.0f}" cy="{gp[i][1]:.0f}" r="12" fill="{RED}"/>' for i in walk[:-1]),
+      f'<circle cx="{TGT[0]}" cy="{TGT[1]}" r="30" fill="none" stroke="{RED}" stroke-width="5"/>')
+Q.t(TGT[0], TGT[1] - 46, "June Gable", 32, WHITE, "middle", 700)
+Q.t((IX0 + IX1) / 2, H2 - 34, "search 0.23 ms", 32, RED, "middle", 700)
 _qlane = Q.html().replace('<svg aria', '<svg class="fragment" data-fragment-index="1" aria').replace(
     'class="lb"', 'class="lb fragment" data-fragment-index="1"').replace('class="qbox"', 'class="qbox fragment" data-fragment-index="1"')
 write("cost", " foot", "One Encoder, Two Deadlines", A.html() + "\n" + _qlane,
