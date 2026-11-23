@@ -72,9 +72,10 @@ Next: so what do the three keep of Stella's ranking?
 
 ## bench · ~2 min
 Why it matters: is the cheap encoder good enough?
-- [Grey dots] The 10 most-downloaded of the 25 models we tested, each on its own index. Up: better ranking on six BEIR datasets. Right: more compute per query.
-- [Nano] Ranks like bge-large (0.532 vs 0.533 nDCG@10) with 22 times less compute, on the index you already have.
-- [Zero] No network at all, and still above both MiniLM models, including the most downloaded one. Fused with BM25, it reaches 0.489.
+- We tested 25 models, same Qdrant configuration, six BEIR dataset, picked diverse ones
+- Up: better ranking, Right: more compute per query. Stella is very good but very expensive
+- [Nano] Ranks like bge-large with 22 times less compute
+- [Zero] No neural network at all, and still above both MiniLM models. Fused with BM25, it reaches 0.489.
 - Caveat: Stella saw FiQA and ArguAna in training. On the other four datasets, Zero trails BM25 (0.410 vs 0.441).
 Next: quality is half the story. How fast is each one? Quick bet.
 

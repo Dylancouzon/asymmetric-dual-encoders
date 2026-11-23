@@ -1193,7 +1193,7 @@ PX = lambda gf: X0 + (math.log10(gf) - xl) / (xh - xl) * (W - X0 - R)
 xl, xh, yl, yh = math.log10(0.12), math.log10(40), 0.26, 0.62
 PY = lambda v: T + (yh - v) / (yh - yl) * (H - T - B)
 F = Fig(aria="Scatter of six-dataset nDCG@10 against query GFLOPs: ten popular open models each on their own index, and "
-             "Stella, Nano and Zero on Stella's index; Zero sits in a separate lookup lane with no network")
+             "Stella, Nano and Zero on Stella's index; Zero sits in a separate lookup lane with no neural network")
 F.add(f'<rect x="{L + 16}" y="{T - 20}" width="{BRK - L - 20}" height="{H - T - B + 40}" rx="14" fill="#2a1520" opacity="0.6"/>',
       f'<rect x="{BRK + 20}" y="{T - 20}" width="{W - R - BRK - 20}" height="{H - T - B + 40}" rx="14" fill="#0d1320"/>')
 for v in (0.30, 0.40, 0.50, 0.60):
@@ -1215,7 +1215,11 @@ for n, sys_, gf, c in (("Stella", "stella-query", _FL["stella"]["median_flops"] 
                        ("Nano", "nano-dense", _FL["nano"]["median_flops"] / 1e9, VIO), ("Zero", "zero-dense", None, RED)):
     x, y = (ZX if gf is None else PX(gf)), PY(six(sys_))
     F.add(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="32" fill="{c}" opacity="0.18"/><circle cx="{x:.0f}" cy="{y:.0f}" r="20" fill="{c}"/>')
-    F.t(x, y - 40, n, 40, c, "middle", 700)
+    F.t(x, y + (72 if n == "Zero" else -40), n, 40, c, "middle", 700)  # Zero's label sits below: its fusion marker is above
+fy = PY(six("zero+bm25 dbsf@100"))                                # Zero fused with BM25 (DBSF@100), same six datasets
+F.add(f'<line x1="{ZX}" y1="{PY(six("zero-dense")) - 24:.0f}" x2="{ZX}" y2="{fy + 16:.0f}" stroke="{RED}" stroke-width="3" stroke-dasharray="6 6"/>',
+      f'<circle cx="{ZX}" cy="{fy:.0f}" r="14" fill="none" stroke="{RED}" stroke-width="3" stroke-dasharray="5 5"/>')
+F.t(ZX + 26, fy + 10, f"+ BM25 {six('zero+bm25 dbsf@100'):.3f}", 28, RED, weight=600)
 write("bench", " foot", "Nano Ranks Like bge-large With 22× Less Compute", F.html(),
       "Exact search, mean nDCG@10 over SciFact, NFCorpus, SciDocs, TREC-COVID, FiQA, and ArguAna. Stella's training "
       "included FiQA and ArguAna; on the other four, Zero (0.410) trails BM25 (0.441). Models: the 10 most downloaded on "
