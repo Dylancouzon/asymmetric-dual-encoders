@@ -1328,7 +1328,7 @@ write("byo", " foot", "Train a Query Encoder for Your Own Index",
 
 # thanks v11: QR cards on the glow background, the Qdrant logo, a waving astronaut
 cards = "".join(f'<div class="qr"><div class="qi">{_qr(n)}</div><p class="ql">{lab}</p></div>'
-                for n, lab in (("linkedin", "LinkedIn"), ("modelcard", "Model card"), ("fastembed", "FastEmbed"), ("event", "London Search Week")))
+                for n, lab in (("linkedin", "LinkedIn"), ("modelcard", "Model card"), ("fastembed", "FastEmbed"), ("event", "Bar Quiz after party")))
 write("thanks", " alt", "",                                       # the mascot says it
       '<img src="project/ds/qdrant/assets/logo-red-white.svg" alt="Qdrant" style="position:absolute;left:1566px;top:128px;width:226px;height:60px;object-fit:contain">'
       + '<img class="mascot" src="/_blob/618ab71966d805daa6f0e0cf6f9efe30" alt="" style="left:128px;top:52px;width:290px;height:428px">'
