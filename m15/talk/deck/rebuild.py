@@ -1265,7 +1265,7 @@ write("cloud", " foot", "Encoding 1M Queries: $6.07, $0.24, or $0.0016", F.html(
 
 # split v11: same bars; legend and labels as text
 W, L0, AX = 1664, 230, 2.2
-SX = lambda v: L0 + v / AX * 820
+SX = lambda v: L0 + v / AX * 1234                              # full width; room for the Nano label
 F = Fig(h=600, w=1664, aria="Median request time split into encode and search: Nano 2.04 ms, Zero 0.86 ms, Stella 20.8 ms wrapped over ten thin rows")
 F.add(f'<rect x="{SX(0)}" y="8" width="28" height="22" rx="5" fill="{TEAL}"/>', f'<rect x="{SX(0) + 200}" y="8" width="28" height="22" rx="5" fill="{ORG}"/>')
 F.t(SX(0) + 40, 30, "encode", 26, GRAY)
@@ -1295,8 +1295,7 @@ for r in range(rows):
         F.add(f'<rect x="{SX(0)}" y="{yy}" width="{SX(e_end) - SX(0):.0f}" height="{th}" rx="6" fill="{TEAL}"/>')
     if b_ - a_ > e_end:
         F.add(f'<rect x="{SX(e_end):.0f}" y="{yy}" width="{SX(b_ - a_) - SX(e_end):.0f}" height="{th}" rx="6" fill="{ORG}"/>')
-F.t(SX(AX) + 20, y0 + 14, "↵ wraps every 2.2 ms", 26, MUT)
-F.t(SX(_tot - (rows - 1) * AX) + 20, y0 + (rows - 1) * pitch + 16, f"{_tot:.1f} ms", 40, WHITE, weight=700)
+F.t(SX(AX) + 24, y0 + (rows - 1) * pitch + 14, f"{_tot:.1f} ms", 40, WHITE, weight=700)
 write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×", F.html(),
       "BEIR NQ, 3,452 queries, 2.68M passages, one Qdrant Edge shard in-process, M5 Pro, sequential. Segments: median encode "
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
