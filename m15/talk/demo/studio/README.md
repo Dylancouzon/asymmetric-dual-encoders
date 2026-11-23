@@ -1,6 +1,6 @@
 # Workload studio
 
-With a large encoder, encoding the query is most of the cost of a dense search: Stella takes about 28 ms per query on a laptop CPU, the search under 1 ms. Constella keeps one Stella document index and lets each query pick its encoder: Stella (best ranking, about 80 queries/s on a laptop), Nano (a 35M-parameter transformer, about 1,300/s) or Zero (a lookup table, about 17,000/s). The workload studio shows what that buys under real traffic. It replays a BEIR dataset's judged questions against one [Qdrant Edge](https://qdrant.tech/documentation/edge/) shard on your machine, scores every answer, and lets an auto-router choose the encoder mix and the HNSW search width live.
+With a large encoder, encoding the query is most of the cost of a dense search: Stella takes about 28 ms per query on a laptop CPU, the search under 1 ms. Constella keeps one Stella document index and lets each query pick its encoder: Stella (best ranking, about 80 queries/s on a laptop), Nano (a 35M-parameter transformer, about 1,300/s) or Zero (a lookup table, about 17,000/s). The workload studio shows what that buys under real traffic. It replays a BEIR dataset's judged questions against one [Qdrant Edge](https://qdrant.tech/documentation/edge/) shard on your machine, scores every answer, and lets an auto-router choose the encoder mix live. Each encoder keeps its own HNSW search settings.
 
 ![Workload studio at 1,500 searches/s on NQ: Auto serves 65% Nano and 35% Zero at HNSW ef 256, p95 13 ms under a 150 ms target, nDCG@10 0.54](screenshot.png)
 
@@ -34,14 +34,15 @@ The vectors come from the Hugging Face dataset [`Qdrant/constella-demo-vectors`]
 
 ## What to try
 
-- **Traffic.** Drag the slider from 40 to a few thousand searches/s. Auto moves from Stella to Nano, then mixes in Zero and narrows the HNSW search. Space pauses; the arrow keys step traffic by 1.5x.
-- **p95 target.** Auto serves the best ranking that keeps latency under it. As traffic grows it trades quality for speed: Nano, then Zero, then a narrower search. Past the machine's capacity, every query is still served, the queue grows and the gauge turns red.
-- **Split traffic.** Route by hand, with your own ef and oversampling per encoder, and compare with Auto.
+- **Traffic.** Drag the slider from 40 to a few thousand searches/s. Auto moves from Stella to Nano, then mixes in Zero. Space pauses; the arrow keys step traffic by 1.5x.
+- **p95 target.** Auto serves the best ranking that keeps latency under it. As traffic grows it trades quality for speed: Nano, then Zero. Past the machine's capacity, every query is still served, the queue grows and the gauge turns red.
+- **HNSW search.** Set ef and oversampling per encoder, in both modes. A page load restores the defaults: Stella ef 64, Nano ef 128, Zero ef 256, all with 4x oversampling. Each keeps at least 95% of its exact-search nDCG@10 on NQ. A wider search costs shard time, so Auto reaches capacity sooner.
+- **Split traffic.** Route by hand and compare with Auto.
 - **More.** Daily wave and burst patterns, a spike switch, and agent tasks that fire several searches at once and finish with the slowest.
 
 ## How Auto decides
 
-Every 250 ms, `allocator.py` picks the traffic share of each encoder and one search preset (ef 64, 128, 256 or 512 with 4x oversampling, or ef 1024 with 8x). It maximizes the average nDCG@10 of served searches and fits two measured budgets: encode capacity per encoder (measured at startup) and time on the Edge shard, which serves one search at a time in this process. A headroom factor, tuned from measured p95, absorbs what the cost model misses. An encoder too slow for the target on its own is left out.
+Every 250 ms, `allocator.py` picks the traffic share of each encoder at the search settings you set. It maximizes the average nDCG@10 of served searches and fits two measured budgets: encode capacity per encoder (measured at startup) and time on the Edge shard, which serves one search at a time in this process. A headroom factor, tuned from measured p95, absorbs what the cost model misses. An encoder too slow for the target on its own is left out.
 
 ## Code map
 

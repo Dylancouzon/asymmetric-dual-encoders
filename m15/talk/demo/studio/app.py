@@ -1,9 +1,10 @@
 """Workload studio: live search traffic on one Qdrant Edge index, with Stella, Nano and Zero as query encoders.
 
 All three encoders search the same Stella document index. Traffic is replayed from a BEIR dataset's judged
-questions, so every answer is scored. Auto routing plans, four times a second, which share of traffic each encoder serves
-and how wide they search: the best average quality that fits the machine's encode and search capacity, with
-headroom tuned from measured p95 against the latency target (see allocator.py). Every query is served. Every
+questions, so every answer is scored. Each encoder keeps its own search settings (ef, oversampling), set from the page.
+Auto routing plans, four times a second, which share of traffic each encoder serves: the best average quality that
+fits the machine's encode and search capacity, with headroom tuned from measured p95 against the latency target
+(see allocator.py). Every query is served. Every
 control applies immediately.
 
   .venv/bin/python m15/talk/demo/studio/app.py                 # FiQA (57,638 passages)
@@ -62,11 +63,14 @@ encoders = {name: make_encoder(name) for name in ENCODERS}
 SWEEP = {(e, s["ef"], s["oversampling"]): s for e in ENCODERS
          for s in json.loads(RECEIPT.read_text())["results"][e]["settings"]}
 EFS, OVERSAMPLING = sorted({k[1] for k in SWEEP}), sorted({k[2] for k in SWEEP})
-PRESETS = [(64, 4.0), (128, 4.0), (256, 4.0), (512, 4.0), (1024, 8.0)]   # what Auto chooses from, narrow to wide
 
+# Per-encoder defaults: each keeps at least 95% of its exact-search nDCG@10 on NQ (the recovery slide), so the
+# laptop still carries about 2,000 searches/s. Stella uses ef 64: its ef 32 sweep timing includes warm-up.
+# The page restores them on load.
+DEFAULT_SEARCH = {"stella": [64, 4.0], "nano": [128, 4.0], "zero": [256, 4.0]}
 state = {"rate": 40.0, "pattern": "steady", "peak": 15.0, "spike": False, "fanout": 1, "paused": False,
          "route": "auto", "split": {"stella": 34.0, "nano": 33.0, "zero": 33.0},
-         "search": {name: [1024, 8.0] for name in ENCODERS},
+         "search": json.loads(json.dumps(DEFAULT_SEARCH)),
          "target_ms": 150.0}
 
 work = Workload(search, encoders, data["q_texts"], data["q_ids"], data["qrels"], DOC_IDS, state, WORKERS)
@@ -228,27 +232,14 @@ def plan_loop():
                 elif p95 < 0.7 * target:          # comfortably under: recover in a few seconds
                     router["headroom"] = min(0.85, router["headroom"] + 0.02)
         # Plan for arrivals plus the backlog cleared within 2 s.
-        presets = {pr: [cost(n, *pr, slowdown) for n in ENCODERS] for pr in PRESETS}
-        args = dict(rate=rate + backlog(now) / 2, headroom=router["headroom"],
-                    slow=slow_encoders(enc_ms, target, now))
-        p, prev = allocator.plan(presets=presets, **args), router["plan"]
-        if prev and p.preset != prev.preset:
-            # Narrow at once when the current width stops fitting; widen only with room to spare (20% more traffic),
-            # so the search width does not flap at the edge of capacity.
-            stay = allocator.plan(presets={prev.preset: presets[prev.preset]}, **args)
-            wider = presets[p.preset][0].search_ms > presets[prev.preset][0].search_ms
-            spare = allocator.plan(presets={p.preset: presets[p.preset]}, **{**args, "rate": 1.2 * args["rate"]})
-            if stay.status == p.status == "ok" and (p.quality - stay.quality < 0.005 or (wider and spare.status != "ok")):
-                p = stay
-        if router["plan"] is None or p.preset != router["plan"].preset:
-            EVENTS.append((now, f"auto ef {p.preset[0]} ×{p.preset[1]:g}"))
+        p = allocator.plan(rate + backlog(now) / 2, [router["costs"][n] for n in ENCODERS], router["headroom"],
+                           slow=slow_encoders(enc_ms, target, now))
         router["plan"] = p
         # After an overload, the backlog drains; until it is short, its waits say nothing about this plan.
         router["draining"] = p.status == "over capacity" or (
             router["draining"] and backlog(now) > rate * 2 * target / 1000)
         if router["draining"]:
             router["over_capacity_t"] = now
-        state["search"] = {n: list(p.preset) for n in ENCODERS}
         work.shares = dict(p.shares)
 
 
@@ -286,9 +277,9 @@ def snapshot():
         "ndcg10": float(np.mean(quality)) if quality else 0.0, "n_quality": len(quality),
         "cores": round(cpu["cores"], 1), "cores_total": os.cpu_count(), "by": by,
         "actual_share": {n: (by[n] / len(last1)) if last1 else 0.0 for n in ENCODERS},
-        "plan": None if p is None else {"preset": p.preset, "shares": p.shares, "quality": p.quality,
+        "plan": None if p is None else {"shares": p.shares, "quality": p.quality,
                                         "encode_util": p.encode_util, "shard_util": p.shard_util, "status": p.status},
-        "headroom": router["headroom"], "n_docs": len(DOC_IDS), "dataset": DATASET_NAME, "efs": EFS, "oversampling": OVERSAMPLING,
+        "headroom": router["headroom"], "n_docs": len(DOC_IDS), "dataset": DATASET_NAME, "efs": EFS, "oversampling": OVERSAMPLING, "search_default": DEFAULT_SEARCH,
         "slow": sorted(router["slow"]), "encode_tail_ms": router.get("encode_ms", {}),
         "costs": {n: {"quality": c.quality, "search_ms": c.search_ms, "encode_per_s": c.encode_per_s}
                   for n, c in router["costs"].items()},
@@ -341,10 +332,9 @@ def update(body: dict):
     for name, w in (body.get("split") or {}).items():
         if name in ENCODERS:
             state["split"][name] = max(0.0, float(w))
-    if state["route"] == "split":            # Auto owns the search settings; in split they are the user's
-        for name, (ef, oversampling) in (body.get("search") or {}).items():
-            if name in ENCODERS:
-                state["search"][name] = [_nearest(EFS, float(ef)), _nearest(OVERSAMPLING, float(oversampling))]
+    for name, (ef, oversampling) in (body.get("search") or {}).items():
+        if name in ENCODERS:
+            state["search"][name] = [_nearest(EFS, float(ef)), _nearest(OVERSAMPLING, float(oversampling))]
     if any(before[k] != state[k] for k in ("rate", "spike", "peak", "fanout", "paused", "pattern")):
         probes.clear()                        # timings, headroom and slow marks belong to the old workload
         router["headroom"], router["slow"], router["workload_t"] = 0.8, {}, time.time()

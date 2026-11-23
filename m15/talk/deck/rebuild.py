@@ -609,103 +609,10 @@ write("split", " foot", "The Whole Request Is 2.4× Faster, Not 51×",
       "and search shares of the median request. Each encoder at its fastest setting within 1% of its own exact nDCG@10 "
       "(Stella 0.631, Nano 0.579); Zero misses that at every tested point (best shown: ef 1024, os 8, nDCG@10 0.510). Exploratory.")
 
-# recipe v8: how auto-routing decides, in three steps
+# router data: the NQ Edge sweep and the router plan (older recipe and plan versions, superseded later, removed)
 _ED = _json.loads(Path(_R + "m15_talk_edge_nq.json").read_text())["results"]
-_RP = _json.loads(Path(_R + "m15_talk_router_plan.json").read_text())
+_RP = _json.loads(Path(_R + "m15_talk_router_plan_own_search.json").read_text())
 nd = lambda n, ef: next(s["ndcg10"] for s in _ED[n]["settings"] if s["ef"] == ef and s["oversampling"] == 4.0)
-g = ['<svg width="1664" height="640" viewBox="0 0 1664 640">']
-for i, (num, head) in enumerate((("01", "Measure"), ("02", "Set"), ("03", "Route"))):
-    x = i * 590
-    g.append(f'<line x1="{x}" y1="0" x2="{x + 500}" y2="0" stroke="{RED}" stroke-width="4"/>')
-    g.append(t(x, 56, num, 30, RED, "start", 600, True))
-    g.append(t(x + 70, 58, head, 48, WHITE, "start", 700))
-for k, ef in enumerate((128, 256, 512)):                      # 01: the measured menu
-    g.append(t(200 + k * 120, 150, str(ef), 28, MUT, "middle", 400, True))
-for j, (n, c) in enumerate((("stella", GRAY), ("nano", VIO), ("zero", RED))):
-    yy = 210 + j * 64
-    g.append(t(0, yy, n.capitalize(), 34, c, "start", 600))
-    for k, ef in enumerate((128, 256, 512)):
-        g.append(t(200 + k * 120, yy, f"{nd(n, ef):.3f}"[1:], 32, WHITE, "middle", 400, True))
-g.append(t(0, 150, "ef", 28, MUT, "start", 400, True))
-g.append(t(0, 420, "nDCG@10 on judged queries", 30, GRAY))
-g.append(t(0, 462, "+ encode and search time", 30, GRAY))
-for k, (lab, val) in enumerate((("quality floor", "0.50"), ("p95 target", "150 ms"))):   # 02: the two rules
-    yy = 110 + k * 170
-    g.append(f'<rect x="590" y="{yy}" width="420" height="140" rx="16" fill="#151b2b" stroke="{GRAY}" stroke-width="3"/>')
-    g.append(t(622, yy + 50, lab, 30, GRAY))
-    g.append(t(622, yy + 112, val, 56, WHITE, "start", 700, True))
-g.append(t(590, 462, "quality first, then latency", 30, GRAY))
-p15 = next(p for p in _RP["plans"] if p["rate"] == 1500)        # 03: one plan, re-made every 250 ms
-g.append(t(1180, 200, "every 250 ms", 52, WHITE, "start", 700))
-g.append(t(1180, 262, "at 1,500 searches/s:", 30, GRAY))
-bx, bw = 1180, 484
-for n, c in (("nano", VIO), ("zero", RED)):
-    w = bw * p15["shares"][n]
-    g.append(f'<rect x="{bx:.0f}" y="290" width="{w:.0f}" height="70" fill="{c}"/>')
-    g.append(t(bx + w / 2, 337, n.capitalize(), 30, "#0b0f19", "middle", 700))
-    bx += w
-g.append(t(1180, 410, f"ef {p15['ef']}", 34, WHITE, "start", 600, True))
-g.append(t(1180, 462, "best average nDCG that fits", 30, GRAY))
-g.append("</svg>")
-write("recipe", " foot", "How the Router Decides",
-      '<div style="margin-top:40px">' + "".join(g) + "</div>",
-      "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4 (results/m15_talk_edge_nq.json). Floor and target: the "
-      "studio defaults. Plan: allocator.py on this laptop's measured encode capacity (results/m15_talk_router_plan.json). Exploratory.",
-      note="<aside>[~2 min] Here's how the router you're about to see makes its choice. Three steps.\n\n[01 Measure.] Before "
-      "any traffic arrives, I score every encoder at every search width on judged queries. That's this menu: the ranking "
-      "quality I get from each pair. At startup the studio also times each encoder and each search on this machine.\n\n"
-      "[02 Set.] Then I give it two rules, in order. Quality first: the average score of what it serves stays above the floor. "
-      "Then latency: stay under the p95 target if the machine can.\n\n[03 Route.] Every quarter of a second it looks at the "
-      "traffic and picks the mix of encoders and one search width that gives the best average quality and still fits on this "
-      "machine. At 1,500 searches a second that's about three quarters Nano, one quarter Zero, at ef 512.\n\nThis only works "
-      "because all three search one index. Switching an encoder costs nothing: no second index, no re-encode. To do this on "
-      "your data you need the same three things: a few hundred judged queries from your traffic, the quality of each encoder "
-      "and ef on them, and timings on your hardware.</aside>")
-
-# plan: what the router picks as traffic grows (planner output)
-W, H, L, R, T, B = 1664, 600, 120, 40, 90, 90
-lo, hi = math.log10(40), math.log10(2500)
-PX = lambda r: L + (math.log10(r) - lo) / (hi - lo) * (W - L - R)
-PY = lambda v: T + (1 - v) * (H - T - B)
-P_ = _RP["plans"]
-g = [f'<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}">']
-base = [0.0] * len(P_)
-for n, c in (("stella", GRAY), ("nano", VIO), ("zero", RED)):
-    top = [b + p["shares"][n] for b, p in zip(base, P_)]
-    pts = [f"{PX(p['rate']):.0f},{PY(v):.0f}" for p, v in zip(P_, top)]
-    pts += [f"{PX(p['rate']):.0f},{PY(v):.0f}" for p, v in reversed(list(zip(P_, base)))]
-    g.append(f'<polygon points="{" ".join(pts)}" fill="{c}"/>')
-    base = top
-g.append(t(PX(55), PY(0.45), "Stella", 44, "#0b0f19", "start", 700))
-g.append(t(PX(600), PY(0.45), "Nano", 44, "#0b0f19", "middle", 700))
-g.append(t(PX(2350), PY(0.82), "Zero", 44, "#0b0f19", "end", 700))
-spans = {}
-for p in P_:
-    spans.setdefault(p["ef"], []).append(p["rate"])
-efs = list(spans)
-edge = [PX(P_[0]["rate"])] + [PX(math.sqrt(spans[a][-1] * spans[b][0])) for a, b in zip(efs, efs[1:])] + [PX(P_[-1]["rate"])]
-for k, ef in enumerate(efs):                                   # one search width per span of traffic, split at the switch
-    a, b = edge[k] + 4, edge[k + 1] - 4
-    g.append(f'<line x1="{a:.0f}" x2="{b:.0f}" y1="{T - 40}" y2="{T - 40}" stroke="{WHITE}" stroke-width="4"/>')
-    last = k == len(efs) - 1
-    g.append(t(W if last else (a + b) / 2, T - 56, f"ef {ef}" if k == 0 else str(ef), 30, WHITE, "end" if last else "middle", 600, True))
-for r in (40, 100, 300, 1000, 2500):
-    g.append(t(PX(r), H - B + 44, f"{r:,}", 30, MUT, "end" if r == 2500 else "middle", 400, True))
-g.append(t((L + W - R) / 2, H - 4, "searches per second", 30, GRAY, "middle"))
-for v in (0, 0.5, 1):
-    g.append(t(L - 16, PY(v) + 10, f"{v:.0%}", 28, MUT, "end", 400, True))
-g.append("</svg>")
-q0, q1 = P_[0]["quality"], P_[-1]["quality"]
-write("plan", " foot", "Quiet Hours Get Stella, Peaks Get Zero",
-      '<div style="margin-top:16px">' + "".join(g) + "</div>",
-      f"Share of traffic per encoder planned by allocator.py: NQ quality and search time per preset, M5 Pro encode capacity "
-      f"(Stella 80, Nano 1,400, Zero 17,000 encodes/s), floor 0.50, headroom 0.8. Average nDCG@10 falls from {q0:.3f} to "
-      f"{q1:.3f}. Planner output, not a load test (results/m15_talk_router_plan.json). Exploratory.",
-      note=f"<aside>[~1 min] This is the plan the router makes for this laptop, from quiet to busy. [Point left.] At 40 "
-      f"searches a second, everything goes to Stella with the widest search. [Point to the purple.] From about a hundred a "
-      f"second Stella can't keep up, so Nano takes over. [Point right.] Past a thousand, Zero mixes in and the search narrows. "
-      f"The average quality drops from {q0:.2f} to {q1:.2f}, and it never goes below the floor I set. Nothing is dropped and "
-      f"nothing is re-encoded. Let me show you it running.</aside>")
 
 # takeaways: four lines to remember
 _TK = (("Measure the whole request", "not just the encoder"), ("Pick the encoder and its ef together", "cheaper vectors need a wider search"),
@@ -1352,7 +1259,6 @@ c2 = ('<div class="rcard"><div class="rh"><p class="rn">02</p><p class="rt">Set<
       '<div class="grow"></div><p class="rd">the best ranking that meets it</p></div>')
 c3 = (f'<div class="rcard" style="border-color:rgba(148,148,255,0.5)"><div class="rh"><p class="rn">03</p><p class="rt">Route</p></div>'
       f'<p style="font-size:52px;font-weight:700;color:#fcfdff">every 250 ms</p><p class="rd">at 1,500 searches/s:</p>{bar}'
-      f'<p style="font-size:34px;font-family:JetBrains Mono,monospace;font-weight:600;color:#fcfdff">ef {p15["ef"]}</p>'
       f'<div class="grow"></div><p class="rd">best average nDCG that fits</p></div>')
 write("recipe", " foot", "How the Router Decides", '<div class="row" style="gap:32px;height:610px;margin-top:8px">' + c1 + c2 + c3 + "</div>",
       "Quality: exact-judged NQ queries, Qdrant Edge, oversampling 4. Target: the studio default. Plan: the "
@@ -1380,25 +1286,15 @@ F.t(PX(2350), PY(0.82), "Zero", 44, INK, "end", 700)
 ZX_ = PX(math.sqrt(1000 * 1200))                                 # last plan with no Zero, first plan with Zero
 F.add(f'<line x1="{ZX_:.0f}" x2="{ZX_:.0f}" y1="{PY(1) - 6:.0f}" y2="{PY(0) + 6:.0f}" stroke="{WHITE}" stroke-width="4" stroke-dasharray="10 10"/>')
 F.t(ZX_ - 20, PY(0.14), "Nano at capacity", 30, INK, "end", 700)
-spans = {}
-for p in P_:
-    spans.setdefault(p["ef"], []).append(p["rate"])
-efs = list(spans)
-edge = [PX(P_[0]["rate"])] + [PX(math.sqrt(spans[a][-1] * spans[b][0])) for a, b in zip(efs, efs[1:])] + [PX(P_[-1]["rate"])]
-for k, ef in enumerate(efs):                                     # one search width per span of traffic
-    a, b = edge[k] + 4, edge[k + 1] - 4
-    F.add(f'<line x1="{a:.0f}" x2="{b:.0f}" y1="{T - 40}" y2="{T - 40}" stroke="{WHITE}" stroke-width="4"/>')
-    last = k == len(efs) - 1
-    F.t(W if last else (a + b) / 2, T - 56, f"ef {ef}" if k == 0 else str(ef), 30, WHITE, "end" if last else "middle", 600, True)
 for r in (40, 100, 300, 1000, 2500):
     F.t(PX(r), H - B + 44, f"{r:,}", 30, MUT, "end" if r == 2500 else "middle", 400, True)
 F.t((L + W - R) / 2, H - 4, "searches per second", 30, GRAY, "middle")
 for v in (0, 0.5, 1):
     F.t(L - 16, PY(v) + 10, f"{v:.0%}", 28, MUT, "end", 400, True)
 write("plan", " foot", "Zero Only Enters at Peaks", F.html(),
-      "Share of traffic per encoder planned by the studio's router: NQ quality and search time per setting, M5 Pro encode "
-      "capacity (Stella 80, Nano 1,400, Zero 17,000 queries/s), encode and search kept under 80% of capacity. Planner output, not a "
-      "load test. Exploratory.")
+      "Share of traffic per encoder planned by the studio's router. Each encoder keeps its own search: Stella ef 64, Nano ef 128, "
+      "Zero ef 256, oversampling 4. NQ quality and search time, M5 Pro encode capacity (Stella 80, Nano 1,400, Zero 17,000 "
+      "queries/s), encode and search kept under 80% of capacity. Planner output, not a load test. Exploratory.")
 
 # live v11: the demo slide, with room for the astronaut
 write("live", " demo", "Demo: An Auto Router on One Index",                   # layout set by Dylan in the page

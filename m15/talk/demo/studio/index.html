@@ -44,8 +44,8 @@ details summary{font-size:1.05rem;letter-spacing:.19rem;color:var(--mut);cursor:
 .util{grid-column:2/-1;font-size:1.15rem;color:var(--mut)}
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:1rem;min-height:0}
 .chart{display:flex;flex-direction:column}.chart .k{font-size:1.25rem;color:var(--mut);margin-bottom:.25rem}canvas{flex:1;width:100%;min-height:0}
-table{width:100%;border-collapse:collapse;font-size:1.35rem}th{font-size:1rem;color:var(--mut);font-weight:500;text-align:right;padding:.1rem .5rem}
-th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem .5rem;border-top:1px solid var(--line)}
+table{width:100%;height:100%;border-collapse:collapse;font-size:1.65rem;white-space:nowrap}th{font-size:1.15rem;height:2.4rem;color:var(--mut);font-weight:500;text-align:right;padding:.1rem .5rem}
+th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem .5rem;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}td.sm{font-size:1.35rem}
 .sm{font-size:1rem;color:var(--mut)}
 @media (max-width:900px){              /* narrow windows: one column, the page scrolls */
   html{font-size:12px}
@@ -69,7 +69,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
       <div class="mix"><span><span class="dot" style="background:var(--zero)"></span>Zero</span><input id="w_zero" type="range" min="0" max="100"><b id="w_zero_v"></b></div></div>
     </div>
   <div class="card"><h2>P95 TARGET <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
-  <div class="card"><h2>HNSW SEARCH <span class="sm" id="search_by" style="letter-spacing:0"></span></h2>
+  <div class="card"><h2>HNSW SEARCH <span class="sm" style="letter-spacing:0">per encoder</span></h2>
     <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><b id="ef_stella_v"></b><select id="os_stella"></select></div>
     <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><b id="ef_nano_v"></b><select id="os_nano"></select></div>
     <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><b id="ef_zero_v"></b><select id="os_zero"></select></div>
@@ -93,7 +93,7 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
     <div class="panel chart"><div class="k">searches/s by encoder vs arriving</div><canvas id="c_qps"></canvas></div>
   </div>
   <div class="charts">
-    <div class="panel"><table><thead><tr><th>encoder</th><th>ef · os</th><th>nDCG@10</th><th>encodes/s max</th><th>search</th><th>plan</th><th>actual</th></tr></thead><tbody id="enc_tbl"></tbody></table></div>
+    <div class="panel" style="display:flex"><table><thead><tr><th>encoder</th><th>ef · os</th><th>nDCG@10</th><th>encodes/s</th><th>search</th><th>plan</th><th>actual</th></tr></thead><tbody id="enc_tbl"></tbody></table></div>
     <div class="panel chart"><div class="k">nDCG@10 of served searches</div><canvas id="c_ndcg"></canvas></div>
   </div>
 </div></div>
@@ -106,7 +106,7 @@ const ms = v => v == null ? "–" : v >= 1000 ? (v / 1000).toFixed(1) + " s" : v
 const lfrac = v => Math.max(0, Math.min(1, Math.log10(Math.max(v, 1)) / 4));          // 1 ms .. 10 s, log
 const rateOf = x => Math.round(10 * Math.pow(800, x / 1000)), xOfRate = r => Math.round(1000 * Math.log(r / 10) / Math.log(800));   // 10 .. 8,000/s
 const tgtOf = x => Math.round(10 * Math.pow(100, x / 1000)), xOfTgt = b => Math.round(1000 * Math.log(b / 10) / Math.log(100));
-let S = null, H = [], editing = 0;
+let S = null, H = [], editing = 0, restored = false;
 
 // ---- controls: every change is sent at once and applies to the next request -------------------------
 // One request in flight; changes made meanwhile are merged, latest value per control, so a fast slider drag
@@ -210,9 +210,6 @@ function render(s) {
   $("splits").style.display = s.route === "split" ? "block" : "none";
   $("pause").textContent = s.paused ? "Start" : "Pause"; $("pause").classList.toggle("paused", s.paused);
   $("spike").classList.toggle("on", s.spike); $("agent").classList.toggle("on", s.fanout > 1);
-  for (const e of ENC) { const c = s.costs[e]; if (!c) continue;
-    $("ef_" + e).disabled = $("os_" + e).disabled = s.route === "auto"; }
-  $("search_by").textContent = s.route === "auto" ? "set by auto" : "ef · oversampling";
   // tiles
   $("arr").textContent = Math.round(s.offered).toLocaleString();   // requested; a full queue holds the replay back
   $("flow1").innerHTML = `searches/s · <b>${s.served_per_s.toLocaleString()}</b> served`;
@@ -233,7 +230,7 @@ function render(s) {
   const status = p ? p.status : "manual", sc = {ok: ["#122a26", "#3fc1a5"], overloaded: ["#2a1520", "#ff516b"], "over capacity": ["#2a1520", "#ff516b"], "over target": ["#2a1f0a", "#f5a623"], manual: ["#1d1d3d", "#9494ff"]}[status] ?? ["#2a1520", "#ff516b"];
   $("chip").textContent = {"over capacity": "over capacity · queue growing", "over target": "target below every encoder's own time", manual: ""}[status] ?? (status === "ok" ? "" : status);
   $("chip").style.display = $("chip").textContent ? "" : "none"; $("chip").style.background = sc[0]; $("chip").style.color = sc[1];
-  $("util").textContent = p ? `ef ${p.preset[0]} ×${p.preset[1]} · expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · shard ${Math.round(100 * p.shard_util)}%` : "";
+  $("util").textContent = p ? `expected nDCG ${p.quality.toFixed(3)} · encode ${Math.round(100 * p.encode_util)}% · shard ${Math.round(100 * p.shard_util)}%` : "";
   // encoders
   $("enc_tbl").innerHTML = ENC.map(e => { const c = s.costs[e] || {}; return `<tr><td><span class="dot" style="background:${COL[e]}"></span>${NAME[e]}</td>
     <td class="sm">${s.search[e][0]} · ×${s.search[e][1]}</td><td>${c.quality ? c.quality.toFixed(3) : "–"}</td>
@@ -241,7 +238,9 @@ function render(s) {
     <td>${Math.round(100 * shares[e])}%</td><td>${Math.round(100 * s.actual_share[e])}%</td></tr>`; }).join("");
 }
 async function tick() {
-  try { const s = await (await fetch("/stats")).json(); S = s; H = s.history.filter(v => s.t - v.t <= 60); render(s); draw(); } catch (e) {}
+  try { const s = await (await fetch("/stats")).json();
+    if (!restored && s.ready) { restored = true; set({search: s.search_default}); }   // a page load restores the defaults
+    S = s; H = s.history.filter(v => s.t - v.t <= 60); render(s); draw(); } catch (e) {}
   setTimeout(tick, 250);
 }
 addEventListener("resize", draw); tick();
