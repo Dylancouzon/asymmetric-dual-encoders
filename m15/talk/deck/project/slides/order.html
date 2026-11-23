@@ -8,7 +8,7 @@ Why it matters: know which queries Zero will get wrong before your users do.<br>
 - Zero does three things: split into tokens, look up one row each, average. Each step loses something.<br>
 - [Order] An average has no order. "paris to rome" and "rome to paris" give the same vector and the same results list.<br>
   - Test: 24 query pairs where direction changes the answer. Right passage first in both directions: Zero 0, Nano 2, Stella 4. Hard for everyone, impossible for Zero.<br>
-- [Context] One row per token, whatever is next to it. "bank" is the same row in "river bank" and "bank loan". A transformer reads neighbours; Zero only has the other rows in the average.<br>
+- [Context] One row per token, whatever is next to it. "bank" is the same row in "river bank" and "bank loan". A transformer uses attention to read the words around each token; Zero only has the other rows in the average.<br>
 - [New words] The vocabulary is fixed. "qdrant" becomes q, ##dran, ##t, rows learned from other words. A transformer recombines pieces; Zero averages them.<br>
 - Takeaway: Zero fits short keyword queries. Test phrased questions separately.<br>
 Next: to get order and context back, you need attention. That is Nano.</aside>

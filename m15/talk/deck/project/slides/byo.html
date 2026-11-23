@@ -9,10 +9,10 @@ Why it matters: the method is not tied to Stella. If you have a frozen index, yo
 - [01] Keep your document encoder and your index. Nothing is re-encoded, ever.<br>
 - [02] Encode a large set of real queries with your current query model, with its prompt and preprocessing. Those vectors are the targets. For Nano, add passages encoded by your document model.<br>
   - A hosted model works if it returns the same vectors.<br>
-  - Before training, fit a quick lookup table to check your model teaches well (remember gte-large).<br>
+  - Before training, fit a quick lookup table to check that your model is easy to imitate (remember gte-large).<br>
 - [03] Train:<br>
-  - Zero: one row per token of your tokenizer, start from your model's token encodings, align then rank. About 20 minutes on one GPU once the targets exist. For Stella the targets took 8 to 12 hours.<br>
-  - Nano: a small backbone, three pooled layers, a projection to your vector size, trained on your model's vectors. No relevance labels needed. About $95 of A100 time for ours.<br>
+  - Zero: one row per token of your tokenizer, each starting from your model's vector for that token, then the same two phases. About 20 minutes on one GPU once your model's vectors are saved. For Stella, computing them took 8 to 12 hours.<br>
+  - Nano: a small embedding model, three averaged layers, one matrix to your vector size, trained to reproduce your model's vectors. No relevance labels needed. About $95 of A100 time for ours.<br>
 - [04] Judge on your own queries: exact nDCG@10 per encoder, then sweep ef and oversampling. Then set your floor and let a router pick.<br>
 - [QR] The paper has every detail: data, losses, steps, and what failed.<br>
 [Advance to the thank-you slide.]</aside>

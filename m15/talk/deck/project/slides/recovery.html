@@ -27,7 +27,7 @@ Why it matters: the search settings are part of the encoder choice.<br>
   - Oversampling, with quantization: 1-bit binary codes in RAM, full vectors on disk. Fetch 4 times the results with the codes, then rescore with the full vectors.<br>
 - [Curves] Each line: of the encoder's own exact top 10, how much does the search find?<br>
 - [Circles] Zero at ef 1024 still finds less than Stella at ef 32.<br>
-- Why: the graph's links were built from Stella's vectors. Zero's query vectors land a little off, so the walk needs more room. Across 25 models in the paper, tables needed ef 256 to match their teacher at 64.<br>
+- Why: the graph's links were built from Stella's vectors. Zero's query vectors land a little off, so the search has to keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match the model they imitate at ef 64.<br>
 - So: same graph, but each encoder gets its own ef and oversampling per request.<br>
 Next: the encoder and the search width are one decision, and the best answer changes with traffic. So I let a router decide.</aside>
 </section>

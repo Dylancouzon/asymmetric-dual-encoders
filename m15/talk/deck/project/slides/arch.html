@@ -22,10 +22,10 @@
 Why it matters: you keep the index and change only the query side.<br>
 - [Top row] Documents go through Stella's document encoder once. Those vectors and that HNSW graph never change.<br>
 - [Three rows] Each request picks a query encoder. All three write vectors into the same space and search the same index.<br>
-  - Stella's own query encoder: 435M parameters, 25 GFLOPs per query.<br>
+  - Stella's own query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).<br>
   - Nano: a small transformer, 34.5M parameters, 0.54 GFLOPs. About 46 times less compute.<br>
   - Zero: no neural network at all, a lookup table. 28 KFLOPs, nearly a million times less than Stella.<br>
-- [own ef] Each encoder also gets its own search width. That matters later.<br>
+- [own ef] Each encoder also gets its own search width: Qdrant's `hnsw_ef`, how many candidates the HNSW search keeps. That matters later.<br>
 - The family is called Constella.<br>
 - Switching costs nothing: no second index, no re-encode. If rankings get worse, switch back on the next request.<br>
 Next: how can a lookup table produce a query vector?</aside>

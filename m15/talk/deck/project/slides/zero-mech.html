@@ -20,7 +20,7 @@ Why it matters: this is the whole encoder. No matrix multiply.<br>
 - Step 1: Stella's tokenizer turns the query into token IDs.<br>
 - Step 2: each token ID picks one row from a table: 30,522 rows, one per token, 1,024 numbers each.<br>
 - Step 3: a weighted mean of the rows, then normalize. Weight = square root of the token count, so a repeated word counts a bit more each time.<br>
-- The table is int8 with one scale per row: 31 MB. It fits in memory next to the search process.<br>
+- The table is stored as 8-bit integers, with one scaling factor per row: 31 MB. It fits in memory next to the search process.<br>
 - [Point to the two vectors] For this query, Zero's vector has cosine 0.88 with Stella's. Not identical, but pointing the same way.<br>
 Next: a table of random rows would not do that. Here is how it learned.</aside>
 </section>

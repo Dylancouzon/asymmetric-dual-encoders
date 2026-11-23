@@ -25,10 +25,10 @@ Next: what if only the query side changed?
 Why it matters: you keep the index and change only the query side.
 - [Top row] Documents go through Stella's document encoder once. Those vectors and that HNSW graph never change.
 - [Three rows] Each request picks a query encoder. All three write vectors into the same space and search the same index.
-  - Stella's own query encoder: 435M parameters, 25 GFLOPs per query.
+  - Stella's own query encoder: 435M parameters, 25 GFLOPs per query (25 billion arithmetic operations).
   - Nano: a small transformer, 34.5M parameters, 0.54 GFLOPs. About 46 times less compute.
   - Zero: no neural network at all, a lookup table. 28 KFLOPs, nearly a million times less than Stella.
-- [own ef] Each encoder also gets its own search width. That matters later.
+- [own ef] Each encoder also gets its own search width: Qdrant's `hnsw_ef`, how many candidates the HNSW search keeps. That matters later.
 - The family is called Constella.
 - Switching costs nothing: no second index, no re-encode. If rankings get worse, switch back on the next request.
 Next: how can a lookup table produce a query vector?
@@ -38,24 +38,24 @@ Why it matters: this is the whole encoder. No matrix multiply.
 - Step 1: Stella's tokenizer turns the query into token IDs.
 - Step 2: each token ID picks one row from a table: 30,522 rows, one per token, 1,024 numbers each.
 - Step 3: a weighted mean of the rows, then normalize. Weight = square root of the token count, so a repeated word counts a bit more each time.
-- The table is int8 with one scale per row: 31 MB. It fits in memory next to the search process.
+- The table is stored as 8-bit integers, with one scaling factor per row: 31 MB. It fits in memory next to the search process.
 - [Point to the two vectors] For this query, Zero's vector has cosine 0.88 with Stella's. Not identical, but pointing the same way.
 Next: a table of random rows would not do that. Here is how it learned.
 
 ## distill · ~2 min
-Why it matters: the table learns to speak Stella without touching the index.
+Why it matters: the table learns to imitate Stella without touching the index. In distillation terms, Stella is the teacher: the model being imitated.
 - Goal: rows whose average lands where Stella would put the query.
 - Start: each row is Stella's encoding of that single token. Rare tokens start with more weight (IDF).
-- Phase 1, Align (16,000 steps, batches of 512):
-  - Targets: Stella's query vectors, computed once and saved.
-  - Loss part one: point the same way as Stella's vector (1 − cosine).
-  - Loss part two: for labeled queries, match how Stella spreads its scores over the relevant passage and 31 other candidates (KL divergence).
+- Phase 1, Align (16,000 training steps of 512 examples each):
+  - What it imitates: Stella's query vectors for the training queries, computed once and saved.
+  - First goal: point in the same direction as Stella's vector (the loss is 1 − cosine).
+  - Second goal: for labeled queries, give the relevant passage and 31 other candidates the same relative scores Stella gives them (measured with KL divergence).
   - Why both: a vector can look close to Stella's and still rank a different passage first.
-- Phase 2, Rank (2,500 steps): InfoNCE on 338,076 labeled query-passage pairs.
-  - Push the relevant passage above 32,768 negatives from a frozen bank.
+- Phase 2, Rank (2,500 steps): contrastive training (InfoNCE) on 338,076 labeled query-passage pairs.
+  - Score the relevant passage above 32,768 wrong passages, drawn from a fixed pool.
   - Drop candidates Stella scores close to or above the relevant one: they may answer the question too.
-- [Formula line] Ê_D, the document side, never changes.
-- Cost: about 20 minutes on one RTX 3080, once the targets exist. A new teacher needs 8 to 12 hours to compute targets first.
+- [Formula line] Ê_D, Stella's document vectors, never changes.
+- Cost: about 20 minutes on one RTX 3080, once Stella's vectors are saved. A different teacher model needs 8 to 12 hours to compute those vectors first.
 - All training sources allow commercial use of the trained weights.
 Next: I assumed the best retriever would make the best table. It did not.
 
@@ -64,7 +64,7 @@ Why it matters: you cannot pick your teacher by its leaderboard score.
 - I fitted a quick lookup table (a few minutes on one A100) to 10 strong models and tested each on its own index.
 - [Red line] gte-large was 1st as a retriever and 10th as a table: 0.597 down to 0.246.
 - [White line] Stella was 2nd as a retriever and 1st as a table. That is why Constella uses Stella.
-- Across all 26 models I tried, the two rankings barely relate (rank correlation +0.09).
+- Across all 26 models I tried, the two rankings barely relate (rank correlation +0.09, close to zero).
 - Lesson: if you might want a cheap query encoder later, test it on a small index before you encode the whole corpus.
 Next: even with the best teacher, a lookup table has limits you should know.
 
@@ -73,18 +73,18 @@ Why it matters: know which queries Zero will get wrong before your users do.
 - Zero does three things: split into tokens, look up one row each, average. Each step loses something.
 - [Order] An average has no order. "paris to rome" and "rome to paris" give the same vector and the same results list.
   - Test: 24 query pairs where direction changes the answer. Right passage first in both directions: Zero 0, Nano 2, Stella 4. Hard for everyone, impossible for Zero.
-- [Context] One row per token, whatever is next to it. "bank" is the same row in "river bank" and "bank loan". A transformer reads neighbours; Zero only has the other rows in the average.
+- [Context] One row per token, whatever is next to it. "bank" is the same row in "river bank" and "bank loan". A transformer uses attention to read the words around each token; Zero only has the other rows in the average.
 - [New words] The vocabulary is fixed. "qdrant" becomes q, ##dran, ##t, rows learned from other words. A transformer recombines pieces; Zero averages them.
 - Takeaway: Zero fits short keyword queries. Test phrased questions separately.
 Next: to get order and context back, you need attention. That is Nano.
 
 ## nano · ~2 min
-Why it matters: a small transformer that writes vectors into Stella's space.
-- Backbone: bge-small, 12 layers, 384 features per token.
-- Problem: Stella's vectors have 1,024 numbers. A linear projection of 384 features can only move in 384 directions, however long its output.
-- Fix: mean-pool layers 4, 8, and 12, join them (1,152 features), then project to 1,024. Different layers carry different information, so the projection gets more directions to use.
-- Training, step 1: freeze the backbone, fit the projection with ridge regression.
-- Training, step 2: train backbone and projection together. Loss: squared distance to Stella's vector for the same text.
+Why it matters: a small transformer whose output vectors land in the same space as Stella's, so they can search Stella's index.
+- Starting model: bge-small, a 12-layer embedding model. Inside it, each token is represented by 384 numbers.
+- Problem: Stella's vectors have 1,024 numbers. One matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent ways.
+- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.
+- Training, step 1: keep bge-small fixed and fit only that final matrix, with ridge regression (least squares with a penalty on large weights).
+- Training, step 2: train the whole model together. The loss is the squared distance to Stella's vector for the same text.
   - Queries are matched to Stella's query vectors. Passages are matched to Stella's document vectors. Three query batches for every passage batch.
   - No relevance labels needed: Stella supplies every target.
 - Data: 3.49M unique queries in 12 forms (questions, product searches, claims, keywords, titles, and seven generated forms). About 200 million examples seen.
@@ -138,7 +138,7 @@ Why it matters: the search settings are part of the encoder choice.
   - Oversampling, with quantization: 1-bit binary codes in RAM, full vectors on disk. Fetch 4 times the results with the codes, then rescore with the full vectors.
 - [Curves] Each line: of the encoder's own exact top 10, how much does the search find?
 - [Circles] Zero at ef 1024 still finds less than Stella at ef 32.
-- Why: the graph's links were built from Stella's vectors. Zero's query vectors land a little off, so the walk needs more room. Across 25 models in the paper, tables needed ef 256 to match their teacher at 64.
+- Why: the graph's links were built from Stella's vectors. Zero's query vectors land a little off, so the search has to keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match the model they imitate at ef 64.
 - So: same graph, but each encoder gets its own ef and oversampling per request.
 Next: the encoder and the search width are one decision, and the best answer changes with traffic. So I let a router decide.
 
@@ -179,10 +179,10 @@ Why it matters: the method is not tied to Stella. If you have a frozen index, yo
 - [01] Keep your document encoder and your index. Nothing is re-encoded, ever.
 - [02] Encode a large set of real queries with your current query model, with its prompt and preprocessing. Those vectors are the targets. For Nano, add passages encoded by your document model.
   - A hosted model works if it returns the same vectors.
-  - Before training, fit a quick lookup table to check your model teaches well (remember gte-large).
+  - Before training, fit a quick lookup table to check that your model is easy to imitate (remember gte-large).
 - [03] Train:
-  - Zero: one row per token of your tokenizer, start from your model's token encodings, align then rank. About 20 minutes on one GPU once the targets exist. For Stella the targets took 8 to 12 hours.
-  - Nano: a small backbone, three pooled layers, a projection to your vector size, trained on your model's vectors. No relevance labels needed. About $95 of A100 time for ours.
+  - Zero: one row per token of your tokenizer, each starting from your model's vector for that token, then the same two phases. About 20 minutes on one GPU once your model's vectors are saved. For Stella, computing them took 8 to 12 hours.
+  - Nano: a small embedding model, three averaged layers, one matrix to your vector size, trained to reproduce your model's vectors. No relevance labels needed. About $95 of A100 time for ours.
 - [04] Judge on your own queries: exact nDCG@10 per encoder, then sweep ef and oversampling. Then set your floor and let a router pick.
 - [QR] The paper has every detail: data, losses, steps, and what failed.
 [Advance to the thank-you slide.]

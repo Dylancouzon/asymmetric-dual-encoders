@@ -15,12 +15,12 @@
 <p class="src">Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. No relevance labels; MS MARCO used for validation only.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~2 min]<br>
-Why it matters: a small transformer that writes vectors into Stella's space.<br>
-- Backbone: bge-small, 12 layers, 384 features per token.<br>
-- Problem: Stella's vectors have 1,024 numbers. A linear projection of 384 features can only move in 384 directions, however long its output.<br>
-- Fix: mean-pool layers 4, 8, and 12, join them (1,152 features), then project to 1,024. Different layers carry different information, so the projection gets more directions to use.<br>
-- Training, step 1: freeze the backbone, fit the projection with ridge regression.<br>
-- Training, step 2: train backbone and projection together. Loss: squared distance to Stella's vector for the same text.<br>
+Why it matters: a small transformer whose output vectors land in the same space as Stella's, so they can search Stella's index.<br>
+- Starting model: bge-small, a 12-layer embedding model. Inside it, each token is represented by 384 numbers.<br>
+- Problem: Stella's vectors have 1,024 numbers. One matrix can stretch 384 numbers into 1,024, but it cannot add information: the output still varies in only 384 independent ways.<br>
+- Fix: average the token vectors from layers 4, 8, and 12, and put the three averages side by side (1,152 numbers). Then one matrix maps them to Stella's 1,024. Different layers capture different things, so the matrix has more to work with.<br>
+- Training, step 1: keep bge-small fixed and fit only that final matrix, with ridge regression (least squares with a penalty on large weights).<br>
+- Training, step 2: train the whole model together. The loss is the squared distance to Stella's vector for the same text.<br>
   - Queries are matched to Stella's query vectors. Passages are matched to Stella's document vectors. Three query batches for every passage batch.<br>
   - No relevance labels needed: Stella supplies every target.<br>
 - Data: 3.49M unique queries in 12 forms (questions, product searches, claims, keywords, titles, and seven generated forms). About 200 million examples seen.<br>
