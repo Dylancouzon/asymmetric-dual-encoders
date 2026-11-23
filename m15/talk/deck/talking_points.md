@@ -111,16 +111,15 @@ Why it matters: the honest saving, with search included.
 - So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.
 Next: why does Zero need more search?
 
-## recovery · ~2.5 min
+## recovery · ~2 min
 Why it matters: the search settings are part of the encoder choice.
-- Qdrant's HNSW settings come in two kinds:
-  - Set when the index is built: `m`, the links per passage (16, the default), and `ef_construct`, the candidates checked when choosing links (100). Change them and you rebuild.
-  - Set per request: `hnsw_ef`, the candidates kept during the search walk. Wider finds more true neighbours and takes longer.
-  - Oversampling, with quantization: 1-bit binary codes in RAM, full vectors on disk. Fetch 4 times the results with the codes, then rescore with the full vectors.
-- [Curves] Each line: the share of the encoder's own exact top 10 that the search finds.
+- The HNSW graph was built once, from Stella's vectors, and stays as it is.
+- [hnsw_ef] How many candidates the search keeps while it walks the graph. Wider finds more true neighbours and takes longer.
+- [oversampling 4] The index stores 1-bit codes in memory and full vectors on disk. The search fetches 4 times the results with the codes, then rescores them with the full vectors.
+- [Curves] Each line: how much of the encoder's own exact top 10 the search finds.
 - [Circles] Zero at ef 1024 still finds less than Stella at ef 32.
-- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.
-- So: one graph, with ef and oversampling set per encoder, per request.
+- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.
+- So: one graph, and each encoder gets its own search width per request.
 Next: encoder and search width are one decision, and the best one changes with traffic. So I let a router decide.
 
 ## recipe · ~2 min

@@ -19,15 +19,14 @@
 <p class="lb" style="left:1622px;top:491px;width:110px;font-size:36px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
 <p class="src">Qdrant Edge, HNSW m=16, ef_construct=100, binary quantization with fp16 rescoring, one build, M5 Pro. Across the paper's 25 lookup tables that passed its exact-search check, they needed a median ef of 256 to match their teacher at 64. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~2.5 min]<br>
+<aside>[~2 min]<br>
 Why it matters: the search settings are part of the encoder choice.<br>
-- Qdrant's HNSW settings come in two kinds:<br>
-  - Set when the index is built: `m`, the links per passage (16, the default), and `ef_construct`, the candidates checked when choosing links (100). Change them and you rebuild.<br>
-  - Set per request: `hnsw_ef`, the candidates kept during the search walk. Wider finds more true neighbours and takes longer.<br>
-  - Oversampling, with quantization: 1-bit binary codes in RAM, full vectors on disk. Fetch 4 times the results with the codes, then rescore with the full vectors.<br>
-- [Curves] Each line: the share of the encoder's own exact top 10 that the search finds.<br>
+- The HNSW graph was built once, from Stella's vectors, and stays as it is.<br>
+- [hnsw_ef] How many candidates the search keeps while it walks the graph. Wider finds more true neighbours and takes longer.<br>
+- [oversampling 4] The index stores 1-bit codes in memory and full vectors on disk. The search fetches 4 times the results with the codes, then rescores them with the full vectors.<br>
+- [Curves] Each line: how much of the encoder's own exact top 10 the search finds.<br>
 - [Circles] Zero at ef 1024 still finds less than Stella at ef 32.<br>
-- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates to find the same neighbours. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.<br>
-- So: one graph, with ef and oversampling set per encoder, per request.<br>
+- Why: the graph's links come from Stella's vectors, and Zero's queries land slightly off, so the search must keep more candidates. Across 25 models in the paper, lookup tables needed ef 256 to match their teacher at ef 64.<br>
+- So: one graph, and each encoder gets its own search width per request.<br>
 Next: encoder and search width are one decision, and the best one changes with traffic. So I let a router decide.</aside>
 </section>
