@@ -21,8 +21,9 @@ input[type=range]{width:100%;accent-color:#9494ff;height:1.9rem;margin:.1rem 0}i
 .seg{display:flex;gap:.4rem;margin:.4rem 0}.seg button{flex:1;font-size:1.25rem;font-weight:600;padding:.5rem .4rem;border-radius:.6rem;border:2px solid var(--line);background:#0b0f19;color:var(--mut)}
 .seg button.on{border-color:var(--ok);color:var(--txt);background:#122a26}
 .mix{display:grid;grid-template-columns:6rem 1fr 3.75rem;align-items:center;gap:.6rem;font-size:1.3rem}.mix b{text-align:right}
-.enc{display:grid;grid-template-columns:5rem 1fr 4.5rem;align-items:center;gap:.5rem;font-size:1.25rem;margin:.35rem 0 0}
+.enc{display:grid;grid-template-columns:5rem 1fr 5rem 4.5rem;align-items:center;gap:.5rem;font-size:1.25rem;margin:.35rem 0 0}
 .enc select{font:inherit;font-size:1.15rem;background:#0b0f19;color:var(--txt);border:2px solid var(--line);border-radius:.5rem;padding:.1rem .3rem}
+.enc b{text-align:right;font-variant-numeric:tabular-nums}.scale{display:flex;justify-content:space-between;padding:0 .3rem}
 .hint{font-size:1.15rem;color:var(--mut);margin:.25rem 0}
 details summary{font-size:1.05rem;letter-spacing:.19rem;color:var(--mut);cursor:pointer;font-weight:600}
 .tg{display:grid;grid-template-columns:auto 1fr;gap:.9rem;align-items:center;margin-top:.4rem}
@@ -69,9 +70,10 @@ th:first-child,td:first-child{text-align:left}td{text-align:right;padding:.35rem
     </div>
   <div class="card"><h2>P95 TARGET <b id="target_v"></b></h2><input id="target" type="range" min="0" max="1000"></div>
   <div class="card"><h2>HNSW SEARCH <span class="sm" id="search_by" style="letter-spacing:0"></span></h2>
-    <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><select id="os_stella"></select></div>
-    <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><select id="os_nano"></select></div>
-    <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><select id="os_zero"></select></div></div>
+    <div class="enc"><span style="color:var(--stella)">Stella</span><input id="ef_stella" type="range" min="0" max="5"><b id="ef_stella_v"></b><select id="os_stella"></select></div>
+    <div class="enc"><span style="color:var(--nano)">Nano</span><input id="ef_nano" type="range" min="0" max="5"><b id="ef_nano_v"></b><select id="os_nano"></select></div>
+    <div class="enc"><span style="color:var(--zero)">Zero</span><input id="ef_zero" type="range" min="0" max="5"><b id="ef_zero_v"></b><select id="os_zero"></select></div>
+    <div class="enc sm"><span></span><div class="scale"><span>32</span><span>1024</span></div></div></div>
   <details><summary>MORE</summary>
     <div class="seg" id="pattern"><button data-v="steady">steady</button><button data-v="wave">daily wave</button><button data-v="bursts">bursts</button></div>
     <div class="tg" id="spike_g"><button id="spike">Spike</button><div><label>size <b id="peak_v"></b></label><input id="peak" type="range" min="2" max="50"></div></div>
@@ -133,7 +135,8 @@ for (const e of ENC) {
     const split = {[e]: v}; for (const o of others) split[o] = rest ? (100 - v) * +$("w_" + o).value / rest : (100 - v) / 2;
     for (const o of ENC) { $("w_" + o).value = split[o]; $("w_" + o + "_v").textContent = Math.round(split[o]) + "%"; }
     set({route: "split", split}); };
-  const sendSearch = () => set({search: {[e]: [EFS[+$("ef_" + e).value], +$("os_" + e).value]}});
+  const sendSearch = () => { $("ef_" + e + "_v").textContent = "ef " + EFS[+$("ef_" + e).value];
+    set({search: {[e]: [EFS[+$("ef_" + e).value], +$("os_" + e).value]}}); };
   $("ef_" + e).oninput = sendSearch; $("os_" + e).onchange = sendSearch;
 }
 // Keys: space pauses, up and down arrows step the traffic by 1.5x.
@@ -199,7 +202,8 @@ function render(s) {
     $("peak").value = s.peak; $("peak_v").textContent = "×" + s.peak; $("fanout").value = s.fanout; $("fanout_v").textContent = s.fanout;
     const tot = ENC.reduce((a, e) => a + s.split[e], 0) || 1;
     for (const e of ENC) { $("w_" + e).value = 100 * s.split[e] / tot; $("w_" + e + "_v").textContent = Math.round(100 * s.split[e] / tot) + "%";
-      $("ef_" + e).value = Math.max(0, EFS.indexOf(s.search[e][0])); $("os_" + e).value = s.search[e][1]; }
+      $("ef_" + e).value = Math.max(0, EFS.indexOf(s.search[e][0])); $("os_" + e).value = s.search[e][1];
+      $("ef_" + e + "_v").textContent = "ef " + s.search[e][0]; }
   }
   document.querySelectorAll("#route button").forEach(b => b.classList.toggle("on", b.dataset.v === s.route));
   document.querySelectorAll("#pattern button").forEach(b => b.classList.toggle("on", b.dataset.v === s.pattern));
