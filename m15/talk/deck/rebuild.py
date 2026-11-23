@@ -751,7 +751,7 @@ ASTRO = {"telescope": "/_blob/7a2fac0c52e21ae07765491e6be45586", "telescope-left
 INK = "#0b0f19"
 # 2026-11-23: the robot mascot (generated with Codex gpt-6.2-sol from the owner's character sheet), same roles per slide
 ASTRO.update({"strings": "/_blob/41d32282c204df52436c792132876383", "graph": "/_blob/08e7d34403c04d248c672ad0496ba4af",
-              "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/04adffae4bd1e482c525300df428406d",
+              "juggle": "/_blob/117da63b17ecd3b5d266b982fa2efadb", "coffee": "/_blob/fdd9aacb427bf1f1d5c8d7d76fa895ec",
               "laptop": "/_blob/05b0c46d773451944c71dbba1c666232", "telescope-left": "/_blob/baa5783eb9620b82b42e657a129cf8c6",
               "wave": "/_blob/c61d49d539b53b74e45ff7bb51d840f0"})
 
@@ -1182,8 +1182,8 @@ F.add(f'<circle cx="1530" cy="186" r="22" fill="none" stroke="{VIO}" stroke-widt
 F.t(1490, 436, "Stella's space", 32, WHITE, "middle", 700)
 chips = ('<div class="chips" style="position:absolute;left:128px;top:792px;gap:24px">' + stat("34.5M parameters", "vio")
          + stat("3.49M training queries") + stat("57.3 A100-hours ≈ $95") + "</div>")
-write("nano", " foot", "Nano Projects bge-small into Stella's Space", F.html() + "\n" + chips + astro("graph", 1520, 716, 220, 230),
-      "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge. "
+write("nano", " foot", "Nano Projects bge-small into Stella's Space", F.html() + "\n" + chips + astro("graph", 1592, 706, 355, 408),
+      "Loss: ‖f(x) − Ê_S(x)‖² on queries (query targets) and passages (document targets), 3:1. Head initialized by ridge.&nbsp;<br>"
       "No relevance labels; MS MARCO used for validation only.")
 
 # bench v11: same scatter; the lookup lane drawn as its own band; labels as text
@@ -1298,7 +1298,7 @@ r = mx / _best["zero"]["usd_per_million"]
 card = (f'<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px">'
         f'<p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">{r:.0f}×</p>'
         f'<p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div>')
-write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1164, 427, 446, 525),
+write("cloud-e2e", " foot", "Once Encoding Is Cheap, Search Is the Bill", F.html() + "\n" + card + astro("coffee", 1390, 612, 400, 400),
       "GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected "
       "setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.")
 
@@ -1399,7 +1399,7 @@ write("plan", " foot", "Zero Only Enters at Peaks", F.html(),
 # live v11: the demo slide, with room for the astronaut
 write("live", " demo", "Demo: An Auto Router on One Index",                   # layout set by Dylan in the page
       '<div class="live" style="margin-top:8px;translate:0 16px"><div class="dot"></div><p>LIVE</p></div>'
-      + astro("laptop", 1004, 276, 985, 933), pre=GLOW)
+      + astro("laptop", 914, 116, 1252, 1143), pre=GLOW)
 _lv = S / "live.html"
 _lv.write_text(_lv.read_text().replace("<h2>Demo:", '<h2 style="width:1498px;min-height:300px;transform:translate(0, 252px);'
                                        'box-sizing:border-box;flex:0 0 auto">Demo:', 1))
@@ -1414,7 +1414,7 @@ write("close", " alt", "Use the Constella Models <span class=\"tr\">Today</span>
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p>'
       '<p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none">'
       '<span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div>'
-      + astro("telescope-left", 1116, 307, 1093, 915), pre=GLOW)
+      + astro("telescope-left", 1072, 128, 1136, 1074), pre=GLOW)
 
 # byo v11: four step cards and the paper's QR in a card
 steps = "".join(f'<div class="stp"><p class="sn">0{i + 1}</p><div class="col" style="gap:4px"><p class="st">{a}</p><p class="sd">{b}</p></div></div>'
