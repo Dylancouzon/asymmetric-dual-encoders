@@ -990,9 +990,9 @@ Q.add("".join(f'<circle cx="{gp[i][0]:.0f}" cy="{gp[i][1]:.0f}" r="11" fill="{RE
       f'<circle cx="{TGT[0]}" cy="{TGT[1]}" r="28" fill="none" stroke="{RED}" stroke-width="5"/>')
 Q.t(TGT[0], TGT[1] - 44, "June Gable", 36, WHITE, "middle", 700)
 Q.t(GX + GW, GY + GH + 20, "0.23 ms", 36, RED, "end", 700)
-_q = Q.html().replace('<svg aria', '<svg class="fragment" data-fragment-index="1" aria').replace(
+_qlane = Q.html().replace('<svg aria', '<svg class="fragment" data-fragment-index="1" aria').replace(
     'class="lb"', 'class="lb fragment" data-fragment-index="1"').replace('class="qbox"', 'class="qbox fragment" data-fragment-index="1"')
-write("cost", " foot", "One Encoder, Two Deadlines", A.html() + "\n" + _q,
+write("cost", " foot", "One Encoder, Two Deadlines", A.html() + "\n" + _qlane,
       f"BEIR NQ, 2,681,468 passages, encoded once with Stella. Real NQ test query; its judged passage ranks first in exact "
       f"search (score {_X2['passages'][0]['score']:.2f}). Vector: first values of 1,024. Median times on the M5 Pro. Graph schematic. Exploratory.")
 
