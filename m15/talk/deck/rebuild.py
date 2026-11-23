@@ -964,15 +964,7 @@ TGT, ENT = (1520, 190), (1262, 440)
 gp, ge, walk = _flat_graph(IX0 + 40, 120, IX1 - IX0 - 80, 330, TGT, ENT)
 A, Q = Fig(h=H2, aria="Passages go through Stella once and fill a Qdrant HNSW index"), \
     Fig(h=H2, aria="A question goes through the same Stella on every request; its vector walks the index to June Gable")
-# lane bands, labelled
-def _band(y, fill, op, stroke, sop):                          # a lane band, split around the Stella card
-    return "".join(f'<rect x="{x0}" y="{y}" width="{x1 - x0}" height="270" rx="22" fill="{fill}" fill-opacity="{op}" '
-                   f'stroke="{stroke}" stroke-opacity="{sop}" stroke-width="2"/>' for x0, x1 in ((0, SX0 - 24), (SX1 + 24, IX0 - 24)))
-
-
-A.add(_band(0, "#c9cede", 0.035, "#3a4157", 1))
 A.t(28, 42, "ONCE, AT INDEXING", 25, MUT, weight=700, mono=True)
-Q.add(_band(290, RED, 0.06, RED, 0.5))
 Q.t(28, 332, "EVERY QUERY", 25, RED, weight=700, mono=True)
 # lane 1: a stack of passages, Stella, into the index
 for k in (2, 1):
@@ -1062,21 +1054,11 @@ write("arch", " foot", "Three Query Encoders Search One Index", F.html(),
 F = Fig(aria="The query's tokens each pick one row of Zero's lookup table; the weighted mean of those rows is Zero's "
              "query vector, close to Stella's (cosine 0.88)")
 rows_ = ex["rows"]
-TX, TW, top = 200, 760, 24
-y, rng_ = top, _random.Random(9)
-for i, r in enumerate(rows_):
-    for _ in range(1 if i else 2):                               # faint rows between the picked ones: the rest of the table
-        F.add(f'<rect x="{TX}" y="{y}" width="{TW}" height="10" rx="3" fill="#9aa0b5" opacity="0.12"/>')
-        y += 15
-    y += 6
-    F.add(f'<rect x="{TX - 8}" y="{y - 6}" width="{TW + 16}" height="48" rx="8" fill="none" stroke="#3a4157" stroke-width="2"/>')
+TX, TW, top = 200, 760, 46
+for i, r in enumerate(rows_):                                    # the picked rows only, no table frame
+    y = top + i * 72
     F.add(strip2(TX, y, r["row"], TW, 36))
     F.t(TX - 32, y + 30, r["token"], 32, MUT if r["token"].startswith("[") else WHITE, "end", 600, True)
-    y += 52
-for _ in range(1):
-    F.add(f'<rect x="{TX}" y="{y}" width="{TW}" height="10" rx="3" fill="#9aa0b5" opacity="0.12"/>')
-    y += 15
-F.g.insert(0, f'<rect x="{TX - 16}" y="0" width="{TW + 32}" height="{y + 12}" rx="16" fill="#0d1320" stroke="#303547" stroke-width="2"/>')
 F.add(arr(990, 300, 1120, 300, WHITE))
 F.t(1055, 356, "weighted", 28, WHITE, "middle", 600)
 F.t(1055, 392, "mean", 28, WHITE, "middle", 600)
