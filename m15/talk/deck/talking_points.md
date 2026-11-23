@@ -30,11 +30,10 @@ Why it matters: you keep the index and change only the query side.
 Next: how can a lookup table produce a query vector?
 
 ## zero-mech · ~1.5 min
-Why it matters: this is the whole encoder, with no matrix multiply.
-- Step 1: Stella's tokenizer turns the query into token IDs.
-- Step 2: each ID picks one row of a table with 30,522 rows (one per token) of 1,024 numbers.
-- Step 3: average the rows, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.
-- Stored as 8-bit integers with one scaling factor per row: 31 MB, small enough to sit next to the search process.
+- The table: one learned vector of 1,024 numbers for every token in Stella's vocabulary, 30,522 tokens (words and word pieces). Stored as 8-bit integers with one scaling factor per row: 31 MB, small enough to sit next to the search process.
+- Step 1: Stella's tokenizer splits the query into tokens from that vocabulary.
+- Step 2: each token looks up its vector in the table.
+- Step 3: average those vectors, weighted by the square root of each token's count (a repeated word counts a bit more), then normalize.
 - [Two vectors] For this query, Zero's vector has cosine 0.88 with Stella's: not identical, but pointing the same way.
 Next: random rows would not do that. Here is how it learned.
 
