@@ -805,16 +805,18 @@ def talk_crossover():
 
 
 def talk_router_plan():
-    if not (REPO / "results" / "m15_talk_router_plan.json").exists():
+    if not (REPO / "results" / "m15_talk_router_plan_own_search.json").exists():
         return ""
-    d = R("m15_talk_router_plan.json")
-    rows = [[f"{p['rate']:,}", f"ef {p['ef']}, os {p['oversampling']:g}",
-             ", ".join(f"{k} {v:.0%}" for k, v in p["shares"].items() if v), f"{p['quality']:.3f}"] for p in d["plans"]]
+    d = R("m15_talk_router_plan_own_search.json")
+    rows = [[f"{p['rate']:,}", ", ".join(f"{k} {v:.0%}" for k, v in p["shares"].items() if v), f"{p['quality']:.3f}"]
+            for p in d["plans"]]
+    st = ", ".join(f"{k.capitalize()} ef {v[0]}" for k, v in d["search"].items())
     return card("C32. What the studio router plans as traffic grows", "exploratory (planner output on fixed costs)",
-                f"With floor {d['floor']:.2f}, the router serves Stella alone at 40 searches/s, moves to Nano by 1,000/s, and "
-                f"mixes in Zero with a narrower search above that; average nDCG@10 stays above the floor.",
-                table(["searches/s", "preset", "traffic share", "average nDCG@10"], rows),
-                "`results/m15_talk_router_plan.json`",
+                f"With each encoder at its own search ({st}, oversampling 4), the router serves Stella alone at 40 "
+                f"searches/s, moves to Nano by 1,000/s, and mixes in Zero above that. Supersedes the shared-preset plan "
+                f"in `results/m15_talk_router_plan.json`.",
+                table(["searches/s", "traffic share", "average nDCG@10"], rows),
+                "`results/m15_talk_router_plan_own_search.json`",
                 "Real load: queueing, contention between encoders and search, and other hardware move the switch points.")
 
 

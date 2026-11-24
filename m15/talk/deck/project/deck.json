@@ -23,18 +23,18 @@
   "order",
   "nano",
   "bench",
-  "cloud",
   "bet",
   "split",
-  "cloud-e2e",
+  "cloud",
   "recovery",
-  "recipe",
   "live",
+  "plan",
   "close",
   "byo",
   "thanks",
-  "plan",
   "takeaways",
+  "recipe",
+  "cloud-e2e",
   "race",
   "solved",
   "flops",
@@ -82,7 +82,7 @@
   },
   "backup": {
    "description": "Hidden backup slides for questions.",
-   "start": "plan"
+   "start": "takeaways"
   }
  },
  "faces": {

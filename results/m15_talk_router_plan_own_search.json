@@ -1,0 +1,212 @@
+{
+  "status": "COMPLETE",
+  "analysis": "exploratory (planner output on fixed costs)",
+  "dataset": "nq",
+  "search": {
+    "stella": [
+      64,
+      4.0
+    ],
+    "nano": [
+      128,
+      4.0
+    ],
+    "zero": [
+      256,
+      4.0
+    ]
+  },
+  "headroom": 0.8,
+  "encode_per_s": {
+    "stella": 80,
+    "nano": 1400,
+    "zero": 17000
+  },
+  "plans": [
+    {
+      "rate": 40,
+      "shares": {
+        "stella": 1.0,
+        "nano": 0.0,
+        "zero": 0.0
+      },
+      "quality": 0.6173610055803523,
+      "status": "ok"
+    },
+    {
+      "rate": 60,
+      "shares": {
+        "stella": 1.0,
+        "nano": 0.0,
+        "zero": 0.0
+      },
+      "quality": 0.6173610055803523,
+      "status": "ok"
+    },
+    {
+      "rate": 100,
+      "shares": {
+        "stella": 0.61,
+        "nano": 0.39,
+        "zero": 0.0
+      },
+      "quality": 0.5964279336437521,
+      "status": "ok"
+    },
+    {
+      "rate": 150,
+      "shares": {
+        "stella": 0.39,
+        "nano": 0.61,
+        "zero": 0.0
+      },
+      "quality": 0.5846195340897725,
+      "status": "ok"
+    },
+    {
+      "rate": 200,
+      "shares": {
+        "stella": 0.27,
+        "nano": 0.73,
+        "zero": 0.0
+      },
+      "quality": 0.5781785888785109,
+      "status": "ok"
+    },
+    {
+      "rate": 300,
+      "shares": {
+        "stella": 0.16,
+        "nano": 0.84,
+        "zero": 0.0
+      },
+      "quality": 0.5722743891015211,
+      "status": "ok"
+    },
+    {
+      "rate": 450,
+      "shares": {
+        "stella": 0.09,
+        "nano": 0.91,
+        "zero": 0.0
+      },
+      "quality": 0.5685171710616186,
+      "status": "ok"
+    },
+    {
+      "rate": 600,
+      "shares": {
+        "stella": 0.05,
+        "nano": 0.95,
+        "zero": 0.0
+      },
+      "quality": 0.5663701893245313,
+      "status": "ok"
+    },
+    {
+      "rate": 800,
+      "shares": {
+        "stella": 0.02,
+        "nano": 0.98,
+        "zero": 0.0
+      },
+      "quality": 0.5647599530217159,
+      "status": "ok"
+    },
+    {
+      "rate": 1000,
+      "shares": {
+        "stella": 0.0,
+        "nano": 1.0,
+        "zero": 0.0
+      },
+      "quality": 0.5636864621531723,
+      "status": "ok"
+    },
+    {
+      "rate": 1200,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.92,
+        "zero": 0.08
+      },
+      "quality": 0.5580528972930182,
+      "status": "ok"
+    },
+    {
+      "rate": 1500,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.72,
+        "zero": 0.28
+      },
+      "quality": 0.5439689851426329,
+      "status": "ok"
+    },
+    {
+      "rate": 1800,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.58,
+        "zero": 0.42
+      },
+      "quality": 0.5341102466373632,
+      "status": "ok"
+    },
+    {
+      "rate": 2000,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.52,
+        "zero": 0.48
+      },
+      "quality": 0.5298850729922476,
+      "status": "ok"
+    },
+    {
+      "rate": 2250,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.45,
+        "zero": 0.55
+      },
+      "quality": 0.5249557037396129,
+      "status": "ok"
+    },
+    {
+      "rate": 2500,
+      "shares": {
+        "stella": 0.0,
+        "nano": 0.39,
+        "zero": 0.61
+      },
+      "quality": 0.5207305300944972,
+      "status": "ok"
+    }
+  ],
+  "receipt": {
+    "script": "m15src/talk_router_plan.py",
+    "script_sha256": "908ae16c238c7fb31e05bfd2cd50ecd21b47438d4d6efcce849d9e6eff72ea83",
+    "git_commit": "44842d43b635a7345e6a1c5cb80d6dd15f6df9fa",
+    "m15src_dirty": true,
+    "started_utc": "2026-11-23T16:23:00Z",
+    "finished_utc": "2026-11-23T16:23:00Z",
+    "machine": {
+      "chip": "Apple M5 Pro",
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "python": "3.12.13"
+    },
+    "packages": {
+      "numpy": "2.5.2"
+    },
+    "seed": 20260930,
+    "inputs": {
+      "edge_nq": {
+        "path": "results/m15_talk_edge_nq.json",
+        "sha256": "aa2b09b1472c763af24ccef9e5964f4bea8e072ed0833b5e7555e7180206458b"
+      }
+    },
+    "method": "m15/MEASUREMENTS.md",
+    "method_sha256": "f0b282be7d3361f12188f42a5c005da34067fc5c8eea91623c664e58e480ad01"
+  }
+}

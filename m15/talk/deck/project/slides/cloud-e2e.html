@@ -1,5 +1,5 @@
-<section id="cloud-e2e" class="s foot" data-transition="fade">
-<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>The Whole Request on a Cloud VM: 29× Cheaper</h2></div>
+<section id="cloud-e2e" class="s foot" hidden>
+<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>Once Encoding Is Cheap, Search Is the Bill</h2></div>
 <svg aria-label="Dollars per million queries, encode plus search: Stella $4.91, Nano $0.18, Zero $0.17" style="position:absolute;left:128px;top:284px" width="1100" height="560" viewBox="0 0 1100 560"><rect x="200" y="96" width="760" height="68" rx="12" fill="#151b2b"/><rect x="200" y="96" width="760" height="68" rx="12" fill="#c9cede"/><rect x="200" y="236" width="760" height="68" rx="12" fill="#151b2b"/><rect x="200" y="236" width="28" height="68" rx="12" fill="#9494ff"/><rect x="200" y="376" width="760" height="68" rx="12" fill="#151b2b"/><rect x="200" y="376" width="26" height="68" rx="12" fill="#ff516b"/></svg>
 <p class="lb" style="left:328px;top:282px;width:697px;font-size:34px;color:#9aa0b5;font-weight:400;text-align:left;">$ per 1M queries, encode + search</p>
 <p class="lb" style="left:128px;top:388px;width:168px;font-size:40px;color:#c9cede;font-weight:700;text-align:left;">Stella</p>
@@ -8,15 +8,15 @@
 <p class="lb" style="left:374px;top:532px;width:132px;font-size:36px;color:#fcfdff;font-weight:700;text-align:left;">$0.18</p>
 <p class="lb" style="left:128px;top:668px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
 <p class="lb" style="left:372px;top:672px;width:132px;font-size:36px;color:#fcfdff;font-weight:700;text-align:left;">$0.17</p>
-<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px"><p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">29×</p><p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div><img class="mascot" src="/_blob/fcf094b23e6cc4c81851cc9e9c5aa63d" alt="" style="left:1164px;top:427px;width:446px;height:525px">
+<div class="stat red" style="position:absolute;left:1320px;top:446px;width:492px;flex-direction:column;align-items:flex-end;gap:4px;padding:28px 32px"><p style="font-size:120px;font-weight:700;color:#ff516b;line-height:1">29×</p><p style="font-size:32px;color:#ffd0d8">cheaper than Stella</p></div><img class="mascot" src="/_blob/a72bd2b3eb93e5f04b461cfb8f2b0b97" alt="" style="left:1088px;top:461px;width:552px;height:527px">
 
 <p class="src">GCP c4-standard-8, $0.395/h, NQ, Qdrant Edge in one process, best of 1-8 threads, each encoder at its selected setting, warm page cache. Nano and Zero both stop near 600-650 queries/s: the search process sets the ceiling. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1.25 min]<br>
 Why it matters: the honest saving, with search included.<br>
-- Same NQ index on the same cloud machine, now paying for encode plus search.<br>
-- Per million queries: Stella $4.91, Nano $0.18, Zero $0.17. About 29 times cheaper.<br>
+- Same NQ index and cloud machine, now paying for encode plus search: Stella $4.91, Nano $0.18, Zero $0.17 per million queries. About 29 times cheaper.<br>
 - Encoding alone said 3,700 times. The search is now the bill.<br>
-- Nano and Zero tie: one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling. A cheaper encoder does not.<br>
+- Nano and Zero tie because one search process tops out around 600 to 650 queries/s. More processes or shards move that ceiling; a cheaper encoder does not.<br>
+- So why keep Zero? Not for price at this rate. After the demo, one chart shows where it earns its place.<br>
 Next: why does Zero need more search?</aside>
 </section>

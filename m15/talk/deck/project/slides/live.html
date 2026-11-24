@@ -1,19 +1,22 @@
 <section id="live" class="s demo" data-transition="fade">
 <img class="bgimg" src="/_blob/5dc1a21d5eb645143579236b1794a30f" alt="">
-<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Production</p></div><h2>Live: An Auto Router on One Index</h2></div>
-<div class="live" style="margin-top:8px"><div class="dot"></div><p>LIVE</p></div><p class="sub" style="font-size:44px;width:1000px;margin-top:24px">2.68M passages, real NQ questions, judged answers, on this laptop.</p><img class="mascot" src="/_blob/7a2fac0c52e21ae07765491e6be45586" alt="" style="left:1280px;top:380px;width:520px;height:520px">
+<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Production</p></div><h2 style="width:1498px;min-height:300px;transform:translate(0, 252px);box-sizing:border-box;flex:0 0 auto">Demo: An Auto Router on One Index</h2></div>
+<div class="live" style="margin-top:8px;translate:0 16px"><div class="dot"></div><p>LIVE</p></div><img class="mascot" src="/_blob/05b0c46d773451944c71dbba1c666232" alt="" style="left:914px;top:116px;width:1252px;height:1143px">
 
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~4 min]<br>
-[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, quality floor 0.50, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]<br>
-- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions, every answer scored against judged answers.<br>
-- Two rules: quality floor first, then the latency target. It never drops a query.<br>
-- [40/s] Quiet: everything on Stella with the widest search.<br>
-- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency stays under the line; quality dips a little.<br>
-- [Drag to about 1,500] Zero mixes in, and the search narrows by itself. Same index, nothing re-encoded.<br>
-- [Drag to about 3,500] Past this laptop's ceiling, about 2,600/s in one process. It keeps the floor and serves every query, so the queue grows. Quality first, as asked.<br>
-- [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back.<br>
+[Before the talk: run DATASET=nq .venv/bin/python m15/talk/demo/studio/app.py, open http://127.0.0.1:8767, wait until the subtitle stops saying "starting", drag traffic to about 1,500 once to warm up, then back to 40. Routing on Auto, p95 target 150 ms. Space pauses; up and down arrows step traffic by 1.5x.]<br>
+- [Share the studio.] A search service on this laptop: 2.68M passages, one Stella index, real NQ questions scored against judged answers.<br>
+- One rule: the best ranking that still meets the latency target. It never drops a query.<br>
+- Each encoder keeps its own search settings, like any model. Every 250 ms the router only moves traffic between them: the best average quality that fits the machine. Only possible because all three search one index.<br>
+- [40/s] Quiet: everything on Stella.<br>
+- [Drag to about 600] 15 times the traffic. Within a second it moves to Nano. Latency holds; quality dips a little.<br>
+- [Drag to about 1,500] Zero takes the traffic Nano cannot encode in time. Same index, nothing re-encoded.<br>
+- [Drag to about 2,500] Past this laptop's limit, about 2,000 searches/s, it still serves every query and the queue grows. More traffic needs another shard, not a cheaper encoder.<br>
+- [Optional, at 2,000: Zero's ef to 1024] A wider search costs search time. The laptop now carries less, and the router moves traffic back to Nano.<br>
+- [Drag back to 40] The backlog drains in seconds; Stella gets its traffic back within about 20 seconds.<br>
 - [Optional: MORE, agent tasks] Ten searches per task: the gauge now times the slowest of the ten.<br>
-- Honest framing: questions and judgments are real, the traffic pattern is simulated, capacity is this laptop. On your hardware the numbers move; that is why you measure.<br>
-Next: how to use it.</aside>
+- Honest framing: questions and judgments are real, the traffic is simulated, the capacity is this laptop's. On your hardware the numbers move; that is why you measure.<br>
+- To run it yourself: a few hundred judged queries from your traffic, the quality of each encoder at each search width, and timings on your hardware.<br>
+Next: the whole range on one chart.</aside>
 </section>

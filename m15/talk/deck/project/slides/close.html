@@ -1,23 +1,26 @@
 <section id="close" class="s alt" data-transition="fade">
 <img class="bgimg" src="/_blob/5dc1a21d5eb645143579236b1794a30f" alt="">
 <div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Monday</p></div><h2>Use the Constella Models <span class="tr">Today</span></h2></div>
-<div class="win" style="width:1250px;margin-top:8px;flex:none"><div class="wbar"><div class="d" style="background:#ff516b"></div><div class="d" style="background:#f5a623"></div><div class="d" style="background:#3fc1a5"></div></div><pre style="margin:0;background:#1E1E1E;color:#D4D4D4;padding:30px 40px;font-family:JetBrains Mono,monospace;font-size:30px;line-height:1.45;font-variant-ligatures:none"><span style="color:#C586C0">from</span> fastembed <span style="color:#C586C0">import</span> <span style="color:#4EC9B0">TextEmbedding</span>
+<div class="win" style="width:1250px;margin-top:8px;flex:none"><div class="wbar"><div class="d" style="background:#ff516b"></div><div class="d" style="background:#f5a623"></div><div class="d" style="background:#3fc1a5"></div></div><pre style="margin:0;background:#1E1E1E;color:#D4D4D4;padding:30px 40px;font-family:JetBrains Mono,monospace;font-size:28px;line-height:1.4;font-variant-ligatures:none"><span style="color:#C586C0">from</span> fastembed <span style="color:#C586C0">import</span> <span style="color:#4EC9B0">TextEmbedding</span>
+<span style="color:#C586C0">from</span> qdrant_client <span style="color:#C586C0">import</span> <span style="color:#4EC9B0">models</span>
 
 <span style="color:#6A9955"># 1. Index once with Stella's document model</span>
 <span style="color:#9CDCFE">stella</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/stella-en-400M-v5-doc-onnx"</span>)
 <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">upload_collection</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#DCDCAA">list</span>(<span style="color:#9CDCFE">stella</span>.<span style="color:#DCDCAA">embed</span>(<span style="color:#9CDCFE">passages</span>)))
 
-<span style="color:#6A9955"># 2. Query the same index with Zero, or swap in Nano</span>
+<span style="color:#6A9955"># 2. Query the same index with Zero, or "Qdrant/constella-nano"</span>
 <span style="color:#9CDCFE">zero</span> = <span style="color:#4EC9B0">TextEmbedding</span>(<span style="color:#CE9178">"Qdrant/constella-zero"</span>)
 <span style="color:#9CDCFE">query</span> = <span style="color:#DCDCAA">next</span>(<span style="color:#9CDCFE">zero</span>.<span style="color:#DCDCAA">embed</span>([<span style="color:#CE9178">"how far is the moon?"</span>]))
-<span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>)</pre></div><div class="win" style="flex-direction:row;align-self:flex-start;align-items:center;gap:18px;padding:18px 30px;background:#0d1220"><p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p><p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div><img class="mascot" src="/_blob/43ddfb95abc5817b219b8e5f2d93a6ee" alt="" style="left:1116px;top:307px;width:1093px;height:915px">
+<span style="color:#9CDCFE">hits</span> = <span style="color:#9CDCFE">client</span>.<span style="color:#DCDCAA">query_points</span>(<span style="color:#CE9178">"wiki"</span>, <span style="color:#9CDCFE">query</span>=<span style="color:#9CDCFE">query</span>,
+    <span style="color:#9CDCFE">search_params</span>=<span style="color:#4EC9B0">models</span>.<span style="color:#4EC9B0">SearchParams</span>(<span style="color:#9CDCFE">hnsw_ef</span>=<span style="color:#B5CEA8">512</span>))</pre></div><div class="win" style="flex-direction:row;flex:none;align-self:flex-start;align-items:center;gap:18px;padding:18px 30px;background:#0d1220"><p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#3fc1a5">$</p><p style="font-family:JetBrains Mono,monospace;font-size:32px;color:#D4D4D4;font-variant-ligatures:none"><span style="color:#DCDCAA">pip</span> install <span style="color:#CE9178">"fastembed&gt;=0.9.0"</span></p></div><img class="mascot" src="/_blob/baa5783eb9620b82b42e657a129cf8c6" alt="" style="left:1072px;top:128px;width:1136px;height:1074px">
 
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
 <aside>[~1 min]<br>
 Why it matters: you can try this on Monday with a few lines of code.<br>
 - [Comment 1] Index once with Stella's document model in FastEmbed.<br>
-- [Comment 2] Query the same collection with Zero. To try Nano, change one model name.<br>
+- [Comment 2] Query the same collection with Zero. For Nano, change one model name.<br>
+- [hnsw_ef=512] Zero needs the wider search from the recovery slide. Set it per request.<br>
 - [pip line] FastEmbed 0.9.0 or later.<br>
-- Start with real queries: judge the passages you want back and compare the three encoders on your index.<br>
+- Then judge the three encoders on real queries against your own index.<br>
 Next: and if your index was built with a different model?</aside>
 </section>

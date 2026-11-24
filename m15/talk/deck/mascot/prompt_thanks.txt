@@ -1,0 +1,8 @@
+Use your image generation tool. The attached sheet shows our mascot: a small chibi robot astronaut, glossy white armor with red trim and red glowing ear rings, black visor with blue LED eyes, red-lit backpack, 3D render style.
+
+Generate ONE image of this exact character, matching the sheet's style, proportions and colors:
+- Pose: standing, full body, waving with one hand, happy LED eyes (the "happy" arcs from the sheet). Next to its head, a small rounded speech bubble that reads exactly "Thank you!" in clean bold sans-serif.
+- Transparent background (PNG with alpha). No floor, no scenery, no text other than the speech bubble. A very soft contact shadow under the feet is fine.
+- Square canvas, character centered, with some empty margin around it.
+
+Save the final PNG to ./gen/thanks.png (in the current directory). If the tool cannot produce real transparency, say so plainly in your final message and still save the result. Do not edit any other file. Reply with the saved path and whether the background is truly transparent.

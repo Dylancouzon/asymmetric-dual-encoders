@@ -1,26 +1,29 @@
 <section id="cloud" class="s foot" data-transition="fade">
-<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>Encoding 1M Queries: $6.07, $0.24, or $0.0016</h2></div>
-<svg aria-label="CPU time to encode one million queries on a log scale: Stella 123 vCPU-hours, Nano 4.8, Zero 2 vCPU-minutes" style="position:absolute;left:128px;top:284px" width="1664" height="600" viewBox="0 0 1664 600"><line x1="200" x2="200" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="392" x2="392" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="584" x2="584" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="776" x2="776" y1="70" y2="500" stroke="#303547" stroke-width="2"/><line x1="968" x2="968" y1="70" y2="500" stroke="#303547" stroke-width="2"/><rect x="200" y="96" width="860" height="68" rx="12" fill="#151b2b"/><rect x="200" y="96" width="786" height="68" rx="12" fill="#c9cede"/><rect x="200" y="236" width="860" height="68" rx="12" fill="#151b2b"/><rect x="200" y="236" width="515" height="68" rx="12" fill="#9494ff"/><rect x="200" y="376" width="860" height="68" rx="12" fill="#151b2b"/><rect x="200" y="376" width="99" height="68" rx="12" fill="#ff516b"/></svg>
-<p class="lb" style="left:328px;top:286px;width:761px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:left;">CPU time to encode 1M queries (log scale)</p>
-<p class="lb" style="left:128px;top:388px;width:168px;font-size:40px;color:#c9cede;font-weight:700;text-align:left;">Stella</p>
-<p class="lb" style="left:1132px;top:394px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">123 vCPU-h</p>
-<p class="lb" style="left:128px;top:528px;width:120px;font-size:40px;color:#9494ff;font-weight:700;text-align:left;">Nano</p>
-<p class="lb" style="left:861px;top:534px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">4.8 vCPU-h</p>
-<p class="lb" style="left:128px;top:668px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
-<p class="lb" style="left:445px;top:674px;width:228px;font-size:34px;color:#fcfdff;font-weight:700;text-align:left;">2 vCPU-min</p>
-<p class="lb" style="left:279px;top:806px;width:98px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">0.01</p>
-<p class="lb" style="left:481px;top:806px;width:79px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">0.1</p>
-<p class="lb" style="left:691px;top:806px;width:42px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">1</p>
-<p class="lb" style="left:874px;top:806px;width:61px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">10</p>
-<p class="lb" style="left:991px;top:806px;width:210px;font-size:30px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">100 vCPU-h</p>
-<div class="col" style="position:absolute;left:1360px;top:500px;width:432px;gap:24px"><div class="stat vio" style="justify-content:space-between"><p style="font-size:30px;color:#dde0ff">Nano</p><p style="font-size:88px;font-weight:700;color:#9494ff;line-height:1">26×</p></div><div class="stat red" style="justify-content:space-between"><p style="font-size:30px;color:#ffb3bf">Zero</p><p style="font-size:88px;font-weight:700;color:#ff516b;line-height:1">3,700×</p></div><p style="font-size:30px;color:#c9cede;text-align:right">less CPU than Stella</p></div>
-<p class="src">GCP c4-standard-8 (8 vCPU), us-east1, on-demand $0.395/h, at peak throughput: batch 1, 8 processes × 1 ONNX Runtime thread (Zero: NumPy), 30 s closed loop on NQ queries. vCPU-hours = 8 / queries per second × 1M / 3600. Encoding only. Exploratory.</p>
+<div class="head"><div class="eb"><div class="rule"></div><p class="eyebrow">Results</p></div><h2>Search Is Now the Bill: 3,700× Becomes 29×</h2></div>
+<svg aria-label="Times cheaper than Stella on a log scale. Nano: 26 times for encoding alone, 27 times for the whole request. Zero: 3,700 times for encoding alone, 29 times for the whole request" style="position:absolute;left:128px;top:284px" width="1664" height="600" viewBox="0 0 1664 600"><line x1="260" x2="260" y1="70" y2="470" stroke="#303547" stroke-width="2"/><line x1="520" x2="520" y1="70" y2="470" stroke="#303547" stroke-width="2"/><line x1="780" x2="780" y1="70" y2="470" stroke="#303547" stroke-width="2"/><line x1="1040" x2="1040" y1="70" y2="470" stroke="#303547" stroke-width="2"/><line x1="1300" x2="1300" y1="70" y2="470" stroke="#303547" stroke-width="2"/><line x1="260" x2="260" y1="70" y2="470" stroke="#c9cede" stroke-width="4"/><circle cx="627" cy="170" r="17" fill="#0b0f19" stroke="#9494ff" stroke-width="5"/><circle cx="632" cy="170" r="19" fill="#9494ff"/><line x1="1167" y1="360" x2="681" y2="360" stroke="#ff516b" stroke-width="6" stroke-dasharray="14 10"/><path d="M665 360 l24 -16 l0 32z" fill="#ff516b"/><circle cx="1189" cy="360" r="17" fill="#0b0f19" stroke="#ff516b" stroke-width="5"/><circle cx="641" cy="360" r="19" fill="#ff516b"/></svg>
+<p class="lb" style="left:356px;top:774px;width:63px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">1×</p>
+<p class="lb" style="left:606px;top:774px;width:83px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">10×</p>
+<p class="lb" style="left:856px;top:774px;width:103px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">100×</p>
+<p class="lb" style="left:1096px;top:774px;width:143px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">1,000×</p>
+<p class="lb" style="left:1347px;top:774px;width:162px;font-size:32px;color:#9aa0b5;font-weight:400;text-align:center;font-family:JetBrains Mono,monospace;">10,000×</p>
+<p class="lb" style="left:598px;top:844px;width:619px;font-size:32px;color:#c9cede;font-weight:400;text-align:center;">times cheaper than Stella (log)</p>
+<p class="lb" style="left:318px;top:304px;width:139px;font-size:32px;color:#c9cede;font-weight:700;text-align:center;">Stella</p>
+<p class="lb" style="left:128px;top:430px;width:120px;font-size:40px;color:#9494ff;font-weight:700;text-align:left;">Nano</p>
+<p class="lb" style="left:800px;top:432px;width:218px;font-size:36px;color:#fcfdff;font-weight:700;text-align:left;">26× → 27×</p>
+<p class="lb" style="left:128px;top:620px;width:120px;font-size:40px;color:#ff516b;font-weight:700;text-align:left;">Zero</p>
+<p class="lb" style="left:1240px;top:570px;width:153px;font-size:36px;color:#fcfdff;font-weight:700;text-align:center;">3,700×</p>
+<p class="lb" style="left:1179px;top:682px;width:276px;font-size:30px;color:#c9cede;font-weight:400;text-align:center;">encoding alone</p>
+<p class="lb" style="left:717px;top:562px;width:103px;font-size:44px;color:#ff516b;font-weight:700;text-align:center;">29×</p>
+<p class="lb" style="left:622px;top:682px;width:294px;font-size:30px;color:#c9cede;font-weight:400;text-align:center;">encode + search</p>
+<img class="mascot" src="/_blob/2d5fc6fe390d5af94d5e9925291c05b1" alt="" style="left:1520px;top:512px;width:288px;height:392px">
+
+<p class="src">One GCP c4-standard-8 (8 vCPU), NQ queries. Hollow: encoding only, CPU per 1M queries (Stella 123 vCPU-h), batch 1, 8 processes × 1 thread. Solid: encode plus Qdrant Edge search in one process, $ per 1M queries (Stella $4.91, Nano $0.18, Zero $0.17), best of 1-8 threads, warm page cache. Each ratio comes from one run. Exploratory.</p>
 <img class="mark" src="/_blob/06af6ab9dd8249dbc63ca9672c348824" alt="Qdrant">
-<aside>[~1 min]<br>
-Why it matters: this is the line item your finance team sees.<br>
-- One GCP machine with 8 vCPUs ($0.395/hour), pushed as fast as it goes, one query per batch.<br>
-- CPU time to encode one million queries: Stella 123 vCPU-hours ($6.07). Nano 4.8 ($0.24). Zero 2 vCPU-minutes ($0.0016).<br>
-- Nano uses 26 times less CPU than Stella. Zero uses 3,700 times less.<br>
-- The dollars assume a busy machine. Idle hours still cost money: size for your real rate.<br>
-Next: but encoding is not the whole request. Quick bet.</aside>
+<aside>[~1.5 min]<br>
+Why it matters: a cheaper encoder only saves what encoding was costing you.<br>
+- With Stella, encoding was almost the whole bill. Make it nearly free, and the next cost in line, the search, becomes the bill.<br>
+- [Arrow] Zero's encoding is 3,700 times cheaper than Stella's. The whole request is 29 times cheaper, and Nano lands in the same place at 27 times.<br>
+- Still a big win: per million queries, Stella $4.91, Nano $0.18, Zero $0.17.<br>
+- General lesson: once the encoder is cheap, the next savings come from the search side: more search processes or shards, quantization, and the search width.<br>
+Next: and Zero needs more search than the others.</aside>
 </section>

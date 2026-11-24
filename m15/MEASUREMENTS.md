@@ -813,6 +813,9 @@ exploratory, use public known-test sets only, and touch none of the reserved fou
   40 to 2,500 searches/s with its four presets, quality and search time from T3's NQ sweep, the M5 Pro encode capacity
   in its self-check (Stella 80, Nano 1,400, Zero 17,000 encodes/s), floor 0.50 and headroom 0.8. Planner output on
   fixed costs, not a load test. Script `m15src/talk_router_plan.py`; receipt `results/m15_talk_router_plan.json`.
+  **Superseded 2026-11-23** (owner ruling: search settings are per encoder and manual; the router only moves traffic):
+  same rates, each encoder at its studio default (Stella ef 64, Nano ef 128, Zero ef 256, oversampling 4), no floor,
+  headroom 0.8. Receipt `results/m15_talk_router_plan_own_search.json`.
 - **T12 slide 2 search example.** One NQ test query chosen for readability among queries whose judged passage ranks first
   ("who played joey's agent estelle on friends"; the first pick ranked its judged passage fourth and was dropped). Stella
   query encoder with its prompt, exact search over the committed Stella NQ document vectors; records the answer rank and
